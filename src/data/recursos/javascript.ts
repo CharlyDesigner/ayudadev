@@ -20,8 +20,8 @@ const recursos: RecursoInput[] = [
   {
     id: 'javascript-elocuente',
     titulo: 'JavaScript Elocuente (4.ª edición)',
-    autor: 'Marijn Haverbeke, traducción comunitaria',
-    url: 'https://eloquentjs-es.thedojo.mx/',
+    autor: 'Marijn Haverbeke, traducción de midudev',
+    url: 'https://www.eloquentjavascript.es/',
     tema: 'javascript',
     tipo: 'libro',
     nivel: 'intermedio',

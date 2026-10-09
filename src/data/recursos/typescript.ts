@@ -84,7 +84,7 @@ const recursos: RecursoInput[] = [
     id: 'typescript-uso-avanzado-nelio',
     titulo: 'Uso avanzado de TypeScript en un ejemplo real',
     autor: 'Nelio Software',
-    url: 'https://neliosoftware.com/es/blog/uso-avanzado-de-typescript/',
+    url: 'https://neliosoftware.com/es/blog/uso-avanzado-de-typescript-parte-1/',
     tema: 'typescript',
     tipo: 'tutorial',
     nivel: 'avanzado',
