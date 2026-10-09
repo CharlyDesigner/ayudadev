@@ -1,0 +1,70 @@
+---
+import Logo from '@components/Logo.astro';
+import ThemeToggle from '@components/nav/ThemeToggle.astro';
+import Icon from '@components/ui/Icon.astro';
+import { NAV, SITE } from '@data/site';
+
+const actual = Astro.url.pathname;
+const activo = (href: string) => (href === '/' ? actual === '/' : actual.startsWith(href));
+---
+
+<header class="sticky top-0 z-40 border-b border-line glass">
+  <div class="container-site flex h-16 items-center justify-between gap-4">
+    <Logo />
+
+    <nav aria-label="Principal" class="hidden md:block">
+      <ul class="flex items-center gap-1">
+        {NAV.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              aria-current={activo(item.href) ? 'page' : undefined}
+              class:list={[
+                'rounded-full px-3.5 py-2 text-sm font-medium transition-colors hover:bg-surface hover:text-fg',
+                activo(item.href) ? 'bg-surface text-fg' : 'text-muted',
+              ]}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <div class="flex items-center gap-1">
+      <button
+        type="button"
+        data-command-open
+        class="hidden items-center gap-2 rounded-full border border-line bg-surface px-3 py-2 text-sm text-muted transition-colors hover:text-fg sm:inline-flex"
+        aria-label="Buscar en el sitio"
+      >
+        <Icon name="search" class="h-4 w-4" />
+        <span class="hidden lg:inline">Buscar</span>
+        <kbd class="hidden lg:inline">Ctrl K</kbd>
+      </button>
+      <button type="button" data-command-open class="grid h-10 w-10 place-items-center rounded-full text-muted hover:bg-surface hover:text-fg sm:hidden" aria-label="Buscar">
+        <Icon name="search" />
+      </button>
+      <a
+        href="/biblioteca/favoritos/"
+        class="relative grid h-10 w-10 place-items-center rounded-full text-muted transition-colors hover:bg-surface hover:text-fg"
+        aria-label="Tus favoritos"
+        title="Favoritos"
+      >
+        <Icon name="heart" />
+        <span data-fav-count hidden class="absolute -top-0.5 -right-0.5 min-w-4 rounded-full bg-accent px-1 text-center text-[10px] font-bold leading-4 text-on-accent">0</span>
+      </a>
+      <a
+        href={SITE.repo}
+        class="hidden h-10 w-10 place-items-center rounded-full text-muted transition-colors hover:bg-surface hover:text-fg md:grid"
+        aria-label="Repositorio en GitHub"
+        title="GitHub"
+        rel="noopener"
+        target="_blank"
+      >
+        <Icon name="github" />
+      </a>
+      <ThemeToggle />
+    </div>
+  </div>
+</header>

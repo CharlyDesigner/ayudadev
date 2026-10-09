@@ -1,0 +1,9 @@
+---
+/**
+ * Lista de pasos numerados con estilo. Dentro usa una lista ordenada normal de Markdown.
+ */
+---
+
+<div class="not-prose my-6 [&>ol]:space-y-3 [&>ol]:pl-0 [&>ol>li]:relative [&>ol>li]:list-none [&>ol>li]:rounded-2xl [&>ol>li]:border [&>ol>li]:border-line [&>ol>li]:bg-surface [&>ol>li]:py-3 [&>ol>li]:pr-4 [&>ol>li]:pl-12 [&>ol>li]:text-[0.95rem] [&>ol>li]:leading-relaxed [&>ol>li]:before:absolute [&>ol>li]:before:top-3 [&>ol>li]:before:left-4 [&>ol>li]:before:grid [&>ol>li]:before:h-6 [&>ol>li]:before:w-6 [&>ol>li]:before:place-items-center [&>ol>li]:before:rounded-full [&>ol>li]:before:bg-accent [&>ol>li]:before:text-xs [&>ol>li]:before:font-bold [&>ol>li]:before:text-on-accent [&>ol>li]:before:content-[counter(paso)] [&>ol>li]:[counter-increment:paso] [&>ol]:[counter-reset:paso] [&_code]:rounded-md [&_code]:border [&_code]:border-line [&_code]:bg-surface-2 [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.85em] [&_pre]:mt-2">
+  <slot />
+</div>

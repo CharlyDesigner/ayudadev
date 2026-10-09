@@ -1,0 +1,263 @@
+---
+titulo: 'Git y GitHub desde cero'
+descripcion: 'Qué es el control de versiones, cómo instalar Git, tus primeros commits y ramas, y cómo subir tu proyecto a GitHub paso a paso.'
+tema: git
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['git-pro-git-es', 'git-learn-git-branching', 'git-github-docs-es']
+requisitos: ['Saber abrir una terminal y moverte entre carpetas con cd']
+etiquetas: ['git', 'github', 'commits', 'ramas', 'terminal']
+orden: 60
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Git es un sistema de control de versiones: guarda "fotos" de tu proyecto cada vez que tú se lo pides, para que puedas volver atrás, comparar y trabajar con otras personas sin pisarse el trabajo. GitHub es un sitio web donde subes esos repositorios para respaldarlos y colaborar. Son cosas distintas: Git es la herramienta, GitHub es un servicio que la usa.
+
+El modelo mental que necesitas:
+
+- **Repositorio**: una carpeta de tu proyecto más una carpeta oculta `.git` donde vive todo el historial. Nada sale de tu máquina hasta que tú lo subes.
+- **Commit**: una foto del proyecto con un mensaje, un autor y una fecha. Cada commit tiene un identificador (hash) como `8bc89c6`.
+- **Tres zonas**: el directorio de trabajo (tus archivos), el área de preparación o *staging* (lo que entrará en el siguiente commit) y el historial (los commits ya guardados). `git add` mueve cambios a staging, `git commit` los guarda.
+- **Rama**: una línea de commits con nombre. `main` es la principal; creas otras para probar cosas sin romper lo que funciona y luego las unes con `merge`.
+- **Remoto**: una copia del repositorio en otro lugar, normalmente GitHub. `push` sube tus commits, `pull` baja los de los demás.
+- **Todo es local y rápido**: hacer commits, ramas y ver el historial no necesita internet. Solo `push`, `pull`, `fetch` y `clone` hablan con el servidor.
+- **Git guarda contenido, no "versiones de archivos"**: cada commit apunta al estado completo del proyecto, por eso puedes saltar a cualquier punto del historial en un instante.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows**: descarga el instalador desde [git-scm.com/download/win](https://git-scm.com/download/win) y acepta las opciones por defecto. Te instala también **Git Bash**, una terminal donde funcionan los comandos de esta guía tal cual. Si prefieres, en PowerShell escribe `winget install Git.Git`.
+2. **macOS**: abre Terminal y escribe `git --version`. Si no está, macOS te ofrece instalar las herramientas de línea de comandos; acepta. También puedes usar `brew install git`.
+3. **Linux**: en Debian o Ubuntu escribe `sudo apt install git`; en Fedora `sudo dnf install git`; en Arch `sudo pacman -S git`.
+4. Comprueba que quedó instalado con `git --version`. Debe mostrar algo como `git version 2.x`.
+5. Dile a Git quién eres. Esto aparecerá en cada commit que hagas, así que usa tu nombre real y el mismo correo que usarás en GitHub:
+
+   ```bash
+   git config --global user.name "Tu Nombre"
+   git config --global user.email "tu@correo.com"
+   git config --global init.defaultBranch main
+   ```
+
+6. Crea una cuenta gratuita en [github.com](https://github.com/) si aún no la tienes. La necesitarás en la última sección.
+
+</Pasos>
+
+En los ejemplos verás hashes como `8bc89c6` y rutas de carpetas. En tu máquina serán distintos: los hashes dependen del contenido, la fecha y el autor. Lo importante es que la forma de la salida coincida.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Tu primer repositorio y tu primer commit" archivo="01-primer-commit.sh" ejecutar="bash 01-primer-commit.sh" salida="Initialized empty Git repository in .../mi-proyecto/.git/
+?? README.md
+[main (root-commit) 8bc89c6] Primer commit: agrega README
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+8bc89c6 Primer commit: agrega README">
+
+```bash
+# Crea una carpeta con un repositorio vacío dentro y entra en ella
+git init -b main mi-proyecto
+cd mi-proyecto
+
+# Crea un archivo y mira cómo lo ve Git
+echo "# Mi proyecto" > README.md
+git status --short
+
+# Prepara el archivo y guarda la foto con un mensaje
+git add README.md
+git commit -m "Primer commit: agrega README"
+
+# El historial, una línea por commit
+git log --oneline
+```
+
+Las dos interrogaciones `??` significan "archivo nuevo que Git todavía no sigue". Después de `git add` pasa a staging y con `git commit` queda guardado. `root-commit` solo aparece en el primer commit del repositorio.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Ver qué cambió antes de guardar" archivo="02-ver-cambios.sh" ejecutar="bash 02-ver-cambios.sh" salida="diff --git a/README.md b/README.md
+index 35985da..ca489ab 100644
+--- a/README.md
++++ b/README.md
+@@ -1 +1,2 @@
+ # Mi proyecto
++Segunda linea
+[main d1d24ba] Agrega una segunda linea al README
+ 1 file changed, 1 insertion(+)
+d1d24ba Agrega una segunda linea al README
+8bc89c6 Primer commit: agrega README">
+
+```bash
+# Sigue dentro de mi-proyecto. Agrega una línea al final del archivo
+echo "Segunda linea" >> README.md
+
+# diff muestra exactamente qué cambió respecto al último commit
+git diff
+
+# Guarda el cambio
+git add README.md
+git commit -m "Agrega una segunda linea al README"
+git log --oneline
+```
+
+En el `diff`, las líneas con `+` son nuevas y las que empiezan con `-` se quitaron. Acostúmbrate a correr `git diff` antes de cada commit: es la forma más rápida de atrapar un cambio que no querías guardar. El historial ahora tiene dos commits, el más reciente arriba.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Trabajar en una rama y unirla a main" archivo="03-ramas.sh" ejecutar="bash 03-ramas.sh" salida="Switched to a new branch 'nueva-funcion'
+[nueva-funcion 1fd3f86] Agrega hola.py
+ 1 file changed, 1 insertion(+)
+ create mode 100644 hola.py
+Switched to branch 'main'
+Updating d1d24ba..1fd3f86
+Fast-forward
+ hola.py | 1 +
+ 1 file changed, 1 insertion(+)
+ create mode 100644 hola.py
+* 1fd3f86 Agrega hola.py
+* d1d24ba Agrega una segunda linea al README
+* 8bc89c6 Primer commit: agrega README
+Deleted branch nueva-funcion (was 1fd3f86).">
+
+```bash
+# Crea una rama nueva y cámbiate a ella en un solo paso
+git switch -c nueva-funcion
+
+# Trabaja normal: crea un archivo y haz commit en la rama
+echo "print('hola')" > hola.py
+git add hola.py
+git commit -m "Agrega hola.py"
+
+# Regresa a main y trae los cambios de la rama
+git switch main
+git merge nueva-funcion
+
+# Mira el historial como grafo y borra la rama que ya no necesitas
+git log --oneline --graph
+git branch -d nueva-funcion
+```
+
+Mientras estabas en `nueva-funcion`, `main` no cambió: el archivo `hola.py` solo existía en la rama. El merge fue un *fast-forward* porque `main` no tenía commits nuevos, así que Git solo movió la etiqueta hacia adelante. Borrar la rama después de unirla es normal, los commits ya están en `main`.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Deshacer un cambio que todavía no guardaste" archivo="04-deshacer.sh" ejecutar="bash 04-deshacer.sh" salida=" M README.md
+Sin cambios pendientes">
+
+```bash
+# Rompe el archivo a propósito
+echo "cambio equivocado" >> README.md
+
+# M significa modificado respecto al último commit
+git status --short
+
+# Regresa el archivo a como estaba en el último commit
+git restore README.md
+
+# Ya no hay nada que reportar
+git status --short
+echo "Sin cambios pendientes"
+```
+
+`git restore archivo` descarta los cambios del directorio de trabajo que no has guardado. No hay forma de recuperarlos después, por eso conviene mirar primero con `git diff`. Si ya hiciste `git add`, usa `git restore --staged archivo` para sacarlo de staging sin perder el cambio.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Ignorar archivos que no deben entrar al repositorio" archivo="05-gitignore.sh" ejecutar="bash 05-gitignore.sh" salida="?? .gitignore
+[main cfb599c] Agrega .gitignore
+ 1 file changed, 2 insertions(+)
+ create mode 100644 .gitignore
+cfb599c Agrega .gitignore">
+
+```bash
+# Un archivo .gitignore con un patrón por línea
+printf 'node_modules/\n*.log\n' > .gitignore
+
+# Simula una carpeta de dependencias y un archivo de registro
+mkdir node_modules
+echo "x" > node_modules/a.js
+echo "y" > app.log
+
+# Git ve el .gitignore nuevo, pero no node_modules ni app.log
+git status --short
+
+git add .gitignore
+git commit -m "Agrega .gitignore"
+git log --oneline | head -1
+```
+
+Las carpetas de dependencias, archivos generados, registros y, sobre todo, archivos con contraseñas (`.env`) nunca deben entrar al repositorio. Con `.gitignore` Git deja de ofrecértelos. GitHub tiene plantillas listas por lenguaje en [github.com/github/gitignore](https://github.com/github/gitignore).
+
+</Ejemplo>
+
+### Súbelo a GitHub
+
+Con el repositorio listo en tu máquina, entra a GitHub, pulsa **New repository**, ponle el mismo nombre (`mi-proyecto`), no marques la opción de crear README y crea el repositorio. GitHub te mostrará la dirección del remoto. Después, en tu terminal:
+
+```bash
+# Conecta tu repositorio local con el de GitHub (una sola vez)
+git remote add origin https://github.com/TU-USUARIO/mi-proyecto.git
+
+# Sube la rama main y recuerda el remoto para la próxima vez
+git push -u origin main
+```
+
+La primera vez Git te pedirá iniciar sesión; GitHub ya no acepta tu contraseña normal, sino un *token* o el inicio de sesión del navegador que abre **Git Credential Manager** (viene con Git para Windows y macOS). A partir de ahí, el ciclo diario es: editar, `git add`, `git commit`, `git push`. Para traer cambios que hicieron otras personas, `git pull`.
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Hacer commit sin configurar tu nombre y correo">
+
+Si saltaste el paso de `git config --global user.name`, Git se niega a hacer el commit o lo firma con un nombre inventado a partir del usuario de tu sistema. Configúralo una vez y revisa con `git config --global --list`. Usa el mismo correo que en GitHub para que los commits aparezcan ligados a tu perfil.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Subir archivos que no debían subirse">
+
+`git add .` agrega todo lo que haya en la carpeta: dependencias, binarios y archivos `.env` con contraseñas. Una vez que un secreto llega a GitHub, considéralo filtrado aunque lo borres después, porque sigue en el historial. Crea el `.gitignore` antes del primer commit y revisa con `git status` qué vas a agregar.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Commits gigantes con mensajes como 'cambios' o 'arreglos'">
+
+Un commit que toca treinta archivos con el mensaje "cambios" no sirve para nada cuando necesitas encontrar dónde se rompió algo. Haz commits pequeños, de una sola idea, y escribe el mensaje en imperativo describiendo qué hace: "Agrega validación de correo en el formulario". Tu yo del futuro te lo va a agradecer.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Entrar en pánico con un conflicto de merge">
+
+Un conflicto solo significa que dos commits cambiaron las mismas líneas y Git no sabe cuál elegir. Abre el archivo, busca las marcas `<<<<<<<`, `=======` y `>>>>>>>`, deja el texto final como debe quedar, borra las marcas, y termina con `git add archivo` y `git commit`. Si te enredas, `git merge --abort` regresa todo a como estaba antes del merge.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Push rechazado porque el remoto tiene cambios nuevos">
+
+Si ves `! [rejected] ... (fetch first)`, alguien subió commits que tú no tienes. No uses `--force`: haz `git pull`, resuelve conflictos si los hay y vuelve a hacer `git push`. En Windows también verás avisos de `LF will be replaced by CRLF`; no son errores, solo Git normalizando los saltos de línea. Puedes silenciarlos con `git config --global core.autocrlf true`.
+
+</Callout>
+
+## Buenas prácticas
+
+- Haz commit seguido y en pedazos pequeños; un commit por cambio lógico.
+- Escribe mensajes claros en imperativo: "Corrige el cálculo del IVA", no "arreglé cosas".
+- Antes de cada commit, `git status` y `git diff`. Antes de cada push, `git log --oneline` para ver qué vas a subir.
+- Trabaja en ramas para cada funcionalidad o corrección y únelas a `main` cuando funcionen.
+- Mantén `.gitignore` desde el primer commit y nunca subas secretos.
+- `git pull` antes de empezar a trabajar cada día si colaboras con alguien más.
+- Evita `git push --force` en ramas compartidas: reescribe historial que otras personas ya tienen.
+- Si no sabes qué hizo un comando, `git reflog` muestra dónde ha estado tu `HEAD`; casi todo se puede recuperar.
+
+## Siguiente paso
+
+Ya tienes el flujo básico: commits, ramas, deshacer y subir a GitHub. Lo que sigue es colaborar: haz un *fork* de un proyecto, crea una rama, sube tus cambios y abre un *pull request*; la documentación de GitHub en español explica el proceso con capturas. Luego practica `rebase`, `stash` y `cherry-pick` con Learn Git Branching, donde ves el grafo moverse con cada comando.
+
+Si todavía no programas, un buen siguiente paso es la guía de [Python desde cero](/guias/python/) o [JavaScript desde cero](/guias/javascript/), y usar Git para versionar esos primeros programas. Y si quieres sentirte más cómodo en la terminal, revisa la biblioteca de [Linux y terminal](/biblioteca/linux/). Todos los recursos sobre Git están en [la biblioteca de Git y GitHub](/biblioteca/git/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

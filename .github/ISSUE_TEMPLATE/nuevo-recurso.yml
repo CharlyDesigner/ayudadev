@@ -1,0 +1,69 @@
+name: Proponer un recurso
+description: Sugiere un libro, curso, documentación o tutorial gratuito en español.
+title: '[Recurso] '
+labels: ['recurso']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por ayudar a crecer la biblioteca. Solo aceptamos recursos **gratuitos**, **legales** (publicados por su autor o con licencia abierta) y, de preferencia, **en español**.
+  - type: input
+    id: titulo
+    attributes:
+      label: Título del recurso
+    validations:
+      required: true
+  - type: input
+    id: autor
+    attributes:
+      label: Autor o proyecto
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Enlace oficial
+      description: La URL del autor, editorial, universidad o repositorio. No enlaces a copias subidas por terceros.
+      placeholder: https://
+    validations:
+      required: true
+  - type: input
+    id: tema
+    attributes:
+      label: Tema
+      description: Por ejemplo JavaScript, Python, Git, SQL, Inteligencia artificial.
+    validations:
+      required: true
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo
+      options: [Libro, Curso, Documentación, Tutorial, Interactivo, Video]
+    validations:
+      required: true
+  - type: dropdown
+    id: nivel
+    attributes:
+      label: Nivel
+      options: [Principiante, Intermedio, Avanzado]
+    validations:
+      required: true
+  - type: input
+    id: licencia
+    attributes:
+      label: Licencia (si la conoces)
+      placeholder: CC BY-NC-SA, MIT, gratuita en el sitio del autor...
+  - type: textarea
+    id: porque
+    attributes:
+      label: Por qué lo recomiendas
+      description: Una o dos frases sobre qué aprendes y para quién es.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmacion
+    attributes:
+      label: Confirmación
+      options:
+        - label: Confirmo que el recurso es gratuito y el enlace es el oficial.
+          required: true

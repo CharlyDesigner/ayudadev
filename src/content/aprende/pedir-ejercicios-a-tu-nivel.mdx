@@ -1,0 +1,118 @@
+---
+titulo: 'Cómo pedirle a la IA explicaciones y ejercicios a tu nivel'
+descripcion: 'Aprende a dar contexto, pedir analogías, ajustar la dificultad y convertir cualquier asistente en un generador de práctica a tu medida.'
+publicado: 2026-10-09
+herramientas: ['claude', 'chatgpt', 'gemini', 'perplexity', 'ollama']
+orden: 2
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+La mayoría de las respuestas malas de la IA vienen de preguntas vagas. "Explícame las funciones" puede producir un párrafo para doctorado o una frase para niños de primaria; el asistente no sabe cuál necesitas. Esta guía te enseña a pedir explicaciones y ejercicios que encajen con lo que sabes hoy.
+
+## Primero: dale contexto
+
+Un asistente no te conoce. Cada conversación nueva empieza de cero (salvo que uses funciones de memoria o proyectos). Por eso el primer mensaje debe decir tres cosas: qué sabes, qué quieres y cómo quieres la respuesta.
+
+```text
+Contexto: estoy aprendiendo [LENGUAJE], llevo [TIEMPO] y ya entiendo [CONCEPTOS QUE DOMINAS]. Todavía no entiendo [CONCEPTOS QUE NO DOMINAS]. Objetivo de hoy: [LO QUE QUIERES LOGRAR]. Responde en español sencillo, con ejemplos de máximo 10 líneas y comentarios en el código.
+```
+
+Con esto, la explicación llega al nivel correcto y, sobre todo, no asume conceptos que todavía no tienes.
+
+<Callout tipo="tip" titulo="Sé honesto con tu nivel">
+Decir que sabes más de lo que sabes produce explicaciones que no entiendes. Decir que sabes menos produce explicaciones aburridas. Ninguna te ayuda. Di la verdad y ajusta sobre la marcha.
+</Callout>
+
+## Pide analogías, no solo definiciones
+
+Una definición técnica es correcta pero no se queda en la cabeza. Una analogía sí. Pide las dos.
+
+```text
+Explícame qué es [CONCEPTO] en dos partes. Primero una analogía de la vida diaria (cocina, escuela, deportes, lo que mejor funcione). Luego la definición técnica en una o dos frases. Al final dime en qué se parece la analogía al código real y en qué no.
+```
+
+La última parte importa: toda analogía tiene límites, y saber dónde falla te evita malentendidos después.
+
+## Ajusta la dificultad como un termostato
+
+Si la explicación fue muy difícil, no cambies de tema: pide que baje un nivel. Si fue muy fácil, pide que suba. Puedes hacerlo con frases cortas:
+
+```text
+Eso fue muy avanzado. Explícamelo de nuevo asumiendo que no sé qué es [CONCEPTO QUE NO ENTENDISTE], y usa un ejemplo más pequeño.
+```
+
+```text
+Eso ya lo entendía. Sube un nivel: muéstrame un caso donde [CONCEPTO] se complica o se usa mal, y por qué.
+```
+
+Un buen tutor humano hace exactamente esto. La diferencia es que la IA no se cansa de que le pidas lo mismo cinco veces.
+
+## Pide que te pregunte a ti
+
+Las explicaciones unidireccionales se olvidan. Pide que el asistente compruebe si entendiste.
+
+```text
+Después de explicarme [CONCEPTO], hazme tres preguntas cortas para comprobar que entendí, de fácil a difícil. Espera mis respuestas y luego dime cuáles acerté y qué me faltó.
+```
+
+Esto convierte la lectura pasiva en una práctica activa, que es donde ocurre el aprendizaje.
+
+## Cómo pedir ejercicios que sirvan
+
+Un ejercicio útil tiene tres propiedades: practica un solo concepto, es pequeño y tiene una forma de saber si lo hiciste bien. Pídelo así:
+
+```text
+Dame 5 ejercicios para practicar [CONCEPTO] en [LENGUAJE], ordenados de fácil a difícil. Cada uno debe caber en 15 líneas, practicar solo ese concepto e incluir un ejemplo de entrada y la salida esperada. No incluyas las soluciones.
+```
+
+El detalle de "entrada y salida esperada" te da una forma de autoevaluarte sin pedir la solución.
+
+<Callout tipo="info" titulo="Pide ejercicios con contexto real">
+Si te aburren los ejercicios abstractos, agrega "ambientados en [TEMA QUE TE GUSTA]": videojuegos, fútbol, cocina, música. Practicas lo mismo y lo recuerdas mejor.
+</Callout>
+
+## Pide una ruta, no solo ejercicios sueltos
+
+Cuando no sabes qué sigue, pide un plan corto. Los planes largos (tres meses, seis meses) suelen abandonarse. Una o dos semanas es un tamaño realista.
+
+```text
+Hazme un plan de 10 días para pasar de [NIVEL ACTUAL] a [OBJETIVO] en [LENGUAJE]. Cada día: un concepto, por qué importa, un ejercicio de máximo 20 líneas y una pregunta de repaso. Asume que tengo 45 minutos diarios.
+```
+
+Al terminar los 10 días, pide el siguiente plan con lo que aprendiste. Así la ruta se ajusta a tu ritmo real.
+
+## Pide retroalimentación sobre tus soluciones
+
+Cuando resuelvas un ejercicio, no pidas "la solución correcta" para comparar. Pide revisión de la tuya.
+
+```text
+Este es mi intento del ejercicio [NÚMERO O DESCRIPCIÓN]: [PEGA TU CÓDIGO]. Dime si cumple lo pedido, qué casos no cubre y una sola cosa que mejorarías. No me muestres tu versión.
+```
+
+"Una sola cosa" es a propósito. Diez correcciones a la vez abruman; una se aplica y se recuerda.
+
+## Errores comunes al pedir ayuda
+
+- **Preguntas gigantes.** "Explícame programación orientada a objetos" produce un libro. Pide un concepto a la vez: "¿qué es una clase?", luego "¿qué es un método?".
+- **Sin lenguaje.** Un bucle en Python no se escribe igual que en C. Di siempre el lenguaje.
+- **Sin tu intento.** Si solo pegas el enunciado, obtienes la solución. Si pegas tu intento, obtienes enseñanza.
+- **Aceptar la primera respuesta.** Si no te quedó claro, dilo. Pide otra analogía, otro ejemplo, otro ángulo.
+- **No ejecutar.** Cada ejemplo que la IA te dé, córrelo tú. Es la única forma de saber si es correcto y de practicar.
+
+## Qué herramienta usar
+
+Para explicaciones y ejercicios cualquier chat sirve: Claude, ChatGPT y Gemini responden bien en español. Perplexity es mejor cuando necesitas verificar algo con fuentes (versiones, instalación, comparar librerías). Ollama te permite hacer todo esto en tu computadora sin internet, con modelos abiertos que se equivocan un poco más pero no tienen límites de uso.
+
+## Ejercicio
+
+Vas a construir tu propio generador de práctica. Sigue estos pasos:
+
+1. Escribe tu mensaje de contexto (nivel, lo que sabes, lo que no, objetivo) y guárdalo en un archivo de notas.
+2. Abre tu asistente, pega el contexto y pide una explicación de un concepto que te cueste, con analogía y definición.
+3. Si fue muy difícil o muy fácil, ajusta el nivel con una frase. Repite hasta que te quede claro.
+4. Pide tres preguntas de comprobación y respóndelas sin mirar la explicación.
+5. Pide 5 ejercicios con entrada y salida esperada, sin soluciones. Resuelve al menos dos en tu editor.
+6. Pide revisión de uno de ellos con "una sola cosa que mejorarías". Aplica el cambio.
+
+Al final anota qué prompt te dio el mejor resultado. Ese es el que vas a reutilizar la próxima semana.

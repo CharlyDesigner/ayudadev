@@ -1,0 +1,43 @@
+/* Tipografía para artículos (guías, IA, noticias) */
+.prose { font-size: 1.0625rem; line-height: 1.75; color: var(--ad-fg); max-width: 72ch; }
+.prose > * + * { margin-top: 1.1em; }
+.prose h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin-top: 2.4em; scroll-margin-top: 6rem; }
+.prose h3 { font-size: 1.2rem; font-weight: 700; margin-top: 1.8em; scroll-margin-top: 6rem; }
+.prose h4 { font-size: 1.05rem; font-weight: 600; margin-top: 1.4em; }
+.prose p { text-wrap: pretty; }
+.prose a:not(.btn) { color: var(--ad-accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+.prose strong { font-weight: 700; }
+.prose ul, .prose ol { padding-left: 1.4rem; }
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+.prose li + li { margin-top: 0.35em; }
+.prose li::marker { color: var(--ad-muted); }
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--ad-surface-2);
+  border: 1px solid var(--ad-line);
+  border-radius: 6px;
+  padding: 0.1em 0.4em;
+}
+.prose pre { margin-top: 1em; }
+.prose pre code { font-family: var(--font-mono); }
+.prose blockquote { border-left: 3px solid var(--ad-accent); padding-left: 1rem; color: var(--ad-muted); font-style: italic; }
+.prose hr { border: 0; border-top: 1px solid var(--ad-line); margin-block: 2.5em; }
+.prose table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; display: block; overflow-x: auto; }
+.prose th, .prose td { border: 1px solid var(--ad-line); padding: 0.55rem 0.75rem; text-align: left; vertical-align: top; }
+.prose th { background: var(--ad-surface-2); font-weight: 600; }
+.prose img { border-radius: 14px; max-width: 100%; height: auto; }
+.prose kbd { font-size: 0.8em; }
+
+/* Bloque de código con botón copiar (se inyecta por script). */
+.code-wrap { position: relative; }
+.code-wrap .copy-btn {
+  position: absolute; top: 0.55rem; right: 0.55rem;
+  font-size: 0.6875rem; font-weight: 600;
+  padding: 0.3rem 0.6rem; border-radius: var(--radius-pill);
+  border: 1px solid var(--ad-line); background: var(--ad-surface); color: var(--ad-muted);
+  cursor: pointer; opacity: 0.85; transition: opacity 0.15s, color 0.15s;
+}
+.code-wrap .copy-btn:hover, .code-wrap .copy-btn:focus-visible { opacity: 1; color: var(--ad-fg); }
+.code-wrap .copy-btn[data-copied='true'] { color: var(--ad-accent-ink); border-color: var(--ad-accent-ink); }

@@ -1,0 +1,268 @@
+---
+titulo: 'Rust desde cero'
+descripcion: 'Qué es Rust, cómo instalarlo con rustup y tus primeros programas con ejemplos que puedes copiar y ejecutar con cargo run.'
+tema: rust
+nivel: principiante
+tiempoLectura: 32
+publicado: 2026-10-09
+libros: ['rust-el-lenguaje-de-programacion-rust', 'rust-en-espanol-facil', 'rust-rust-by-example-es', 'rust-tour-de-rust']
+requisitos: ['Saber usar una terminal básica']
+etiquetas: ['cargo', 'ownership', 'sistemas', 'cli']
+orden: 18
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Rust es un lenguaje compilado pensado para programas donde el rendimiento y la seguridad importan: sistemas operativos, navegadores, herramientas de línea de comandos, servidores y WebAssembly. Su rasgo único es que el compilador garantiza que no habrá errores de memoria ni condiciones de carrera, sin necesitar un recolector de basura.
+
+- **Compilado a código nativo**: `cargo build` produce un binario rápido y sin runtime pesado, como C o C++.
+- **Tipado estático y fuerte con inferencia**: casi nunca escribes tipos en variables locales, pero el compilador los conoce todos.
+- **Ownership (propiedad)**: cada valor tiene un único dueño. Cuando el dueño sale del ámbito, el valor se libera. Asignar un valor a otra variable lo "mueve".
+- **Borrowing (préstamo)**: en vez de mover, puedes prestar una referencia `&T` (varias de lectura) o `&mut T` (una sola de escritura). El *borrow checker* lo verifica al compilar.
+- **Sin null ni excepciones**: la ausencia de valor es `Option`, y los errores recuperables son `Result`. El compilador te obliga a manejarlos.
+- **Enums con datos y match exhaustivo**: modelas estados con `enum` y el `match` debe cubrir todos los casos.
+- **Traits** en lugar de herencia: defines comportamiento compartido y lo implementas para cualquier tipo.
+- **Cargo**: gestor de paquetes, compilador, ejecutor de pruebas y generador de documentación en una sola herramienta.
+
+## Instálalo y corre tu primer archivo
+
+La forma oficial es `rustup`, que instala el compilador `rustc`, `cargo` y permite actualizar con un comando.
+
+<Pasos>
+
+1. **Windows**: descarga `rustup-init.exe` desde [rustup.rs](https://rustup.rs/) y ejecútalo. Si te pide las herramientas de compilación de Visual Studio (C++ build tools), acepta instalarlas: Rust las necesita para enlazar.
+2. **macOS y Linux**: abre una terminal y ejecuta `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Acepta la instalación por defecto.
+3. Cierra y vuelve a abrir la terminal. Comprueba con `rustc --version` y `cargo --version`.
+4. Crea un proyecto con `cargo new hola` y entra con `cd hola`. Cargo genera `Cargo.toml` (metadatos y dependencias) y `src/main.rs` con un Hola mundo.
+5. Ejecuta `cargo run`. Compila y muestra `Hello, world!`.
+6. Para actualizar Rust en el futuro, basta con `rustup update`.
+
+</Pasos>
+
+Cada ejemplo de esta guía reemplaza el contenido de `src/main.rs` y se corre con `cargo run`. Si prefieres un archivo suelto, `rustc archivo.rs` genera el ejecutable directamente. Como editor, Visual Studio Code con la extensión rust-analyzer te muestra los errores mientras escribes.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="src/main.rs" ejecutar="cargo run" salida="Hola, mundo">
+
+```rust
+fn main() {
+    // Todo programa empieza en main
+    println!("Hola, mundo");
+}
+```
+
+`println!` lleva signo de admiración porque es una macro, no una función. Las macros generan código al compilar; por ahora solo recuerda escribir el `!`.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables e inmutabilidad" archivo="src/main.rs" ejecutar="cargo run" salida={"Ana tiene 30 años y mide 1.68 m\nMayor de edad: true"}>
+
+```rust
+fn main() {
+    // let crea variables inmutables; mut permite cambiarlas
+    let nombre = "Ana";
+    let mut edad = 29;
+    edad += 1;
+
+    // Rust infiere los tipos, pero puedes anotarlos
+    let altura: f64 = 1.68;
+    let mayor_de_edad = edad >= 18;
+
+    println!("{nombre} tiene {edad} años y mide {altura} m");
+    println!("Mayor de edad: {mayor_de_edad}");
+}
+```
+
+Por defecto nada cambia: si quitas `mut`, la línea `edad += 1` no compila. Las variables van en snake_case y `println!` interpola directamente con el nombre entre llaves.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Funciones, if y match" archivo="src/main.rs" ejecutar="cargo run" salida={"-3 es negativo\n0 es cero\n7 es positivo\nDía 3: miércoles"}>
+
+```rust
+// Recibe un i32 y devuelve un texto fijo
+fn clasificar(n: i32) -> &'static str {
+    // if es una expresión: la última línea sin ; es el valor devuelto
+    if n < 0 {
+        "negativo"
+    } else if n == 0 {
+        "cero"
+    } else {
+        "positivo"
+    }
+}
+
+fn main() {
+    for n in [-3, 0, 7] {
+        println!("{n} es {}", clasificar(n));
+    }
+
+    // match obliga a cubrir todos los casos
+    let dia = 3;
+    let nombre = match dia {
+        1 => "lunes",
+        2 => "martes",
+        3 => "miércoles",
+        _ => "otro día",
+    };
+    println!("Día {dia}: {nombre}");
+}
+```
+
+En Rust casi todo es una expresión que produce un valor. Si quitas el brazo `_` del `match`, el compilador se niega porque hay enteros sin cubrir.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Mover y prestar valores" archivo="src/main.rs" ejecutar="cargo run" salida={"copia = hola\nlargo = 4\ncopia sigue viva: hola"}>
+
+```rust
+fn largo(texto: &String) -> usize {
+    // Recibimos una referencia: solo pedimos prestado el valor
+    texto.len()
+}
+
+fn main() {
+    let saludo = String::from("hola");
+
+    // Mover: saludo deja de ser válido, ahora el dueño es copia
+    let copia = saludo;
+    println!("copia = {copia}");
+
+    // Prestar: pasamos &copia y seguimos pudiendo usarla después
+    let n = largo(&copia);
+    println!("largo = {n}");
+    println!("copia sigue viva: {copia}");
+}
+```
+
+Si agregas `println!("{saludo}")` después del movimiento, el compilador responde "value borrowed here after move". Ese mensaje es el ownership en acción: un `String` tiene un solo dueño a la vez.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Enums, structs y métodos" archivo="src/main.rs" ejecutar="cargo run" salida={"Circulo(1.0) tiene área 3.14\nRectangulo { ancho: 2.0, alto: 3.5 } tiene área 7.00"}>
+
+```rust
+// derive(Debug) permite imprimir el valor con {:?}
+#[derive(Debug)]
+enum Figura {
+    Circulo(f64),
+    Rectangulo { ancho: f64, alto: f64 },
+}
+
+impl Figura {
+    // &self: el método toma prestado el valor, no lo consume
+    fn area(&self) -> f64 {
+        match self {
+            Figura::Circulo(radio) => 3.14159 * radio * radio,
+            Figura::Rectangulo { ancho, alto } => ancho * alto,
+        }
+    }
+}
+
+fn main() {
+    let figuras = vec![
+        Figura::Circulo(1.0),
+        Figura::Rectangulo { ancho: 2.0, alto: 3.5 },
+    ];
+
+    for f in &figuras {
+        println!("{:?} tiene área {:.2}", f, f.area());
+    }
+}
+```
+
+Cada variante del `enum` puede llevar datos distintos, y `match` los desempaqueta. `{:.2}` imprime con dos decimales. Recorremos `&figuras` para prestar el vector en vez de consumirlo.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Errores con Result y ausencia con Option" archivo="src/main.rs" ejecutar="cargo run" salida={"10 / 4 = 2.5\nError: no se puede dividir entre cero\nAna tiene 29\nPedro no está en el mapa"}>
+
+```rust
+use std::collections::HashMap;
+
+fn dividir(a: f64, b: f64) -> Result<f64, String> {
+    if b == 0.0 {
+        return Err(String::from("no se puede dividir entre cero"));
+    }
+    Ok(a / b)
+}
+
+fn main() {
+    // Result obliga a decidir qué hacer con el error
+    match dividir(10.0, 4.0) {
+        Ok(r) => println!("10 / 4 = {r}"),
+        Err(e) => println!("Error: {e}"),
+    }
+    match dividir(1.0, 0.0) {
+        Ok(r) => println!("1 / 0 = {r}"),
+        Err(e) => println!("Error: {e}"),
+    }
+
+    // Option: buscar en un mapa puede no encontrar nada
+    let mut edades = HashMap::new();
+    edades.insert("Ana", 29);
+    edades.insert("Luis", 34);
+
+    for nombre in ["Ana", "Pedro"] {
+        match edades.get(nombre) {
+            Some(edad) => println!("{nombre} tiene {edad}"),
+            None => println!("{nombre} no está en el mapa"),
+        }
+    }
+}
+```
+
+No existe `null`: `get` devuelve `Option`, y no puedes usar el valor sin antes comprobar si es `Some` o `None`. Lo mismo con `Result`: el error viaja como un valor normal y nunca se ignora por accidente.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Usar un valor después de moverlo">
+El mensaje "value borrowed here after move" significa que asignaste o pasaste un valor y luego intentaste usarlo. Soluciones, en este orden: pasa una referencia (`&valor`), reorganiza el código para que el dueño sea claro, o clona (`valor.clone()`) solo cuando de verdad necesites dos copias.
+</Callout>
+
+<Callout tipo="warning" titulo="Mezclar préstamos mutables e inmutables">
+"cannot borrow as mutable because it is also borrowed as immutable" aparece cuando tienes una referencia de lectura viva y quieres modificar el valor. Acorta el alcance de la primera referencia (termina de usarla antes de mutar) o separa la lectura y la escritura en bloques distintos.
+</Callout>
+
+<Callout tipo="warning" titulo="Indexar un String como si fuera un arreglo">
+`s[0]` no compila porque un `String` guarda bytes UTF-8 y un carácter puede ocupar varios. Usa `s.chars().nth(0)` para caracteres o `s.bytes()` para bytes, y recuerda que `len()` cuenta bytes, no letras.
+</Callout>
+
+<Callout tipo="warning" titulo="Abusar de unwrap">
+`unwrap()` saca el valor de un `Option` o `Result` y provoca un pánico si está vacío o es error. Sirve para prototipos y pruebas; en código real usa `match`, `if let`, el operador `?` para propagar errores, o `unwrap_or` con un valor por defecto.
+</Callout>
+
+<Callout tipo="warning" titulo="Clonar todo para callar al compilador">
+Llenar el código de `clone()` y `Rc<RefCell<T>>` para evitar errores de ownership suele indicar un diseño que pelea contra el lenguaje. Antes de clonar, pregúntate quién debería ser el dueño del dato y si una referencia bastaría.
+</Callout>
+
+## Buenas prácticas
+
+- Corre `cargo fmt` para formatear y `cargo clippy` para recibir sugerencias del linter oficial antes de compartir código.
+- Usa `cargo check` mientras escribes: valida sin generar el binario y es mucho más rápido que `cargo build`.
+- Escribe pruebas junto al código con `#[test]` y córrelas con `cargo test`.
+- Prefiere `&str` como parámetro cuando solo lees texto, y `String` cuando necesitas ser dueño del valor.
+- Maneja los errores con `Result` y el operador `?`; reserva `panic!` para situaciones imposibles de recuperar.
+- Lee los mensajes del compilador completos: casi siempre incluyen la solución exacta.
+
+## Siguiente paso
+
+Ya entiendes ownership, enums, `Result` y `Option`, que son la base de todo lo demás. Para continuar:
+
+- **Traits y genéricos**: el capítulo 10 de [El Lenguaje de Programación Rust](https://book.rustlang-es.org/) explica cómo escribir código reutilizable.
+- **Colecciones e iteradores**: `Vec`, `HashMap` y los métodos `map`, `filter` y `collect` sustituyen a la mayoría de los bucles.
+- **Una herramienta de línea de comandos**: con la crate `clap` puedes construir tu primer programa útil en una tarde.
+- **Control de versiones**: guarda tu progreso con la [guía de Git](/guias/git/).
+- **Si vienes de C o C++**: compara con la [guía de C](/guias/c/) para ver qué problemas resuelve Rust de otra manera.
+
+Explora más libros y cursos gratis en la [biblioteca de Rust](/biblioteca/rust/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

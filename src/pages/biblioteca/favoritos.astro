@@ -1,0 +1,97 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Biblioteca', href: '/biblioteca/' },
+  { nombre: 'Favoritos', href: '/biblioteca/favoritos/' },
+];
+---
+
+<BaseLayout title="Tus favoritos" description="Los recursos que guardaste en este navegador." path="/biblioteca/favoritos/" noindex>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Biblioteca" titulo="Tus favoritos" descripcion="Se guardan solo en este navegador. Puedes exportarlos para llevarlos a otro dispositivo." />
+
+    <div class="mt-6 flex flex-wrap gap-2">
+      <button type="button" class="btn btn-secondary btn-sm" data-fav-export><Icon name="download" class="h-4 w-4" /> Exportar JSON</button>
+      <label class="btn btn-secondary btn-sm cursor-pointer">
+        <Icon name="upload" class="h-4 w-4" /> Importar JSON
+        <input type="file" accept="application/json" class="visually-hidden" data-fav-import />
+      </label>
+      <button type="button" class="btn btn-ghost btn-sm" data-fav-clear><Icon name="trash" class="h-4 w-4" /> Vaciar</button>
+    </div>
+
+    <p class="mt-6 text-sm text-muted" data-fav-status aria-live="polite">Cargando tus favoritos...</p>
+    <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" data-fav-list></div>
+
+    <noscript>
+      <p class="card mt-6 p-6 text-sm">Los favoritos necesitan JavaScript activado para guardarse en tu navegador.</p>
+    </noscript>
+  </div>
+</BaseLayout>
+
+<script>
+  import { favoritos, reemplazarFavoritos, alCambiarFavoritos } from '@/scripts/favoritos';
+
+  interface Recurso { id: string; titulo: string; autor: string; url: string; tema: string; descripcion: string; tipo: string; nivel: string }
+
+  const lista = document.querySelector<HTMLElement>('[data-fav-list]');
+  const status = document.querySelector<HTMLElement>('[data-fav-status]');
+  let catalogo: Recurso[] = [];
+
+  const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
+
+  const render = () => {
+    if (!lista || !status) return;
+    const ids = favoritos();
+    const items = ids.map((id) => catalogo.find((r) => r.id === id)).filter((r): r is Recurso => Boolean(r));
+    status.textContent = items.length ? `${items.length} ${items.length === 1 ? 'recurso guardado' : 'recursos guardados'}.` : 'Aún no guardas nada. Pulsa el corazón en cualquier recurso de la biblioteca.';
+    lista.innerHTML = items
+      .map(
+        (r) => `<article class="card flex flex-col gap-2 p-5">
+          <div class="flex items-start justify-between gap-3">
+            <span class="badge badge-accent">${escapar(r.tipo)}</span>
+            <button type="button" data-fav-id="${escapar(r.id)}" aria-pressed="true" class="chip" title="Quitar de favoritos">Quitar</button>
+          </div>
+          <h2 class="text-lg font-semibold leading-snug"><a href="${escapar(r.url)}" rel="noopener" target="_blank" class="hover:text-accent-ink">${escapar(r.titulo)}</a></h2>
+          <p class="text-sm text-muted">${escapar(r.autor)}</p>
+          <p class="text-sm">${escapar(r.descripcion)}</p>
+          <a href="/biblioteca/${escapar(r.tema)}/#${escapar(r.id)}" class="mt-auto text-xs text-muted hover:text-fg">Ver en la biblioteca</a>
+        </article>`
+      )
+      .join('');
+  };
+
+  fetch('/recursos.json')
+    .then((r) => r.json())
+    .then((data: Recurso[]) => { catalogo = data; render(); })
+    .catch(() => { if (status) status.textContent = 'No se pudo cargar el catálogo.'; });
+
+  alCambiarFavoritos(render);
+
+  document.querySelector('[data-fav-export]')?.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(favoritos(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ayudadev-favoritos.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.querySelector<HTMLInputElement>('[data-fav-import]')?.addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (Array.isArray(data)) reemplazarFavoritos([...favoritos(), ...data.filter((x) => typeof x === 'string')]);
+    } catch {
+      if (status) status.textContent = 'Ese archivo no es una lista de favoritos válida.';
+    }
+  });
+  document.querySelector('[data-fav-clear]')?.addEventListener('click', () => {
+    if (confirm('¿Vaciar tus favoritos?')) reemplazarFavoritos([]);
+  });
+</script>

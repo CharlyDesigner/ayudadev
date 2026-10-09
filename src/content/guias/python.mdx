@@ -1,0 +1,218 @@
+---
+titulo: 'Python desde cero'
+descripcion: 'Qué es Python, cómo instalarlo en Windows, macOS y Linux, y tus primeros programas con ejemplos que corren tal cual.'
+tema: python
+nivel: principiante
+tiempoLectura: 25
+publicado: 2026-10-09
+libros: ['python-aprende-python-sdelquin', 'python-tutorial-oficial', 'python-manual-aprende-con-alf', 'python-intermedio']
+requisitos: ['Saber abrir una terminal y moverte entre carpetas']
+etiquetas: ['scripts', 'datos', 'automatizacion', 'principiante']
+orden: 12
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Python es el lenguaje que más se recomienda para empezar a programar: se lee casi como inglés, trae una biblioteca estándar enorme y sirve para scripts, automatización, análisis de datos, web e inteligencia artificial. Esta guía te lleva desde la instalación hasta leer y escribir archivos.
+
+## Qué es y para qué sirve
+
+- **Se interpreta.** Escribes un archivo `.py` y el intérprete (CPython) lo convierte a bytecode y lo ejecuta. No hay paso de compilación visible.
+- **Tipado dinámico y fuerte.** Las variables son nombres que apuntan a objetos; el tipo vive en el objeto. A diferencia de JavaScript, Python no mezcla tipos a escondidas: `"5" + 2` lanza un error en vez de inventar un resultado.
+- **Las anotaciones de tipo son opcionales.** Puedes escribir `def area(base: float) -> float` para documentar y que el editor te ayude, pero Python no las impone al ejecutar.
+- **Memoria automática.** Conteo de referencias más un recolector de ciclos. Asignar no copia: `b = a` hace que ambos nombres apunten al mismo objeto.
+- **La indentación define los bloques.** No hay llaves: cuatro espacios marcan qué va dentro de un `if`, un `for` o una función.
+- **Multiparadigma.** Funciones, clases, comprensiones y módulos. Todo es un objeto, incluidas las funciones.
+- **"Baterías incluidas".** Archivos, fechas, JSON, expresiones regulares, pruebas y mucho más vienen con el lenguaje. Para lo demás está PyPI, el repositorio de paquetes.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala Python.** En **Windows** descarga el instalador desde [python.org/downloads](https://www.python.org/downloads/) y marca la casilla **"Add python.exe to PATH"** antes de instalar. En **macOS** usa el instalador de python.org o `brew install python` con Homebrew. En **Linux** suele venir instalado; si no, `sudo apt install python3` (Debian y Ubuntu) o el equivalente de tu distribución.
+2. **Comprueba que funciona.** Abre una terminal nueva y escribe `python --version` (en macOS y Linux normalmente es `python3 --version`). Debe mostrar un número de versión.
+3. **Crea una carpeta para practicar**: `mkdir aprendo-python` y `cd aprendo-python`.
+4. **Crea el archivo `hola.py`** con tu editor (recomendamos [VS Code](https://code.visualstudio.com/) con la extensión oficial de Python) y pega el código del ejemplo 1.
+5. **Ejecútalo** con `python hola.py` (o `python3 hola.py`). Si ves el saludo, estás listo.
+
+</Pasos>
+
+Si prefieres una herramienta que gestione versiones de Python y dependencias de forma automática, [uv](https://docs.astral.sh/uv/) es la opción moderna: `uv init mi-proyecto` crea el proyecto y `uv run hola.py` lo ejecuta en su propio entorno.
+
+## Ejemplos paso a paso
+
+En los comandos usamos `python`; si tu sistema solo reconoce `python3`, cámbialo.
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.py" ejecutar="python hola.py" salida="Hola, Ana. Bienvenida a Python">
+
+```python
+# Tu primer programa: imprime un saludo en la terminal
+nombre = "Ana"
+print(f"Hola, {nombre}. Bienvenida a Python")
+```
+
+No hay que declarar el tipo ni usar punto y coma. La `f` antes de las comillas crea una *f-string*: lo que va entre llaves se evalúa y se inserta en el texto.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Tipos, conversiones y aritmética" archivo="tipos.py" ejecutar="python tipos.py" salida={"<class 'int'>\n<class 'str'>\nEdad: 28\nEdad: 28\n3.5\n3\n1024"}>
+
+```python
+# Tipado dinámico: la variable es un nombre, el tipo está en el objeto
+dato = 42
+print(type(dato))
+dato = "ahora soy texto"
+print(type(dato))
+
+# Tipado fuerte: Python no mezcla tipos a escondidas
+edad = 28
+print("Edad: " + str(edad))   # conviertes tú de forma explícita
+print(f"Edad: {edad}")        # o usas una f-string, más cómodo
+
+# Operaciones básicas
+print(7 / 2)    # división siempre da float
+print(7 // 2)   # división entera
+print(2 ** 10)  # potencia
+```
+
+Si quitas el `str()` de la primera concatenación, Python lanza `TypeError: can only concatenate str (not "int") to str`. Eso es el tipado fuerte protegiéndote. Fíjate también en que `/` siempre devuelve decimal y `//` devuelve el cociente entero.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Listas, diccionarios y comprensiones" archivo="listas.py" ejecutar="python listas.py" salida={"4 ['manzana', 'pera', 'uva', 'mango']\n1. manzana\n2. pera\n3. uva\n4. mango\n['MANZANA', 'MANGO']\nmanzana: $20\npera: $25\nuva: $60\nsin precio"}>
+
+```python
+# Listas y diccionarios, las dos estructuras que más vas a usar
+frutas = ["manzana", "pera", "uva"]
+frutas.append("mango")
+print(len(frutas), frutas)
+
+# enumerate te da índice y valor sin contadores manuales
+for i, fruta in enumerate(frutas, start=1):
+    print(f"{i}. {fruta}")
+
+# Comprensión de lista: crea una lista nueva en una línea
+largas = [f.upper() for f in frutas if len(f) > 4]
+print(largas)
+
+# Diccionario: pares clave-valor
+precios = {"manzana": 20, "pera": 25, "uva": 60}
+for fruta, precio in precios.items():
+    print(f"{fruta}: ${precio}")
+
+print(precios.get("mango", "sin precio"))
+```
+
+Observa la indentación: las líneas dentro del `for` llevan cuatro espacios. `enumerate` y `.items()` son la forma idiomática de recorrer; no necesitas índices manuales. La comprensión `[... for ... if ...]` reemplaza a un bucle que crea una lista y hace `append`. `dict.get` devuelve un valor por defecto en vez de lanzar error si la clave no existe.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Funciones, anotaciones y dataclasses" archivo="funciones.py" ejecutar="python funciones.py" salida={'12\n5.0\n16\nPunto(x=3, y=4)\n5.0'}>
+
+```python
+from dataclasses import dataclass
+
+
+# Las anotaciones de tipo documentan y ayudan al editor (no se imponen al ejecutar)
+def area_rectangulo(base: float, altura: float = 1.0) -> float:
+    """Devuelve el área de un rectángulo."""
+    return base * altura
+
+
+print(area_rectangulo(3, 4))
+print(area_rectangulo(5))              # usa el valor por defecto
+print(area_rectangulo(altura=2, base=8))  # argumentos con nombre
+
+
+# dataclass genera __init__, __repr__ y comparación por ti
+@dataclass
+class Punto:
+    x: float
+    y: float = 0.0
+
+    def distancia_al_origen(self) -> float:
+        return (self.x**2 + self.y**2) ** 0.5
+
+
+p = Punto(3, 4)
+print(p)
+print(p.distancia_al_origen())
+```
+
+La primera llamada imprime `12` y no `12.0`: las anotaciones no convierten nada, solo informan. El texto entre triples comillas es el *docstring*, la documentación de la función. Con `@dataclass` defines una clase de datos en pocas líneas y obtienes gratis el constructor y una representación legible al imprimir.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Archivos y manejo de errores" archivo="archivos.py" ejecutar="python archivos.py" salida={'1: Comprar café\n2: Estudiar Python\nNo encontré el archivo: no-existe.txt'}>
+
+```python
+from pathlib import Path
+
+# pathlib maneja rutas en cualquier sistema operativo
+ruta = Path("notas.txt")
+
+# with cierra el archivo solo, incluso si algo falla
+with ruta.open("w", encoding="utf-8") as archivo:
+    archivo.write("Comprar café\n")
+    archivo.write("Estudiar Python\n")
+
+# Leer línea por línea
+with ruta.open(encoding="utf-8") as archivo:
+    for numero, linea in enumerate(archivo, start=1):
+        print(f"{numero}: {linea.strip()}")
+
+# Manejo de errores: intenta y captura solo lo que esperas
+try:
+    Path("no-existe.txt").read_text(encoding="utf-8")
+except FileNotFoundError as e:
+    print("No encontré el archivo:", e.filename)
+```
+
+El bloque `with` garantiza que el archivo se cierre aunque ocurra un error. Indicar `encoding="utf-8"` evita que los acentos se rompan en Windows. En Python se prefiere intentar la operación y capturar la excepción concreta (`FileNotFoundError`) en vez de comprobar antes si el archivo existe. Al terminar, verás un archivo `notas.txt` en tu carpeta.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Mezclar tabuladores y espacios">
+Python exige indentación consistente. Si copias código de distintas fuentes puedes acabar con `IndentationError` o `TabError`. Configura tu editor para que la tecla Tab inserte cuatro espacios y listo.
+</Callout>
+
+<Callout tipo="warning" titulo="Argumentos por defecto mutables">
+`def agregar(x, lista=[])` comparte la misma lista entre todas las llamadas, así que los valores se acumulan "misteriosamente". Usa `lista=None` y dentro `if lista is None: lista = []`.
+</Callout>
+
+<Callout tipo="warning" titulo="Creer que b = a copia la lista">
+`b = a` crea un segundo nombre para el mismo objeto: si cambias `b`, cambia `a`. Para copiar usa `b = a.copy()` o `b = list(a)`; para estructuras anidadas, `copy.deepcopy(a)`. La trampa clásica es `[[0] * 3] * 3`, que crea tres filas que son la misma lista.
+</Callout>
+
+<Callout tipo="warning" titulo="Instalar paquetes en el Python del sistema">
+Cada proyecto debe tener su entorno virtual: `python -m venv .venv`, actívalo (`.venv\Scripts\activate` en Windows, `source .venv/bin/activate` en macOS y Linux) y entonces `pip install`. Así evitas conflictos de versiones entre proyectos. Con `uv` esto ocurre de forma automática.
+</Callout>
+
+<Callout tipo="warning" titulo="except desnudo que se traga todo">
+Un `except:` sin tipo (o `except Exception` sin hacer nada) oculta errores reales y hasta impide detener el programa con Ctrl+C. Captura solo la excepción que esperas, como `FileNotFoundError` o `ValueError`, y deja pasar el resto.
+</Callout>
+
+## Buenas prácticas
+
+- Sigue PEP 8: `snake_case` para funciones y variables, `PascalCase` para clases, cuatro espacios de indentación. Deja que `ruff format` o `black` formateen por ti.
+- Recorre con `for ... in`, `enumerate`, `zip` y `.items()`; evita `range(len(lista))`.
+- Usa `pathlib` para rutas y `with` para abrir archivos, siempre con `encoding="utf-8"`.
+- Escribe funciones cortas con docstring y anotaciones de tipo; `mypy` o `pyright` las verifican por ti.
+- Usa `dataclasses` para agrupar datos en vez de diccionarios sueltos.
+- Pon el código principal bajo `if __name__ == "__main__":` para poder importar el archivo sin ejecutarlo.
+- Un entorno virtual por proyecto y las dependencias anotadas en `pyproject.toml` o `requirements.txt`.
+- Añade `ruff` como linter desde el primer día: atrapa errores comunes y ordena los imports.
+
+## Siguiente paso
+
+- **Practica con problemas pequeños.** Automatiza algo real: renombrar archivos, leer un CSV, descargar una página. El [tutorial oficial](https://docs.python.org/es/3/tutorial/) tiene un capítulo sobre la biblioteca estándar que te dará ideas.
+- **Datos.** Si te interesa el análisis de datos, el [Manual de Python](https://aprendeconalf.es/python-manual/) introduce NumPy y pandas, y la [biblioteca de inteligencia artificial](/biblioteca/inteligencia-artificial/) tiene el siguiente nivel.
+- **Web.** Para crear sitios y APIs con Python, revisa los recursos de [Django](/biblioteca/django/).
+- **Guarda tu progreso** con [Git y GitHub](/biblioteca/git/) y explora más libros gratuitos en la [biblioteca de Python](/biblioteca/python/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

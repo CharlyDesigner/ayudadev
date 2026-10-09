@@ -1,0 +1,36 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import { SITE } from '@data/site';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('aprende', (a) => !a.data.borrador)).sort((a, b) => a.data.orden - b.data.orden);
+  return lista.map((a, i) => ({ params: { slug: a.id }, props: { a, anterior: lista[i - 1] ?? null, siguiente: lista[i + 1] ?? null } }));
+}
+
+const { a, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(a);
+const path = `/ia/aprende/${a.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'IA', href: '/ia/' },
+  { nombre: 'Aprende con IA', href: '/ia/aprende/' },
+  { nombre: a.data.titulo, href: path },
+];
+---
+
+<ArticleLayout
+  titulo={a.data.titulo}
+  descripcion={a.data.descripcion}
+  path={path}
+  eyebrow="Aprende con IA"
+  migas={migas}
+  headings={headings}
+  publicado={a.data.publicado}
+  actualizado={a.data.actualizado}
+  anterior={anterior ? { titulo: anterior.data.titulo, href: `/ia/aprende/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.titulo, href: `/ia/aprende/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/aprende/${a.id}.mdx`}
+>
+  <Content />
+</ArticleLayout>

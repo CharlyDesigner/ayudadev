@@ -1,0 +1,87 @@
+---
+nombre: 'Cursor'
+empresa: 'Anysphere'
+descripcion: 'Editor de código basado en VS Code con IA integrada: chat, autocompletado y un agente que edita varios archivos. Tiene plan Hobby gratuito.'
+tipo: ide
+sitio: 'https://cursor.com'
+docs: 'https://cursor.com/docs'
+planGratis: limitado
+precioUrl: 'https://cursor.com/pricing'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 6
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+Cursor es un editor de código completo, construido sobre la base de VS Code, con la inteligencia artificial integrada en todas partes. Tiene autocompletado predictivo, un chat que conoce tu proyecto y un modo agente que puede crear y modificar varios archivos a partir de una instrucción.
+
+Como está basado en VS Code, puedes importar tus extensiones, temas y atajos. Cursor ofrece un plan Hobby gratuito con uso limitado y planes de pago. Consulta la [página oficial de precios](https://cursor.com/pricing) para ver qué incluye cada plan hoy.
+
+## Para qué sirve si estás aprendiendo
+
+Cursor es atractivo porque la IA está a un atajo de distancia. Para aprender funciona bien si marcas límites:
+
+- Seleccionas un bloque de código y preguntas qué hace, sin salir del editor.
+- Pides que genere un archivo de ejemplo y luego lo lees con calma.
+- Usas el chat para entender errores con el contexto del proyecto completo.
+- Dejas que el agente haga tareas mecánicas (renombrar, mover, crear estructura) mientras tú escribes la lógica.
+
+El peligro es el mismo que con cualquier asistente dentro del editor: aceptar sin leer. Si estás en tus primeras semanas, desactiva el autocompletado y usa solo el chat.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Descarga Cursor desde [cursor.com](https://cursor.com) e instálalo. Si usas VS Code, acepta importar tu configuración.
+2. Abre una carpeta con un proyecto pequeño, propio o de un tutorial.
+3. Selecciona unas líneas de código y abre el chat. Pregunta: "¿Qué hace este bloque y por qué?".
+4. Pide un cambio pequeño en modo agente y revisa el diff archivo por archivo antes de aceptar.
+5. Entra a la configuración y decide si quieres las sugerencias automáticas encendidas o solo el chat.
+
+</Pasos>
+
+Un flujo típico en el editor se ve así:
+
+```text
+1. Abres src/calculadora.js y seleccionas la función sumar().
+2. Abres el chat y escribes: "Explícame esta función y dime qué pasa si le paso texto en vez de números".
+3. Cursor responde y te propone una validación.
+4. En vez de aceptar, escribes tú la validación y le pides: "Revisa mi versión, no la cambies".
+5. Corres node src/calculadora.js en la terminal integrada para comprobar.
+```
+
+<Callout tipo="tip" titulo="Reglas del proyecto">
+Cursor permite guardar reglas para el proyecto. Escribe ahí algo como "Estoy aprendiendo: explícame antes de cambiar y no reescribas funciones que yo escribí sin preguntar". Así cada conversación arranca con tu contexto.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Explícame qué hace el código que tengo seleccionado, línea por línea, en español sencillo. Si ves algo que podría fallar, dímelo, pero no lo cambies.
+```
+
+```text
+Quiero crear [FUNCIÓN O COMPONENTE] en [LENGUAJE]. Antes de escribir código, dame un plan de 4 o 5 pasos y las preguntas que me harías para entender mejor el requisito.
+```
+
+```text
+Acabo de escribir [ARCHIVO] yo mismo. Revísalo como un mentor: qué está bien, qué cambiarías y qué prueba escribirías primero. No lo reescribas.
+```
+
+## Límites y cuidados
+
+- **El agente edita archivos.** Usa git y haz commit antes de pedir cambios grandes para poder revertir.
+- **Alucinaciones.** Puede sugerir importaciones o métodos que no existen. Corre el código y lee los errores.
+- **Privacidad.** Revisa en la [documentación](https://cursor.com/docs) las opciones de privacidad y qué se envía a los servidores según tu configuración.
+- **Secretos.** No dejes archivos `.env` con claves reales dentro del proyecto que abres; usa `.gitignore` y revisa qué archivos puede leer la IA.
+- **Aprender vs copiar.** Si el agente escribe todo, tú solo lees. Alterna: una tarea tú, una tarea con ayuda, y siempre explica con tus palabras lo que aceptaste.
+
+## Enlaces oficiales
+
+- [Sitio de Cursor](https://cursor.com)
+- [Documentación](https://cursor.com/docs)
+- [Planes y precios](https://cursor.com/pricing)

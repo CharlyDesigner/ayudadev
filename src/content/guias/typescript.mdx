@@ -1,0 +1,218 @@
+---
+titulo: 'TypeScript desde cero'
+descripcion: 'Qué aporta TypeScript sobre JavaScript, cómo instalarlo y tus primeros archivos tipados con ejemplos que corren tal cual.'
+tema: typescript
+nivel: principiante
+tiempoLectura: 25
+publicado: 2026-10-09
+libros: ['typescript-introduccion-valverde', 'typescript-concise-typescript-book', 'typescript-handbook-oficial', 'typescript-clean-code-es']
+requisitos: ['Conocer lo básico de JavaScript: variables, funciones, objetos y arreglos', 'Tener Node.js instalado']
+etiquetas: ['tipos', 'node', 'tsc', 'principiante']
+orden: 11
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+TypeScript es JavaScript con anotaciones de tipo. Escribes casi el mismo código, pero el editor te avisa de errores antes de ejecutar y te autocompleta con precisión. Si ya diste tus primeros pasos con JavaScript (si no, empieza por [JavaScript desde cero](/guias/javascript/)), esta guía te enseña a añadir tipos sin complicarte.
+
+## Qué es y para qué sirve
+
+- **Es un superconjunto de JavaScript.** Todo archivo `.js` válido es TypeScript válido. Solo agregas tipos donde aportan valor.
+- **Los tipos se comprueban antes de ejecutar y luego desaparecen.** El compilador (`tsc`) revisa tu código y emite JavaScript normal. En tiempo de ejecución no queda rastro de los tipos: por eso no puedes preguntar `instanceof` a una interfaz.
+- **Tipado estático y estructural.** Dos tipos son compatibles si tienen la misma forma (las mismas propiedades), sin importar cómo se llamen.
+- **Inferencia.** No tienes que anotar todo: si escribes `const edad = 31`, TypeScript ya sabe que es `number`. Anota los límites (parámetros y retornos de funciones) y deja que infiera el resto.
+- **Ejecución y memoria** son las de JavaScript: motor V8, un hilo, recolector de basura, promesas y `async/await`.
+- **Estrictitud gradual.** Con `"strict": true` obtienes las comprobaciones más útiles (por ejemplo, que `null` no se cuele donde esperas un objeto). Actívalo desde el primer día.
+- **Para qué sirve.** Proyectos que crecen, equipos, librerías y cualquier código donde un error en producción cueste caro. Frameworks como React, Angular, Astro o Svelte lo soportan de forma nativa.
+
+## Instálalo y corre tu primer archivo
+
+Necesitas Node.js (ver la guía de [JavaScript](/guias/javascript/)). Los pasos son iguales en Windows, macOS y Linux.
+
+<Pasos>
+
+1. **Crea un proyecto.** En la terminal: `mkdir aprendo-ts`, `cd aprendo-ts` y `npm init -y`. Luego `npm pkg set type=module` para usar módulos modernos.
+2. **Instala TypeScript y tsx** como dependencias de desarrollo: `npm i -D typescript tsx @types/node`. `tsx` ejecuta archivos `.ts` directamente sin paso de compilación manual.
+3. **Genera la configuración** con `npx tsc --init`. Abre `tsconfig.json` y confirma que `"strict": true` está activado. Es el ajuste más importante.
+4. **Crea `hola.ts`** con el código del ejemplo 1.
+5. **Ejecútalo** con `npx tsx hola.ts`. Para solo comprobar tipos sin ejecutar usa `npx tsc --noEmit`.
+
+</Pasos>
+
+Las versiones recientes de Node.js también pueden ejecutar `node hola.ts` directamente (quitan los tipos, sin comprobarlos). `tsx` funciona en cualquier versión y es lo que usan estos ejemplos.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Tu primera función tipada" archivo="hola.ts" ejecutar="npx tsx hola.ts" salida="Hola, Ana. Hola, Ana.">
+
+```ts
+// Anotas el tipo una vez y el editor te avisa si te equivocas
+function saludar(nombre: string, veces: number): string {
+  return `Hola, ${nombre}. `.repeat(veces).trim();
+}
+
+console.log(saludar('Ana', 2));
+
+// Descomenta la siguiente línea y verás el error antes de ejecutar:
+// saludar('Ana', '2');
+```
+
+Los dos puntos después de cada parámetro indican su tipo, y el `: string` después del paréntesis es el tipo de retorno. Si descomentas la última línea y ejecutas `npx tsc --noEmit`, verás: `Argument of type 'string' is not assignable to parameter of type 'number'`. Ese aviso, antes de ejecutar nada, es todo el punto de TypeScript.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Interfaces para describir objetos" archivo="interfaz.ts" ejecutar="npx tsx interfaz.ts" salida="120">
+
+```ts
+// Una interfaz describe la forma de un objeto
+interface Producto {
+  nombre: string;
+  precio: number;
+  enStock?: boolean; // opcional
+}
+
+const productos: Producto[] = [
+  { nombre: 'Café', precio: 120, enStock: true },
+  { nombre: 'Pan', precio: 35 },
+];
+
+function totalEnStock(lista: Producto[]): number {
+  return lista
+    .filter((p) => p.enStock) // undefined cuenta como falso
+    .reduce((suma, p) => suma + p.precio, 0);
+}
+
+console.log(totalEnStock(productos));
+```
+
+`Producto[]` significa "arreglo de Producto". El signo `?` marca una propiedad opcional, así que el pan es válido sin `enStock`. Si escribieras `precio: '35'` o inventaras una propiedad, TypeScript lo marcaría al instante. Dentro del `filter`, `p` ya se infiere como `Producto` sin anotarlo.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Uniones discriminadas" archivo="union.ts" ejecutar="npx tsx union.ts" salida={'Resultado: 2.5\nError: No se puede dividir entre cero'}>
+
+```ts
+// Uniones discriminadas: cada caso lleva su etiqueta
+type Resultado =
+  | { ok: true; valor: number }
+  | { ok: false; error: string };
+
+function dividir(a: number, b: number): Resultado {
+  if (b === 0) return { ok: false, error: 'No se puede dividir entre cero' };
+  return { ok: true, valor: a / b };
+}
+
+function mostrar(r: Resultado): string {
+  // Dentro del if, TypeScript sabe que r.valor existe
+  if (r.ok) return `Resultado: ${r.valor}`;
+  return `Error: ${r.error}`;
+}
+
+console.log(mostrar(dividir(10, 4)));
+console.log(mostrar(dividir(1, 0)));
+```
+
+Un tipo `Resultado` puede ser una de dos formas, y la propiedad `ok` dice cuál. Al comprobar `r.ok`, TypeScript "estrecha" el tipo: en una rama existe `valor`, en la otra `error`, y te impide acceder a la propiedad equivocada. Este patrón sustituye a lanzar excepciones para errores esperados.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Genéricos: funciones que sirven para cualquier tipo" archivo="genericos.ts" ejecutar="npx tsx genericos.ts" salida={'10 a\nLuis'}>
+
+```ts
+// Un genérico es un tipo "parámetro": funciona con cualquier T
+function primero<T>(lista: T[]): T | undefined {
+  return lista[0];
+}
+
+const n = primero([10, 20, 30]); // n es number | undefined
+const s = primero(['a', 'b']);   // s es string | undefined
+
+console.log(n, s);
+
+// Restricción: K debe ser una clave de T
+function propiedad<T, K extends keyof T>(obj: T, clave: K): T[K] {
+  return obj[clave];
+}
+
+const persona = { nombre: 'Luis', edad: 31 };
+console.log(propiedad(persona, 'nombre'));
+// propiedad(persona, 'correo'); // error: 'correo' no es clave de persona
+```
+
+`T` se rellena solo con el tipo del argumento que pases: con números devuelve `number`, con textos devuelve `string`. El retorno incluye `undefined` porque la lista podría estar vacía, y TypeScript te obligará a tenerlo en cuenta. En la segunda función, `K extends keyof T` limita la clave a las propiedades reales del objeto.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Datos externos: de unknown a un tipo seguro" archivo="unknown.ts" ejecutar="npx tsx unknown.ts" salida="Ana tiene 28 años">
+
+```ts
+// Los datos externos (JSON, API, formularios) llegan como unknown
+const texto = '{"nombre":"Ana","edad":28}';
+const datos: unknown = JSON.parse(texto);
+
+// Un type guard comprueba la forma en tiempo de ejecución
+function esPersona(x: unknown): x is { nombre: string; edad: number } {
+  return (
+    typeof x === 'object' &&
+    x !== null &&
+    typeof (x as { nombre?: unknown }).nombre === 'string' &&
+    typeof (x as { edad?: unknown }).edad === 'number'
+  );
+}
+
+if (esPersona(datos)) {
+  // Aquí TypeScript ya sabe que datos tiene nombre y edad
+  console.log(`${datos.nombre} tiene ${datos.edad} años`);
+} else {
+  console.log('El JSON no tiene la forma esperada');
+}
+```
+
+`unknown` es el tipo honesto para algo que no conoces: no te deja usarlo hasta que compruebes qué es. La función `esPersona` devuelve `x is ...`, un *type guard*: si devuelve `true`, TypeScript trata `datos` como una persona dentro del `if`. En proyectos reales, librerías como zod hacen esta validación por ti y derivan el tipo del esquema.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Usar any para que deje de quejarse">
+`any` apaga el comprobador para ese valor y se contagia a todo lo que toca. Si no sabes qué llega, usa `unknown` y estrecha el tipo con `typeof`, `instanceof` o un type guard. Lo mismo con `as`: una aserción no valida nada, solo le dice al compilador "confía en mí".
+</Callout>
+
+<Callout tipo="warning" titulo="Creer que el tipo valida los datos de una API">
+Escribir `const user = (await res.json()) as Usuario` no comprueba nada: los tipos desaparecen al ejecutar. Si el servidor cambia la respuesta, tu programa fallará en otro lugar y será difícil de rastrear. Valida en los límites del sistema (ejemplo 5 o zod).
+</Callout>
+
+<Callout tipo="warning" titulo="catch (e) es unknown con strict">
+En modo estricto no puedes hacer `e.message` directamente. Estrecha primero: `if (e instanceof Error) console.log(e.message)`. Es molesto al principio, pero evita suponer que todo lo que se lanza es un `Error`.
+</Callout>
+
+<Callout tipo="warning" titulo="Imports sin extensión en módulos ESM">
+Con `"module": "NodeNext"` los imports relativos llevan extensión `.js` aunque el archivo sea `.ts`: `import { suma } from './suma.js'`. Si ves `ERR_MODULE_NOT_FOUND` al ejecutar, casi siempre es esto o una mezcla de CommonJS y ESM.
+</Callout>
+
+<Callout tipo="warning" titulo="Confiar en que arr[0] existe">
+Por defecto, `lista[0]` se tipa como el elemento aunque la lista esté vacía. Activa `"noUncheckedIndexedAccess": true` en `tsconfig.json` para que el acceso por índice incluya `undefined` y te obligue a comprobarlo. Lo mismo aplica a `Object.keys`, que devuelve `string[]`, no las claves exactas de tu tipo.
+</Callout>
+
+## Buenas prácticas
+
+- Activa `"strict": true` desde el primer proyecto. Migrar después cuesta mucho más.
+- Anota parámetros y retornos de funciones públicas; deja que el resto se infiera.
+- Modela los estados con uniones discriminadas en vez de varias propiedades opcionales que "no deberían" combinarse.
+- Prefiere `unknown` a `any`, y valida los datos externos en tiempo de ejecución.
+- Usa `interface` para formas de objeto y `type` para uniones y tipos compuestos. Elige una convención y sé consistente.
+- Evita los `enum` numéricos; usa uniones de literales (`'activo' | 'pausado'`) o `as const`.
+- Ejecuta `npx tsc --noEmit` en tu integración continua y antes de cada commit.
+- Añade `typescript-eslint` y Prettier para mantener el estilo y detectar más errores.
+
+## Siguiente paso
+
+- **Practica con un framework.** Crea un proyecto con `npm create vite@latest -- --template vanilla-ts` y aplica lo aprendido en el navegador. Para la parte visual, revisa [HTML y CSS desde cero](/guias/html-css/).
+- **Profundiza en el sistema de tipos.** Narrowing, mapped types y tipos condicionales están explicados en [The Concise TypeScript Book](https://gibbok.github.io/typescript-book/es-es/book/the-concise-typescript-book/).
+- **Tipa el servidor.** Node.js con TypeScript es la combinación habitual para APIs; consulta los recursos de [Node.js](/biblioteca/nodejs/).
+- **Explora la biblioteca.** Más libros gratuitos en la [biblioteca de TypeScript](/biblioteca/typescript/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

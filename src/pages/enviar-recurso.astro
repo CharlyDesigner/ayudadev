@@ -1,0 +1,69 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { issueUrl } from '@lib/github';
+import { SITE } from '@data/site';
+import { migasLd } from '@lib/seo';
+
+const titulo = 'Enviar un recurso';
+const descripcion = 'Propón un libro, curso, documentación o prompt para la comunidad. Revisamos cada propuesta y la publicamos con tu crédito si quieres.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Enviar recurso', href: '/enviar-recurso/' },
+];
+const criterios = [
+  ['Gratis', 'Se puede leer o tomar completo sin pagar ni registrarse.'],
+  ['Legal', 'Lo publica su autor, editorial o universidad, o tiene licencia abierta. Nada de copias subidas por terceros.'],
+  ['Útil', 'Enseña algo concreto con calidad. Preferimos pocos recursos buenos a muchos regulares.'],
+  ['En español', 'Si está en inglés, debe ser imprescindible y sin equivalente en español.'],
+];
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/enviar-recurso/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Comunidad" titulo={titulo} descripcion={descripcion} />
+
+    <div class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div>
+        <h2 class="text-xl font-bold">Qué aceptamos</h2>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          {criterios.map(([t, d]) => (
+            <div class="card p-5">
+              <p class="flex items-center gap-2 font-semibold"><Icon name="check" class="h-4 w-4 text-accent-ink" /> {t}</p>
+              <p class="mt-1 text-sm text-muted">{d}</p>
+            </div>
+          ))}
+        </div>
+
+        <h2 class="mt-10 text-xl font-bold">Cómo enviarlo</h2>
+        <ol class="mt-4 space-y-3">
+          {[
+            'Abre el formulario de propuesta en GitHub (necesitas una cuenta gratuita).',
+            'Llena título, autor, enlace oficial, tema y por qué lo recomiendas.',
+            'Lo revisamos, verificamos la licencia y lo publicamos. Te avisamos en el mismo issue.',
+          ].map((p, i) => (
+            <li class="flex gap-3">
+              <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold text-on-accent">{i + 1}</span>
+              <span class="text-sm leading-relaxed">{p}</span>
+            </li>
+          ))}
+        </ol>
+
+        <div class="mt-8 flex flex-wrap gap-2">
+          <a href={issueUrl('nuevo-recurso')} rel="noopener" target="_blank" class="btn btn-primary"><Icon name="upload" class="h-4 w-4" /> Proponer un recurso</a>
+          <a href={issueUrl('enlace-roto')} rel="noopener" target="_blank" class="btn btn-secondary"><Icon name="alert-triangle" class="h-4 w-4" /> Reportar enlace roto</a>
+        </div>
+        <p class="mt-4 text-sm text-muted">¿Sin cuenta de GitHub? Escríbenos a <a href={`mailto:${SITE.contacto}?subject=Recurso para AyudaDev`} class="link">{SITE.contacto}</a> con los mismos datos.</p>
+      </div>
+
+      <aside class="card h-fit p-6">
+        <h2 class="font-semibold">¿Quieres contribuir con código o guías?</h2>
+        <p class="mt-2 text-sm text-muted">El sitio es de código abierto. En el repositorio encontrarás cómo correrlo en tu máquina, la guía de contenido y las reglas de estilo.</p>
+        <a href={SITE.repo} rel="noopener" target="_blank" class="btn btn-secondary btn-sm mt-4"><Icon name="github" class="h-4 w-4" /> Ver el repositorio</a>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,299 @@
+---
+titulo: 'C desde cero'
+descripcion: 'Qué es C, cómo instalar gcc y tus primeros programas: variables, ciclos, funciones, arreglos, punteros y memoria dinámica, con ejemplos que compilan tal cual.'
+tema: c
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['c-fundamentos-de-programacion-en-c-nacho-cabanes', 'c-programacion-en-c-wikilibros', 'c-beejs-guide-to-c-programming']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['c', 'gcc', 'punteros', 'memoria', 'compilador']
+orden: 14
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+C es el lenguaje con el que están escritos Linux, Python, Git, SQLite y buena parte de lo que corre en tu computadora y en tu celular. Es pequeño, rápido y no esconde nada: tú decides cuánta memoria pides y cuándo la devuelves. Por eso se usa en sistemas operativos, microcontroladores y motores de bases de datos, y por eso aprenderlo te enseña cómo funciona de verdad una máquina.
+
+Lo que necesitas tener claro:
+
+- **Se compila a código nativo**: `gcc` convierte tu `.c` en un ejecutable para tu procesador. No hay máquina virtual ni intérprete en medio; el programa resultante corre solo.
+- **Tipado estático y débil**: declaras el tipo de cada variable (`int`, `double`, `char`), pero el compilador te deja convertir entre tipos con bastante libertad, incluso cuando no deberías.
+- **Memoria manual**: las variables locales viven en la pila y desaparecen al salir de la función; lo que pides con `malloc` vive en el *heap* hasta que tú lo liberas con `free`. No hay recolector de basura.
+- **Los punteros son direcciones**: un puntero guarda dónde está un dato en memoria. Son la herramienta más poderosa de C y la fuente de la mayoría de sus errores.
+- **Los arreglos no saben su tamaño**: al pasarlos a una función se convierten en un puntero al primer elemento; tú tienes que pasar la longitud aparte. Una cadena es un arreglo de `char` terminado en el carácter `'\0'`.
+- **Comportamiento indefinido**: leer fuera de un arreglo, usar memoria liberada o una variable sin inicializar no siempre produce un error visible. A veces "funciona" y falla en otra máquina. Compila siempre con avisos activados.
+- **Paradigma procedural**: funciones y `struct`. No hay clases ni objetos; la organización la pones tú con archivos `.h` y `.c`.
+- **Biblioteca estándar pequeña**: `stdio.h` para entrada y salida, `stdlib.h` para memoria y conversiones, `string.h` para cadenas, `math.h` para matemáticas.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows**: la opción más sencilla es instalar **MSYS2** desde [msys2.org](https://www.msys2.org/), abrir la terminal "MSYS2 UCRT64" y escribir `pacman -S mingw-w64-ucrt-x86_64-gcc`. Alternativa: activa WSL con `wsl --install` y sigue los pasos de Linux dentro de Ubuntu.
+2. **macOS**: abre Terminal y escribe `xcode-select --install`. Instala las herramientas de línea de comandos de Apple, que incluyen `clang`; el comando `gcc` también funciona y usa ese mismo compilador.
+3. **Linux**: en Debian o Ubuntu escribe `sudo apt install build-essential`; en Fedora `sudo dnf install gcc`; en Arch `sudo pacman -S gcc`.
+4. Comprueba con `gcc --version`. Debe mostrar la versión del compilador.
+5. Crea una carpeta `c-practicas` y dentro un archivo `hola.c` con el ejemplo 1.
+6. Compila y ejecuta: `gcc -Wall -Wextra hola.c -o hola` y luego `./hola`. En Windows con MSYS2 funciona igual; si usas PowerShell o CMD, el ejecutable se llama `hola.exe` y lo corres con `.\hola`.
+
+</Pasos>
+
+Las banderas `-Wall -Wextra` encienden los avisos del compilador. Nunca compiles sin ellas: la mitad de los errores de C te los avisa el compilador antes de ejecutar, pero solo si se lo pides. Cuando algo falle en tiempo de ejecución, agrega `-g -fsanitize=address,undefined` (en Linux y macOS) y el programa te dirá en qué línea tocaste memoria que no debías.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.c" ejecutar="gcc -Wall -Wextra hola.c -o hola && ./hola" salida="Hola, mundo">
+
+```c
+#include <stdio.h>   /* trae printf */
+
+int main(void) {
+    printf("Hola, mundo\n");   /* \n es el salto de línea */
+    return 0;                  /* 0 significa "todo bien" */
+}
+```
+
+Todo programa en C empieza en `main`. `#include` copia las declaraciones de la biblioteca estándar que vas a usar. `printf` imprime texto con formato; sin el `\n` final, la siguiente salida se pegaría en la misma línea. El `return 0` le dice al sistema operativo que el programa terminó bien.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables, tipos y printf" archivo="variables.c" ejecutar="gcc -Wall -Wextra variables.c -o variables && ./variables" salida="Edad: 20
+Precio: 19.99
+Inicial: A
+7 / 2 = 3
+7 % 2 = 1
+7 / 2.0 = 3.5
+Un int ocupa 4 bytes">
+
+```c
+#include <stdio.h>
+
+int main(void) {
+    int edad = 20;          /* entero */
+    double precio = 19.99;  /* decimal de doble precisión */
+    char inicial = 'A';     /* un solo carácter */
+
+    printf("Edad: %d\n", edad);          /* %d para enteros */
+    printf("Precio: %.2f\n", precio);    /* %.2f: decimal con dos cifras */
+    printf("Inicial: %c\n", inicial);    /* %c para un carácter */
+
+    printf("7 / 2 = %d\n", 7 / 2);       /* división entera */
+    printf("7 %% 2 = %d\n", 7 % 2);      /* %% imprime un % literal */
+    printf("7 / 2.0 = %.1f\n", 7 / 2.0); /* división decimal */
+
+    printf("Un int ocupa %d bytes\n", (int) sizeof(int));
+    return 0;
+}
+```
+
+`printf` recibe una cadena con marcadores (`%d`, `%f`, `%c`, `%s`) y después los valores en el mismo orden. El marcador tiene que coincidir con el tipo: pasar un `double` a `%d` imprime basura. `sizeof` te dice cuántos bytes ocupa un tipo; `int` ocupa 4 en todas las computadoras de escritorio actuales. Como en Java, `7 / 2` entre enteros da `3`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Ciclos y funciones" archivo="ciclos.c" ejecutar="gcc -Wall -Wextra ciclos.c -o ciclos && ./ciclos" salida="1 es impar, su cuadrado es 1
+2 es par, su cuadrado es 4
+3 es impar, su cuadrado es 9
+4 es par, su cuadrado es 16
+5 es impar, su cuadrado es 25
+5! = 120">
+
+```c
+#include <stdio.h>
+
+/* Una función: recibe un int y devuelve un int */
+int cuadrado(int n) {
+    return n * n;
+}
+
+int main(void) {
+    for (int i = 1; i <= 5; i++) {
+        if (i % 2 == 0) {
+            printf("%d es par, su cuadrado es %d\n", i, cuadrado(i));
+        } else {
+            printf("%d es impar, su cuadrado es %d\n", i, cuadrado(i));
+        }
+    }
+
+    /* factorial de 5 con while */
+    int n = 5;
+    int factorial = 1;
+    while (n > 0) {
+        factorial *= n;   /* factorial = factorial * n */
+        n--;
+    }
+    printf("5! = %d\n", factorial);
+    return 0;
+}
+```
+
+Las funciones se definen antes de usarse (o se declaran arriba con un prototipo como `int cuadrado(int n);`). Reciben copias de sus argumentos: cambiar `n` dentro de `cuadrado` no toca la variable de quien la llamó. La estructura de `for`, `while` e `if` es la misma que en Java y JavaScript, que la copiaron de C.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Arreglos y cadenas" archivo="arreglos.c" ejecutar="gcc -Wall -Wextra arreglos.c -o arreglos && ./arreglos" salida="Hay 4 notas, suma 34, promedio 8.5
+Hola, Ana. Tu nombre tiene 3 letras
+Nombre completo: Ana Lopez">
+
+```c
+#include <stdio.h>
+#include <string.h>   /* strlen */
+
+int main(void) {
+    int notas[] = {8, 9, 7, 10};
+    int cantidad = sizeof notas / sizeof notas[0];   /* 16 bytes / 4 bytes = 4 */
+    int suma = 0;
+
+    for (int i = 0; i < cantidad; i++) {
+        suma += notas[i];
+    }
+    printf("Hay %d notas, suma %d, promedio %.1f\n",
+           cantidad, suma, (double) suma / cantidad);
+
+    /* Una cadena es un arreglo de char terminado en '\0' */
+    char nombre[20] = "Ana";
+    printf("Hola, %s. Tu nombre tiene %d letras\n", nombre, (int) strlen(nombre));
+
+    /* snprintf arma una cadena nueva sin pasarse del espacio disponible */
+    char completo[40];
+    snprintf(completo, sizeof completo, "%s %s", nombre, "Lopez");
+    printf("Nombre completo: %s\n", completo);
+    return 0;
+}
+```
+
+Los índices van de `0` a `cantidad - 1`; C no revisa que te mantengas dentro, así que `notas[4]` leería lo que haya después en memoria. El truco `sizeof notas / sizeof notas[0]` solo funciona en la función donde se declaró el arreglo. Para cadenas, reserva espacio de sobra y usa funciones con límite como `snprintf` en lugar de `strcpy` o `strcat`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Punteros" archivo="punteros.c" ejecutar="gcc -Wall -Wextra punteros.c -o punteros && ./punteros" salida="x vale 10
+x ahora vale 20
+a = 2, b = 1">
+
+```c
+#include <stdio.h>
+
+/* Recibe direcciones, por eso sí puede cambiar las variables originales */
+void intercambiar(int *a, int *b) {
+    int temporal = *a;
+    *a = *b;
+    *b = temporal;
+}
+
+int main(void) {
+    int x = 10;
+    int *p = &x;        /* & da la dirección de x; p la guarda */
+
+    printf("x vale %d\n", x);
+    *p = 20;            /* * accede al valor que está en esa dirección */
+    printf("x ahora vale %d\n", x);
+
+    int a = 1, b = 2;
+    intercambiar(&a, &b);
+    printf("a = %d, b = %d\n", a, b);
+    return 0;
+}
+```
+
+`&x` es "la dirección de x" y `*p` es "lo que hay en la dirección guardada en p". Como las funciones reciben copias, la única forma de que `intercambiar` modifique `a` y `b` es darle sus direcciones. Esto mismo es lo que hace `scanf` cuando le pasas `&variable`, y lo que te permite devolver más de un resultado desde una función.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Structs y memoria dinámica" archivo="structs.c" ejecutar="gcc -Wall -Wextra structs.c -o structs && ./structs" salida="Punto 0: (0, 0)
+Punto 1: (1, 1)
+Punto 2: (2, 4)">
+
+```c
+#include <stdio.h>
+#include <stdlib.h>   /* malloc, free */
+
+struct Punto {
+    int x;
+    int y;
+};
+
+int main(void) {
+    int cantidad = 3;
+
+    /* Pide memoria para 3 puntos; sizeof *puntos es el tamaño de un Punto */
+    struct Punto *puntos = malloc(cantidad * sizeof *puntos);
+    if (puntos == NULL) {
+        printf("Sin memoria\n");
+        return 1;
+    }
+
+    for (int i = 0; i < cantidad; i++) {
+        puntos[i].x = i;
+        puntos[i].y = i * i;
+    }
+
+    for (int i = 0; i < cantidad; i++) {
+        printf("Punto %d: (%d, %d)\n", i, puntos[i].x, puntos[i].y);
+    }
+
+    free(puntos);     /* devuelve la memoria */
+    puntos = NULL;    /* evita usarla por accidente después */
+    return 0;
+}
+```
+
+Un `struct` agrupa varios campos en un solo tipo. `malloc` pide memoria en el *heap* cuyo tamaño puedes decidir en tiempo de ejecución, a diferencia de un arreglo normal; devuelve `NULL` si no hay memoria, y siempre hay que comprobarlo. Cada `malloc` debe tener exactamente un `free`. Escribir `sizeof *puntos` en vez de `sizeof(struct Punto)` evita errores si después cambias el tipo.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Escribir = cuando querías ==">
+
+`if (x = 5)` no compara: asigna 5 a `x` y la condición siempre es verdadera. El compilador con `-Wall` te avisa con `suggest parentheses around assignment used as truth value`. Lee los avisos; en C un aviso casi siempre es un error de verdad.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Salirte del arreglo">
+
+Un arreglo de 4 elementos tiene índices del 0 al 3; `notas[4]` lee o escribe memoria ajena y el programa puede seguir "funcionando" con datos corruptos. Lo mismo con cadenas: `char nombre[3] = "Ana"` no deja espacio para el `'\0'` final. Compila con `-fsanitize=address` mientras aprendes para que estos errores se detengan en la línea exacta.
+
+</Callout>
+
+<Callout tipo="warning" titulo="scanf sin & o sin límite">
+
+`scanf("%d", edad)` compila con un aviso y falla al ejecutar: `scanf` necesita la dirección, `&edad`. Y `scanf("%s", nombre)` sin ancho acepta cualquier longitud y desborda el arreglo. Para leer texto usa `fgets(nombre, sizeof nombre, stdin)` y convierte después con `strtol` o `sscanf`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Devolver un puntero a una variable local o usar memoria liberada">
+
+Las variables locales desaparecen cuando la función termina; un puntero a ellas apunta a basura. Igual de grave es usar `puntos` después de `free(puntos)` o liberarlo dos veces. Regla: quien hace `malloc` decide quién hace `free`, y después de liberar asigna `NULL`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="El marcador de printf no coincide con el tipo">
+
+`printf("%d", 3.5)` imprime un número cualquiera y `printf("%f", 7)` también, porque C no convierte automáticamente los argumentos de `printf`. Usa `%d` para `int`, `%f` para `double`, `%c` para `char`, `%s` para cadenas, `%ld` para `long` y `%zu` para `size_t`. La bandera `-Wall` incluye `-Wformat`, que detecta casi todos estos casos.
+
+</Callout>
+
+## Buenas prácticas
+
+- Compila siempre con `-Wall -Wextra` y, mientras aprendes, con `-g -fsanitize=address,undefined`.
+- Inicializa toda variable al declararla; `int total = 0;`, nunca `int total;` a secas.
+- Usa llaves en todos los `if`, `for` y `while`, aunque tengan una sola línea.
+- Pasa el tamaño junto con cada arreglo: `void imprimir(const int *datos, int cantidad)`.
+- Para cadenas usa `snprintf`, `strncpy` con cuidado o `fgets`; destierra `gets`, `strcpy` y `sprintf`.
+- Comprueba el resultado de `malloc`, `fopen` y `scanf`; en C nada avisa si no lo haces tú.
+- Un `free` por cada `malloc`, y `puntero = NULL` después.
+- Divide el programa en funciones cortas y en archivos `.h` (declaraciones) y `.c` (definiciones) cuando crezca.
+- Usa `const` para parámetros que la función no debe modificar.
+
+## Siguiente paso
+
+Con punteros, structs y `malloc` ya puedes construir tus propias estructuras de datos: una lista enlazada, una pila, un arreglo que crece solo. Son el mejor ejercicio para dominar la memoria. Después aprende a leer y escribir archivos con `fopen`, `fgets` y `fprintf`, a dividir el programa en varios archivos con un `Makefile`, y a depurar con `gdb`.
+
+Cuando te sientas cómodo, C++ te dará clases, contenedores y seguridad extra sobre la misma base; también puedes mirar Rust si te interesa la programación de sistemas sin los errores de memoria de C. Guarda cada ejercicio en un repositorio con [Git y GitHub desde cero](/guias/git/), y si quieres ver la relación con el sistema, revisa la biblioteca de [Sistemas operativos](/biblioteca/sistemas-operativos/). Todos los recursos están en [la biblioteca de C](/biblioteca/c/) y, para el siguiente paso, en [la biblioteca de C++](/biblioteca/cpp/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

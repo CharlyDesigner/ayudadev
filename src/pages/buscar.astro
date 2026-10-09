@@ -1,0 +1,52 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Icon from '@components/ui/Icon.astro';
+---
+
+<BaseLayout title="Buscar" description="Busca temas, recursos, guías y herramientas de IA en AyudaDev." path="/buscar/" noindex>
+  <div class="container-site py-10 sm:py-14">
+    <SectionHeader nivel="h1" eyebrow="Búsqueda" titulo="Buscar en AyudaDev" descripcion="Temas, recursos, guías, herramientas de IA y prompts." />
+    <form class="mt-8 flex gap-2" role="search" data-buscar>
+      <label class="relative flex-1">
+        <span class="visually-hidden">Qué buscas</span>
+        <Icon name="search" class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted" />
+        <input type="search" name="q" class="field pl-11" placeholder="javascript, git, prompts..." autocomplete="off" />
+      </label>
+      <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
+    <p class="mt-6 text-sm text-muted" data-buscar-status aria-live="polite"></p>
+    <div class="mt-4 grid gap-3 md:grid-cols-2" data-buscar-list></div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { normalizar } from '@/lib/text';
+  interface Item { tipo: string; titulo: string; url: string; sub?: string; tags?: string }
+  const form = document.querySelector<HTMLFormElement>('[data-buscar]');
+  const input = form?.querySelector<HTMLInputElement>('input[name="q"]');
+  const list = document.querySelector<HTMLElement>('[data-buscar-list]');
+  const status = document.querySelector<HTMLElement>('[data-buscar-status]');
+  const TIPOS: Record<string, string> = { pagina: 'Página', tema: 'Tema', recurso: 'Recurso', guia: 'Guía', ia: 'IA', noticia: 'Noticia', prompt: 'Prompt' };
+  const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
+  let indice: Item[] = [];
+
+  const buscar = (q: string) => {
+    if (!list || !status) return;
+    const palabras = normalizar(q).split(/\s+/).filter(Boolean);
+    if (!palabras.length) { list.innerHTML = ''; status.textContent = ''; return; }
+    const res = indice.filter((it) => { const pajar = normalizar(`${it.titulo} ${it.sub ?? ''} ${it.tags ?? ''}`); return palabras.every((p) => pajar.includes(p)); }).slice(0, 60);
+    status.textContent = res.length ? `${res.length} resultados para "${q}"` : `Sin resultados para "${q}"`;
+    list.innerHTML = res.map((it) => `<a href="${escapar(it.url)}" class="card card-hover flex flex-col gap-1 p-4"><span class="badge self-start">${TIPOS[it.tipo] ?? it.tipo}</span><span class="font-semibold">${escapar(it.titulo)}</span>${it.sub ? `<span class="text-sm text-muted">${escapar(it.sub)}</span>` : ''}</a>`).join('');
+    history.replaceState(null, '', `?q=${encodeURIComponent(q)}`);
+  };
+
+  fetch('/search-index.json').then((r) => r.json()).then((data: Item[]) => {
+    indice = data;
+    const q = new URLSearchParams(location.search).get('q') ?? '';
+    if (input) input.value = q;
+    buscar(q);
+  });
+  form?.addEventListener('submit', (e) => { e.preventDefault(); buscar(input?.value ?? ''); });
+  input?.addEventListener('input', () => buscar(input.value));
+</script>

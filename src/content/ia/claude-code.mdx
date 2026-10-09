@@ -1,0 +1,98 @@
+---
+nombre: 'Claude Code'
+empresa: 'Anthropic'
+descripcion: 'Agente de programación de Anthropic que vive en tu terminal, lee tu proyecto, edita archivos y corre comandos con tu permiso.'
+tipo: cli
+sitio: 'https://code.claude.com'
+docs: 'https://code.claude.com/docs'
+planGratis: no
+precioUrl: 'https://claude.com/pricing'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 2
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+Claude Code es una herramienta de Anthropic que corre en tu terminal. A diferencia de un chat normal, no solo responde: lee los archivos de tu proyecto, propone cambios, los aplica si los apruebas y ejecuta comandos como instalar dependencias o correr pruebas. También existe como extensión para VS Code y JetBrains, como app de escritorio y en versión web.
+
+Según la documentación oficial, usarlo requiere una suscripción de pago de Claude o una cuenta de la plataforma para desarrolladores. Consulta la [página oficial de precios](https://claude.com/pricing) para ver las opciones vigentes.
+
+Este sitio, AyudaDev, se construyó con ayuda de Claude Code: parte de la estructura, los componentes y las revisiones de contenido se hicieron en sesiones con esta herramienta, siempre con una persona revisando cada cambio.
+
+## Para qué sirve si estás aprendiendo
+
+Claude Code es más potente que un chat, y por eso hay que usarlo con más cuidado cuando estás aprendiendo. Bien usado te ayuda a:
+
+- Entender un proyecto ajeno: le pides que explique la estructura de carpetas o qué hace un archivo.
+- Ver cómo se resuelve un error real en tu propio código, con el contexto completo.
+- Aprender flujos de trabajo de verdad: git, pruebas, scripts, formato de código.
+- Practicar la revisión de código: le pides que revise lo que tú escribiste y te diga qué mejorar.
+
+El riesgo es dejar que haga todo. Si cada función la escribe Claude Code, tú no practicas. Una regla útil: tú escribes, él revisa. O él escribe algo pequeño y tú lo explicas con tus palabras antes de aceptarlo.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Abre una terminal e instala Claude Code con el comando oficial para tu sistema. En Windows con PowerShell: `irm https://claude.ai/install.ps1 | iex`. En macOS, Linux o WSL: `curl -fsSL https://claude.ai/install.sh | bash`.
+2. Cierra y vuelve a abrir la terminal. Escribe `claude --version` para confirmar que quedó instalado.
+3. Entra a la carpeta de un proyecto con `cd mi-proyecto` y escribe `claude`. La primera vez te pedirá iniciar sesión desde el navegador.
+4. Haz una pregunta de lectura, sin cambios: "¿Qué hace este proyecto y cuál es el archivo principal?".
+5. Pide un cambio pequeño y revisa el diff antes de aprobarlo. Escribe `/help` para ver los comandos y `/exit` para salir.
+
+</Pasos>
+
+Así se ve una sesión real al empezar:
+
+```bash
+cd mi-primer-proyecto
+claude
+```
+
+```text
+> ¿qué hace este proyecto y en qué lenguaje está?
+
+Es una app de notas en Node.js. El punto de entrada es src/index.js ...
+
+> agrega una función que valide que el título de la nota no esté vacío. Explícame el cambio antes de aplicarlo.
+
+Voy a editar src/notas.js para agregar validarTitulo() ...
+¿Aplico este cambio? (y/n)
+```
+
+<Callout tipo="warning" titulo="Revisa antes de aprobar">
+Claude Code te pide permiso antes de editar archivos o correr comandos. Lee lo que propone. Si no entiendes un cambio, pregúntale por qué lo hace antes de decir que sí.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Explícame la estructura de carpetas de este proyecto. Para cada carpeta importante dime qué contiene y por qué está ahí. No modifiques nada.
+```
+
+```text
+Lee el archivo [NOMBRE DEL ARCHIVO] y explícame qué hace función por función, en español sencillo. Señala cualquier parte que te parezca confusa o mejorable, pero no la cambies todavía.
+```
+
+```text
+Escribí esta función yo mismo. Revísala como si fueras un mentor: dime qué está bien, qué podría fallar y cómo lo probarías. No la reescribas, quiero corregirla yo.
+```
+
+## Límites y cuidados
+
+- **Hace cambios reales en tus archivos.** Usa git y haz commit antes de cada sesión para poder volver atrás.
+- **Puede equivocarse.** Un comando mal entendido puede borrar o sobrescribir algo. Lee cada propuesta.
+- **No le des secretos.** No pegues claves de API ni contraseñas en el chat, y revisa que tu proyecto no tenga archivos `.env` con secretos que Claude Code pueda leer. Usa `.gitignore` y, si hace falta, excluye archivos desde la configuración.
+- **Verifica el resultado.** Corre las pruebas y abre la app después de cada cambio. Que "compile" no significa que esté bien.
+- **Aprender no es delegar.** Si en una sesión no escribiste ni una línea, cambia el enfoque: pide explicaciones y pistas, no soluciones.
+
+## Enlaces oficiales
+
+- [Sitio de Claude Code](https://code.claude.com)
+- [Documentación](https://code.claude.com/docs)
+- [Guía de inicio rápido](https://code.claude.com/docs/en/quickstart)
+- [Planes y precios](https://claude.com/pricing)

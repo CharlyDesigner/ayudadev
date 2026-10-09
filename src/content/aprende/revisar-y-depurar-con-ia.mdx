@@ -1,0 +1,125 @@
+---
+titulo: 'Cómo revisar y depurar tu código con IA'
+descripcion: 'Lee errores, pide pistas, revisa tu propio código y usa la IA como segundo par de ojos sin perder la práctica. Con prompts y un ejercicio.'
+publicado: 2026-10-09
+herramientas: ['claude', 'claude-code', 'chatgpt', 'copilot', 'cursor', 'gemini']
+orden: 3
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Depurar es la habilidad que más separa a quien programa de quien solo copia. Y es, también, donde la IA ayuda más si la usas bien, o donde más daño hace si la usas mal. Esta guía te muestra un proceso para encontrar errores y revisar tu código con ayuda de un asistente sin dejar de aprender.
+
+## Antes de abrir el chat: lee el error
+
+El mensaje de error es información gratis. Dice qué pasó, en qué archivo y en qué línea. Antes de pegarlo en cualquier chat, dedica dos minutos a leerlo tú:
+
+1. Busca el tipo de error (por ejemplo `TypeError`, `SyntaxError`, `NullPointerException`).
+2. Encuentra el archivo y la línea que menciona.
+3. Abre esa línea y lee las tres líneas anteriores.
+4. Pregúntate: ¿qué esperaba que pasara aquí y qué pasó en realidad?
+
+Muchos errores se resuelven en este paso. Los que no, ya llegan al chat con una pregunta mejor.
+
+<Callout tipo="tip" titulo="La traza se lee de abajo hacia arriba">
+En la mayoría de los lenguajes, la última línea de la traza de error es el mensaje principal, y las líneas de arriba muestran el camino que siguió el programa. Empieza por el final.
+</Callout>
+
+## Paso 1: pide que te traduzca el error
+
+Si el mensaje no te dice nada, pide una traducción, no una solución.
+
+```text
+Obtuve este error en [LENGUAJE]: [PEGA EL ERROR COMPLETO]. Explícame qué significa cada parte del mensaje en palabras simples y cuáles son las tres causas más comunes de este error. No me digas cómo arreglar mi código todavía.
+```
+
+Ahora sabes qué buscar. Vuelve a tu código con esa información antes de seguir.
+
+## Paso 2: pide pistas, no el arreglo
+
+Si sigues atorado, pega tu código y pide pistas en escalera.
+
+```text
+Este es mi código: [PEGA EL CÓDIGO]. Y este es el error: [PEGA EL ERROR]. No me des la solución. Dame tres pistas ordenadas de menos a más específica. Espera a que te diga cuál me sirvió antes de dar la siguiente.
+```
+
+La mayoría de los asistentes respetan esta instrucción. Si uno te da la solución de todos modos, dile "te pedí pistas, no la solución" y repite. Vale la pena insistir.
+
+## Paso 3: cuando ya lo arreglaste, pide el porqué
+
+Arreglar el error no es el final. Entender por qué ocurrió es lo que evita que vuelva.
+
+```text
+Ya lo arreglé cambiando [LO QUE CAMBIASTE]. Explícame por qué eso resolvió el error, qué estaba pasando por dentro, y cómo puedo detectar este mismo problema más rápido la próxima vez.
+```
+
+## Errores que no dan error
+
+Los peores bugs son los silenciosos: el programa corre, pero el resultado está mal. Aquí la IA ayuda a pensar, no a adivinar.
+
+```text
+Este código en [LENGUAJE] corre sin errores pero da un resultado incorrecto. Esperaba [RESULTADO ESPERADO] y obtengo [RESULTADO REAL]. Código: [PEGA EL CÓDIGO]. No lo corrijas. Dime qué revisarías primero y qué valores imprimirías para encontrar dónde se desvía.
+```
+
+La técnica de "imprimir valores" (con `print`, `console.log` o el equivalente) es la forma más vieja y más efectiva de depurar. La IA puede decirte dónde poner esas impresiones; tú las pones y lees los resultados.
+
+<Callout tipo="info" titulo="Aprende a usar el depurador de tu editor">
+Poner puntos de interrupción y avanzar línea por línea te enseña más que cualquier explicación. Pídele a la IA: "Explícame cómo usar el depurador de VS Code para [LENGUAJE] con un ejemplo pequeño".
+</Callout>
+
+## Revisar tu código cuando ya funciona
+
+Que funcione no significa que esté bien. Una revisión de código busca claridad, casos no cubiertos y malas prácticas. Pídela como la pediría un mentor, no como un generador de código nuevo.
+
+```text
+Esta función que escribí funciona. Revísala como un mentor con experiencia en [LENGUAJE]: dime qué está bien, qué casos no cubre (entradas vacías, valores negativos, texto donde esperaba números), qué nombre o estructura mejorarías y por qué. No la reescribas; señala las líneas.
+```
+
+Aplica uno o dos cambios, no todos. Después pide otra revisión. Las mejoras pequeñas y seguidas enseñan más que una reescritura completa.
+
+## Pide casos de prueba, no pruebas hechas
+
+Escribir pruebas es una de las mejores formas de entender tu propio código. Pide a la IA los casos, y escribe tú el código de las pruebas.
+
+```text
+Para esta función: [PEGA EL CÓDIGO]. Dame una lista de casos de prueba que debería cubrir, incluyendo casos límite y entradas inválidas. Para cada caso dime la entrada y la salida esperada. No escribas el código de las pruebas; lo voy a escribir yo.
+```
+
+Cuando una de tus pruebas falle, ya tienes un bug real que depurar con los pasos de arriba.
+
+## Dentro del editor: Copilot, Cursor y Claude Code
+
+Los asistentes integrados en el editor ven tu proyecto completo, lo que hace la depuración más rápida porque no tienes que copiar nada. Pero también hacen muy fácil aceptar un arreglo sin entenderlo.
+
+Una regla sencilla: cuando el asistente proponga un cambio, no lo aceptes hasta poder explicar con tus palabras qué hace y por qué resuelve el problema. Si no puedes, pregunta antes:
+
+```text
+Antes de aplicar este cambio, explícame qué estaba mal, qué hace tu corrección y si hay otra forma de resolverlo. Quiero decidir yo cuál usar.
+```
+
+Con Claude Code puedes pedirle que corra las pruebas después de cada cambio y que te muestre la salida. Con Copilot y Cursor, usa el chat para preguntar sobre el error del panel de problemas antes de pedir que lo corrija.
+
+<Callout tipo="warning" titulo="Haz commit antes de depurar con un agente">
+Si usas una herramienta que edita archivos, guarda el estado con git antes de empezar. Si el "arreglo" rompe otra cosa, vuelves atrás en segundos.
+</Callout>
+
+## Lo que la IA no puede hacer por ti
+
+- **Ejecutar tu código en tu máquina.** Tú ves el resultado real; la IA solo imagina.
+- **Saber qué querías que hiciera.** Si el requisito está mal entendido, el "arreglo" también.
+- **Garantizar que es correcto.** Puede inventar funciones o afirmar con seguridad algo falso. Prueba todo.
+- **Reemplazar tu criterio.** Decidir qué cambio aplicar es tu trabajo. Ese criterio se construye depurando, no delegando.
+
+## Ejercicio
+
+Toma un programa tuyo que funcione, de entre 20 y 50 líneas. Vas a romperlo a propósito y repararlo con el método de esta guía.
+
+1. Introduce un error a mano: cambia un nombre de variable, quita un paréntesis o altera una condición. Guarda el archivo.
+2. Ejecútalo. Lee el error completo sin abrir el chat. Anota en una nota qué tipo de error es, en qué línea y qué crees que lo causa.
+3. Si no lo encuentras en cinco minutos, pega solo el error (no el código) y pide la traducción del paso 1.
+4. Si aún no, pega el código y pide tres pistas. Usa la menor cantidad posible.
+5. Arréglalo y pide el porqué con el prompt del paso 3.
+6. Ahora que funciona, pide una revisión de mentor y aplica un solo cambio.
+7. Pide la lista de casos de prueba y escribe al menos tres pruebas tú mismo. Córrelas.
+
+Repite con un error distinto la próxima semana. Cada ronda te hace más rápido leyendo errores, que es la habilidad real que estás construyendo.

@@ -1,0 +1,80 @@
+---
+nombre: 'ChatGPT'
+empresa: 'OpenAI'
+descripcion: 'El asistente de chat de OpenAI. Explica, genera código y responde en español. Tiene plan gratuito y es la puerta de entrada más común a la IA.'
+tipo: chat
+sitio: 'https://chatgpt.com'
+docs: 'https://help.openai.com'
+planGratis: si
+precioUrl: 'https://openai.com/chatgpt/pricing/'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 3
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+ChatGPT es el asistente conversacional de OpenAI. Se usa desde chatgpt.com, desde apps de escritorio y desde el celular. Le escribes una pregunta o una tarea y responde con texto, código o imágenes, según el plan y las funciones activas.
+
+Hay un plan gratuito que permite chatear sin pagar, y planes de pago con más herramientas y mayor uso. Las condiciones cambian seguido, así que revisa la [página oficial de precios](https://openai.com/chatgpt/pricing/) antes de decidir.
+
+Para mucha gente ChatGPT fue el primer contacto con la inteligencia artificial, y sigue siendo una buena opción para aprender a programar si lo usas con método.
+
+## Para qué sirve si estás aprendiendo
+
+ChatGPT es útil cuando necesitas una explicación rápida, un ejemplo o una segunda opinión:
+
+- Resuelve dudas puntuales sin que tengas que buscar en diez páginas distintas.
+- Explica errores de compilación o de ejecución con palabras sencillas.
+- Propone ejercicios, pequeños proyectos y rutas de estudio.
+- Te ayuda a escribir documentación, comentarios y mensajes de commit claros.
+- Sirve como "compañero de estudio" para repasar conceptos antes de un examen o entrevista.
+
+También puede ejecutar fragmentos de código en algunos planes, lo que ayuda a comprobar rápido si una idea funciona. Aun así, la mejor práctica es correr el código en tu propia máquina.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Entra a [chatgpt.com](https://chatgpt.com) y crea una cuenta gratuita.
+2. Escribe en español y empieza por decir tu nivel y tu objetivo: "Estoy aprendiendo JavaScript, llevo un mes, quiero entender las funciones".
+3. Pide ejemplos cortos y comentados en lugar de programas largos.
+4. Cuando te dé código, cópialo a tu editor, ejecútalo y cuéntale qué pasó. La conversación mejora cuando le das retroalimentación real.
+5. Usa un chat por tema y ponle nombre, así encuentras después lo que ya aprendiste.
+
+</Pasos>
+
+<Callout tipo="tip" titulo="Pide el porqué">
+Después de cada respuesta, pregunta "¿por qué funciona así?" o "¿qué pasaría si cambio esta línea?". Esas preguntas son las que te hacen aprender.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Soy principiante en [LENGUAJE]. Explícame la diferencia entre una función y un método con un ejemplo de cada uno, máximo 10 líneas por ejemplo, con comentarios en español. Termina con una pregunta para que compruebe que entendí.
+```
+
+```text
+Dame un mini proyecto de fin de semana para practicar [TEMA] en [LENGUAJE]. Divídelo en 5 pasos pequeños. Para cada paso dime qué debo lograr, pero no me des el código: quiero escribirlo yo y después pedirte que lo revises.
+```
+
+```text
+Revisa este código que escribí y dime tres cosas que mejorarías y por qué. No lo reescribas completo, solo señala las líneas y explica el cambio. Código: [PEGA TU CÓDIGO]
+```
+
+## Límites y cuidados
+
+- **Alucinaciones.** ChatGPT puede inventar funciones, parámetros o versiones de librerías que no existen. Confirma siempre en la documentación oficial.
+- **Privacidad.** Los chats pueden usarse para mejorar los modelos según tu configuración. Revisa las opciones de tu cuenta y la [ayuda oficial](https://help.openai.com).
+- **No pegues secretos.** Ni contraseñas, ni claves de API, ni datos de clientes o de otras personas.
+- **Verifica la salida.** Ejecuta el código, lee los resultados y compara con lo que esperabas.
+- **Copiar no es aprender.** Si solo copias, no vas a poder resolver el mismo problema sin ayuda mañana. Escribe tú y usa ChatGPT para revisar.
+
+## Enlaces oficiales
+
+- [Sitio de ChatGPT](https://chatgpt.com)
+- [Centro de ayuda de OpenAI](https://help.openai.com)
+- [Planes y precios](https://openai.com/chatgpt/pricing/)

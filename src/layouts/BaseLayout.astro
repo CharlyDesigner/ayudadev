@@ -1,0 +1,65 @@
+---
+import '@/styles/global.css';
+import BaseHead from '@components/seo/BaseHead.astro';
+import JsonLd from '@components/seo/JsonLd.astro';
+import SiteHeader from '@components/nav/SiteHeader.astro';
+import MobileTabBar from '@components/nav/MobileTabBar.astro';
+import SiteFooter from '@components/SiteFooter.astro';
+import CommandPalette from '@components/CommandPalette.astro';
+import { organizacionLd, sitioLd } from '@lib/seo';
+
+interface Props {
+  title: string;
+  description: string;
+  path?: string;
+  image?: string;
+  imageAlt?: string;
+  type?: 'website' | 'article';
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown>[];
+  bodyClass?: string;
+}
+
+const { jsonLd = [], bodyClass = '', ...head } = Astro.props;
+const esInicio = Astro.url.pathname === '/';
+const ld = [organizacionLd(), ...(esInicio ? [sitioLd()] : []), ...jsonLd];
+---
+
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        d.classList.add('js');
+        try {
+          var t = new URLSearchParams(location.search).get('theme') || localStorage.getItem('ayudadev-theme');
+          if (t === 'light' || t === 'dark') d.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    <BaseHead {...head} />
+    <JsonLd data={ld} />
+    <slot name="head" />
+  </head>
+  <body class:list={['flex min-h-dvh flex-col pb-20 md:pb-0', bodyClass]}>
+    <a href="#contenido" class="visually-hidden focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-full focus:bg-accent focus:px-4 focus:py-2 focus:text-on-accent">
+      Saltar al contenido
+    </a>
+    <SiteHeader />
+    <main id="contenido" class="flex-1">
+      <slot />
+    </main>
+    <SiteFooter />
+    <MobileTabBar />
+    <CommandPalette />
+    <script>
+      import { montarFavoritos } from '@/scripts/favoritos';
+      import { montarCopiar } from '@/scripts/copiar';
+      montarFavoritos();
+      montarCopiar();
+    </script>
+  </body>
+</html>

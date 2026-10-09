@@ -1,0 +1,42 @@
+---
+/**
+ * Selector de tema claro/oscuro. Por defecto sigue la preferencia del sistema;
+ * al elegir uno se guarda en localStorage ('ayudadev-theme').
+ */
+import Icon from '@components/ui/Icon.astro';
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  class:list={['grid h-10 w-10 place-items-center rounded-full text-muted transition-colors hover:bg-surface hover:text-fg', className]}
+  aria-label="Cambiar tema claro u oscuro"
+  title="Cambiar tema"
+>
+  <span data-theme-icon="light"><Icon name="moon" /></span>
+  <span data-theme-icon="dark" hidden><Icon name="sun" /></span>
+</button>
+
+<script>
+  import { temaActual, alternarTema, alCambiarTema } from '@/scripts/theme';
+
+  const sync = () => {
+    const theme = temaActual();
+    document.querySelectorAll<HTMLElement>('[data-theme-icon]').forEach((icon) => {
+      icon.hidden = icon.dataset.themeIcon !== theme;
+    });
+  };
+
+  document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      alternarTema();
+      sync();
+    })
+  );
+  alCambiarTema(sync);
+  sync();
+</script>

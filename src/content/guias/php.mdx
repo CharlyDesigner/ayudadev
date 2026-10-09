@@ -1,0 +1,237 @@
+---
+titulo: 'PHP desde cero'
+descripcion: 'Qué es PHP, cómo instalarlo y tus primeros scripts desde la terminal con ejemplos que puedes copiar y ejecutar con php.'
+tema: php
+nivel: principiante
+tiempoLectura: 28
+publicado: 2026-10-09
+libros: ['php-ya-tutoriales-ya', 'php-tutorial-sencillo-manual', 'php-manual-oficial', 'php-la-manera-correcta']
+requisitos: ['Saber usar una terminal básica']
+etiquetas: ['web', 'cli', 'composer', 'poo']
+orden: 19
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+PHP es un lenguaje creado para generar páginas web en el servidor. Mueve WordPress, Laravel, Symfony y una parte enorme de los sitios que visitas. También sirve para scripts de terminal, y así es como lo vamos a aprender aquí, sin necesidad de un servidor web. Ideas clave:
+
+- **Interpretado**: escribes un archivo `.php` y el intérprete `php` lo ejecuta línea por línea. No hay paso de compilación visible.
+- **Tipado dinámico con tipos opcionales**: una variable puede cambiar de tipo, pero puedes declarar tipos en parámetros, retornos y propiedades. Con `declare(strict_types=1)` el intérprete los exige.
+- **Modelo "no compartir nada"**: en la web, cada petición arranca el script desde cero, genera la respuesta y descarta todo. Nada queda en memoria entre peticiones (salvo lo que guardes en sesión o base de datos).
+- **Memoria automática**: conteo de referencias más un recolector de ciclos. No liberas nada a mano.
+- **Varios paradigmas**: procedural (funciones), orientado a objetos (clases, interfaces, traits, enums) y funcional (closures, `array_map`).
+- **Ecosistema**: Composer instala paquetes de Packagist y los estándares PSR definen cómo se escribe y organiza el código.
+- **Versiones**: usa PHP 8.x. Las versiones 7 y anteriores ya no reciben soporte.
+
+## Instálalo y corre tu primer archivo
+
+Solo necesitas el intérprete de línea de comandos. Más adelante, si quieres servir páginas, PHP trae un servidor de desarrollo integrado.
+
+<Pasos>
+
+1. **Windows**: descarga el ZIP "Thread Safe" de [windows.php.net/download](https://windows.php.net/download/), descomprímelo en `C:\php` y agrega esa carpeta a la variable PATH. Alternativa más simple: `winget install PHP.PHP.8.3` o instalar XAMPP, que incluye PHP, Apache y MariaDB.
+2. **macOS**: con Homebrew ejecuta `brew install php`.
+3. **Linux**: en Ubuntu o Debian, `sudo apt install php-cli`. En Fedora, `sudo dnf install php-cli`.
+4. Abre una terminal nueva y escribe `php --version`. Debe mostrar PHP 8 o superior.
+5. Crea una carpeta para practicar y dentro un archivo `hola.php` con el contenido del ejemplo 1.
+6. Ejecuta `php hola.php`. Verás `Hola, mundo` en la terminal.
+
+</Pasos>
+
+Para páginas web, más adelante puedes arrancar el servidor integrado con `php -S localhost:8000` dentro de la carpeta de tu proyecto y abrir esa dirección en el navegador.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.php" ejecutar="php hola.php" salida="Hola, mundo">
+
+```php
+<?php
+// Todo el código PHP va después de la etiqueta de apertura
+echo "Hola, mundo\n";
+```
+
+`echo` imprime texto. El `\n` es el salto de línea; sin él, la siguiente salida aparecería pegada. En archivos que solo contienen PHP no se escribe la etiqueta de cierre.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables y tipos" archivo="variables.php" ejecutar="php variables.php" salida={"Ana tiene 30 años y mide 1.68 m\nMayor de edad: true"}>
+
+```php
+<?php
+declare(strict_types=1); // exige que los tipos coincidan
+
+// Las variables siempre empiezan con $
+$nombre = "Ana";
+$edad = 29;
+$altura = 1.68;
+$edad++;
+$mayorDeEdad = $edad >= 18;
+
+// Dentro de comillas dobles las variables se interpolan
+echo "$nombre tiene $edad años y mide $altura m\n";
+// var_export muestra el valor tal cual; un bool se imprime como true o false
+echo "Mayor de edad: " . var_export($mayorDeEdad, true) . "\n";
+```
+
+El punto `.` concatena cadenas. Si hicieras `echo $mayorDeEdad;` verías `1`, porque PHP convierte `true` a `"1"` y `false` a cadena vacía al imprimir.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Arreglos y bucles" archivo="arreglos.php" ejecutar="php arreglos.php" salida={"1. manzana\n2. pera\n3. uva\n4. mango\nFrutas: 4, total: 85"}>
+
+```php
+<?php
+// Arreglo indexado (lista)
+$frutas = ["manzana", "pera", "uva"];
+$frutas[] = "mango"; // agrega al final
+
+foreach ($frutas as $i => $fruta) {
+    echo ($i + 1) . ". $fruta\n";
+}
+
+// Arreglo asociativo (clave => valor)
+$precios = ["manzana" => 20, "pera" => 25, "uva" => 40];
+$total = 0;
+foreach ($precios as $fruta => $precio) {
+    $total += $precio;
+}
+echo "Frutas: " . count($frutas) . ", total: $total\n";
+```
+
+En PHP el mismo tipo `array` sirve como lista y como diccionario. `foreach` recorre ambos; con `$clave => $valor` obtienes también el índice o la clave.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Funciones con tipos y match" archivo="funciones.php" ejecutar="php funciones.php" salida={"-3 es negativo\n0 es cero\n7 es positivo\nHola, Ana\nBuenas, Luis"}>
+
+```php
+<?php
+declare(strict_types=1);
+
+// Parámetro int, retorno string
+function clasificar(int $n): string
+{
+    // match compara con === y devuelve un valor
+    return match (true) {
+        $n < 0 => "negativo",
+        $n === 0 => "cero",
+        default => "positivo",
+    };
+}
+
+// Parámetro con valor por defecto
+function saludar(string $nombre, string $saludo = "Hola"): string
+{
+    return "$saludo, $nombre";
+}
+
+foreach ([-3, 0, 7] as $n) {
+    echo "$n es " . clasificar($n) . "\n";
+}
+echo saludar("Ana") . "\n";
+echo saludar("Luis", "Buenas") . "\n";
+```
+
+Con `strict_types` activado, llamar `clasificar("7")` con una cadena lanza un `TypeError` en lugar de convertir en silencio. `match` es la versión estricta y sin `break` del viejo `switch`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Clases y objetos" archivo="clases.php" ejecutar="php clases.php" salida="Libreta: $45.50">
+
+```php
+<?php
+declare(strict_types=1);
+
+class Producto
+{
+    // Promoción de propiedades: el constructor declara y asigna a la vez
+    public function __construct(
+        public readonly string $nombre, // solo lectura tras construir
+        private int $centavos,          // privado: solo la clase lo toca
+    ) {}
+
+    public function precio(): string
+    {
+        return number_format($this->centavos / 100, 2);
+    }
+}
+
+$libreta = new Producto("Libreta", 4550);
+echo "{$libreta->nombre}: $" . $libreta->precio() . "\n";
+```
+
+Guardar el dinero en centavos enteros evita errores de redondeo. `readonly` impide cambiar `nombre` después de crear el objeto, y `private` oculta `centavos` para que solo `precio()` lo use.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="JSON y funciones de arreglos" archivo="json.php" ejecutar="php json.php" salida={"Adultos: Ana, Eva\n[\n    {\n        \"nombre\": \"Ana\",\n        \"edad\": 29\n    },\n    {\n        \"nombre\": \"Eva\",\n        \"edad\": 42\n    }\n]"}>
+
+```php
+<?php
+$json = '[{"nombre":"Ana","edad":29},{"nombre":"Luis","edad":17},{"nombre":"Eva","edad":42}]';
+
+// true convierte los objetos JSON en arreglos asociativos
+$personas = json_decode($json, true);
+
+// fn crea una función flecha de una sola expresión
+$adultos = array_filter($personas, fn($p) => $p["edad"] >= 18);
+$nombres = array_map(fn($p) => $p["nombre"], $adultos);
+
+echo "Adultos: " . implode(", ", $nombres) . "\n";
+// array_values reindexa desde 0 para que el JSON sea una lista
+echo json_encode(array_values($adultos), JSON_PRETTY_PRINT) . "\n";
+```
+
+Leer y escribir JSON es parte del trabajo diario en PHP. `array_filter` conserva las claves originales, por eso se usa `array_values` antes de codificar.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Confiar en lo que llega del usuario">
+`$_GET`, `$_POST` y `$_FILES` contienen lo que el visitante quiera enviar. Si lo metes directo en una consulta SQL tienes inyección SQL; si lo imprimes sin escapar tienes XSS. Usa PDO con consultas preparadas y escapa la salida con `htmlspecialchars`.
+</Callout>
+
+<Callout tipo="warning" titulo="Comparar con == en lugar de ===">
+`==` convierte tipos antes de comparar y produce sorpresas: `"abc" == 0` fue cierto durante años y `"1e3" == "1000"` sigue siéndolo. Usa `===` para valores y `in_array($x, $lista, true)` para buscar en arreglos.
+</Callout>
+
+<Callout tipo="warning" titulo="Mostrar los errores en producción">
+Un mensaje de error expone rutas, consultas y versiones. En desarrollo activa `error_reporting(E_ALL)` y `display_errors=On`; en producción pon `display_errors=Off` y `log_errors=On` para que los errores vayan al registro, no a la pantalla.
+</Callout>
+
+<Callout tipo="warning" titulo="Usar strlen con texto en UTF-8">
+`strlen("año")` devuelve 4, porque cuenta bytes y la `ñ` ocupa dos. Para contar o cortar caracteres usa `mb_strlen` y `mb_substr`, y guarda tus archivos en UTF-8.
+</Callout>
+
+<Callout tipo="warning" titulo="Guardar dinero en float">
+`0.1 + 0.2` no es exactamente `0.3`. Como en el ejemplo 5, guarda centavos en enteros, o usa la extensión BCMath o una librería como `brick/money` cuando necesites decimales exactos.
+</Callout>
+
+## Buenas prácticas
+
+- Empieza cada archivo con `declare(strict_types=1);` y declara tipos en parámetros y retornos.
+- Sigue el estilo PSR-12 (o PER): un formateador como PHP-CS-Fixer lo aplica solo.
+- Organiza las clases con autoload PSR-4 a través de Composer en vez de usar `require` manual por todos lados.
+- Separa responsabilidades: nada de HTML, SQL y lógica mezclados en el mismo archivo.
+- Para bases de datos usa PDO con consultas preparadas; nunca concatenes valores en el SQL.
+- Mantén la versión de PHP actualizada y revisa `composer audit` para dependencias con vulnerabilidades.
+
+## Siguiente paso
+
+Ya sabes escribir scripts con tipos, arreglos, clases y JSON. Para avanzar:
+
+- **Tu primera página web**: sigue [el tutorial del manual oficial](https://www.php.net/manual/es/tutorial.php) y arranca el servidor integrado con `php -S localhost:8000`.
+- **HTML y CSS**: la página que generes necesita estructura y estilo; aprende con la [guía de HTML y CSS](/guias/html-css/).
+- **Bases de datos**: aprende [SQL desde cero](/guias/sql/) y después conecta PHP con PDO.
+- **Composer y buenas prácticas**: lee [PHP: La Manera Correcta](https://wilsenhc.github.io/php-the-right-way/) antes de tu primer proyecto serio.
+- **Un framework**: cuando domines lo anterior, Laravel o Symfony te dan enrutamiento, ORM y seguridad listos.
+
+Explora más libros y cursos gratis en la [biblioteca de PHP](/biblioteca/php/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

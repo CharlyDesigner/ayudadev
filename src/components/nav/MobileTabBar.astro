@@ -1,0 +1,33 @@
+---
+import Icon from '@components/ui/Icon.astro';
+
+const actual = Astro.url.pathname;
+const tabs = [
+  { label: 'Inicio', href: '/', icon: 'home' },
+  { label: 'Biblioteca', href: '/biblioteca/', icon: 'book' },
+  { label: 'Guías', href: '/guias/', icon: 'code' },
+  { label: 'IA', href: '/ia/', icon: 'sparkles' },
+  { label: 'Más', href: '/noticias/', icon: 'menu' },
+] as const;
+const activo = (href: string) => (href === '/' ? actual === '/' : actual.startsWith(href));
+---
+
+<nav aria-label="Navegación móvil" class="fixed inset-x-3 bottom-3 z-40 md:hidden">
+  <ul class="glass flex items-center justify-around rounded-full border border-line px-1 py-1.5 shadow-[0_10px_30px_rgb(0_0_0/0.25)]">
+    {tabs.map((tab) => (
+      <li class="flex-1">
+        <a
+          href={tab.href}
+          aria-current={activo(tab.href) ? 'page' : undefined}
+          class:list={[
+            'flex flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[11px] font-medium transition-colors',
+            activo(tab.href) ? 'text-accent-ink' : 'text-muted',
+          ]}
+        >
+          <Icon name={tab.icon} class="h-5 w-5" />
+          <span>{tab.label}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PUBLIC_STRIPE_PAYMENT_LINK: ${{ vars.PUBLIC_STRIPE_PAYMENT_LINK }}
+      PUBLIC_GITHUB_SPONSORS: ${{ vars.PUBLIC_GITHUB_SPONSORS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Revisar tipos
+        run: npm run check
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Revisar el sitio estático
+        run: npm run check:static
+
+      - name: Revisar sintaxis PHP
+        run: for f in public/api/*.php; do php -l "$f"; done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7

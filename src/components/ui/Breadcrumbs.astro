@@ -1,0 +1,24 @@
+---
+import Icon from '@components/ui/Icon.astro';
+import type { Miga } from '@lib/seo';
+interface Props {
+  migas: Miga[];
+  class?: string;
+}
+const { migas, class: className = '' } = Astro.props;
+---
+
+<nav aria-label="Ruta de navegación" class:list={['text-sm text-muted', className]}>
+  <ol class="flex flex-wrap items-center gap-1">
+    {migas.map((m, i) => (
+      <li class="flex items-center gap-1">
+        {i > 0 && <Icon name="chevron-right" class="h-3.5 w-3.5 opacity-60" />}
+        {i === migas.length - 1 ? (
+          <span aria-current="page" class="text-fg">{m.nombre}</span>
+        ) : (
+          <a href={m.href} class="hover:text-fg">{m.nombre}</a>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>

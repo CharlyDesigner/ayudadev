@@ -1,0 +1,91 @@
+---
+nombre: 'Ollama'
+empresa: 'Ollama'
+descripcion: 'Herramienta de código abierto para correr modelos de IA en tu propia computadora, sin enviar tus datos a la nube. Gratis y sin límites en local.'
+tipo: local
+sitio: 'https://ollama.com'
+docs: 'https://docs.ollama.com'
+planGratis: si
+precioUrl: 'https://ollama.com/pricing'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 8
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+Ollama es un programa de código abierto (licencia MIT) que te permite descargar y correr modelos de lenguaje abiertos en tu propia computadora. Lo instalas, eliges un modelo y chateas desde la terminal o desde su app de escritorio. Nada sale de tu máquina a menos que tú lo decidas.
+
+Según su sitio oficial, correr modelos en tu propio hardware es gratis y sin límites de uso. Ollama también ofrece modelos en la nube con un esquema de créditos; los detalles están en su [página de precios](https://ollama.com/pricing).
+
+Es la opción ideal si quieres privacidad total, trabajar sin internet o simplemente entender cómo funciona un modelo por dentro.
+
+## Para qué sirve si estás aprendiendo
+
+Ollama no es el asistente más potente, pero enseña cosas que los chats en la nube ocultan:
+
+- Ves cuánto pesa un modelo, cuánta memoria usa y qué tan rápido responde en tu equipo.
+- Puedes practicar sin preocuparte por límites de mensajes ni por privacidad.
+- Tiene una API local, así que es perfecto para tu primer proyecto que "use IA": un script en Python o JavaScript que le mande preguntas.
+- Funciona sin conexión, útil si tu internet es inestable.
+
+Los modelos abiertos pequeños se equivocan más que los grandes comerciales. Úsalo para practicar y experimentar, y verifica con la documentación lo que te diga.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Descarga Ollama desde [ollama.com/download](https://ollama.com/download) para Windows, macOS o Linux e instálalo.
+2. Abre una terminal y escribe `ollama --version` para confirmar que está instalado.
+3. Descarga y ejecuta un modelo pequeño. En la [biblioteca de modelos](https://ollama.com/search) verás los nombres disponibles; luego corre `ollama run NOMBRE-DEL-MODELO`.
+4. Escribe una pregunta en español en la terminal y espera la respuesta. Escribe `/bye` para salir.
+5. Cuando te sientas cómodo, prueba la API local desde un script con la librería oficial de Python o JavaScript que aparece en la [documentación](https://docs.ollama.com).
+
+</Pasos>
+
+```bash
+ollama run NOMBRE-DEL-MODELO
+```
+
+```text
+>>> explícame qué es una variable en programación
+Una variable es un nombre que apunta a un valor guardado en memoria ...
+>>> /bye
+```
+
+<Callout tipo="info" titulo="Elige un modelo que quepa en tu equipo">
+Cada modelo indica su tamaño en la biblioteca. Si tu computadora tiene poca memoria RAM, empieza con los modelos más pequeños. Un modelo demasiado grande se vuelve lento o no arranca.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Explícame qué es una función en [LENGUAJE] con un ejemplo de máximo 8 líneas y comentarios en español. Luego hazme una pregunta para comprobar que entendí.
+```
+
+```text
+Dame 3 ejercicios cortos para practicar condicionales en [LENGUAJE], de fácil a difícil, sin las soluciones. Después de cada uno dime qué concepto practica.
+```
+
+```text
+Revisa esta función que escribí y dime si tiene algún error lógico. No la reescribas, solo señala la línea y explica el problema. Código: [PEGA TU CÓDIGO]
+```
+
+## Límites y cuidados
+
+- **Más errores que los modelos grandes.** Los modelos abiertos pequeños inventan con más frecuencia. Ejecuta el código y revisa la documentación.
+- **Depende de tu hardware.** Sin una buena cantidad de RAM o una GPU, las respuestas pueden ser lentas.
+- **Privacidad real, pero no magia.** En local tus datos no salen. Si activas los modelos en la nube de Ollama, ya estás enviando datos a un servidor; revisa su política.
+- **Secretos.** Aunque sea local, no acostumbres pegar claves o contraseñas en ningún chat.
+- **Aprender vs copiar.** La regla no cambia por ser local: escribe tú, pide revisión y explica con tus palabras lo que aceptas.
+
+## Enlaces oficiales
+
+- [Sitio de Ollama](https://ollama.com)
+- [Documentación](https://docs.ollama.com)
+- [Descargas](https://ollama.com/download)
+- [Repositorio en GitHub](https://github.com/ollama/ollama)
+- [Precios](https://ollama.com/pricing)

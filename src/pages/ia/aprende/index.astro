@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { migasLd } from '@lib/seo';
+
+const lista = (await getCollection('aprende', (a) => !a.data.borrador)).sort((a, b) => a.data.orden - b.data.orden);
+const titulo = 'Aprende con IA';
+const descripcion = 'Guías para usar la IA como tutor: que te explique a tu nivel, te ponga ejercicios y te revise el código, sin que termines copiando sin entender.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'IA', href: '/ia/' },
+  { nombre: 'Aprende con IA', href: '/ia/aprende/' },
+];
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/ia/aprende/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="IA" titulo={titulo} descripcion={descripcion} />
+    {lista.length === 0 && <p class="card mt-10 p-8 text-center text-muted">Las guías están en camino.</p>}
+    <div class="mt-10 grid gap-4 md:grid-cols-2">
+      {lista.map((a, i) => (
+        <a href={`/ia/aprende/${a.id}/`} class="card card-hover group flex gap-4 p-5">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-accent text-sm font-bold text-on-accent">{i + 1}</span>
+          <span class="min-w-0">
+            <span class="block text-lg font-semibold leading-snug">{a.data.titulo}</span>
+            <span class="mt-1 block text-sm text-muted">{a.data.descripcion}</span>
+            <span class="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent-ink">Leer <Icon name="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+          </span>
+        </a>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

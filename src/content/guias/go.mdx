@@ -1,0 +1,277 @@
+---
+titulo: 'Go desde cero'
+descripcion: 'Qué es Go, cómo instalarlo y tus primeros programas con ejemplos que puedes copiar y ejecutar con go run.'
+tema: go
+nivel: principiante
+tiempoLectura: 28
+publicado: 2026-10-09
+libros: ['go-un-tour-por-go', 'go-pequeno-libro-de-go', 'go-ya-tutoriales-ya', 'go-effective-go']
+requisitos: ['Saber usar una terminal básica']
+etiquetas: ['golang', 'goroutines', 'cli', 'backend']
+orden: 17
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Go (también llamado Golang) es un lenguaje creado en Google para construir servicios de red, herramientas de línea de comandos e infraestructura. Docker, Kubernetes y muchas APIs en la nube están escritos en Go. Su filosofía es la simplicidad: pocas palabras clave, una sola forma de hacer cada cosa y compilación casi instantánea.
+
+- **Compilado a binario nativo**: `go build` produce un solo archivo ejecutable sin dependencias. Copiarlo a otro servidor es todo el despliegue.
+- **Tipado estático con inferencia**: `x := 5` declara un `int` sin que escribas el tipo, pero el compilador lo conoce y lo revisa.
+- **Recolector de basura**: hay punteros, pero no liberas memoria a mano ni haces aritmética de punteros.
+- **Sin clases ni herencia**: usas `struct` con métodos e interfaces implícitas. Un tipo "implementa" una interfaz solo por tener sus métodos.
+- **Errores como valores**: las funciones devuelven `error` y tú lo compruebas con `if err != nil`. No hay excepciones para el flujo normal.
+- **Concurrencia integrada**: las goroutines son hilos ligeros y los canales sirven para comunicarlas de forma segura.
+- **Valores cero útiles**: toda variable nace con un valor (`0`, `""`, `false`, `nil`), nunca con basura.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows**: descarga el instalador `.msi` desde [go.dev/dl](https://go.dev/dl/) y ejecútalo. También puedes usar `winget install GoLang.Go`.
+2. **macOS**: descarga el `.pkg` de la misma página o ejecuta `brew install go`.
+3. **Linux**: descarga el `.tar.gz`, extráelo en `/usr/local` siguiendo las [instrucciones oficiales](https://go.dev/doc/install) y agrega `/usr/local/go/bin` a tu PATH.
+4. Abre una terminal nueva y escribe `go version`. Debe responder con la versión instalada.
+5. Crea una carpeta para tu proyecto, entra en ella y ejecuta `go mod init ejemplo/hola`. Esto crea `go.mod`, el archivo que identifica tu módulo y sus dependencias.
+6. Crea `hola.go` con el contenido del ejemplo 1 y ejecuta `go run hola.go`.
+
+</Pasos>
+
+`go run` compila y ejecuta en un paso; `go build` genera el binario. Como editor, Visual Studio Code con la extensión oficial de Go instala las herramientas de formato y análisis por ti.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.go" ejecutar="go run hola.go" salida="Hola, mundo">
+
+```go
+// Todo archivo ejecutable pertenece al paquete main
+package main
+
+// Importamos el paquete fmt para imprimir con formato
+import "fmt"
+
+// La ejecución empieza en main
+func main() {
+	fmt.Println("Hola, mundo")
+}
+```
+
+Go exige que todo lo que importas se use; si dejas un `import` sin usar, el programa no compila. Las llaves de apertura van en la misma línea que `func` o `if`, siempre.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables y tipos" archivo="variables.go" ejecutar="go run variables.go" salida={"Ana tiene 30 años y mide 1.68 m\nMayor de edad: true, tipo de altura: float64"}>
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	// Forma larga: var nombre tipo = valor
+	var nombre string = "Ana"
+	// Forma corta: := declara e infiere el tipo (solo dentro de funciones)
+	edad := 29
+	altura := 1.68
+	edad++
+	mayorDeEdad := edad >= 18
+
+	// Println separa los argumentos con espacios
+	fmt.Println(nombre, "tiene", edad, "años y mide", altura, "m")
+	// Printf usa verbos: %v imprime cualquier valor, %T imprime su tipo
+	fmt.Printf("Mayor de edad: %v, tipo de altura: %T\n", mayorDeEdad, altura)
+}
+```
+
+Una variable declarada y no usada también es error de compilación. Suena estricto, pero evita código muerto desde el primer día.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Slices y mapas" archivo="colecciones.go" ejecutar="go run colecciones.go" salida={"1. manzana\n2. pera\n3. uva\n4. mango\nFrutas: 4 total: 85"}>
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	// Un slice es una lista que crece con append
+	frutas := []string{"manzana", "pera", "uva"}
+	frutas = append(frutas, "mango")
+
+	// range devuelve índice y valor
+	for i, fruta := range frutas {
+		fmt.Printf("%d. %s\n", i+1, fruta)
+	}
+
+	// Un mapa asocia claves con valores
+	precios := map[string]int{"manzana": 20, "pera": 25, "uva": 40}
+	total := 0
+	for _, precio := range precios { // _ descarta la clave
+		total += precio
+	}
+	fmt.Println("Frutas:", len(frutas), "total:", total)
+}
+```
+
+`append` devuelve un slice nuevo, por eso se reasigna a `frutas`. El orden al recorrer un mapa es aleatorio a propósito; aquí no importa porque solo sumamos.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Funciones que devuelven errores" archivo="errores.go" ejecutar="go run errores.go" salida={"10 / 4 = 2.5\nError: no se puede dividir entre cero"}>
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+)
+
+// Una función puede devolver varios valores; el último suele ser error
+func dividir(a, b float64) (float64, error) {
+	if b == 0 {
+		return 0, errors.New("no se puede dividir entre cero")
+	}
+	return a / b, nil // nil significa "sin error"
+}
+
+func main() {
+	if r, err := dividir(10, 4); err != nil {
+		fmt.Println("Error:", err)
+	} else {
+		fmt.Println("10 / 4 =", r)
+	}
+
+	if _, err := dividir(1, 0); err != nil {
+		fmt.Println("Error:", err)
+	}
+}
+```
+
+Este patrón `if err != nil` aparece en todo programa Go. Es verboso, pero cada error se maneja justo donde ocurre y nunca se pierde uno sin querer.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Structs y métodos" archivo="structs.go" ejecutar="go run structs.go" salida={"Área: 7\nDespués de escalar: {Ancho:4 Alto:7}, área 28.0"}>
+
+```go
+package main
+
+import "fmt"
+
+// Un struct agrupa campos
+type Rectangulo struct {
+	Ancho, Alto float64
+}
+
+// Método con receptor por valor: recibe una copia
+func (r Rectangulo) Area() float64 {
+	return r.Ancho * r.Alto
+}
+
+// Receptor por puntero: puede modificar el original
+func (r *Rectangulo) Escalar(factor float64) {
+	r.Ancho *= factor
+	r.Alto *= factor
+}
+
+func main() {
+	r := Rectangulo{Ancho: 2, Alto: 3.5}
+	fmt.Println("Área:", r.Area())
+	r.Escalar(2)
+	fmt.Printf("Después de escalar: %+v, área %.1f\n", r, r.Area())
+}
+```
+
+Si `Escalar` tuviera receptor por valor, cambiaría una copia y el rectángulo original seguiría igual. Regla práctica: usa puntero cuando el método modifica el struct.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Goroutines y canales" archivo="concurrencia.go" ejecutar="go run concurrencia.go" salida="Suma de cuadrados: 55">
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+// chan<- int: este parámetro solo puede enviar al canal
+func cuadrado(n int, resultados chan<- int, wg *sync.WaitGroup) {
+	defer wg.Done() // avisa al terminar, pase lo que pase
+	resultados <- n * n
+}
+
+func main() {
+	resultados := make(chan int, 5) // canal con espacio para 5 valores
+	var wg sync.WaitGroup
+
+	for n := 1; n <= 5; n++ {
+		wg.Add(1)
+		go cuadrado(n, resultados, &wg) // go lanza una goroutine
+	}
+	wg.Wait()        // espera a que las 5 terminen
+	close(resultados) // cerrar permite que range termine
+
+	suma := 0
+	for r := range resultados {
+		suma += r
+	}
+	fmt.Println("Suma de cuadrados:", suma)
+}
+```
+
+Cinco goroutines calculan en paralelo y envían su resultado por el canal. `WaitGroup` espera a todas y, al cerrar el canal, el `range` del final sabe cuándo parar.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Ignorar el error que devuelve una función">
+Escribir `resultado, _ := hacerAlgo()` descarta el error y el programa sigue como si nada. Compruébalo siempre con `if err != nil`, aunque solo sea para imprimirlo. El linter `errcheck` (incluido en golangci-lint) te avisa cuando se te escapa uno.
+</Callout>
+
+<Callout tipo="warning" titulo="Escribir en un mapa desde varias goroutines">
+Los mapas no son seguros para acceso concurrente: dos goroutines escribiendo a la vez provocan el pánico "concurrent map writes". Protege el mapa con `sync.Mutex`, usa canales como en el ejemplo 6, o ejecuta tus pruebas con `go test -race` para detectarlo.
+</Callout>
+
+<Callout tipo="warning" titulo="Goroutines que nunca terminan">
+Una goroutine que espera en un canal que nadie va a leer se queda bloqueada para siempre y consume memoria. Cierra los canales desde el lado que envía (nunca desde el que recibe) y usa `context` para cancelar trabajos largos.
+</Callout>
+
+<Callout tipo="warning" titulo="Pensar que un slice es una copia">
+Dos slices pueden compartir el mismo arreglo de fondo: modificar uno cambia el otro. Si necesitas una copia independiente usa `slices.Clone`. Y recuerda que `append` puede o no crear un arreglo nuevo, por eso siempre reasignas su resultado.
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar go mod tidy">
+Si importas un paquete externo y no corres `go mod tidy`, el compilador se queja de que falta en `go.mod`. Ejecútalo cada vez que agregues o quites dependencias y sube siempre `go.mod` y `go.sum` a tu repositorio.
+</Callout>
+
+## Buenas prácticas
+
+- Deja que `gofmt` (o `go fmt ./...`) formatee tu código; en Go no se discute el estilo.
+- Ejecuta `go vet ./...` antes de compartir código: detecta errores que compilan pero están mal.
+- Nombra en camelCase; lo que empieza con mayúscula es público (exportado) y lo que empieza con minúscula es privado del paquete.
+- Mantén las funciones cortas y devuelve el error con contexto: `fmt.Errorf("leer config: %w", err)`.
+- Prefiere la biblioteca estándar (`net/http`, `encoding/json`, `testing`) antes de buscar una dependencia.
+- Escribe pruebas en archivos `_test.go` y córrelas con `go test ./...`.
+
+## Siguiente paso
+
+Ya manejas variables, colecciones, errores, structs y concurrencia básica. Lo que sigue:
+
+- **Interfaces**: el mecanismo central de Go para escribir código flexible. Están en [Un tour por Go](https://go-tour-lat.appspot.com/) y en Effective Go.
+- **Tu primer servidor HTTP**: con `net/http` puedes responder peticiones web en pocas líneas, sin frameworks.
+- **Bases de datos**: aprende [SQL desde cero](/guias/sql/) y luego usa `database/sql` con un driver de PostgreSQL o SQLite.
+- **Control de versiones**: guarda cada avance con la [guía de Git](/guias/git/).
+- **Contenedores**: un binario de Go cabe en una imagen de Docker diminuta; revisa la [biblioteca de Docker](/biblioteca/docker/).
+
+Explora más libros y cursos gratis en la [biblioteca de Go](/biblioteca/go/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

@@ -1,0 +1,155 @@
+name: Publicar en dev.carlosnavarro.site
+
+# Solo se ejecuta cuando tú lo pides desde GitHub (pestaña Actions, Run workflow).
+# Nada se publica solo, ni al hacer push a main.
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'Prueba = no sube nada, solo muestra qué haría. Publicar = sube el sitio.'
+        type: choice
+        options: [prueba, publicar]
+        default: prueba
+      confirmacion:
+        description: 'Para publicar de verdad, escribe: publicar'
+        required: false
+        default: ''
+
+concurrency:
+  group: deploy-ayudadev
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PUBLIC_STRIPE_PAYMENT_LINK: ${{ vars.PUBLIC_STRIPE_PAYMENT_LINK }}
+      PUBLIC_GITHUB_SPONSORS: ${{ vars.PUBLIC_GITHUB_SPONSORS }}
+
+    steps:
+      - name: Revisar la confirmación
+        env:
+          MODO: ${{ inputs.modo }}
+          CONFIRMACION: ${{ inputs.confirmacion }}
+        run: |
+          if [ "$MODO" = "publicar" ] && [ "$CONFIRMACION" != "publicar" ]; then
+            echo "::error::Elegiste Publicar pero no escribiste 'publicar' en la confirmación. Nada se subió."
+            exit 1
+          fi
+          echo "Modo: $MODO"
+
+      - name: Revisar que las credenciales estén cargadas
+        env:
+          SERVIDOR: ${{ secrets.FTP_SERVER }}
+          USUARIO: ${{ secrets.FTP_USERNAME }}
+          CLAVE: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          faltan=""
+          [ -z "$SERVIDOR" ] && faltan="$faltan FTP_SERVER"
+          [ -z "$USUARIO" ] && faltan="$faltan FTP_USERNAME"
+          [ -z "$CLAVE" ] && faltan="$faltan FTP_PASSWORD"
+          if [ -n "$faltan" ]; then
+            echo "::error::Faltan estos secretos en el repositorio:$faltan (Settings, Secrets and variables, Actions)"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Revisar tipos
+        run: npm run check
+
+      - name: Pruebas
+        run: npm test
+
+      - name: Compilar el sitio
+        run: npm run build
+
+      - name: Revisar el sitio estático
+        run: npm run check:static
+
+      - name: Revisar que el build quedó completo
+        run: |
+          for archivo in dist/index.html dist/404.html dist/.htaccess dist/robots.txt dist/sitemap-index.xml dist/rss.xml dist/search-index.json dist/recursos.json dist/api/suscribir.php dist/api/confirmar.php dist/api/baja.php dist/api/_guard.php dist/api/_newsletter.php dist/api/_data/.htaccess; do
+            [ -f "$archivo" ] || { echo "::error::Falta $archivo en el build"; exit 1; }
+          done
+          for archivo_php in dist/api/*.php; do
+            php -l "$archivo_php"
+          done
+          paginas=$(find dist -name '*.html' | wc -l)
+          echo "Páginas compiladas: $paginas"
+          [ "$paginas" -ge 60 ] || { echo "::error::Solo $paginas páginas, se esperaban 60 o más"; exit 1; }
+          if grep -rl 'localhost:43' dist --include='*.html' | head -1 | grep -q .; then
+            echo "::error::El build contiene enlaces a localhost"
+            exit 1
+          fi
+
+      # La cuenta FTP debe aterrizar en el Document Root del subdominio. Por defecto
+      # se busca cgi-bin/ (cPanel lo crea); si tu subdominio no lo tiene, define la
+      # variable FTP_SENTINEL con el nombre de un archivo que exista ahí.
+      - name: Revisar la carpeta destino en el servidor
+        env:
+          SERVIDOR: ${{ secrets.FTP_SERVER }}
+          USUARIO: ${{ secrets.FTP_USERNAME }}
+          CLAVE: ${{ secrets.FTP_PASSWORD }}
+          PUERTO: ${{ vars.FTP_PORT || 21 }}
+          DESTINO: ${{ vars.FTP_REMOTE_DIR || './' }}
+          CENTINELA: ${{ vars.FTP_SENTINEL || 'cgi-bin' }}
+        run: |
+          ruta="${DESTINO#./}"
+          listado=$(curl -sS --ssl-reqd --insecure --list-only --max-time 60 \
+            --user "$USUARIO:$CLAVE" "ftp://$SERVIDOR:$PUERTO/$ruta")
+          echo "Contenido de la carpeta destino:"
+          echo "$listado" | sed 's/^/  /'
+          if ! echo "$listado" | grep -qx "$CENTINELA"; then
+            echo "::error::La carpeta destino no tiene '$CENTINELA', así que no parece ser el Document Root del subdominio. Revisa el Directory de la cuenta FTP en cPanel o define la variable FTP_SENTINEL. Nada se subió."
+            exit 1
+          fi
+
+      - name: Subir por FTPS
+        # SamKirkland/FTP-Deploy-Action v4.4.0, fijado por hash de commit.
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ vars.FTP_PORT || 21 }}
+          protocol: ftps
+          security: loose
+          local-dir: ./dist/
+          server-dir: ${{ vars.FTP_REMOTE_DIR || './' }}
+          dry-run: ${{ inputs.modo != 'publicar' }}
+          # Lo que vive solo en el servidor y el despliegue no debe tocar ni borrar.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            cgi-bin/**
+            .well-known/**
+            php.ini
+            .user.ini
+            error_log
+            api/_data/**
+
+      - name: Resumen
+        env:
+          MODO: ${{ inputs.modo }}
+        run: |
+          if [ "$MODO" = "publicar" ]; then
+            echo "### Sitio publicado" >> $GITHUB_STEP_SUMMARY
+            echo "Revisa https://dev.carlosnavarro.site" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### Prueba terminada, no se subió nada" >> $GITHUB_STEP_SUMMARY
+            echo "Arriba, en el paso de FTPS, está la lista de lo que se habría subido." >> $GITHUB_STEP_SUMMARY
+            echo "Para publicar de verdad: vuelve a ejecutar, elige *publicar* y escribe \`publicar\` en la confirmación." >> $GITHUB_STEP_SUMMARY
+          fi

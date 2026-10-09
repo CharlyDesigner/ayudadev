@@ -1,0 +1,22 @@
+---
+import Icon from '@components/ui/Icon.astro';
+interface Props {
+  id: string;
+  class?: string;
+}
+const { id, class: className = '' } = Astro.props;
+---
+
+<button
+  type="button"
+  data-fav-id={id}
+  aria-pressed="false"
+  title="Guardar en favoritos"
+  aria-label="Guardar en favoritos"
+  class:list={[
+    'grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition-colors hover:text-fg aria-pressed:border-accent aria-pressed:bg-accent/15 aria-pressed:text-accent-ink [&[aria-pressed=true]_svg]:fill-current',
+    className,
+  ]}
+>
+  <Icon name="heart" class="h-4 w-4" />
+</button>

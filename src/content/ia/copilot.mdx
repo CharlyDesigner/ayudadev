@@ -1,0 +1,81 @@
+---
+nombre: 'GitHub Copilot'
+empresa: 'GitHub (Microsoft)'
+descripcion: 'Asistente de código dentro de tu editor. Autocompleta, explica y chatea sobre tu proyecto. Tiene un plan gratuito con acceso limitado.'
+tipo: asistente-codigo
+sitio: 'https://github.com/features/copilot'
+docs: 'https://docs.github.com/es/copilot'
+planGratis: limitado
+precioUrl: 'https://github.com/features/copilot/plans'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 5
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+GitHub Copilot es un asistente de programación que se instala dentro de tu editor: VS Code, Visual Studio, JetBrains, Neovim y otros. Mientras escribes, sugiere la siguiente línea o bloque completo. También tiene un chat lateral para preguntar sobre tu código y un modo agente que puede hacer cambios en varios archivos.
+
+GitHub ofrece un plan gratuito con acceso limitado a algunas funciones, además de planes de pago. Revisa la [página oficial de planes](https://github.com/features/copilot/plans) para ver qué incluye cada uno hoy.
+
+La documentación está disponible en español en [docs.github.com](https://docs.github.com/es/copilot).
+
+## Para qué sirve si estás aprendiendo
+
+Copilot es cómodo porque está donde ya trabajas. Para aprender tiene ventajas y un riesgo claro.
+
+Ventajas:
+
+- El chat del editor conoce el archivo abierto, así que puedes preguntar "¿qué hace esta función?" sin copiar nada.
+- Te muestra cómo se escribe algo en un lenguaje nuevo, con la sintaxis correcta.
+- Explica errores del panel de problemas con un clic.
+- Te ayuda a escribir pruebas y comentarios.
+
+El riesgo: el autocompletado es tan fluido que puedes aceptar sugerencias sin leerlas. Para aprender, apaga las sugerencias automáticas al principio y usa solo el chat. Cuando ya domines lo básico, activa el autocompletado y acostúmbrate a leer cada sugerencia antes de aceptarla.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Crea una cuenta en GitHub si no tienes una y activa Copilot desde tu configuración o desde la [página de planes](https://github.com/features/copilot/plans).
+2. Instala la extensión "GitHub Copilot" en VS Code (o el plugin de tu editor) e inicia sesión con tu cuenta de GitHub.
+3. Abre un archivo de código y abre el panel de chat de Copilot. Pregunta: "Explícame este archivo en español".
+4. Escribe un comentario describiendo una función pequeña y observa la sugerencia. Léela completa antes de aceptarla con Tab.
+5. Si aprendes, considera desactivar las sugerencias automáticas en la configuración y usar solo el chat durante tus primeras semanas.
+
+</Pasos>
+
+<Callout tipo="warning" titulo="Tab no es aprender">
+Aceptar sugerencias con Tab se siente productivo, pero si no entiendes lo que aceptaste, no avanzaste. Pregunta en el chat "¿por qué sugeriste esto?" cuando algo no te quede claro.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Explícame el archivo que tengo abierto en español sencillo. Para cada función dime qué recibe, qué devuelve y para qué se usa en el resto del proyecto.
+```
+
+```text
+Tengo este error en el panel de problemas: [PEGA EL ERROR]. Explícame qué significa y dame dos pistas para corregirlo, pero no me des el código corregido todavía.
+```
+
+```text
+Escribí esta función yo. Sugiéreme tres casos de prueba que podrían fallar y explícame por qué los elegiste. Quiero escribir las pruebas yo mismo.
+```
+
+## Límites y cuidados
+
+- **Sugerencias incorrectas.** Copilot sugiere código que "se ve bien" pero puede tener errores lógicos o usar APIs que no existen. Léelo y pruébalo.
+- **Código de terceros.** Las sugerencias se basan en mucho código público. Revisa la configuración relacionada con coincidencias de código público y las licencias si publicas tu proyecto.
+- **Privacidad.** Revisa en la [documentación oficial](https://docs.github.com/es/copilot) qué datos se envían y cómo se usan según tu plan.
+- **Secretos.** No escribas claves o contraseñas en archivos que Copilot pueda leer. Usa variables de entorno y `.gitignore`.
+- **Aprender vs copiar.** Si todo lo escribe Copilot, tú no practicas. Alterna sesiones con y sin asistente.
+
+## Enlaces oficiales
+
+- [Sitio de GitHub Copilot](https://github.com/features/copilot)
+- [Documentación en español](https://docs.github.com/es/copilot)
+- [Planes](https://github.com/features/copilot/plans)

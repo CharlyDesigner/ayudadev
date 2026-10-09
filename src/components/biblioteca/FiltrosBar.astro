@@ -1,0 +1,141 @@
+---
+/**
+ * Barra de filtros del catálogo. Funciona sin JS (todo visible) y con JS oculta
+ * tarjetas según los criterios. El estado vive en la URL (?q=&tema=&tipo=...).
+ */
+import Icon from '@components/ui/Icon.astro';
+import { AREAS_INFO } from '@data/areas';
+import { TEMAS } from '@data/temas';
+import { ETIQUETAS_FORMATO, ETIQUETAS_NIVEL, ETIQUETAS_TIPO, TIPOS, NIVELES, FORMATOS } from '@lib/schemas';
+
+interface Props {
+  total: number;
+  temaFijo?: string;
+}
+const { total, temaFijo } = Astro.props;
+---
+
+<form data-filtros class="card flex flex-col gap-4 p-4 sm:p-5" role="search" aria-label="Filtrar recursos" action="/biblioteca/" method="get">
+  <div class="relative">
+    <Icon name="search" class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted" />
+    <input type="search" name="q" class="field pl-11" placeholder="Busca por título, autor o palabra clave" aria-label="Buscar recursos" autocomplete="off" />
+  </div>
+
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {!temaFijo && (
+      <label class="text-xs font-medium text-muted">
+        Área
+        <select name="area" class="field mt-1 py-2.5 text-sm">
+          <option value="">Todas</option>
+          {AREAS_INFO.map((a) => <option value={a.id}>{a.nombre}</option>)}
+        </select>
+      </label>
+    )}
+    {!temaFijo && (
+      <label class="text-xs font-medium text-muted">
+        Tema
+        <select name="tema" class="field mt-1 py-2.5 text-sm">
+          <option value="">Todos</option>
+          {TEMAS.map((t) => <option value={t.slug}>{t.nombre}</option>)}
+        </select>
+      </label>
+    )}
+    <label class="text-xs font-medium text-muted">
+      Tipo
+      <select name="tipo" class="field mt-1 py-2.5 text-sm">
+        <option value="">Todos</option>
+        {TIPOS.map((t) => <option value={t}>{ETIQUETAS_TIPO[t]}</option>)}
+      </select>
+    </label>
+    <label class="text-xs font-medium text-muted">
+      Nivel
+      <select name="nivel" class="field mt-1 py-2.5 text-sm">
+        <option value="">Todos</option>
+        {NIVELES.map((n) => <option value={n}>{ETIQUETAS_NIVEL[n]}</option>)}
+      </select>
+    </label>
+    {temaFijo && (
+      <label class="text-xs font-medium text-muted">
+        Formato
+        <select name="formato" class="field mt-1 py-2.5 text-sm">
+          <option value="">Todos</option>
+          {FORMATOS.map((f) => <option value={f}>{ETIQUETAS_FORMATO[f]}</option>)}
+        </select>
+      </label>
+    )}
+    {temaFijo && <input type="hidden" name="tema" value={temaFijo} />}
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
+    <p aria-live="polite"><span data-filtros-count>{total}</span> de {total} recursos</p>
+    <div class="flex gap-2">
+      <button type="reset" class="btn btn-ghost btn-sm" data-filtros-reset>Limpiar</button>
+      <noscript><button type="submit" class="btn btn-secondary btn-sm">Filtrar</button></noscript>
+    </div>
+  </div>
+</form>
+
+<div data-filtros-empty hidden class="card mt-6 p-8 text-center">
+  <p class="font-semibold">No encontramos recursos con esos filtros.</p>
+  <p class="mt-1 text-sm text-muted">Prueba con otra palabra o <a href="/enviar-recurso/" class="link">propón un recurso</a> que falte.</p>
+</div>
+
+<script>
+  import { normalizar } from '@/lib/text';
+
+  const form = document.querySelector<HTMLFormElement>('[data-filtros]');
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-recurso]')];
+  const count = document.querySelector<HTMLElement>('[data-filtros-count]');
+  const vacio = document.querySelector<HTMLElement>('[data-filtros-empty]');
+  const secciones = [...document.querySelectorAll<HTMLElement>('[data-seccion-tema]')];
+
+  if (form && cards.length) {
+    const campos = ['q', 'area', 'tema', 'tipo', 'nivel', 'formato'] as const;
+    const leer = () => Object.fromEntries(campos.map((c) => [c, (form.elements.namedItem(c) as HTMLInputElement | HTMLSelectElement | null)?.value?.trim() ?? '']));
+
+    const aplicar = () => {
+      const f = leer();
+      const palabras = normalizar(f.q ?? '').split(/\s+/).filter(Boolean);
+      let visibles = 0;
+      for (const card of cards) {
+        const d = card.dataset;
+        let ok = true;
+        if (f.area && d.area !== f.area) ok = false;
+        if (ok && f.tema && d.tema !== f.tema) ok = false;
+        if (ok && f.tipo && d.tipo !== f.tipo) ok = false;
+        if (ok && f.nivel && d.nivel !== f.nivel) ok = false;
+        if (ok && f.formato && d.formato !== f.formato) ok = false;
+        if (ok && palabras.length) {
+          const pajar = normalizar(d.texto ?? '');
+          ok = palabras.every((p) => pajar.includes(p));
+        }
+        card.hidden = !ok;
+        if (ok) visibles++;
+      }
+      for (const s of secciones) s.hidden = !s.querySelector('[data-recurso]:not([hidden])');
+      if (count) count.textContent = String(visibles);
+      if (vacio) vacio.hidden = visibles > 0;
+
+      const params = new URLSearchParams();
+      for (const c of campos) {
+        const el = form.elements.namedItem(c) as HTMLInputElement | HTMLSelectElement | null;
+        if (f[c] && el && el.type !== 'hidden') params.set(c, f[c]);
+      }
+      const qs = params.toString();
+      history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+    };
+
+    // Estado inicial desde la URL.
+    const inicial = new URLSearchParams(location.search);
+    for (const c of campos) {
+      const el = form.elements.namedItem(c) as HTMLInputElement | HTMLSelectElement | null;
+      if (el && inicial.get(c) && el.type !== 'hidden') el.value = inicial.get(c) ?? '';
+    }
+
+    form.addEventListener('input', aplicar);
+    form.addEventListener('change', aplicar);
+    form.addEventListener('submit', (e) => { e.preventDefault(); aplicar(); });
+    form.addEventListener('reset', () => requestAnimationFrame(aplicar));
+    aplicar();
+  }
+</script>

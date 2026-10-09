@@ -1,0 +1,217 @@
+---
+titulo: 'C# desde cero'
+descripcion: 'Qué es C#, cómo instalar .NET y tus primeros programas de consola con ejemplos que puedes copiar y ejecutar con dotnet run.'
+tema: c-sharp
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['c-sharp-tutoriales-interactivos-paseo', 'c-sharp-introduccion-programacion-nacho-cabanes', 'c-sharp-documentacion-microsoft-learn', 'c-sharp-ruta-escribir-primer-codigo']
+requisitos: ['Saber usar una terminal básica']
+etiquetas: ['dotnet', 'consola', 'linq', 'async']
+orden: 16
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+C# (se pronuncia "si sharp") es el lenguaje principal de la plataforma .NET, creada por Microsoft y hoy de código abierto. Con él se hacen aplicaciones web (ASP.NET Core), de escritorio, servicios en la nube, apps móviles con MAUI y videojuegos con Unity. Para entenderlo, ten en mente estas ideas:
+
+- **Compila a un código intermedio (IL)** que el runtime de .NET convierte a código de máquina justo antes de ejecutarlo. Tú solo escribes `dotnet run` y .NET se encarga del resto.
+- **Tipado estático y fuerte**: cada variable tiene un tipo (`int`, `string`, `bool`) que el compilador revisa antes de correr. Muchos errores se detectan antes de ejecutar nada.
+- **Recolector de basura**: no liberas memoria a mano. Los objetos que ya nadie usa se limpian solos.
+- **Orientado a objetos con rasgos funcionales**: clases, interfaces y herencia, pero también lambdas, `record` y LINQ para trabajar con colecciones de forma declarativa.
+- **Tipos por valor y por referencia**: `int`, `double` y `struct` se copian; `class` y `record` se comparten por referencia.
+- **Asincronía integrada**: `async` y `await` te permiten esperar operaciones lentas (red, disco) sin bloquear el programa.
+- **Multiplataforma**: el mismo código corre en Windows, macOS y Linux con .NET 8 o superior.
+
+## Instálalo y corre tu primer archivo
+
+Necesitas el SDK de .NET (versión 8 o más reciente). Incluye el compilador, el runtime y la herramienta `dotnet`.
+
+<Pasos>
+
+1. **Windows**: descarga el instalador del SDK desde [dotnet.microsoft.com/download](https://dotnet.microsoft.com/es-es/download) y ejecútalo. Si usas `winget`, basta con `winget install Microsoft.DotNet.SDK.8`.
+2. **macOS**: descarga el instalador `.pkg` desde la misma página, o usa Homebrew: `brew install --cask dotnet-sdk`.
+3. **Linux**: sigue la [guía oficial para tu distribución](https://learn.microsoft.com/es-es/dotnet/core/install/linux). En Ubuntu suele bastar con `sudo apt install dotnet-sdk-8.0`.
+4. Abre una terminal nueva y comprueba la instalación con `dotnet --version`. Debe imprimir un número de versión igual o mayor a 8.
+5. Crea tu primer proyecto: `dotnet new console -n Hola` y entra a la carpeta con `cd Hola`. Verás un archivo `Program.cs` y otro `Hola.csproj`.
+6. Ejecuta `dotnet run`. La primera vez tarda unos segundos mientras compila; después imprime `Hello, World!`.
+
+</Pasos>
+
+A partir de aquí, cada ejemplo reemplaza el contenido de `Program.cs` y se ejecuta con `dotnet run` dentro de la carpeta del proyecto. Como editor, Visual Studio Code con la extensión C# Dev Kit es gratuito y suficiente.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="Program.cs" ejecutar="dotnet run" salida="Hola, mundo">
+
+```cs
+// Desde .NET 6 no hace falta escribir una clase ni un método Main:
+// el archivo Program.cs ya es el punto de entrada
+Console.WriteLine("Hola, mundo");
+```
+
+`Console.WriteLine` imprime un texto y salta de línea. Esto se llama "instrucciones de nivel superior": el compilador genera el método `Main` por ti.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables y tipos" archivo="Program.cs" ejecutar="dotnet run" salida={"Ana tiene 30 años y vive en Guadalajara\nMayor de edad: True"}>
+
+```cs
+// Cada variable declara su tipo (o lo infiere con var)
+string nombre = "Ana";
+int edad = 29;
+var ciudad = "Guadalajara"; // var deduce que es string
+bool mayorDeEdad = edad >= 18;
+
+edad++; // suma 1
+
+// Las cadenas interpoladas empiezan con $ y meten valores entre llaves
+Console.WriteLine($"{nombre} tiene {edad} años y vive en {ciudad}");
+Console.WriteLine($"Mayor de edad: {mayorDeEdad}");
+```
+
+El compilador no te deja guardar un texto en un `int` ni sumar un `bool`. Fíjate en que un `bool` se imprime como `True` con mayúscula inicial.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Condiciones, bucles y switch" archivo="Program.cs" ejecutar="dotnet run" salida={"1 es impar\n2 es par\n3 es impar\n4 es par\n5 es impar\nDía 3: miércoles"}>
+
+```cs
+// for clásico: inicio; condición; incremento
+for (int i = 1; i <= 5; i++)
+{
+    // Operador ternario: condición ? siCierto : siFalso
+    string tipo = i % 2 == 0 ? "par" : "impar";
+    Console.WriteLine($"{i} es {tipo}");
+}
+
+// switch como expresión: devuelve un valor según el caso
+int dia = 3;
+string nombre = dia switch
+{
+    1 => "lunes",
+    2 => "martes",
+    3 => "miércoles",
+    _ => "otro día", // _ cubre cualquier otro valor
+};
+Console.WriteLine($"Día {dia}: {nombre}");
+```
+
+`%` devuelve el residuo de la división. El `switch` de expresión es más corto que el `switch` clásico y obliga a dar un resultado en cada rama.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Listas y LINQ" archivo="Program.cs" ejecutar="dotnet run" salida={"Pares ordenados: 8, 10, 12\nSuma total: 59\nMayor: 21"}>
+
+```cs
+// List<int> es una lista que crece sola
+var numeros = new List<int> { 5, 12, 8, 21, 3 };
+numeros.Add(10);
+
+// LINQ: filtrar, ordenar y transformar colecciones con métodos encadenados
+var pares = numeros
+    .Where(n => n % 2 == 0) // n => ... es una lambda (función corta)
+    .OrderBy(n => n)
+    .ToList();
+
+Console.WriteLine($"Pares ordenados: {string.Join(", ", pares)}");
+Console.WriteLine($"Suma total: {numeros.Sum()}");
+Console.WriteLine($"Mayor: {numeros.Max()}");
+```
+
+LINQ funciona sobre cualquier colección. `Where` filtra, `OrderBy` ordena y `ToList` materializa el resultado. Sin `ToList`, la consulta se evalúa cada vez que la recorres.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Records y métodos" archivo="Program.cs" ejecutar="dotnet run" salida={"Persona { Nombre = Ana, Edad = 29 }\nHola, soy Ana y tengo 29 años\nSon iguales: True"}>
+
+```cs
+var ana = new Persona("Ana", 29);
+
+Console.WriteLine(ana);           // los records se imprimen solos
+Console.WriteLine(ana.Saludar());
+Console.WriteLine($"Son iguales: {ana == new Persona("Ana", 29)}");
+
+// Los tipos se declaran después de las instrucciones de nivel superior
+record Persona(string Nombre, int Edad)
+{
+    public string Saludar() => $"Hola, soy {Nombre} y tengo {Edad} años";
+}
+```
+
+Un `record` es un tipo pensado para guardar datos: genera el constructor, las propiedades, `ToString` y la comparación por valor. Si necesitas estado que cambia, usa `class`.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Esperar sin bloquear con async y await" archivo="Program.cs" ejecutar="dotnet run" salida={"Preparando el desayuno...\npan tostado listo\ncafé listo\nDesayuno completo"}>
+
+```cs
+Console.WriteLine("Preparando el desayuno...");
+
+// Las dos tareas arrancan a la vez y se esperan juntas
+var cafe = PrepararAsync("café", 300);
+var pan = PrepararAsync("pan tostado", 100);
+await Task.WhenAll(cafe, pan);
+
+Console.WriteLine("Desayuno completo");
+
+static async Task PrepararAsync(string que, int milisegundos)
+{
+    await Task.Delay(milisegundos); // simula una espera (red, disco)
+    Console.WriteLine($"{que} listo");
+}
+```
+
+`await` suspende el método sin bloquear el hilo, así el pan (100 ms) termina antes que el café (300 ms). En programas reales esto se usa para peticiones HTTP, archivos y bases de datos.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Olvidar el await o bloquear con .Result">
+Si llamas a un método `async` sin `await`, el código sigue sin esperar el resultado y las excepciones se pierden. Y si usas `.Result` o `.Wait()` para forzar la espera, puedes provocar un bloqueo total del programa. Regla simple: todo lo que devuelva `Task` se espera con `await`, y el método que lo llama también se marca `async`.
+</Callout>
+
+<Callout tipo="warning" titulo="NullReferenceException por ignorar los avisos">
+Con `Nullable` activado (el valor por defecto en proyectos nuevos), el compilador avisa cuando una variable `string?` podría ser `null`. Si ignoras esos avisos, el error aparece en tiempo de ejecución con el mensaje "Object reference not set to an instance of an object". Declara `string?` solo cuando de verdad puede faltar el valor y compruébalo antes de usarlo.
+</Callout>
+
+<Callout tipo="warning" titulo="Comparar objetos con == esperando comparar contenido">
+En una `class`, `==` compara referencias: dos objetos con los mismos datos son distintos. Si quieres comparación por valor, usa `record` (como en el ejemplo 5) o implementa `Equals`. Con `string` sí funciona por contenido porque está sobrecargado.
+</Callout>
+
+<Callout tipo="warning" titulo="Modificar una lista mientras la recorres">
+Hacer `numeros.Remove(x)` dentro de un `foreach` sobre `numeros` lanza "Collection was modified". Recorre una copia (`numeros.ToList()`) o usa `RemoveAll` con una condición.
+</Callout>
+
+<Callout tipo="warning" titulo="Usar double para dinero">
+`0.1 + 0.2` no da exactamente `0.3` en `double`. Para precios y cantidades monetarias usa `decimal` (escribe `19.99m` con la `m` al final). Y para fechas con zona horaria prefiere `DateTimeOffset` en lugar de `DateTime`.
+</Callout>
+
+## Buenas prácticas
+
+- Deja activados `Nullable` e `ImplicitUsings` en el `.csproj` (vienen así en los proyectos nuevos) y atiende los avisos del compilador.
+- Nombra con PascalCase los tipos, métodos y propiedades (`Persona`, `Saludar`) y con camelCase las variables locales (`mayorDeEdad`).
+- Usa `var` cuando el tipo se ve a simple vista en la misma línea; escribe el tipo cuando ayude a leer.
+- Envuelve en `using` todo lo que implemente `IDisposable` (archivos, conexiones, `HttpClient`) para liberar recursos.
+- Corre `dotnet format` antes de compartir código y `dotnet test` con xUnit cuando tu proyecto crezca.
+- Guarda las credenciales fuera del código: `dotnet user-secrets` en desarrollo y variables de entorno en producción.
+
+## Siguiente paso
+
+Ya puedes escribir programas de consola con tipos, colecciones y asincronía. Lo que sigue:
+
+- **Programación orientada a objetos**: clases, interfaces y herencia en la [documentación de C#](https://learn.microsoft.com/es-es/dotnet/csharp/fundamentals/object-oriented/).
+- **Una API web**: crea un proyecto con `dotnet new webapi` y sigue los tutoriales de ASP.NET Core.
+- **Bases de datos**: aprende [SQL desde cero](/guias/sql/) y luego conecta tu app con Entity Framework Core.
+- **Control de versiones**: guarda tu progreso con la [guía de Git](/guias/git/).
+- **Videojuegos**: si tu meta es Unity, el lenguaje que ya conoces es exactamente este.
+
+Explora más libros y cursos gratis en la [biblioteca de C#](/biblioteca/c-sharp/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

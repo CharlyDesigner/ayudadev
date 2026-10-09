@@ -1,0 +1,71 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { migasLd } from '@lib/seo';
+
+const herramientas = (await getCollection('ia', (h) => !h.data.borrador)).sort((a, b) => a.data.orden - b.data.orden);
+const aprende = (await getCollection('aprende', (a) => !a.data.borrador)).sort((a, b) => a.data.orden - b.data.orden);
+const prompts = await getCollection('prompts');
+const titulo = 'IA para aprender a programar';
+const descripcion = 'Qué herramienta usar, cómo empezar y cómo pedirle ayuda sin dejar de aprender. Fichas de Claude, ChatGPT, Gemini, Copilot y más, prompts listos y una comparativa honesta.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'IA', href: '/ia/' },
+];
+const TIPOS: Record<string, string> = { chat: 'Chat', ide: 'Editor', cli: 'Terminal', 'asistente-codigo': 'Asistente de código', api: 'API', local: 'Local' };
+const PLAN: Record<string, string> = { si: 'Plan gratis', limitado: 'Gratis con límites', no: 'De pago', pendiente: 'Ver precios' };
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/ia/" image="/og/ia.png" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Inteligencia artificial" titulo={titulo} descripcion={descripcion} />
+
+    <div class="mt-8 grid gap-3 sm:grid-cols-3">
+      {[
+        ['Biblioteca de prompts', `${prompts.length} prompts para aprender, depurar y explicar código.`, '/ia/prompts/', 'bulb'],
+        ['Comparativa', 'Qué herramienta brilla en qué, sin precios inventados.', '/ia/comparativa/', 'layers'],
+        ['Aprende con IA', 'Cómo usarla como tutor y no como atajo.', '/ia/aprende/', 'school'],
+      ].map(([t, d, h, i]) => (
+        <a href={h} class="card card-hover flex items-start gap-3 p-5">
+          <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-accent text-on-accent"><Icon name={i as any} class="h-5 w-5" /></span>
+          <span><span class="block font-semibold">{t}</span><span class="block text-sm text-muted">{d}</span></span>
+        </a>
+      ))}
+    </div>
+
+    <section class="mt-14" aria-labelledby="herramientas-titulo">
+      <h2 id="herramientas-titulo" class="mb-4 text-2xl font-bold tracking-tight">Herramientas</h2>
+      {herramientas.length === 0 && <p class="card p-8 text-center text-muted">Las fichas están en camino.</p>}
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {herramientas.map((h) => (
+          <a href={`/ia/${h.id}/`} class="card card-hover group flex flex-col gap-3 p-5">
+            <div class="flex items-center justify-between gap-3">
+              <span class="grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-accent-ink transition-colors group-hover:bg-accent group-hover:text-on-accent"><Icon name="robot" class="h-5 w-5" /></span>
+              <span class="flex gap-1.5"><span class="badge">{TIPOS[h.data.tipo]}</span><span class="badge badge-accent">{PLAN[h.data.planGratis]}</span></span>
+            </div>
+            <h3 class="text-lg font-semibold">{h.data.nombre} <span class="text-sm font-normal text-muted">· {h.data.empresa}</span></h3>
+            <p class="text-sm text-muted">{h.data.descripcion}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    {aprende.length > 0 && (
+      <section class="mt-14" aria-labelledby="aprende-titulo">
+        <h2 id="aprende-titulo" class="mb-4 text-2xl font-bold tracking-tight">Aprende con IA</h2>
+        <div class="grid gap-4 md:grid-cols-3">
+          {aprende.map((a) => (
+            <a href={`/ia/aprende/${a.id}/`} class="card card-hover flex flex-col gap-2 p-5">
+              <h3 class="font-semibold">{a.data.titulo}</h3>
+              <p class="text-sm text-muted">{a.data.descripcion}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>

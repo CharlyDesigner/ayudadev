@@ -1,0 +1,23 @@
+---
+interface Props {
+  eyebrow?: string;
+  titulo: string;
+  descripcion?: string;
+  enlace?: { href: string; label: string };
+  class?: string;
+  nivel?: 'h1' | 'h2';
+}
+const { eyebrow, titulo, descripcion, enlace, class: className = '', nivel = 'h2' } = Astro.props;
+const Tag = nivel;
+---
+
+<div class:list={['flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between', className]}>
+  <div class="max-w-2xl">
+    {eyebrow && <p class="eyebrow mb-3">{eyebrow}</p>}
+    <Tag class:list={['font-bold tracking-tight text-balance', nivel === 'h1' ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl']}>{titulo}</Tag>
+    {descripcion && <p class="mt-2 text-pretty text-muted">{descripcion}</p>}
+  </div>
+  {enlace && (
+    <a href={enlace.href} class="btn btn-secondary btn-sm shrink-0">{enlace.label}</a>
+  )}
+</div>

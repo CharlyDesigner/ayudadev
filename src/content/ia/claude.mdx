@@ -1,0 +1,81 @@
+---
+nombre: 'Claude'
+empresa: 'Anthropic'
+descripcion: 'Asistente de chat de Anthropic. Explica conceptos, revisa tu código y conversa en español con un plan gratuito para empezar.'
+tipo: chat
+sitio: 'https://claude.ai'
+docs: 'https://support.claude.com'
+planGratis: si
+precioUrl: 'https://claude.com/pricing'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 1
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+Claude es el asistente de inteligencia artificial de Anthropic. Lo usas desde el navegador en claude.ai, desde la app de escritorio o desde el celular. Le escribes en lenguaje natural, en español si quieres, y responde con texto, código, tablas o explicaciones paso a paso.
+
+Hay un plan gratuito con el que puedes chatear sin pagar, y planes de pago con más capacidad. Los detalles cambian con el tiempo, así que revisa siempre la [página oficial de precios](https://claude.com/pricing).
+
+Claude es la base de otras herramientas de Anthropic, como Claude Code, que tiene su propia ficha en esta sección.
+
+## Para qué sirve si estás aprendiendo
+
+Para alguien que está empezando a programar, Claude funciona bien como un tutor paciente:
+
+- Explica un concepto varias veces, con analogías distintas, hasta que te quede claro.
+- Lee el código que le pegas y te dice qué hace línea por línea.
+- Traduce mensajes de error a palabras sencillas y te da pistas para encontrar el problema.
+- Genera ejercicios a tu nivel y revisa tus respuestas.
+- Te ayuda a planear qué estudiar y en qué orden.
+
+Lo importante es cómo lo usas. Si le pides la solución completa y la copias, aprendes poco. Si le pides pistas, explicaciones y revisión de tu propio intento, aprendes mucho. En la guía [Cómo aprender a programar con IA sin copiar y pegar](/ia/aprende/aprender-sin-copiar/) te contamos el método.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Entra a [claude.ai](https://claude.ai) y crea una cuenta con tu correo o con Google.
+2. Escribe tu primera pregunta en español. Por ejemplo: "Explícame qué es una variable como si fuera mi primer día programando".
+3. Si la respuesta usa palabras que no conoces, pídele que las defina. No te quedes con la duda.
+4. Pega un trozo de código tuyo y pídele que lo explique o que lo revise. Dile en qué lenguaje está.
+5. Crea un proyecto o una conversación por tema, para que el contexto no se mezcle.
+
+</Pasos>
+
+<Callout tipo="tip" titulo="Dile tu nivel">
+Empieza cada conversación diciendo qué sabes y qué no. "Llevo dos semanas con Python y solo conozco variables y condicionales" cambia por completo la calidad de la respuesta.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Explícame qué es un bucle for en Python como si tuviera 12 años. Primero una analogía de la vida diaria, luego un ejemplo de máximo 8 líneas con comentarios en español, y al final una pregunta para comprobar que lo entendí.
+```
+
+```text
+Tengo este código en JavaScript y no funciona. No me des la solución. Dime qué significa el error en palabras simples y dame tres pistas, de la más general a la más específica. Código: [PEGA TU CÓDIGO]. Error: [PEGA EL ERROR].
+```
+
+```text
+Hazme 5 ejercicios de nivel principiante sobre listas en Python, ordenados de fácil a difícil. No incluyas las soluciones todavía. Cuando te mande mi respuesta, revísala y dime qué hice bien y qué puedo mejorar.
+```
+
+## Límites y cuidados
+
+- **Puede equivocarse con seguridad.** Claude a veces inventa funciones, nombres de librerías o resultados. Ejecuta siempre el código que te dé y compara con la documentación oficial.
+- **No pegues secretos.** Nunca compartas contraseñas, claves de API, tokens ni datos personales de otras personas en una conversación.
+- **Privacidad.** Revisa la política de privacidad y la configuración de tu cuenta para saber cómo se usan tus conversaciones.
+- **Verifica, no confíes.** Si te dice que algo "siempre funciona así", búscalo en la documentación del lenguaje antes de darlo por hecho.
+- **Aprender no es copiar.** Si pegas la respuesta sin entenderla, el problema vuelve al día siguiente. Escribe el código tú y usa a Claude para revisar.
+
+## Enlaces oficiales
+
+- [Sitio de Claude](https://claude.ai)
+- [Centro de ayuda](https://support.claude.com)
+- [Planes y precios](https://claude.com/pricing)
+- [Documentación para desarrolladores](https://platform.claude.com/docs)

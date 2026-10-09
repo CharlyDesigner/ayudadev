@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { TEMAS } from '@data/temas';
+import { AREAS_INFO } from '@data/areas';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
+import { coleccionLd, migasLd } from '@lib/seo';
+import { SITE } from '@data/site';
+
+const guias = (await getCollection('guias', (g) => !g.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+const titulo = 'Guías con ejemplos';
+const descripcion = 'Cada guía te lleva de cero a tu primer programa: modelo mental, instalación, ejemplos que puedes copiar y ejecutar, errores comunes y los libros gratis para seguir.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Guías', href: '/guias/' },
+];
+const porArea = AREAS_INFO.map((a) => ({ area: a, guias: guias.filter((g) => TEMAS.find((t) => t.slug === g.data.tema)?.area === a.id) })).filter((x) => x.guias.length);
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/guias/" image="/og/guias.png" jsonLd={[migasLd(migas), coleccionLd({ nombre: titulo, descripcion, path: '/guias/', items: guias.map((g) => ({ nombre: g.data.titulo, url: `${SITE.url}/guias/${g.id}/` })) })]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Guías" titulo={titulo} descripcion={descripcion} />
+
+    {guias.length === 0 && <p class="card mt-10 p-8 text-center text-muted">Las primeras guías están en camino.</p>}
+
+    <div class="mt-10 space-y-12">
+      {porArea.map(({ area, guias: lista }) => (
+        <section aria-labelledby={`area-${area.id}`}>
+          <h2 id={`area-${area.id}`} class="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted"><Icon name={area.icono as any} class="h-4 w-4 text-accent-ink" /> {area.nombre}</h2>
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {lista.map((g) => {
+              const tema = TEMAS.find((t) => t.slug === g.data.tema);
+              return (
+                <a href={`/guias/${g.id}/`} class="card card-hover group flex flex-col gap-3 p-5">
+                  <div class="flex items-center justify-between gap-3">
+                    <span class="grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-accent-ink transition-colors group-hover:bg-accent group-hover:text-on-accent"><Icon name={(tema?.icono ?? 'code') as any} class="h-5 w-5" /></span>
+                    <span class="flex gap-1.5">
+                      <span class="badge">{ETIQUETAS_NIVEL[g.data.nivel]}</span>
+                      {g.data.tiempoLectura && <span class="badge">{g.data.tiempoLectura} min</span>}
+                    </span>
+                  </div>
+                  <h3 class="text-lg font-semibold leading-snug">{g.data.titulo}</h3>
+                  <p class="text-sm text-muted">{g.data.descripcion}</p>
+                  <span class="mt-auto inline-flex items-center gap-1 text-sm font-medium text-accent-ink">Leer la guía <Icon name="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+                </a>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>

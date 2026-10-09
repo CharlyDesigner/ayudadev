@@ -1,0 +1,27 @@
+---
+/**
+ * Muestra recursos del catálogo por id. Falla el build si un id no existe (control de integridad).
+ */
+import RecursoCard from '@components/biblioteca/RecursoCard.astro';
+import { recursoPorId } from '@data/library';
+
+interface Props {
+  ids: string[];
+  titulo?: string;
+}
+const { ids, titulo = 'Libros y cursos gratis para seguir' } = Astro.props;
+const recursos = ids.map((id) => {
+  const r = recursoPorId(id);
+  if (!r) throw new Error(`LibrosRecomendados: el recurso "${id}" no existe en el catálogo`);
+  return r;
+});
+---
+
+{recursos.length > 0 && (
+  <section class="not-prose my-10" aria-labelledby="libros-titulo">
+    <h2 id="libros-titulo" class="mb-4 text-2xl font-bold tracking-tight">{titulo}</h2>
+    <div class="grid gap-4 md:grid-cols-2">
+      {recursos.map((r) => <RecursoCard recurso={r} />)}
+    </div>
+  </section>
+)}

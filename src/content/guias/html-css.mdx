@@ -1,0 +1,295 @@
+---
+titulo: 'HTML y CSS desde cero'
+descripcion: 'Cómo funcionan HTML y CSS, qué necesitas para empezar y cinco páginas completas que puedes abrir en tu navegador y modificar.'
+tema: html-css
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['html-css-lenguaje-html-manz', 'html-css-lenguaje-css-manz', 'html-css-aprende-css-web-dev', 'html-css-mdn-css']
+requisitos: ['Saber crear carpetas y archivos en tu computadora']
+etiquetas: ['html', 'css', 'flexbox', 'grid', 'responsive', 'principiante']
+orden: 30
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Toda página web, por compleja que sea, se construye sobre dos lenguajes: HTML da la estructura y el significado, CSS da el aspecto. No necesitas instalar nada: un editor de texto y tu navegador bastan. Esta guía te enseña a construir páginas reales desde la primera línea.
+
+## Qué es y para qué sirve
+
+- **HTML describe contenido y significado.** Etiquetas como `h1`, `p`, `nav` o `article` le dicen al navegador (y a los lectores de pantalla y a los buscadores) qué es cada cosa. No describe cómo se ve.
+- **CSS describe presentación.** Colores, tipografía, espacios y la distribución de los elementos en la pantalla.
+- **El navegador une ambos.** Lee el HTML y construye el DOM (un árbol de elementos), aplica las reglas CSS y pinta el resultado. No hay compilación ni servidor: abrir el archivo basta.
+- **Cascada y especificidad.** Cuando varias reglas afectan al mismo elemento, gana la más específica; a igualdad, la que aparece después. Esto explica la mayoría de los "¿por qué no se aplica mi estilo?".
+- **Herencia.** Color y fuente se heredan de padre a hijo; márgenes, bordes y fondo no.
+- **Modelo de caja.** Cada elemento es una caja con contenido, `padding`, borde y `margin`. Con `box-sizing: border-box` el ancho que declaras ya incluye padding y borde.
+- **Flujo normal, flexbox y grid.** Por defecto los bloques se apilan y el texto fluye en línea. Flexbox organiza en una dimensión (una fila o una columna); Grid en dos.
+- **Diseño adaptable.** Se parte del móvil y se deja que el contenido se ajuste; los *media queries* y *container queries* se usan solo cuando el diseño se rompe.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala un editor.** [VS Code](https://code.visualstudio.com/) funciona igual en Windows, macOS y Linux. Trae autocompletado de HTML y CSS incluido.
+2. **Crea una carpeta** llamada `mi-sitio` y ábrela en VS Code (Archivo, Abrir carpeta).
+3. **Crea el archivo `index.html`** y pega el código del ejemplo 1. Guarda.
+4. **Ábrelo en el navegador.** Haz doble clic en el archivo desde tu explorador de archivos, o arrástralo a una ventana de Chrome o Firefox. Verás tu página.
+5. **Opcional: recarga automática.** En VS Code instala la extensión **Live Server** y pulsa "Go Live"; o, si tienes Node.js, ejecuta `npx serve .` dentro de la carpeta y abre la dirección que te indique.
+
+</Pasos>
+
+Para ver qué está pasando por dentro, abre las herramientas de desarrollo con F12: la pestaña **Elementos** (o Inspector) muestra el HTML y las reglas CSS aplicadas a cada elemento, y puedes editarlas en vivo.
+
+## Ejemplos paso a paso
+
+Cada ejemplo es un archivo HTML completo con su CSS dentro de la etiqueta `style`. Guárdalo con el nombre indicado y ábrelo en el navegador.
+
+<Ejemplo numero={1} titulo="Tu primera página" archivo="index.html" ejecutar="Abre index.html en tu navegador" salida="Un título grande que dice 'Hola, mundo', un párrafo debajo y un enlace azul subrayado a MDN. En la pestaña del navegador se lee 'Mi primera página'.">
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi primera página</title>
+</head>
+<body>
+  <h1>Hola, mundo</h1>
+  <p>Esta es mi primera página hecha con HTML.</p>
+  <a href="https://developer.mozilla.org/es/">Aprende más en MDN</a>
+</body>
+</html>
+```
+
+Esta es la plantilla mínima que vas a repetir siempre. `lang="es"` ayuda a lectores de pantalla y traductores; `charset="utf-8"` evita que los acentos se vean mal; la etiqueta `viewport` hace que la página se vea bien en móviles. Todo lo visible va dentro de `body`.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Estructura semántica" archivo="blog.html" ejecutar="Abre blog.html en tu navegador" salida="Una columna centrada con el título 'Blog de recetas', un menú con tres enlaces, una línea separadora, un artículo con el título 'Pan de elote' y una lista de tres ingredientes, y al final un pie de página.">
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog de recetas</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; line-height: 1.5; }
+    header, footer { border-block: 1px solid #ccc; padding: 1rem 0; }
+    nav a { margin-right: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Blog de recetas</h1>
+    <nav aria-label="Principal">
+      <a href="#">Inicio</a>
+      <a href="#">Recetas</a>
+      <a href="#">Contacto</a>
+    </nav>
+  </header>
+  <main>
+    <article>
+      <h2>Pan de elote</h2>
+      <p>Una receta sencilla para la tarde.</p>
+      <ul>
+        <li>3 elotes tiernos</li>
+        <li>1 lata de leche condensada</li>
+        <li>4 huevos</li>
+      </ul>
+    </article>
+  </main>
+  <footer>
+    <p>Hecho con cariño en 2026</p>
+  </footer>
+</body>
+</html>
+```
+
+`header`, `nav`, `main`, `article` y `footer` se verían igual que un `div`, pero dicen qué es cada parte: un lector de pantalla puede saltar directo al contenido principal y un buscador entiende qué es el artículo. Hay un solo `h1` y los subtítulos siguen con `h2`. El CSS del `body` centra la columna con `margin: 2rem auto` y limita su ancho para que las líneas sean cómodas de leer.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Barra de navegación con flexbox" archivo="barra.html" ejecutar="Abre barra.html en tu navegador" salida="Una barra azul oscuro que ocupa todo el ancho, con el nombre 'MiTienda' en blanco a la izquierda y tres enlaces blancos alineados a la derecha en una sola fila. Al pasar el cursor sobre un enlace, se subraya.">
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Barra con flexbox</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    /* El contenedor reparte a sus hijos en una fila */
+    .barra {
+      display: flex;
+      align-items: center;          /* centra en vertical */
+      justify-content: space-between; /* logo a la izquierda, menú a la derecha */
+      gap: 1rem;
+      padding: 1rem;
+      background: #1e293b;
+      color: white;
+    }
+    .menu { display: flex; gap: 1.5rem; list-style: none; margin: 0; padding: 0; }
+    .menu a { color: white; text-decoration: none; }
+    .menu a:hover, .menu a:focus-visible { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header class="barra">
+    <strong>MiTienda</strong>
+    <ul class="menu">
+      <li><a href="#">Productos</a></li>
+      <li><a href="#">Ofertas</a></li>
+      <li><a href="#">Carrito</a></li>
+    </ul>
+  </header>
+  <main style="padding: 1rem">
+    <p>Cambia el ancho de la ventana: la barra se adapta sola.</p>
+  </main>
+</body>
+</html>
+```
+
+`display: flex` convierte a `.barra` en un contenedor flexible: sus hijos directos se colocan en fila. `justify-content: space-between` empuja el primero a la izquierda y el último a la derecha; `align-items: center` los alinea en vertical; `gap` separa sin márgenes. La lista `.menu` es a su vez otro contenedor flex para poner los enlaces en fila. Fíjate en `:focus-visible`: quien navega con teclado también ve dónde está.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Galería de tarjetas con grid" archivo="galeria.html" ejecutar="Abre galeria.html en tu navegador" salida="Sobre un fondo gris claro, el título 'Cursos' y seis tarjetas blancas con esquinas redondeadas en una cuadrícula. En pantalla ancha caben varias por fila; si estrechas la ventana se reacomodan hasta quedar en una sola columna.">
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galería con grid</title>
+  <style>
+    body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; background: #f1f5f9; }
+    /* Tantas columnas de al menos 12rem como quepan; el resto se reparte */
+    .galeria {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: 1rem;
+    }
+    .tarjeta {
+      background: white;
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+    }
+    .tarjeta h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+    .tarjeta p { margin: 0; color: #475569; }
+  </style>
+</head>
+<body>
+  <h1>Cursos</h1>
+  <div class="galeria">
+    <article class="tarjeta"><h2>HTML</h2><p>Estructura de la página.</p></article>
+    <article class="tarjeta"><h2>CSS</h2><p>Estilos y diseño.</p></article>
+    <article class="tarjeta"><h2>JavaScript</h2><p>Interacción y lógica.</p></article>
+    <article class="tarjeta"><h2>Accesibilidad</h2><p>Para todas las personas.</p></article>
+    <article class="tarjeta"><h2>Git</h2><p>Control de versiones.</p></article>
+    <article class="tarjeta"><h2>Python</h2><p>Scripts y datos.</p></article>
+  </div>
+</body>
+</html>
+```
+
+Una sola línea hace todo el trabajo: `repeat(auto-fit, minmax(12rem, 1fr))` crea tantas columnas como quepan de al menos 12rem y reparte el espacio sobrante entre ellas. No necesitas media queries para que la galería sea adaptable. Las unidades `rem` se basan en el tamaño de fuente del usuario, así que el diseño respeta sus preferencias.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Formulario accesible con validación nativa" archivo="contacto.html" ejecutar="Abre contacto.html en tu navegador" salida="Un formulario centrado con los campos Nombre, Correo y Mensaje y un botón azul 'Enviar'. Si escribes un correo sin arroba, el borde del campo se pone rojo; si pulsas Enviar con campos vacíos, el navegador muestra un aviso y no envía.">
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formulario de contacto</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 30rem; margin: 2rem auto; padding: 0 1rem; }
+    form { display: grid; gap: 1rem; }
+    label { display: grid; gap: 0.25rem; font-weight: 600; }
+    input, textarea { font: inherit; padding: 0.5rem; border: 1px solid #94a3b8; border-radius: 0.5rem; }
+    input:invalid:not(:placeholder-shown) { border-color: #dc2626; }
+    button { font: inherit; padding: 0.6rem 1rem; border: 0; border-radius: 0.5rem; background: #2563eb; color: white; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <h1>Contacto</h1>
+  <form>
+    <label>
+      Nombre
+      <input name="nombre" required autocomplete="name" placeholder=" ">
+    </label>
+    <label>
+      Correo
+      <input type="email" name="correo" required autocomplete="email" placeholder=" ">
+    </label>
+    <label>
+      Mensaje
+      <textarea name="mensaje" rows="4" required placeholder=" "></textarea>
+    </label>
+    <button type="submit">Enviar</button>
+  </form>
+</body>
+</html>
+```
+
+Cada `label` envuelve a su campo, así que al hacer clic en el texto se enfoca el control y los lectores de pantalla anuncian el nombre correcto. `type="email"` y `required` activan la validación del navegador sin JavaScript. El selector `:invalid:not(:placeholder-shown)` marca en rojo solo cuando ya escribiste algo, no al cargar la página. `autocomplete` permite que el navegador rellene los datos por ti.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Olvidar la etiqueta viewport o el atributo lang">
+Sin `meta name="viewport"` la página se ve diminuta en el celular, como si fuera una pantalla de escritorio encogida. Sin `lang="es"` los lectores de pantalla pronuncian el texto con acento inglés. Copia siempre la plantilla del ejemplo 1.
+</Callout>
+
+<Callout tipo="warning" titulo="Usar div para todo">
+Un `div` no significa nada. Si es un botón, usa `button`; si es un enlace, `a`; si es la navegación, `nav`. Los elementos nativos traen teclado, foco y semántica gratis. Reserva `div` y `span` para agrupar con fines de estilo cuando no exista una etiqueta con significado.
+</Callout>
+
+<Callout tipo="warning" titulo="Quitar el outline del foco">
+`outline: none` sin reemplazo deja a quien navega con teclado sin saber dónde está. Si no te gusta el estilo por defecto, cámbialo con `:focus-visible`, como en los ejemplos 3 y 5, pero nunca lo elimines.
+</Callout>
+
+<Callout tipo="warning" titulo="Guerras de especificidad y !important">
+Si necesitas `!important` para que un estilo se aplique, el problema suele ser un selector demasiado específico más arriba (como `#id .clase div p`). Usa selectores planos con clases y deja que el orden del código decida. Inspecciona el elemento con F12 para ver qué regla está ganando.
+</Callout>
+
+<Callout tipo="warning" titulo="Imágenes sin ancho y alto">
+Una imagen sin `width` y `height` hace que el contenido salte cuando carga. Pon siempre ambos atributos (el CSS `max-width: 100%; height: auto` la mantendrá adaptable) y un `alt` que describa la imagen, o `alt=""` si es decorativa.
+</Callout>
+
+## Buenas prácticas
+
+- Empieza siempre con la plantilla base: `doctype`, `lang`, `charset`, `viewport` y `title`.
+- Primero la estructura semántica, después el estilo. Un solo `h1` por página y títulos en orden.
+- Aplica `box-sizing: border-box` a todo desde el inicio; ahorra muchos cálculos.
+- Flexbox para filas o columnas; Grid para cuadrículas. Usa `gap` en lugar de márgenes entre hermanos.
+- Usa unidades relativas (`rem`, `%`, `ch`) y funciones como `clamp()` y `min()` antes que píxeles fijos.
+- Diseña primero para móvil y añade reglas `@media (min-width: ...)` solo cuando el contenido se rompa.
+- Guarda colores y espaciados en custom properties (`--color-primario`) para cambiarlos en un solo lugar.
+- Prueba cada página con el teclado (Tab, Enter) y con el zoom al 200 %. Si funciona así, funciona para todos.
+
+## Siguiente paso
+
+- **Dale vida con JavaScript.** Con la estructura lista, [JavaScript desde cero](/guias/javascript/) te enseña a responder a clics, validar formularios y cargar datos.
+- **Profundiza en CSS.** [Lenguaje CSS](https://lenguajecss.com/css/) cubre animaciones, transiciones, container queries y diseño responsive con detalle y en español.
+- **Hazlo accesible.** La [biblioteca de accesibilidad](/biblioteca/accesibilidad/) explica cómo probar con lectores de pantalla y cumplir las pautas WCAG.
+- **Publica tu sitio.** Con [Git y GitHub](/biblioteca/git/) puedes subir tu carpeta y activar GitHub Pages para tener tu página en internet gratis.
+- Más libros y cursos en la [biblioteca de HTML y CSS](/biblioteca/html-css/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

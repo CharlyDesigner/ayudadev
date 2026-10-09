@@ -1,0 +1,44 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import { SITE } from '@data/site';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('noticias', (n) => !n.data.borrador)).sort((a, b) => b.data.publicado.getTime() - a.data.publicado.getTime());
+  return lista.map((n, i) => ({ params: { slug: n.id }, props: { n, siguiente: lista[i - 1] ?? null, anterior: lista[i + 1] ?? null } }));
+}
+
+const { n, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(n);
+const path = `/noticias/${n.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Noticias', href: '/noticias/' },
+  { nombre: n.data.titulo, href: path },
+];
+---
+
+<ArticleLayout
+  titulo={n.data.titulo}
+  descripcion={n.data.descripcion}
+  path={path}
+  eyebrow="Noticias"
+  migas={migas}
+  headings={headings}
+  publicado={n.data.publicado}
+  actualizado={n.data.actualizado}
+  tipoLd="NewsArticle"
+  anterior={anterior ? { titulo: anterior.data.titulo, href: `/noticias/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.titulo, href: `/noticias/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/noticias/${n.id}.md`}
+>
+  <Content />
+  {n.data.fuentes.length > 0 && (
+    <section class="mt-10">
+      <h2>Fuentes</h2>
+      <ul>
+        {n.data.fuentes.map((f) => <li><a href={f.url} rel="noopener" target="_blank">{f.titulo}</a></li>)}
+      </ul>
+    </section>
+  )}
+</ArticleLayout>

@@ -1,0 +1,117 @@
+---
+titulo: 'Cómo aprender a programar con IA sin copiar y pegar'
+descripcion: 'Un método para usar Claude, ChatGPT o cualquier asistente como tutor y no como máquina de respuestas. Con prompts listos y un ejercicio.'
+publicado: 2026-10-09
+herramientas: ['claude', 'chatgpt', 'gemini', 'claude-code', 'cursor']
+orden: 1
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+La inteligencia artificial puede acelerar tu aprendizaje o anularlo. Depende de una sola cosa: quién escribe el código. Si lo escribe la IA y tú lo pegas, en dos semanas no vas a recordar nada. Si lo escribes tú y la IA te explica, te corrige y te hace preguntas, vas a avanzar más rápido que con cualquier curso.
+
+Esta guía te da un método concreto para lo segundo. Funciona igual con Claude, ChatGPT, Gemini o un asistente dentro del editor como Cursor o Claude Code.
+
+## El problema con copiar y pegar
+
+Cuando copias una solución, tu cerebro hace lo mínimo: reconoce que "se ve bien" y sigue adelante. No practicaste la sintaxis, no te equivocaste, no leíste el error ni pensaste en por qué funciona. La programación se aprende con las manos, igual que un instrumento. Ver a alguien tocar la guitarra no te enseña a tocarla.
+
+Hay una segunda trampa: la IA se equivoca con mucha seguridad. Si no entiendes el código que pegaste, no vas a notar el error hasta que todo falle, y en ese momento no vas a saber por dónde empezar.
+
+## Regla 1: dile a la IA que es tu tutor, no tu programador
+
+El primer mensaje de cada conversación define todo lo que sigue. Dile tu nivel, tu objetivo y cómo quieres que te ayude.
+
+```text
+Estoy aprendiendo [LENGUAJE]. Llevo [TIEMPO] y sé [LO QUE YA SABES]. Quiero que seas mi tutor: explícame los conceptos, dame pistas cuando me atore y revisa mi código, pero no escribas las soluciones completas a menos que te lo pida de forma explícita. Si te pido código, hazlo de máximo 10 líneas y con comentarios en español.
+```
+
+Con ese contexto, la mayoría de los asistentes cambian de modo: en lugar de soltar un programa completo, te hacen preguntas y te dan pasos.
+
+<Callout tipo="tip" titulo="Guárdalo">
+Guarda ese mensaje en un archivo de notas. Vas a usarlo al inicio de cada sesión. Algunas herramientas permiten guardar instrucciones fijas (proyectos en Claude, instrucciones personalizadas en ChatGPT, reglas en Cursor, el archivo CLAUDE.md en Claude Code).
+</Callout>
+
+## Regla 2: pide pistas antes que soluciones
+
+Cuando te atores, resiste el impulso de pedir "dame el código". Pide pistas en escalera: de la más general a la más específica.
+
+```text
+Estoy intentando [LO QUE QUIERES LOGRAR] en [LENGUAJE] y no me sale. Este es mi intento: [PEGA TU CÓDIGO]. No me des la solución. Dame tres pistas, de la más general a la más concreta, y espera a que te diga cuál me sirvió.
+```
+
+Lee la primera pista e intenta de nuevo. Si no sale, lee la segunda. Casi siempre resuelves antes de llegar a la tercera, y ese momento de "ya entendí" es exactamente lo que fija el aprendizaje.
+
+## Regla 3: escribe tú, que la IA revise
+
+Invierte el flujo habitual. En lugar de pedir código y leerlo, escribe tu versión primero, aunque esté mal, y pide una revisión.
+
+```text
+Escribí esta función yo mismo para [OBJETIVO]. Revísala como un mentor: dime qué está bien, qué podría fallar y qué cambiarías. No la reescribas completa; señala las líneas y explica por qué. Código: [PEGA TU CÓDIGO]
+```
+
+Una buena revisión te enseña más que diez ejemplos perfectos, porque habla de tus errores reales y no de errores hipotéticos.
+
+## Regla 4: explica con tus palabras lo que aceptes
+
+Habrá momentos en que sí necesitas ver código de la IA: una sintaxis que no conoces, una librería nueva. Está bien. La condición es que antes de usarlo, lo expliques tú.
+
+```text
+Te voy a explicar con mis palabras qué hace el código que me diste: [TU EXPLICACIÓN]. Dime si entendí bien, qué me faltó y qué pregunta me harías para comprobar que lo domino.
+```
+
+Si no puedes explicarlo, no lo uses todavía. Pide que lo divida en partes más pequeñas.
+
+<Callout tipo="warning" titulo="Nunca pegues código que no entiendes en un proyecto real">
+Un fragmento que no entiendes es una deuda. Cuando falle (y va a fallar), vas a estar depurando algo que nunca supiste cómo funcionaba.
+</Callout>
+
+## Regla 5: ejecuta todo y lee los errores
+
+La IA no corre tu código. Tú sí. Cada ejemplo que te dé, pégalo en tu editor, ejecútalo y mira qué pasa. Si sale un error, no lo pegues de inmediato al chat: léelo primero. Los mensajes de error dicen el archivo, la línea y el tipo de problema. Aprender a leerlos es una habilidad que te acompaña toda la carrera.
+
+Cuando sí lo pegues, hazlo con una pregunta de comprensión, no de solución:
+
+```text
+Obtuve este error al ejecutar: [PEGA EL ERROR]. Explícame qué significa cada parte del mensaje y qué suele causarlo. No me digas cómo corregirlo todavía.
+```
+
+## Un flujo de estudio de 45 minutos
+
+Así puede verse una sesión usando estas reglas:
+
+1. **5 minutos.** Abre la conversación con el mensaje de tutor. Di qué vas a practicar hoy.
+2. **10 minutos.** Pide una explicación del concepto con una analogía y un ejemplo corto. Lee el ejemplo. Ciérralo.
+3. **15 minutos.** Escribe tu propio ejemplo desde cero, sin ver el de la IA. Ejecútalo. Corrige lo que falle leyendo los errores.
+4. **10 minutos.** Pega tu código y pide revisión. Aplica uno o dos cambios, no todos.
+5. **5 minutos.** Explica con tus palabras qué aprendiste y pide a la IA una pregunta de repaso para mañana.
+
+Si al terminar no escribiste código con tus manos, la sesión no cuenta como práctica. Cuenta como lectura, que también sirve, pero no es lo mismo.
+
+## Señales de que lo estás haciendo bien
+
+- Resuelves ejercicios parecidos sin abrir el chat.
+- Cuando la IA se equivoca, lo notas.
+- Puedes leer un error y saber en qué línea mirar.
+- Tus preguntas se vuelven más específicas: ya no es "¿cómo hago X?" sino "¿por qué X se comporta así cuando Y?".
+
+## Señales de alerta
+
+- Tienes mucho código "tuyo" que no sabrías escribir de nuevo.
+- Pides la solución en el primer mensaje.
+- Pasas más tiempo leyendo respuestas que escribiendo.
+- Te sientes productivo pero no puedes hacer nada sin el asistente.
+
+Si reconoces varias, no pasa nada. Vuelve a la regla 1 y empieza la siguiente sesión de otra forma.
+
+## Ejercicio
+
+Elige un concepto que creas dominar a medias (por ejemplo, bucles, funciones o listas) en el lenguaje que estás aprendiendo. Haz esto, en orden:
+
+1. Abre tu asistente favorito y pégale el mensaje de tutor de la regla 1 con tus datos reales.
+2. Pídele un ejercicio de nivel principiante sobre ese concepto, sin solución.
+3. Resuélvelo en tu editor sin pedir ayuda. Ejecútalo hasta que funcione. Si te atoras más de 10 minutos, pide una pista, solo una.
+4. Pega tu solución y pide una revisión de mentor con el prompt de la regla 3.
+5. Escribe en un archivo de notas, con tus palabras, qué hace tu código y qué aprendiste de la revisión.
+
+Guarda ese archivo. En una semana, repite el ejercicio con el mismo concepto sin abrir el chat. Si lo resuelves, ya es tuyo.

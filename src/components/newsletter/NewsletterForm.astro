@@ -1,0 +1,58 @@
+---
+/**
+ * Formulario del boletín. Funciona sin JS (POST + redirect 303) y con JS (fetch + estado en línea).
+ * Trampas invisibles: `website` y `address_line_2`. `_ts` es la hora de render.
+ */
+import Icon from '@components/ui/Icon.astro';
+interface Props {
+  compacto?: boolean;
+  origen?: string;
+}
+const { compacto = false, origen = Astro.url.pathname } = Astro.props;
+const ts = Math.floor(Date.now() / 1000);
+---
+
+<form
+  action="/api/suscribir.php"
+  method="post"
+  data-newsletter
+  class:list={['flex flex-col gap-3', compacto ? '' : 'card p-6 sm:p-8']}
+  novalidate
+>
+  <input type="hidden" name="_ts" value={ts} />
+  <input type="hidden" name="_back" value="/newsletter/" />
+  <input type="hidden" name="origen" value={origen} />
+  <div class="visually-hidden" aria-hidden="true">
+    <label>No llenes este campo <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+    <label>Tampoco este <input type="text" name="address_line_2" tabindex="-1" autocomplete="off" /></label>
+  </div>
+
+  {!compacto && (
+    <div>
+      <h2 class="text-xl font-bold tracking-tight">Recibe lo nuevo en tu correo</h2>
+      <p class="mt-1 text-sm text-muted">Guías nuevas, recursos recién agregados y novedades de IA para aprender. Un correo cada tanto, sin spam.</p>
+    </div>
+  )}
+
+  <div class="flex flex-col gap-2 sm:flex-row">
+    <label class="flex-1">
+      <span class="visually-hidden">Tu correo electrónico</span>
+      <input type="email" name="email" class="field" placeholder="tu@correo.com" required autocomplete="email" inputmode="email" />
+    </label>
+    <button type="submit" class="btn btn-primary">
+      <Icon name="mail" class="h-4 w-4" /> Suscribirme
+    </button>
+  </div>
+
+  <label class="flex items-start gap-2 text-xs text-muted">
+    <input type="checkbox" name="consentimiento" value="1" required class="mt-0.5 accent-[var(--ad-accent)]" />
+    <span>Acepto recibir correos de AyudaDev. Puedo darme de baja cuando quiera. <a href="/privacidad/" class="link">Aviso de privacidad</a>.</span>
+  </label>
+
+  <p data-newsletter-status class="text-sm" aria-live="polite" hidden></p>
+</form>
+
+<script>
+  import { montarNewsletter } from '@/scripts/newsletter';
+  montarNewsletter();
+</script>

@@ -1,0 +1,78 @@
+---
+nombre: 'Gemini'
+empresa: 'Google'
+descripcion: 'Asistente de IA de Google integrado con su ecosistema. Tiene plan gratuito con cuenta de Google y responde en español.'
+tipo: chat
+sitio: 'https://gemini.google.com'
+docs: 'https://support.google.com/gemini'
+planGratis: si
+precioUrl: 'https://gemini.google/subscriptions/'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 4
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+Gemini es el asistente de inteligencia artificial de Google. Se usa desde gemini.google.com, desde la app móvil y dentro de otros productos de Google. Con una cuenta de Google tienes acceso al plan gratuito; los planes de pago agregan más capacidad y funciones. Consulta la [página oficial de planes](https://gemini.google/subscriptions/) para ver lo vigente.
+
+Google también ofrece los modelos Gemini para desarrolladores a través de [Google AI for Developers](https://ai.google.dev), con documentación y una API. Esa parte es útil cuando ya quieres construir algo con IA, no solo chatear.
+
+## Para qué sirve si estás aprendiendo
+
+Gemini cubre lo mismo que otros chats: explicar, dar ejemplos, revisar código y proponer ejercicios. Algunas situaciones donde destaca:
+
+- Si ya usas Gmail, Drive o Docs, puedes trabajar con tus documentos desde la misma cuenta.
+- Puede buscar información reciente en la web y citar fuentes, lo que ayuda cuando preguntas por una librería nueva.
+- Funciona bien con imágenes: puedes subir una captura de un error o de un diagrama y pedir que lo explique.
+- Tiene buena cobertura de español.
+
+Para aprender a programar úsalo como tutor: pide explicaciones, pistas y revisión, no soluciones completas.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Entra a [gemini.google.com](https://gemini.google.com) con tu cuenta de Google.
+2. Escribe tu objetivo y tu nivel: "Quiero aprender Python desde cero, nunca he programado".
+3. Pídele un plan de estudio corto, de una o dos semanas, con un ejercicio por día.
+4. Cuando termines un ejercicio, pégale tu código y pide revisión, no una versión nueva.
+5. Si tienes una duda sobre una captura de pantalla, súbela y pregunta directamente sobre ella.
+
+</Pasos>
+
+<Callout tipo="tip" titulo="Pide fuentes">
+Cuando preguntes por una librería, una versión o una fecha, pídele a Gemini que incluya enlaces a la documentación oficial. Luego abre esos enlaces y confirma.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Hazme un plan de 7 días para aprender lo básico de [LENGUAJE]. Cada día debe tener un concepto, una explicación corta y un ejercicio de máximo 15 líneas. No incluyas las soluciones.
+```
+
+```text
+Te subo una captura con un error que me salió en la terminal. Explícame qué significa en español sencillo, qué lo suele causar y qué revisaría primero. No asumas nada que no se vea en la imagen.
+```
+
+```text
+Explícame qué es [CONCEPTO] con tres analogías diferentes: una de cocina, una de deportes y una de la escuela. Luego dime cuál analogía se parece más al código real y por qué.
+```
+
+## Límites y cuidados
+
+- **Puede inventar.** Aunque busque en la web, Gemini puede mezclar información de versiones distintas o citar algo que no dice la fuente. Abre los enlaces.
+- **Privacidad.** Tu actividad puede guardarse en tu cuenta de Google. Revisa la configuración de actividad y la [ayuda oficial](https://support.google.com/gemini).
+- **Nada de secretos.** No pegues claves, contraseñas ni datos personales de terceros.
+- **Verifica el código.** Ejecuta cada ejemplo en tu máquina y compara la salida.
+- **Aprender es escribir.** Si Gemini escribe todo, tú solo lees. Alterna: tú escribes, Gemini revisa.
+
+## Enlaces oficiales
+
+- [Sitio de Gemini](https://gemini.google.com)
+- [Centro de ayuda de Gemini](https://support.google.com/gemini)
+- [Planes y suscripciones](https://gemini.google/subscriptions/)
+- [Google AI for Developers](https://ai.google.dev)

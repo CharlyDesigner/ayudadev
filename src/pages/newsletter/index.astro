@@ -1,0 +1,40 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import NewsletterForm from '@components/newsletter/NewsletterForm.astro';
+import Icon from '@components/ui/Icon.astro';
+import { migasLd } from '@lib/seo';
+
+const titulo = 'Newsletter de AyudaDev';
+const descripcion = 'Recibe en tu correo las guías nuevas, los recursos recién agregados y novedades de IA para aprender a programar. Un correo cada tanto, sin spam y con baja en un clic.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Newsletter', href: '/newsletter/' },
+];
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/newsletter/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Boletín" titulo={titulo} descripcion={descripcion} />
+
+    <div id="newsletter" class="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <NewsletterForm origen="/newsletter/" />
+      <aside class="space-y-3">
+        {[
+          ['Qué recibirás', 'Guías nuevas con ejemplos, recursos agregados a la biblioteca y lo más útil del mundo de la IA para aprender.', 'mail'],
+          ['Con qué frecuencia', 'Cuando haya algo que valga la pena. Nunca más de un par de veces al mes.', 'calendar'],
+          ['Doble confirmación', 'Te mandamos un correo para confirmar. Así nadie te suscribe sin tu permiso.', 'check'],
+          ['Baja en un clic', 'Cada correo trae un enlace para darte de baja. Sin preguntas.', 'x'],
+        ].map(([t, d, i]) => (
+          <div class="card flex gap-3 p-4">
+            <Icon name={i as any} class="mt-0.5 h-5 w-5 shrink-0 text-accent-ink" />
+            <div><p class="font-semibold">{t}</p><p class="text-sm text-muted">{d}</p></div>
+          </div>
+        ))}
+        <a href="/rss.xml" class="card flex items-center gap-3 p-4 text-sm hover:text-accent-ink"><Icon name="rss" class="h-5 w-5 text-accent-ink" /> ¿Prefieres RSS? Aquí está el feed</a>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,71 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { SITE } from '@data/site';
+import { RECURSOS } from '@data/library';
+import { TEMAS } from '@data/temas';
+import { migasLd } from '@lib/seo';
+
+const titulo = 'Acerca de AyudaDev';
+const descripcion = 'Quién está detrás, por qué existe, cómo elegimos los recursos y con qué licencias publicamos el contenido.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Acerca de', href: '/acerca/' },
+];
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/acerca/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="El proyecto" titulo={titulo} descripcion={descripcion} />
+
+    <div class="prose mt-10">
+      <h2>Por qué existe</h2>
+      <p>
+        Aprender a programar en español sigue siendo más difícil de lo que debería: los buenos recursos están regados, muchos cuestan dinero y casi ninguno te dice por dónde empezar. AyudaDev junta en un solo lugar {RECURSOS.length} recursos gratuitos en {TEMAS.length} temas, les pone nivel y contexto, y los acompaña con guías que puedes seguir paso a paso con código que de verdad corre.
+      </p>
+      <p>
+        También nació para responder una pregunta nueva: cómo usar la inteligencia artificial para aprender, sin que termine aprendiendo por ti. Por eso hay fichas de las herramientas más usadas, prompts probados y guías para usarla como tutor.
+      </p>
+
+      <h2>Quién lo hace</h2>
+      <p>
+        AyudaDev es un proyecto de <a href={SITE.autor.url} rel="noopener" target="_blank">Carlos Navarro</a>, diseñador y desarrollador web, fundador de <a href={SITE.organizacion.url} rel="noopener" target="_blank">Mark House</a>, una agencia de marketing digital, marca y tecnología en Tepatitlán de Morelos, Jalisco, México. Buena parte del sitio se construyó con ayuda de Claude Code, y las guías se revisan a mano antes de publicarse.
+      </p>
+
+      <h2>Cómo elegimos los recursos</h2>
+      <ul>
+        <li><strong>Gratis de verdad.</strong> Sin pagos escondidos ni registro obligatorio para leer.</li>
+        <li><strong>Enlace a la fuente original.</strong> Siempre al sitio del autor, la editorial, la universidad o el repositorio oficial. No alojamos ni redistribuimos archivos.</li>
+        <li><strong>Licencia visible.</strong> Cada recurso muestra su licencia cuando la conocemos. "Gratis para leer" significa que se puede leer en línea, no que se pueda copiar o redistribuir.</li>
+        <li><strong>Verificado.</strong> Cada enlace se abre y revisa antes de entrar al catálogo, y guardamos la fecha de verificación.</li>
+        <li><strong>En español primero.</strong> Solo incluimos recursos en inglés cuando no hay equivalente y son imprescindibles, y lo marcamos.</li>
+      </ul>
+
+      <h2>Inspiración y créditos</h2>
+      <p>
+        La idea de una biblioteca de libros gratuitos de programación en español viene de <a href={SITE.inspiracion.url} rel="noopener" target="_blank">librosgratis.dev</a> y del repositorio abierto <a href={SITE.inspiracion.repo} rel="noopener" target="_blank">midudev/libros-programacion-gratis</a>. AyudaDev no reutiliza su catálogo ni sus archivos: cada entrada se curó y verificó de forma independiente. Si buscas más libros de un tema, en cada página de la biblioteca hay un enlace a su sección en librosgratis.dev.
+      </p>
+
+      <h2>Licencias de este sitio</h2>
+      <ul>
+        <li>El <strong>código</strong> del sitio se publica bajo licencia MIT en <a href={SITE.repo} rel="noopener" target="_blank">GitHub</a>.</li>
+        <li>Los <strong>textos</strong> de las guías, fichas y noticias se publican bajo <a href="https://creativecommons.org/licenses/by/4.0/deed.es" rel="noopener" target="_blank">CC BY 4.0</a>: puedes reutilizarlos citando a AyudaDev.</li>
+        <li>El <strong>catálogo</strong> de enlaces (títulos, autores y URLs) se publica como <a href="https://creativecommons.org/publicdomain/zero/1.0/deed.es" rel="noopener" target="_blank">CC0</a>.</li>
+        <li>Cada <strong>recurso enlazado</strong> conserva la licencia de su autor.</li>
+      </ul>
+
+      <h2>Contacto</h2>
+      <p>
+        Para proponer recursos o reportar enlaces usa los <a href={`${SITE.repo}/issues`} rel="noopener" target="_blank">issues del repositorio</a>. Para cualquier otra cosa, escribe a <a href={`mailto:${SITE.contacto}`}>{SITE.contacto}</a>.
+      </p>
+    </div>
+
+    <div class="mt-10 flex flex-wrap gap-2">
+      <a href="/enviar-recurso/" class="btn btn-primary"><Icon name="upload" class="h-4 w-4" /> Proponer un recurso</a>
+      <a href="/apoya/" class="btn btn-secondary"><Icon name="heart" class="h-4 w-4" /> Apoyar el proyecto</a>
+    </div>
+  </div>
+</BaseLayout>

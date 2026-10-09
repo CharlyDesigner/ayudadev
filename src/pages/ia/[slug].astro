@@ -1,0 +1,45 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import Icon from '@components/ui/Icon.astro';
+import { fechaCorta } from '@lib/dates';
+import { SITE } from '@data/site';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('ia', (h) => !h.data.borrador)).sort((a, b) => a.data.orden - b.data.orden);
+  return lista.map((h, i) => ({ params: { slug: h.id }, props: { h, anterior: lista[i - 1] ?? null, siguiente: lista[i + 1] ?? null } }));
+}
+
+const { h, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(h);
+const path = `/ia/${h.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'IA', href: '/ia/' },
+  { nombre: h.data.nombre, href: path },
+];
+const PLAN: Record<string, string> = { si: 'Tiene plan gratis', limitado: 'Gratis con límites', no: 'Solo de pago', pendiente: 'Consulta precios' };
+---
+
+<ArticleLayout
+  titulo={h.data.nombre}
+  descripcion={h.data.descripcion}
+  path={path}
+  eyebrow={`${h.data.empresa} · ficha de herramienta`}
+  migas={migas}
+  headings={headings}
+  publicado={h.data.publicado}
+  actualizado={h.data.verificado}
+  meta={[{ icono: 'robot', texto: PLAN[h.data.planGratis] }]}
+  anterior={anterior ? { titulo: anterior.data.nombre, href: `/ia/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.nombre, href: `/ia/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/ia/${h.id}.mdx`}
+>
+  <div class="not-prose mb-8 flex flex-wrap gap-2">
+    <a href={h.data.sitio} rel="noopener" target="_blank" class="btn btn-primary"><Icon name="arrow-up-right" class="h-4 w-4" /> Sitio oficial</a>
+    {h.data.docs && <a href={h.data.docs} rel="noopener" target="_blank" class="btn btn-secondary">Documentación</a>}
+    {h.data.precioUrl && <a href={h.data.precioUrl} rel="noopener" target="_blank" class="btn btn-ghost">Precios oficiales</a>}
+  </div>
+  <p class="not-prose mb-8 text-xs text-muted">Información verificada el {fechaCorta(h.data.verificado)}. Las herramientas de IA cambian rápido: confirma siempre en el sitio oficial.</p>
+  <Content />
+</ArticleLayout>

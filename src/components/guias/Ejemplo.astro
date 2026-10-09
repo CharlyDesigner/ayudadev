@@ -1,0 +1,49 @@
+---
+/**
+ * Ejemplo ejecutable dentro de una guía MDX.
+ * Uso:
+ * <Ejemplo titulo="Hola mundo" archivo="hola.js" ejecutar="node hola.js" salida="Hola, mundo">
+ *   ```js
+ *   console.log('Hola, mundo');
+ *   ```
+ * </Ejemplo>
+ */
+import Icon from '@components/ui/Icon.astro';
+interface Props {
+  titulo: string;
+  archivo?: string;
+  ejecutar?: string;
+  salida?: string;
+  numero?: number;
+}
+const { titulo, archivo, ejecutar, salida, numero } = Astro.props;
+---
+
+<section class="not-prose my-8 overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+  <header class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-3">
+    <h3 class="flex items-center gap-2 text-base font-semibold">
+      {numero !== undefined && <span class="grid h-6 w-6 place-items-center rounded-full bg-accent text-xs font-bold text-on-accent">{numero}</span>}
+      {titulo}
+    </h3>
+    {archivo && <code class="rounded-md border border-line bg-surface-2 px-2 py-0.5 font-mono text-xs text-muted">{archivo}</code>}
+  </header>
+  <div class="px-5 py-4 [&_pre]:my-0 [&_p]:mt-3 [&_p]:text-[0.95rem] [&_p]:leading-relaxed [&_p]:text-muted">
+    <slot />
+  </div>
+  {(ejecutar || salida) && (
+    <footer class="grid gap-3 border-t border-line bg-surface-2/60 px-5 py-4 sm:grid-cols-2">
+      {ejecutar && (
+        <div>
+          <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted"><Icon name="terminal" class="h-3.5 w-3.5" /> Cómo correrlo</p>
+          <code class="block rounded-lg border border-line bg-bg px-3 py-2 font-mono text-sm">{ejecutar}</code>
+        </div>
+      )}
+      {salida && (
+        <div>
+          <p class="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted"><Icon name="check" class="h-3.5 w-3.5" /> Qué deberías ver</p>
+          <pre class="rounded-lg border border-line bg-bg px-3 py-2 font-mono text-sm whitespace-pre-wrap">{salida}</pre>
+        </div>
+      )}
+    </footer>
+  )}
+</section>

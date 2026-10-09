@@ -1,0 +1,47 @@
+---
+import type { MarkdownHeading } from 'astro';
+interface Props {
+  headings: MarkdownHeading[];
+}
+const { headings } = Astro.props;
+const lista = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{lista.length > 1 && (
+  <nav aria-label="Contenido de la página" class="text-sm">
+    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">En esta página</p>
+    <ul class="space-y-1.5 border-l border-line">
+      {lista.map((h) => (
+        <li>
+          <a
+            href={`#${h.slug}`}
+            data-toc-link={h.slug}
+            class:list={['-ml-px block border-l border-transparent py-0.5 pl-3 text-muted transition-colors hover:border-fg hover:text-fg', h.depth === 3 && 'pl-6 text-[0.8rem]']}
+          >
+            {h.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<script>
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
+  if (links.length) {
+    const headings = links.map((l) => document.getElementById(l.dataset.tocLink ?? '')).filter((h): h is HTMLElement => Boolean(h));
+    const activar = (id: string) => links.forEach((l) => {
+      const on = l.dataset.tocLink === id;
+      l.classList.toggle('text-accent-ink', on);
+      l.classList.toggle('border-accent-ink', on);
+    });
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible) activar(visible.target.id);
+      },
+      { rootMargin: '-80px 0px -70% 0px' }
+    );
+    headings.forEach((h) => obs.observe(h));
+  }
+</script>

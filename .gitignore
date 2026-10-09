@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example
+public/api/_data/*
+!public/api/_data/.htaccess
+public/api/*-config.php
+entregas/
+*.log
+.DS_Store
+Thumbs.db

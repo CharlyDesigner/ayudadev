@@ -1,0 +1,222 @@
+---
+titulo: 'JavaScript desde cero'
+descripcion: 'Qué es JavaScript, cómo instalar Node.js y tus primeros programas con ejemplos que puedes copiar, ejecutar y modificar.'
+tema: javascript
+nivel: principiante
+tiempoLectura: 25
+publicado: 2026-10-09
+libros: ['javascript-moderno-javascript-info', 'javascript-aprende-javascript-midudev', 'javascript-elocuente', 'javascript-mdn-guia']
+requisitos: ['Saber abrir una terminal y moverte entre carpetas']
+etiquetas: ['node', 'navegador', 'async', 'principiante']
+orden: 10
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+JavaScript es el lenguaje que corre en todos los navegadores y, gracias a Node.js, también en servidores y en tu terminal. Con un solo lenguaje puedes hacer una página interactiva, una API o un script que automatice tareas. Esta guía te lleva de cero a tus primeros programas funcionando.
+
+## Qué es y para qué sirve
+
+Antes de escribir código conviene tener un modelo mental de cómo funciona:
+
+- **Se interpreta, no se compila a mano.** Escribes un archivo `.js` y un motor (V8 en Chrome y Node.js, SpiderMonkey en Firefox) lo ejecuta directamente. No hay paso de compilación obligatorio.
+- **Tipado dinámico y débil.** Los tipos viven en los valores, no en las variables: la misma variable puede guardar un número y luego un texto. Además, JavaScript convierte tipos por su cuenta (`'5' * 2` da `10`), lo que causa sorpresas si no lo conoces.
+- **Memoria automática.** Un recolector de basura libera lo que ya no usas. No reservas ni liberas memoria a mano.
+- **Un solo hilo con un bucle de eventos.** El código corre una instrucción tras otra. Las tareas lentas (red, temporizadores, archivos) se delegan y su resultado vuelve después, por eso existen las promesas y `async/await`.
+- **Multiparadigma.** Puedes programar con funciones, con objetos y clases, o mezclar ambos. Las funciones son valores: se guardan en variables y se pasan como argumentos.
+- **Dos entornos principales.** En el navegador tienes el DOM (la página) y APIs como `fetch`. En Node.js tienes acceso a archivos, red y procesos del sistema.
+- **Módulos.** El código se organiza en archivos que exportan e importan cosas con `import` y `export` (ESM).
+
+## Instálalo y corre tu primer archivo
+
+Para ejecutar JavaScript fuera del navegador necesitas Node.js. Trae incluido `npm`, el gestor de paquetes.
+
+<Pasos>
+
+1. **Instala Node.js (versión LTS).** En **Windows** descarga el instalador desde [nodejs.org](https://nodejs.org/) o ejecuta `winget install OpenJS.NodeJS.LTS` en PowerShell. En **macOS** usa el instalador de nodejs.org o `brew install node` si tienes Homebrew. En **Linux** lo más cómodo es [nvm](https://github.com/nvm-sh/nvm): tras instalarlo ejecuta `nvm install --lts`.
+2. **Comprueba que funciona.** Abre una terminal nueva y escribe `node -v` y `npm -v`. Deben mostrar un número de versión cada uno.
+3. **Crea una carpeta para practicar.** Por ejemplo `mkdir aprendo-js` y entra con `cd aprendo-js`.
+4. **Crea el archivo `hola.js`** con tu editor (recomendamos [VS Code](https://code.visualstudio.com/)) y pega el código del ejemplo 1.
+5. **Ejecútalo** con `node hola.js`. Si ves el saludo, ya tienes todo listo.
+
+</Pasos>
+
+Para probar código en el navegador, abre las herramientas de desarrollo (tecla F12) y escribe en la pestaña **Consola**. Es el mismo lenguaje.
+
+## Ejemplos paso a paso
+
+Cada ejemplo es un archivo completo. Cópialo tal cual, guárdalo con el nombre indicado y ejecútalo con el comando que aparece debajo.
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.js" ejecutar="node hola.js" salida="Hola, Ana. Bienvenida a JavaScript">
+
+```js
+// Tu primer programa: imprime un saludo en la terminal
+const nombre = 'Ana';
+console.log(`Hola, ${nombre}. Bienvenida a JavaScript`);
+```
+
+`const` declara una variable que no se reasigna. `console.log` imprime en la terminal. Las comillas invertidas crean una plantilla de texto donde `${...}` inserta el valor de una expresión.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Tipos y conversiones" archivo="tipos.js" ejecutar="node tipos.js" salida={'number\nstring\n10\n52\ntrue\nfalse\n7'}>
+
+```js
+// Los tipos viven en los valores, no en las variables
+let dato = 42;
+console.log(typeof dato); // number
+dato = 'ahora soy texto';
+console.log(typeof dato); // string
+
+// Coerciones implícitas: el mismo "5" se comporta distinto
+console.log('5' * 2);   // multiplica: convierte a número
+console.log('5' + 2);   // concatena: convierte a texto
+
+// Por eso comparamos con === (sin conversión)
+console.log(5 == '5');  // true, convierte antes de comparar
+console.log(5 === '5'); // false, tipos distintos
+
+// Convierte de forma explícita cuando lo necesites
+console.log(Number('5') + 2);
+```
+
+`let` sí permite reasignar. Fíjate en la diferencia entre `*` y `+` con textos: el `+` concatena en cuanto uno de los dos lados es texto. La regla práctica es comparar siempre con `===` y convertir con `Number()` o `String()` cuando lo necesites.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Listas con map, filter y reduce" archivo="arreglos.js" ejecutar="node arreglos.js" salida={"[ 'Café', 'Leche' ]\nTotal en stock: $148\nLeche"}>
+
+```js
+// Transformar listas sin bucles con índices
+const productos = [
+  { nombre: 'Café', precio: 120, enStock: true },
+  { nombre: 'Pan', precio: 35, enStock: false },
+  { nombre: 'Leche', precio: 28, enStock: true },
+];
+
+// filter: quédate con los que cumplen la condición
+const disponibles = productos.filter((p) => p.enStock);
+
+// map: transforma cada elemento en otra cosa
+const nombres = disponibles.map((p) => p.nombre);
+console.log(nombres);
+
+// reduce: acumula un solo valor a partir de todos
+const total = disponibles.reduce((suma, p) => suma + p.precio, 0);
+console.log(`Total en stock: $${total}`);
+
+// find: el primero que cumple (o undefined)
+const barato = productos.find((p) => p.precio < 30);
+console.log(barato?.nombre ?? 'ninguno');
+```
+
+Las funciones flecha `(p) => p.enStock` son funciones cortas que devuelven el resultado de la expresión. `filter`, `map` y `reduce` no modifican el arreglo original: devuelven uno nuevo o un valor. Esa es la forma habitual de trabajar con listas en JavaScript moderno.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Objetos, desestructuración y acceso seguro" archivo="objetos.js" ejecutar="node objetos.js" salida={'Luis 31\n31 32\nGuadalajara\nundefined\n0\nsin datos'}>
+
+```js
+// Desestructuración, spread y acceso seguro
+const usuario = {
+  nombre: 'Luis',
+  edad: 31,
+  direccion: { ciudad: 'Guadalajara' },
+};
+
+// Saca propiedades a variables en una línea
+const { nombre, edad } = usuario;
+console.log(nombre, edad);
+
+// Crea una copia modificada sin tocar el original
+const actualizado = { ...usuario, edad: 32 };
+console.log(usuario.edad, actualizado.edad);
+
+// Optional chaining: no explota si algo no existe
+console.log(usuario.direccion?.ciudad);
+console.log(usuario.trabajo?.empresa);
+
+// ?? solo reemplaza null o undefined (|| también reemplaza 0 y "")
+const visitas = 0;
+console.log(visitas ?? 'sin datos');
+console.log(visitas || 'sin datos');
+```
+
+El operador `...` (spread) copia las propiedades de un objeto en otro nuevo. `?.` devuelve `undefined` en vez de lanzar un error si la propiedad intermedia no existe. Observa la última diferencia: `??` respeta el `0` porque no es `null` ni `undefined`, mientras que `||` lo trata como "vacío".
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Código asíncrono con promesas y async/await" archivo="asincrono.js" ejecutar="node asincrono.js" salida={'1. Pido los datos\n2. Mientras tanto sigo trabajando\n3. Llegaron: Hola desde el futuro\n4. Ambas listas: A B'}>
+
+```js
+// Simula una tarea lenta (como pedir datos a un servidor)
+function esperar(ms, valor) {
+  return new Promise((resolve) => setTimeout(() => resolve(valor), ms));
+}
+
+async function main() {
+  console.log('1. Pido los datos');
+  const saludo = await esperar(300, 'Hola desde el futuro');
+  console.log('3. Llegaron:', saludo);
+
+  // Dos tareas independientes en paralelo
+  const [a, b] = await Promise.all([esperar(200, 'A'), esperar(100, 'B')]);
+  console.log('4. Ambas listas:', a, b);
+}
+
+main();
+console.log('2. Mientras tanto sigo trabajando');
+```
+
+Mira el orden de la salida: el mensaje 2 aparece antes que el 3. `await` pausa solo la función `main`, no el programa entero, así que la última línea del archivo corre mientras la promesa espera. `Promise.all` lanza varias tareas a la vez y espera a que todas terminen. Este es el patrón que usarás con `fetch` para pedir datos a una API.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Comparar con == en vez de ===">
+`==` convierte los tipos antes de comparar, así que `0 == ''` y `null == undefined` son verdaderos. Usa siempre `===` y `!==`. Para comprobar si algo es `NaN` usa `Number.isNaN(x)`, porque `NaN === NaN` es falso.
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar el await">
+Si llamas a una función `async` sin `await`, recibes una promesa, no el valor. Un `if (promesa)` siempre entra porque un objeto es verdadero. Si ves `Promise { <pending> }` en la consola, te faltó un `await` (y la función que lo contiene debe ser `async`).
+</Callout>
+
+<Callout tipo="warning" titulo="forEach con await no espera">
+`lista.forEach(async (x) => await algo(x))` dispara todo a la vez y no espera a nada. Para ir uno por uno usa `for (const x of lista) await algo(x)`. Para hacerlo en paralelo usa `await Promise.all(lista.map(algo))`.
+</Callout>
+
+<Callout tipo="warning" titulo="Métodos que mutan el arreglo original">
+`sort()`, `reverse()` y `splice()` cambian el arreglo sobre el que se llaman, y la copia con `...` es superficial (los objetos anidados se comparten). Si quieres una copia ordenada usa `toSorted()` en runtimes recientes o `[...lista].sort()`. Para copias profundas usa `structuredClone(obj)`.
+</Callout>
+
+<Callout tipo="warning" titulo="Perder this al pasar un método como callback">
+Si pasas `objeto.metodo` a un evento o a `setTimeout`, dentro `this` ya no es el objeto. Usa una función flecha (`() => objeto.metodo()`) o `objeto.metodo.bind(objeto)`. Las funciones flecha no tienen `this` propio: toman el del lugar donde se escribieron.
+</Callout>
+
+## Buenas prácticas
+
+- Usa `const` por defecto y `let` solo cuando reasignes. Olvida `var`.
+- Compara con `===` y convierte tipos de forma explícita con `Number()`, `String()` o `Boolean()`.
+- Prefiere `map`, `filter`, `find` y `reduce` a bucles con índices; son más fáciles de leer y no mutan la lista original.
+- Escribe `async/await` con `try/catch` y usa `Promise.all` para tareas independientes.
+- Cuando uses `fetch`, revisa `res.ok` antes de leer el cuerpo: un 404 no lanza error por sí solo.
+- Nunca metas datos de usuario en `innerHTML`; usa `textContent`.
+- Organiza tu código en módulos ES (`import`/`export`) y activa `"type": "module"` en tu `package.json`.
+- Instala ESLint y Prettier desde el primer proyecto: detectan errores y formatean por ti.
+
+## Siguiente paso
+
+Ya puedes escribir programas que transforman datos y esperan resultados. Lo que sigue:
+
+- **Manipula la página.** Aprende el DOM y los eventos en el [Tutorial de JavaScript Moderno](https://es.javascript.info/) (parte 2) o en nuestra guía de [HTML y CSS desde cero](/guias/html-css/) para tener dónde aplicar tu JavaScript.
+- **Agrega tipos.** Cuando tus proyectos crezcan, [TypeScript desde cero](/guias/typescript/) te enseña a detectar errores antes de ejecutar.
+- **Lleva JavaScript al servidor.** Explora los recursos de [Node.js](/biblioteca/nodejs/) para crear APIs y herramientas de terminal.
+- **Guarda tu progreso.** Con [Git y GitHub](/biblioteca/git/) tendrás historial y copia de seguridad de cada ejercicio.
+
+Y si quieres ejercicios guiados, todos los libros de la [biblioteca de JavaScript](/biblioteca/javascript/) son gratuitos y están en español.
+
+<LibrosRecomendados ids={frontmatter.libros} />

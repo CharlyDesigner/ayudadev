@@ -1,0 +1,67 @@
+# AyudaDev: Apache (InMotion cPanel). Se copia a la raíz del sitio publicado.
+
+Options -Indexes
+DirectorySlash On
+LimitRequestBody 65536
+
+# Archivos internos, de configuración o respaldo nunca deben ser públicos.
+<FilesMatch "(^\.|\.(?:env|ini|log|bak|sql|ya?ml|lock|jsonl)$|^(?:package(?:-lock)?\.json|composer\.(?:json|lock))$)">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # El sitio público solo necesita navegación y los POST de su API.
+  RewriteCond %{REQUEST_METHOD} !^(GET|HEAD|POST)$ [NC]
+  RewriteRule ^ - [F,L]
+
+  # Forzar HTTPS (se excluye /.well-known para que AutoSSL pueda renovar).
+  RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://dev.carlosnavarro.site%{REQUEST_URI} [L,R=301]
+
+  # Endpoints del boletín: cada uno acepta solo su método.
+  RewriteCond %{REQUEST_METHOD} !POST
+  RewriteRule ^api/suscribir\.php$ - [F,L]
+  RewriteCond %{REQUEST_METHOD} !GET
+  RewriteRule ^api/(confirmar|baja)\.php$ - [F,L]
+
+  # Módulos compartidos y carpeta de datos: nunca por web.
+  RewriteRule ^api/(_guard|_newsletter)\.php$ - [F,L]
+  RewriteRule ^api/_data(/|$) - [F,L]
+</IfModule>
+
+ErrorDocument 404 /404.html
+
+# Compresión
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript application/json application/xml application/rss+xml image/svg+xml
+</IfModule>
+
+# Caché: los archivos de /_astro/ llevan hash en el nombre.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 hour"
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/json "access plus 1 hour"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/avif "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <If "%{REQUEST_URI} =~ m#^/_astro/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; media-src 'self'; manifest-src 'self'; upgrade-insecure-requests"
+</IfModule>

@@ -1,0 +1,80 @@
+---
+nombre: 'Perplexity'
+empresa: 'Perplexity AI'
+descripcion: 'Buscador con IA que responde citando fuentes. Útil para investigar librerías, errores y documentación. Tiene plan gratuito con límites.'
+tipo: chat
+sitio: 'https://www.perplexity.ai'
+docs: 'https://www.perplexity.ai/help-center'
+planGratis: limitado
+precioUrl: 'https://www.perplexity.ai/pro'
+publicado: 2026-10-09
+verificado: 2026-10-09
+orden: 7
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué es
+
+Perplexity es un motor de respuestas: combina búsqueda en la web con un modelo de lenguaje. En lugar de darte diez enlaces, te da una respuesta redactada y, debajo de cada afirmación, las fuentes de donde la sacó. Puedes usarlo desde el navegador, la app de escritorio o el celular.
+
+Tiene un plan gratuito con límites y planes de pago con más capacidad. Consulta la [página oficial de planes](https://www.perplexity.ai/pro) para ver las condiciones actuales.
+
+A diferencia de un chat puro, Perplexity está pensado para investigar, no tanto para programar contigo.
+
+## Para qué sirve si estás aprendiendo
+
+Perplexity brilla cuando necesitas información actual y verificable:
+
+- Comparar dos librerías o frameworks y saber cuál está más activo.
+- Entender un mensaje de error poco común: suele encontrar hilos de foros y issues de GitHub.
+- Saber cómo se instala algo en tu sistema operativo con los pasos oficiales.
+- Encontrar la documentación correcta de una versión específica.
+- Investigar qué tecnologías se piden en vacantes de tu ciudad.
+
+Como muestra las fuentes, es un buen lugar para practicar algo clave: leer la documentación original en lugar de quedarte con el resumen.
+
+## Cómo empezar
+
+<Pasos>
+
+1. Entra a [perplexity.ai](https://www.perplexity.ai). Puedes usarlo sin cuenta; crear una te permite guardar el historial.
+2. Haz una pregunta concreta: "¿Cómo instalo Python en Windows 11 paso a paso según la documentación oficial?".
+3. Lee la respuesta, pero abre al menos dos de las fuentes citadas para confirmar.
+4. Usa las preguntas de seguimiento para profundizar sin perder el contexto.
+5. Guarda en tus notas los enlaces oficiales que encuentres; esa es tu biblioteca.
+
+</Pasos>
+
+<Callout tipo="tip" titulo="Pide fuentes oficiales">
+Agrega "solo fuentes oficiales o documentación del proyecto" a tus preguntas. Reduce las respuestas basadas en blogs desactualizados.
+</Callout>
+
+## Tres prompts para probar hoy
+
+```text
+Compara [LIBRERÍA A] y [LIBRERÍA B] para [TAREA]. Quiero saber cuál se mantiene más activa, cuál tiene mejor documentación y cuál es más fácil para principiantes. Cita la documentación oficial y el repositorio de cada una.
+```
+
+```text
+Me sale este error: [PEGA EL ERROR]. Busca qué lo causa normalmente y resume las tres causas más comunes con sus soluciones, citando las fuentes. No inventes nada que no aparezca en las fuentes.
+```
+
+```text
+¿Cuál es la forma oficial y actual de instalar [HERRAMIENTA] en [SISTEMA OPERATIVO]? Dame los pasos y el enlace a la página oficial de instalación.
+```
+
+## Límites y cuidados
+
+- **Las fuentes pueden estar mal.** Citar una fuente no garantiza que la resuma bien. Abre el enlace y lee.
+- **Fuentes desactualizadas.** Puede citar un blog de hace años. Fíjate en la fecha y prefiere la documentación oficial.
+- **Privacidad.** Revisa las opciones de tu cuenta y el [centro de ayuda](https://www.perplexity.ai/help-center) sobre cómo se guardan tus búsquedas.
+- **Secretos.** No pegues claves, contraseñas ni datos personales en las búsquedas.
+- **Investigar no es aprender.** Leer un resumen no sustituye hacer el ejercicio. Usa Perplexity para encontrar, y tu editor para practicar.
+
+## Enlaces oficiales
+
+- [Sitio de Perplexity](https://www.perplexity.ai)
+- [Centro de ayuda](https://www.perplexity.ai/help-center)
+- [Planes](https://www.perplexity.ai/pro)

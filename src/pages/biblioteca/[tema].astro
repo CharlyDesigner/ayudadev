@@ -1,0 +1,93 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import FiltrosBar from '@components/biblioteca/FiltrosBar.astro';
+import RecursoCard from '@components/biblioteca/RecursoCard.astro';
+import TemaCard from '@components/biblioteca/TemaCard.astro';
+import Icon from '@components/ui/Icon.astro';
+import { TEMAS, temasPorArea } from '@data/temas';
+import { areaPorId } from '@data/areas';
+import { recursosPorTema, conteoPorTema } from '@data/library';
+import { coleccionLd, migasLd } from '@lib/seo';
+import { issueUrl } from '@lib/github';
+import { SITE } from '@data/site';
+import { plural } from '@lib/text';
+
+export async function getStaticPaths() {
+  const guias = await getCollection('guias', (g) => !g.data.borrador);
+  return TEMAS.map((tema) => ({
+    params: { tema: tema.slug },
+    props: { tema, guia: guias.find((g) => g.data.tema === tema.slug) ?? null },
+  }));
+}
+
+const { tema, guia } = Astro.props;
+const area = areaPorId(tema.area);
+const lista = recursosPorTema(tema.slug);
+const conteo = conteoPorTema();
+const relacionados = temasPorArea(tema.area).filter((t) => t.slug !== tema.slug);
+const path = `/biblioteca/${tema.slug}/`;
+const titulo = `${tema.nombre}: recursos gratis en español`;
+const descripcion = `${plural(lista.length, 'recurso gratuito', 'recursos gratuitos')} para aprender ${tema.nombre}: ${tema.descripcion}`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Biblioteca', href: '/biblioteca/' },
+  { nombre: tema.nombre, href: path },
+];
+---
+
+<BaseLayout
+  title={titulo}
+  description={descripcion}
+  path={path}
+  jsonLd={[migasLd(migas), coleccionLd({ nombre: titulo, descripcion, path, items: lista.map((r) => ({ nombre: r.titulo, url: r.url })) })]}
+>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow={area.nombre} titulo={tema.nombre} descripcion={tema.descripcion} />
+
+    <div class="mt-6 flex flex-wrap gap-2">
+      {guia && (
+        <a href={`/guias/${guia.id}/`} class="btn btn-primary">
+          <Icon name="code" class="h-4 w-4" /> Guía con ejemplos de {tema.nombre}
+        </a>
+      )}
+      <a href={issueUrl('nuevo-recurso', { title: `[Recurso] ${tema.nombre}: `, tema: tema.nombre })} rel="noopener" target="_blank" class="btn btn-secondary">
+        <Icon name="upload" class="h-4 w-4" /> Proponer un recurso
+      </a>
+      {tema.librosgratis && (
+        <a href={`${SITE.inspiracion.url}/libros/${tema.librosgratis}/`} rel="noopener" target="_blank" class="btn btn-ghost">
+          Más libros en librosgratis.dev <Icon name="arrow-up-right" class="h-4 w-4" />
+        </a>
+      )}
+    </div>
+
+    <section class="mt-10" aria-labelledby="lista-titulo">
+      <h2 id="lista-titulo" class="mb-4 text-xl font-semibold">{plural(lista.length, 'recurso', 'recursos')}</h2>
+      {lista.length ? (
+        <>
+          <FiltrosBar total={lista.length} temaFijo={tema.slug} />
+          <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {lista.map((r) => <RecursoCard recurso={r} />)}
+          </div>
+        </>
+      ) : (
+        <div class="card p-8 text-center">
+          <p class="font-semibold">Todavía no hay recursos en este tema.</p>
+          <p class="mt-1 text-sm text-muted">¿Conoces uno bueno y gratuito? <a href="/enviar-recurso/" class="link">Propónlo</a>.</p>
+        </div>
+      )}
+    </section>
+
+    {relacionados.length > 0 && (
+      <section class="mt-14" aria-labelledby="relacionados-titulo">
+        <h2 id="relacionados-titulo" class="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">Más en {area.nombre}</h2>
+        <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {relacionados.map((t) => <TemaCard tema={t} conteo={conteo.get(t.slug) ?? 0} compacto />)}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>

@@ -1,0 +1,95 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { SITE } from '@data/site';
+import { migasLd } from '@lib/seo';
+
+const { stripe, sponsors } = SITE.donaciones;
+const titulo = 'Apoya el proyecto';
+const descripcion = 'AyudaDev es gratis, sin anuncios y sin registro. Si te sirve, una donación voluntaria ayuda a pagar el hosting y el tiempo de curar recursos y escribir guías.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Apoya', href: '/apoya/' },
+];
+const faq = [
+  ['¿Es obligatorio donar?', 'No. Todo el contenido seguirá siendo gratuito y abierto. Donar es una forma de decir gracias y de ayudar a que el proyecto siga creciendo.'],
+  ['¿En qué se usa el dinero?', 'En el hosting y dominio del sitio, en herramientas para verificar enlaces y generar contenido, y en el tiempo dedicado a curar recursos, escribir guías y responder a la comunidad.'],
+  ['¿Es deducible de impuestos?', 'No. AyudaDev es un proyecto personal de Carlos Navarro, no una organización sin fines de lucro. Las donaciones son regalos voluntarios.'],
+  ['¿Puedo apoyar sin dinero?', 'Sí, y vale muchísimo: comparte el sitio, propón un recurso, reporta un enlace roto o deja una estrella en GitHub.'],
+];
+---
+
+<BaseLayout
+  title={titulo}
+  description={descripcion}
+  path="/apoya/"
+  jsonLd={[
+    migasLd(migas),
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ]}
+>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Donaciones voluntarias" titulo={titulo} descripcion={descripcion} />
+
+    <div class="mt-10 grid gap-4 md:grid-cols-2">
+      <section class="card bg-glow flex flex-col gap-4 p-6 sm:p-8" aria-labelledby="stripe-titulo">
+        <span class="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-on-accent"><Icon name="gift" class="h-6 w-6" /></span>
+        <h2 id="stripe-titulo" class="text-xl font-bold">Donación única con tarjeta</h2>
+        <p class="text-sm text-muted">Pago seguro por Stripe. Tú eliges el monto. No guardamos datos de tu tarjeta: todo pasa por Stripe.</p>
+        {stripe ? (
+          <a href={stripe} rel="noopener" target="_blank" class="btn btn-primary mt-auto self-start"><Icon name="heart" class="h-4 w-4" /> Donar con Stripe</a>
+        ) : (
+          <p class="mt-auto rounded-2xl border border-dashed border-line p-4 text-sm text-muted">[PENDIENTE] El enlace de Stripe se activará muy pronto. Mientras tanto puedes apoyar compartiendo el sitio.</p>
+        )}
+      </section>
+
+      <section class="card flex flex-col gap-4 p-6 sm:p-8" aria-labelledby="sponsors-titulo">
+        <span class="grid h-12 w-12 place-items-center rounded-2xl bg-surface-2 text-accent-ink"><Icon name="github" class="h-6 w-6" /></span>
+        <h2 id="sponsors-titulo" class="text-xl font-bold">Apoyo mensual con GitHub Sponsors</h2>
+        <p class="text-sm text-muted">Si usas GitHub, puedes patrocinar el proyecto con un monto mensual y cancelar cuando quieras.</p>
+        {sponsors ? (
+          <a href={sponsors} rel="noopener" target="_blank" class="btn btn-secondary mt-auto self-start"><Icon name="star" class="h-4 w-4" /> Patrocinar en GitHub</a>
+        ) : (
+          <p class="mt-auto rounded-2xl border border-dashed border-line p-4 text-sm text-muted">[PENDIENTE] GitHub Sponsors está en proceso de activación.</p>
+        )}
+      </section>
+    </div>
+
+    <section class="mt-12" aria-labelledby="otras-titulo">
+      <h2 id="otras-titulo" class="text-2xl font-bold tracking-tight">Otras formas de ayudar</h2>
+      <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ['Comparte el sitio', 'Mándalo a alguien que esté aprendiendo o publícalo en tus redes.', '/', 'share'],
+          ['Propón un recurso', 'Si conoces un libro o curso gratuito que falta, dínoslo.', '/enviar-recurso/', 'upload'],
+          ['Reporta un enlace roto', 'Los enlaces cambian. Avísanos y lo arreglamos.', `${SITE.repo}/issues/new?template=enlace-roto.yml`, 'alert-triangle'],
+          ['Deja una estrella', 'Una estrella en GitHub ayuda a que más gente lo encuentre.', SITE.repo, 'star'],
+        ].map(([t, d, h, i]) => (
+          <a href={h} class="card card-hover flex flex-col gap-2 p-5" rel={h.startsWith('http') ? 'noopener' : undefined} target={h.startsWith('http') ? '_blank' : undefined}>
+            <Icon name={i as any} class="h-5 w-5 text-accent-ink" />
+            <span class="font-semibold">{t}</span>
+            <span class="text-sm text-muted">{d}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="mt-12 max-w-3xl" aria-labelledby="faq-titulo">
+      <h2 id="faq-titulo" class="text-2xl font-bold tracking-tight">Preguntas frecuentes</h2>
+      <div class="mt-5 divide-y divide-line">
+        {faq.map(([q, a]) => (
+          <details class="group py-4">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 font-semibold"><span>{q}</span><Icon name="chevron-down" class="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180" /></summary>
+            <p class="mt-2 text-sm leading-relaxed text-muted">{a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  </div>
+</BaseLayout>

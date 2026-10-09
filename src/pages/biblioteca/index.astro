@@ -1,0 +1,79 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import FiltrosBar from '@components/biblioteca/FiltrosBar.astro';
+import RecursoCard from '@components/biblioteca/RecursoCard.astro';
+import TemaCard from '@components/biblioteca/TemaCard.astro';
+import Icon from '@components/ui/Icon.astro';
+import { AREAS_INFO } from '@data/areas';
+import { TEMAS, temasPorArea } from '@data/temas';
+import { RECURSOS, conteoPorTema, recursosPorTema } from '@data/library';
+import { coleccionLd, migasLd } from '@lib/seo';
+import { SITE } from '@data/site';
+
+const conteo = conteoPorTema();
+const titulo = 'Biblioteca de recursos gratuitos';
+const descripcion = `${RECURSOS.length} libros, cursos y documentación en español para aprender a programar, organizados en ${TEMAS.length} temas. Todo gratis y enlazado a su fuente original.`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Biblioteca', href: '/biblioteca/' },
+];
+---
+
+<BaseLayout
+  title={titulo}
+  description={descripcion}
+  path="/biblioteca/"
+  image="/og/biblioteca.png"
+  jsonLd={[
+    migasLd(migas),
+    coleccionLd({ nombre: titulo, descripcion, path: '/biblioteca/', items: TEMAS.map((t) => ({ nombre: t.nombre, url: `${SITE.url}/biblioteca/${t.slug}/` })) }),
+  ]}
+>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Biblioteca" titulo={titulo} descripcion={descripcion} enlace={{ href: '/enviar-recurso/', label: 'Enviar un recurso' }} />
+
+    <section class="mt-10" aria-labelledby="temas-titulo">
+      <h2 id="temas-titulo" class="text-sm font-semibold uppercase tracking-wider text-muted">Explora por tema</h2>
+      <div class="mt-4 space-y-6">
+        {AREAS_INFO.map((area) => {
+          const temas = temasPorArea(area.id);
+          if (!temas.length) return null;
+          return (
+            <div>
+              <h3 class="mb-2 flex items-center gap-2 text-sm font-medium"><Icon name={area.icono as any} class="h-4 w-4 text-accent-ink" /> {area.nombre}</h3>
+              <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {temas.map((t) => <TemaCard tema={t} conteo={conteo.get(t.slug) ?? 0} compacto />)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="catalogo-titulo">
+      <h2 id="catalogo-titulo" class="mb-4 text-2xl font-bold tracking-tight">Todos los recursos</h2>
+      <FiltrosBar total={RECURSOS.length} />
+
+      <div class="mt-8 space-y-12">
+        {TEMAS.map((t) => {
+          const lista = recursosPorTema(t.slug);
+          if (!lista.length) return null;
+          return (
+            <section data-seccion-tema={t.slug} aria-labelledby={`sec-${t.slug}`}>
+              <div class="mb-4 flex items-end justify-between gap-3">
+                <h3 id={`sec-${t.slug}`} class="text-xl font-semibold">{t.nombre}</h3>
+                <a href={`/biblioteca/${t.slug}/`} class="text-sm text-muted hover:text-fg">Ver página del tema</a>
+              </div>
+              <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {lista.map((r) => <RecursoCard recurso={r} />)}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </section>
+  </div>
+</BaseLayout>

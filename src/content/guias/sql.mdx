@@ -1,0 +1,229 @@
+---
+titulo: 'SQL desde cero'
+descripcion: 'Qué es una base de datos relacional, cómo instalar SQLite y tus primeras tablas, consultas, joins y transacciones con ejemplos que puedes correr tal cual.'
+tema: sql
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['sql-manual-de-sql-jorge-sanchez', 'sql-bases-de-datos-jose-juan-sanchez', 'sql-sqlbolt']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['sql', 'sqlite', 'bases-de-datos', 'consultas', 'joins']
+orden: 70
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+SQL es el lenguaje para hablar con bases de datos relacionales: PostgreSQL, MySQL, SQLite, SQL Server, Oracle. Casi cualquier aplicación que guarda usuarios, pedidos o mensajes termina usando SQL por debajo, así que es de las habilidades más rentables que puedes aprender. En esta guía usamos SQLite porque no necesita servidor: toda la base de datos es un archivo en tu disco.
+
+Lo que necesitas tener claro:
+
+- **Tablas, filas y columnas**: una tabla es como una hoja de cálculo con columnas de tipo fijo (`INTEGER`, `TEXT`, `REAL`). Cada fila es un registro. Las tablas se relacionan entre sí por columnas que apuntan a otras tablas (claves foráneas).
+- **SQL es declarativo**: describes *qué* resultado quieres, no *cómo* obtenerlo. El motor decide el plan: qué índice usar, en qué orden unir tablas.
+- **Trabajas con conjuntos**, no con bucles. Una consulta devuelve cero, una o millones de filas de una sola vez.
+- **Cuatro verbos para los datos**: `SELECT` lee, `INSERT` agrega, `UPDATE` modifica y `DELETE` borra. Para la estructura: `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`.
+- **El orden lógico de una consulta** es `FROM` y `JOIN`, luego `WHERE`, luego `GROUP BY`, luego `HAVING`, luego `SELECT`, luego `ORDER BY` y al final `LIMIT`. Por eso en `WHERE` no puedes usar un alias que definiste en `SELECT`.
+- **`NULL` significa desconocido**, no cero ni cadena vacía. `NULL = NULL` no es verdadero; se pregunta con `IS NULL`.
+- **Las transacciones** agrupan varios cambios para que se apliquen todos o ninguno (`BEGIN`, `COMMIT`, `ROLLBACK`).
+- **Tipado por motor**: SQLite es flexible con los tipos; PostgreSQL y MySQL son estrictos. Lo que aprendas aquí sirve en todos, con pequeñas diferencias de sintaxis.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows**: en PowerShell escribe `winget install SQLite.SQLite`. Si prefieres hacerlo a mano, descarga el paquete *sqlite-tools* para Windows desde [sqlite.org/download.html](https://www.sqlite.org/download.html), descomprímelo en una carpeta como `C:\sqlite` y agrega esa carpeta a tu variable de entorno `PATH`.
+2. **macOS**: ya viene instalado. Abre Terminal y escribe `sqlite3 --version`. Si quieres una versión más nueva, `brew install sqlite`.
+3. **Linux**: en Debian o Ubuntu escribe `sudo apt install sqlite3`; en Fedora `sudo dnf install sqlite`; en Arch `sudo pacman -S sqlite`.
+4. Comprueba con `sqlite3 --version`. Debe responder con un número de versión 3.x.
+5. Crea una carpeta para practicar, por ejemplo `tienda`, y entra en ella desde la terminal. Guarda ahí los archivos `.sql` de los ejemplos.
+6. Cada ejemplo se corre con `sqlite3 tienda.db < archivo.sql`. El archivo `tienda.db` se crea solo la primera vez y los siguientes ejemplos usan las tablas de los anteriores, así que córrelos en orden.
+
+</Pasos>
+
+Por defecto `sqlite3` muestra cada fila en una línea con las columnas separadas por `|`. Si quieres verlas como tabla con encabezados, agrega al inicio de cualquier archivo las líneas `.headers on` y `.mode column`. Y si escribes `sqlite3 tienda.db` sin más, entras a una consola interactiva donde puedes probar consultas una por una; sales con `.quit`.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Crear una tabla e insertar datos" archivo="01_crear.sql" ejecutar="sqlite3 tienda.db < 01_crear.sql" salida="1|Cuaderno|45|20
+2|Pluma|12|100
+3|Mochila|350|5">
+
+```sql
+-- Crea la tabla y mete tres productos
+CREATE TABLE productos (
+  id     INTEGER PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  precio INTEGER NOT NULL,
+  stock  INTEGER NOT NULL DEFAULT 0
+);
+
+INSERT INTO productos (nombre, precio, stock) VALUES
+  ('Cuaderno', 45, 20),
+  ('Pluma', 12, 100),
+  ('Mochila', 350, 5);
+
+SELECT * FROM productos;
+```
+
+`INTEGER PRIMARY KEY` es el identificador único de cada fila; en SQLite se asigna solo si no lo das, por eso no lo incluimos en el `INSERT`. `NOT NULL` obliga a que la columna siempre tenga valor y `DEFAULT 0` rellena el stock si no lo indicas. Los textos van entre comillas simples.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Filtrar y ordenar" archivo="02_filtrar.sql" ejecutar="sqlite3 tienda.db < 02_filtrar.sql" salida="Cuaderno|45
+Pluma|12">
+
+```sql
+-- Solo productos baratos, del más caro al más barato
+SELECT nombre, precio
+FROM productos
+WHERE precio < 100
+ORDER BY precio DESC;
+```
+
+`WHERE` deja pasar solo las filas que cumplen la condición y `ORDER BY ... DESC` las ordena de mayor a menor (`ASC`, el valor por defecto, es de menor a mayor). Fíjate en que pedimos solo dos columnas: en código real conviene listar las columnas que necesitas en lugar de `*`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Relacionar dos tablas con JOIN" archivo="03_ventas.sql" ejecutar="sqlite3 tienda.db < 03_ventas.sql" salida="Cuaderno|2|2026-10-01
+Pluma|10|2026-10-01
+Cuaderno|3|2026-10-02
+Mochila|1|2026-10-03">
+
+```sql
+-- Tabla de ventas relacionada con productos
+CREATE TABLE ventas (
+  id          INTEGER PRIMARY KEY,
+  producto_id INTEGER NOT NULL REFERENCES productos(id),
+  cantidad    INTEGER NOT NULL,
+  fecha       TEXT NOT NULL
+);
+
+INSERT INTO ventas (producto_id, cantidad, fecha) VALUES
+  (1, 2, '2026-10-01'),
+  (2, 10, '2026-10-01'),
+  (1, 3, '2026-10-02'),
+  (3, 1, '2026-10-03');
+
+-- Une las dos tablas: nombre del producto y lo que se vendió
+SELECT p.nombre, v.cantidad, v.fecha
+FROM ventas v
+JOIN productos p ON p.id = v.producto_id
+ORDER BY v.fecha, p.nombre;
+```
+
+En `ventas` no guardamos el nombre del producto, solo su `id`: así, si el nombre cambia, no hay que corregirlo en mil lugares. `JOIN ... ON` indica cómo se emparejan las filas de las dos tablas. Los alias `v` y `p` acortan la consulta y dejan claro de qué tabla viene cada columna.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Agrupar y sumar" archivo="04_agrupar.sql" ejecutar="sqlite3 tienda.db < 04_agrupar.sql" salida="Mochila|1|350
+Cuaderno|5|225
+Pluma|10|120">
+
+```sql
+-- Total vendido por producto
+SELECT p.nombre,
+       SUM(v.cantidad)            AS unidades,
+       SUM(v.cantidad * p.precio) AS importe
+FROM ventas v
+JOIN productos p ON p.id = v.producto_id
+GROUP BY p.id, p.nombre
+ORDER BY importe DESC;
+```
+
+`GROUP BY` junta las filas que comparten producto en una sola, y las funciones de agregación (`SUM`, `COUNT`, `AVG`, `MIN`, `MAX`) calculan un valor por grupo. Toda columna del `SELECT` que no sea una agregación debe estar en el `GROUP BY`. `AS` da nombre a la columna calculada y ese alias sí se puede usar en `ORDER BY`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Modificar y borrar dentro de una transacción" archivo="05_actualizar.sql" ejecutar="sqlite3 tienda.db < 05_actualizar.sql" salida="Cuaderno|45|20
+Pluma|15|100
+Mochila|350|5">
+
+```sql
+-- Cambia datos dentro de una transacción
+BEGIN;
+UPDATE productos SET precio = 15 WHERE nombre = 'Pluma';
+DELETE FROM productos WHERE stock = 0;
+COMMIT;
+
+SELECT nombre, precio, stock FROM productos ORDER BY id;
+```
+
+`UPDATE` cambia columnas de las filas que cumplen el `WHERE`; `DELETE` las borra. Aquí el `DELETE` no quitó nada porque ningún producto tiene stock cero. Entre `BEGIN` y `COMMIT` los cambios son todo o nada: si algo falla a la mitad, `ROLLBACK` los deshace. Acostúmbrate a escribir el `WHERE` antes que el resto de la sentencia.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="LEFT JOIN y NULL: incluir lo que no tiene ventas" archivo="06_nulos.sql" ejecutar="sqlite3 tienda.db < 06_nulos.sql" salida="Cuaderno|5
+Pluma|10
+Mochila|1
+Regla|0">
+
+```sql
+-- LEFT JOIN: también los productos que nunca se vendieron
+INSERT INTO productos (nombre, precio, stock) VALUES ('Regla', 8, 30);
+
+SELECT p.nombre,
+       COALESCE(SUM(v.cantidad), 0) AS unidades
+FROM productos p
+LEFT JOIN ventas v ON v.producto_id = p.id
+GROUP BY p.id, p.nombre
+ORDER BY p.id;
+```
+
+Con `JOIN` normal, la regla no aparecería porque no tiene ventas. `LEFT JOIN` conserva todas las filas de la tabla de la izquierda (`productos`) y rellena con `NULL` lo que no encuentra en la derecha. `SUM` de puros `NULL` da `NULL`, y `COALESCE` lo convierte en `0` para que la salida sea legible.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="UPDATE o DELETE sin WHERE">
+
+`DELETE FROM productos;` borra todos los productos, sin preguntar. Antes de modificar o borrar, corre un `SELECT` con el mismo `WHERE` para ver cuántas filas vas a tocar, y envuelve el cambio en `BEGIN` para poder hacer `ROLLBACK` si afectó más de lo esperado.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Comparar con NULL usando =">
+
+`WHERE telefono = NULL` nunca devuelve filas, porque `NULL` no es igual a nada, ni siquiera a sí mismo. Usa `IS NULL` o `IS NOT NULL`. Lo mismo con `NOT IN (subconsulta)`: si la subconsulta devuelve algún `NULL`, el resultado queda vacío. Prefiere `NOT EXISTS`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Armar consultas pegando texto del usuario">
+
+Si construyes `"SELECT ... WHERE nombre = '" + nombre + "'"`, cualquiera puede escribir `' OR 1=1 --` y leer o borrar toda la tabla. Se llama inyección SQL y sigue siendo uno de los ataques más comunes. Usa siempre consultas parametrizadas del lenguaje que uses (`?` en SQLite y Python, `$1` en PostgreSQL); el valor viaja aparte y nunca se interpreta como SQL.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Filas duplicadas por un JOIN mal planteado">
+
+Si unes `productos` con `ventas` y luego sumas el precio, cada producto se repite una vez por venta y la suma sale inflada. Cuando un resultado te dé "demasiadas filas", revisa la condición del `ON` y en qué tabla está la relación uno a muchos. Poner `DISTINCT` para tapar el problema casi siempre esconde un error de lógica.
+
+</Callout>
+
+<Callout tipo="warning" titulo="En SQLite las claves foráneas vienen apagadas">
+
+`REFERENCES productos(id)` documenta la relación, pero SQLite no la verifica a menos que ejecutes `PRAGMA foreign_keys = ON;` al inicio de cada conexión. Sin eso puedes borrar un producto que tiene ventas y dejar datos huérfanos. PostgreSQL y MySQL (con InnoDB) sí las verifican siempre.
+
+</Callout>
+
+## Buenas prácticas
+
+- Nombra tablas y columnas en `snake_case` y de forma consistente: `producto_id`, `creado_en`.
+- Lista las columnas en `SELECT` e `INSERT`; evita `SELECT *` en código de aplicación.
+- Define `PRIMARY KEY`, `NOT NULL`, `UNIQUE` y claves foráneas: que la base cuide la integridad, no solo tu código.
+- Usa tipos adecuados: para dinero `NUMERIC` o `DECIMAL` en PostgreSQL y MySQL, nunca `FLOAT`.
+- Guarda fechas en formato ISO (`2026-10-09`) o en el tipo de fecha del motor, nunca como texto libre.
+- Agrega índices a las columnas que usas en `WHERE`, `JOIN` y `ORDER BY` cuando las tablas crezcan, y revisa el plan con `EXPLAIN QUERY PLAN`.
+- Versiona tus archivos `.sql` con Git, como cualquier otro código.
+- Haz respaldos: en SQLite basta con copiar el archivo `.db` cuando nadie lo está escribiendo.
+
+## Siguiente paso
+
+Con esto ya puedes modelar una tienda, una biblioteca o un registro de gastos. Practica diseñando tus propias tablas con un diagrama entidad-relación antes de escribir SQL, y luego instala PostgreSQL para conocer un motor con servidor, tipos estrictos y funciones de ventana. Cuando programes, conecta la base desde tu lenguaje: Python trae el módulo `sqlite3` de serie y Node tiene `node:sqlite`.
+
+Si aún no programas en ningún lenguaje, empieza por [Python desde cero](/guias/python/); si ya haces web, sigue con [JavaScript desde cero](/guias/javascript/) y guarda tus consultas en un repositorio con [Git y GitHub desde cero](/guias/git/). Todos los recursos están en [la biblioteca de SQL](/biblioteca/sql/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

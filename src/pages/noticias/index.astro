@@ -1,0 +1,45 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import NewsletterForm from '@components/newsletter/NewsletterForm.astro';
+import { fechaLarga } from '@lib/dates';
+import { migasLd } from '@lib/seo';
+
+const noticias = (await getCollection('noticias', (n) => !n.data.borrador)).sort((a, b) => b.data.publicado.getTime() - a.data.publicado.getTime());
+const titulo = 'Noticias';
+const descripcion = 'Novedades de AyudaDev, recursos recién agregados y lo que pasa en el mundo del desarrollo y la IA, contado para quien está aprendiendo.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Noticias', href: '/noticias/' },
+];
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/noticias/" image="/og/noticias.png" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Noticias" titulo={titulo} descripcion={descripcion} enlace={{ href: '/noticias/rss.xml', label: 'Suscribirse por RSS' }} />
+
+    <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div class="space-y-4">
+        {noticias.length === 0 && <p class="card p-8 text-center text-muted">Pronto habrá noticias.</p>}
+        {noticias.map((n) => (
+          <article class="card card-hover relative p-6">
+            <time datetime={n.data.publicado.toISOString()} class="text-xs text-muted">{fechaLarga(n.data.publicado)}</time>
+            <h2 class="mt-2 text-xl font-semibold leading-snug"><a href={`/noticias/${n.id}/`} class="after:absolute after:inset-0 hover:text-accent-ink">{n.data.titulo}</a></h2>
+            <p class="mt-2 text-sm text-muted">{n.data.descripcion}</p>
+            {n.data.etiquetas.length > 0 && (
+              <div class="mt-3 flex flex-wrap gap-1.5">{n.data.etiquetas.map((e) => <span class="badge">{e}</span>)}</div>
+            )}
+          </article>
+        ))}
+      </div>
+      <aside class="space-y-4">
+        <NewsletterForm />
+        <a href="/noticias/rss.xml" class="card flex items-center gap-3 p-4 text-sm hover:text-accent-ink"><Icon name="rss" class="h-5 w-5 text-accent-ink" /> Feed RSS de noticias</a>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

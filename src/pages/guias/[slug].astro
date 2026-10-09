@@ -1,0 +1,55 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import { temaPorSlug } from '@data/temas';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
+import { SITE } from '@data/site';
+
+export async function getStaticPaths() {
+  const guias = (await getCollection('guias', (g) => !g.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+  return guias.map((guia, i) => ({
+    params: { slug: guia.id },
+    props: { guia, anterior: guias[i - 1] ?? null, siguiente: guias[i + 1] ?? null },
+  }));
+}
+
+const { guia, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(guia);
+const tema = temaPorSlug(guia.data.tema);
+const path = `/guias/${guia.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Guías', href: '/guias/' },
+  { nombre: guia.data.titulo, href: path },
+];
+const meta = [
+  { icono: 'school' as const, texto: ETIQUETAS_NIVEL[guia.data.nivel] },
+  ...(guia.data.tiempoLectura ? [{ icono: 'clock' as const, texto: `${guia.data.tiempoLectura} min de lectura` }] : []),
+];
+---
+
+<ArticleLayout
+  titulo={guia.data.titulo}
+  descripcion={guia.data.descripcion}
+  path={path}
+  eyebrow={tema ? `Guía de ${tema.nombre}` : 'Guía'}
+  migas={migas}
+  headings={headings}
+  publicado={guia.data.publicado}
+  actualizado={guia.data.actualizado}
+  meta={meta}
+  anterior={anterior ? { titulo: anterior.data.titulo, href: `/guias/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.titulo, href: `/guias/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/guias/${guia.id}.mdx`}
+>
+  {guia.data.requisitos.length > 0 && (
+    <div class="not-prose mb-8 rounded-2xl border border-line bg-surface p-4 text-sm">
+      <p class="font-semibold">Antes de empezar</p>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-muted">
+        {guia.data.requisitos.map((r) => <li>{r}</li>)}
+      </ul>
+      {tema && <p class="mt-3"><a href={`/biblioteca/${tema.slug}/`} class="link">Ver todos los recursos de {tema.nombre}</a></p>}
+    </div>
+  )}
+  <Content frontmatter={guia.data} />
+</ArticleLayout>

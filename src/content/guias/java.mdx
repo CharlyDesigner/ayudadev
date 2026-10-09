@@ -1,0 +1,321 @@
+---
+titulo: 'Java desde cero'
+descripcion: 'Qué es Java, cómo instalar el JDK 21 y tus primeros programas: variables, ciclos, métodos, clases, records y listas, con ejemplos que puedes copiar y ejecutar.'
+tema: java
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['java-introduccion-a-java-nacho-cabanes', 'java-aprender-programacion-java-desde-cero', 'java-dev-java-learn']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['java', 'jdk', 'poo', 'clases', 'records']
+orden: 13
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Java es un lenguaje de propósito general que lleva décadas moviendo sistemas bancarios, aplicaciones Android, servidores de empresas y herramientas como Minecraft. Es verboso al principio, pero esa misma estructura te obliga a ordenar las ideas, y la máquina virtual de Java (JVM) hace que el mismo programa corra igual en Windows, macOS y Linux.
+
+Lo que necesitas tener claro:
+
+- **Compila a bytecode**: `javac` convierte tu `.java` en `.class`, y `java` lo ejecuta en la JVM. Desde Java 11 puedes saltarte el paso y correr un archivo directo con `java Hola.java`, que es lo que haremos aquí.
+- **Tipado estático y fuerte**: declaras el tipo de cada variable (`int`, `double`, `String`) y el compilador se queja antes de ejecutar si mezclas cosas que no van. Muchos errores se atrapan sin correr el programa.
+- **Todo vive en clases**: un programa es un conjunto de clases; la que tenga el método `main` es por donde empieza. Un archivo público por clase, y el archivo se llama igual que la clase.
+- **Primitivos y objetos**: `int`, `double`, `boolean`, `char` son valores simples; `String`, listas y tus propias clases son objetos que se manejan por referencia.
+- **Memoria automática**: la JVM tiene un recolector de basura; no liberas memoria a mano.
+- **Orientado a objetos con toques funcionales**: clases, herencia e interfaces desde siempre, y desde Java 8 lambdas y *streams*. Los *records* (Java 16) y el *pattern matching* (Java 21) hacen que escribir datos inmutables sea corto.
+- **Ecosistema enorme**: Maven y Gradle para proyectos, JUnit para pruebas, Spring para servidores. No los necesitas para empezar.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows**: en PowerShell escribe `winget install EclipseAdoptium.Temurin.21.JDK`. Si prefieres el instalador, descárgalo desde [adoptium.net](https://adoptium.net/) eligiendo la versión 21 (LTS) y marca la opción de agregar Java al `PATH`.
+2. **macOS**: con Homebrew, `brew install --cask temurin@21`. Sin Homebrew, descarga el `.pkg` desde [adoptium.net](https://adoptium.net/).
+3. **Linux**: en Debian o Ubuntu escribe `sudo apt install openjdk-21-jdk`; en Fedora `sudo dnf install java-21-openjdk-devel`; en Arch `sudo pacman -S jdk21-openjdk`.
+4. Cierra y vuelve a abrir la terminal. Comprueba con `java -version` y `javac -version`; ambos deben mostrar la versión 21 o superior.
+5. Crea una carpeta `java-practicas` y dentro un archivo `Hola.java` con el contenido del ejemplo 1. Ojo con la mayúscula: el nombre del archivo tiene que coincidir con el de la clase.
+6. Córrelo con `java Hola.java`. Para programas de varias clases o proyectos reales usarás `javac` y después `java`, o una herramienta como Maven, pero para aprender basta con esto.
+
+</Pasos>
+
+Un editor que te ayude con Java vale mucho: IntelliJ IDEA Community o VS Code con la extensión *Extension Pack for Java* marcan los errores mientras escribes.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="Hola.java" ejecutar="java Hola.java" salida="Hola, mundo">
+
+```java
+public class Hola {
+    public static void main(String[] args) {
+        System.out.println("Hola, mundo");
+    }
+}
+```
+
+Toda la ceremonia es obligatoria: la clase `Hola`, el método `main` con esa firma exacta, y `System.out.println` para imprimir una línea. Con el tiempo lo escribes sin pensar. Las llaves delimitan bloques y cada instrucción termina en punto y coma.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables y tipos" archivo="Variables.java" ejecutar="java Variables.java" salida="Ana tiene 20 años
+Inicial: A, activo: true
+Precio con IVA: 23.19
+7 / 2 = 3
+7 % 2 = 1
+7 / 2.0 = 3.5">
+
+```java
+public class Variables {
+    public static void main(String[] args) {
+        int edad = 20;              // entero
+        double precio = 19.99;      // decimal
+        char inicial = 'A';         // un solo carácter, comillas simples
+        boolean activo = true;      // verdadero o falso
+        String nombre = "Ana";      // texto, comillas dobles
+
+        System.out.println(nombre + " tiene " + edad + " años");
+        System.out.println("Inicial: " + inicial + ", activo: " + activo);
+
+        // Redondeo a dos decimales sin depender del idioma del sistema
+        double conIva = Math.round(precio * 1.16 * 100) / 100.0;
+        System.out.println("Precio con IVA: " + conIva);
+
+        System.out.println("7 / 2 = " + (7 / 2));      // división entera
+        System.out.println("7 % 2 = " + (7 % 2));      // residuo
+        System.out.println("7 / 2.0 = " + (7 / 2.0));  // división decimal
+    }
+}
+```
+
+El `+` con un `String` pega textos y convierte números a texto. Fíjate en `7 / 2`: como ambos son enteros, el resultado es entero y se pierde el `.5`. Basta con que uno de los dos sea decimal para obtener `3.5`. Los paréntesis alrededor de las operaciones evitan que Java pegue "7" y "2" como texto.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Condiciones y ciclos" archivo="Control.java" ejecutar="java Control.java" salida="1 es impar
+2 es par
+3 es impar
+4 es par
+5 es impar
+Cuenta regresiva: 3
+Cuenta regresiva: 2
+Cuenta regresiva: 1
+Despegue">
+
+```java
+public class Control {
+    public static void main(String[] args) {
+        // for: cuando sabes cuántas vueltas quieres
+        for (int i = 1; i <= 5; i++) {
+            if (i % 2 == 0) {
+                System.out.println(i + " es par");
+            } else {
+                System.out.println(i + " es impar");
+            }
+        }
+
+        // while: mientras se cumpla una condición
+        int cuenta = 3;
+        while (cuenta > 0) {
+            System.out.println("Cuenta regresiva: " + cuenta);
+            cuenta--;
+        }
+        System.out.println("Despegue");
+    }
+}
+```
+
+`i % 2 == 0` pregunta si el residuo de dividir entre 2 es cero, es decir, si el número es par. Nota que la comparación usa `==` (dos signos) y la asignación `=` (uno). `cuenta--` resta uno; `i++` suma uno. Si olvidas cambiar la variable del `while`, el ciclo nunca termina.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Métodos y arreglos" archivo="Metodos.java" ejecutar="java Metodos.java" salida="Notas: 4
+Promedio: 8.5
+Mayor: 10">
+
+```java
+public class Metodos {
+    // Recibe un arreglo de enteros y devuelve un decimal
+    static double promedio(int[] valores) {
+        int suma = 0;
+        for (int v : valores) {   // "para cada v en valores"
+            suma += v;
+        }
+        return (double) suma / valores.length;
+    }
+
+    static int mayor(int[] valores) {
+        int max = valores[0];
+        for (int v : valores) {
+            if (v > max) {
+                max = v;
+            }
+        }
+        return max;
+    }
+
+    public static void main(String[] args) {
+        int[] notas = {8, 9, 7, 10};
+        System.out.println("Notas: " + notas.length);
+        System.out.println("Promedio: " + promedio(notas));
+        System.out.println("Mayor: " + mayor(notas));
+    }
+}
+```
+
+Un método declara qué devuelve (`double`, `int`, o `void` si nada), su nombre y sus parámetros. `static` significa que se puede llamar sin crear un objeto, suficiente por ahora. El `(double) suma` convierte el entero antes de dividir para no perder decimales. Los arreglos tienen tamaño fijo y se indexan desde cero: `valores[0]` es el primero.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Tu primera clase y un record" archivo="Cuenta.java" ejecutar="java Cuenta.java" salida="Ana: 150.0
+Retiro de 500: false
+Retiro de 30: true
+Ana: 120.0
+Persona[nombre=Luis, edad=25]
+Luis cumple 26 el próximo año">
+
+```java
+public class Cuenta {
+    private final String titular;   // no cambia después de crearse
+    private double saldo;           // privado: solo la clase lo toca
+
+    public Cuenta(String titular, double saldoInicial) {
+        this.titular = titular;
+        this.saldo = saldoInicial;
+    }
+
+    public void depositar(double monto) {
+        if (monto <= 0) {
+            throw new IllegalArgumentException("El monto debe ser positivo");
+        }
+        saldo += monto;
+    }
+
+    public boolean retirar(double monto) {
+        if (monto > saldo) {
+            return false;   // no alcanza, no cambia nada
+        }
+        saldo -= monto;
+        return true;
+    }
+
+    public String resumen() {
+        return titular + ": " + saldo;
+    }
+
+    public static void main(String[] args) {
+        Cuenta cuenta = new Cuenta("Ana", 100);
+        cuenta.depositar(50);
+        System.out.println(cuenta.resumen());
+        System.out.println("Retiro de 500: " + cuenta.retirar(500));
+        System.out.println("Retiro de 30: " + cuenta.retirar(30));
+        System.out.println(cuenta.resumen());
+
+        // Un record es una clase de solo datos en una línea
+        Persona p = new Persona("Luis", 25);
+        System.out.println(p);
+        System.out.println(p.nombre() + " cumple " + (p.edad() + 1) + " el próximo año");
+    }
+}
+
+record Persona(String nombre, int edad) {}
+```
+
+Una clase junta datos (`titular`, `saldo`) con las operaciones que los modifican, y al marcarlos `private` nadie puede poner un saldo negativo desde fuera. El constructor se llama al hacer `new`. El `record Persona` genera solo el constructor, los métodos `nombre()` y `edad()`, `toString`, `equals` y `hashCode`; úsalo para datos que no cambian.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Listas y streams" archivo="Listas.java" ejecutar="java Listas.java" salida="[Ana, Luis, Beto, Carla]
+Hay 4 nombres
+Con más de 3 letras: [Luis, Beto, Carla]
+Total de letras: 16
+Hola, ANA
+Hola, LUIS
+Hola, BETO
+Hola, CARLA">
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+public class Listas {
+    public static void main(String[] args) {
+        // ArrayList crece sola; List.of crea una lista fija de arranque
+        List<String> nombres = new ArrayList<>(List.of("Ana", "Luis", "Beto"));
+        nombres.add("Carla");
+        System.out.println(nombres);
+        System.out.println("Hay " + nombres.size() + " nombres");
+
+        // stream: filtrar y transformar sin escribir el ciclo a mano
+        List<String> largos = nombres.stream()
+            .filter(n -> n.length() > 3)
+            .toList();
+        System.out.println("Con más de 3 letras: " + largos);
+
+        int letras = nombres.stream().mapToInt(String::length).sum();
+        System.out.println("Total de letras: " + letras);
+
+        for (String n : nombres) {
+            System.out.println("Hola, " + n.toUpperCase());
+        }
+    }
+}
+```
+
+`List` es la interfaz y `ArrayList` la implementación: declara con la interfaz para poder cambiar la implementación después. Lo que va entre los signos de menor y mayor es el tipo de los elementos; la lista solo acepta `String`. Un *stream* encadena operaciones (`filter`, `map`, `sum`) sobre la colección; `n -> n.length() > 3` es una lambda, una función pequeña sin nombre.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="El archivo no se llama como la clase">
+
+Si la clase pública es `Hola`, el archivo debe ser `Hola.java`, con la misma mayúscula. Si no coinciden, el compilador te dice `class Hola is public, should be declared in a file named Hola.java`. Lo mismo con `main`: si escribes `Main` o `string[] args`, Java no encuentra el punto de entrada.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Comparar textos con == en vez de equals">
+
+`"hola" == otroTexto` compara si son el mismo objeto en memoria, no si tienen las mismas letras; a veces da `true` por casualidad y en producción falla. Usa `a.equals(b)` o `a.equalsIgnoreCase(b)`. Con `Integer` pasa igual: `==` funciona entre -128 y 127 y deja de funcionar después.
+
+</Callout>
+
+<Callout tipo="warning" titulo="NullPointerException">
+
+Es el error más común de Java: llamaste a un método sobre una variable que vale `null`, por ejemplo un `String` que nunca inicializaste o el resultado de un `Map.get` que no encontró nada. Inicializa tus variables, devuelve listas vacías en lugar de `null` y lee el mensaje: desde Java 14 te dice exactamente qué variable estaba vacía.
+
+</Callout>
+
+<Callout tipo="warning" titulo="División entera cuando querías decimales">
+
+`int promedio = suma / cantidad` trunca el resultado: `17 / 4` da `4`, no `4.25`. Convierte antes de dividir, `(double) suma / cantidad`, o usa variables `double`. Y para dinero no uses `double` en absoluto: `0.1 + 0.2` no da exactamente `0.3`; usa `BigDecimal` construido desde un `String`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Acentos y eñes rotos en la consola de Windows">
+
+Si `println("años")` muestra símbolos raros, el problema no es tu código: la consola de Windows usa otra codificación. Guarda el archivo como UTF-8 y corre `chcp 65001` en la terminal antes de `java`, o agrega `-Dstdout.encoding=UTF-8` al comando. En Windows Terminal moderno con PowerShell 7 suele funcionar sin tocar nada.
+
+</Callout>
+
+## Buenas prácticas
+
+- Nombres en `camelCase` para variables y métodos, `PascalCase` para clases, `MAYUSCULAS` para constantes.
+- Un archivo por clase pública y una responsabilidad por clase.
+- Marca los campos `private` y `final` cuando no deban cambiar; expón solo los métodos necesarios.
+- Usa `record` para datos inmutables y `List.of` o `Map.of` para colecciones que no cambian.
+- Programa contra interfaces (`List`, `Map`) y no contra implementaciones (`ArrayList`, `HashMap`).
+- Lanza excepciones con mensaje claro y nunca dejes un `catch` vacío.
+- Para fechas usa `java.time` (`LocalDate`, `Instant`); para dinero `BigDecimal`.
+- Cuando el proyecto crezca, crea uno con Maven o Gradle y escribe pruebas con JUnit 5 desde el primer día.
+
+## Siguiente paso
+
+Ya dominas la sintaxis base y la idea de clase. Sigue con herencia e interfaces, excepciones con `try` y `catch`, y lectura de archivos con `java.nio.file.Files`. Después crea tu primer proyecto con Maven y agrega pruebas con JUnit. Con eso puedes entrar a Spring Boot para hacer APIs web o a Android con Kotlin, que corre sobre la misma JVM.
+
+Si te interesa el lado de los datos, combina Java con [SQL desde cero](/guias/sql/) usando JDBC. Y guarda cada ejercicio en un repositorio siguiendo [Git y GitHub desde cero](/guias/git/). Todos los recursos están en [la biblioteca de Java](/biblioteca/java/) y, para el salto a Android, en [la biblioteca de Kotlin](/biblioteca/kotlin/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

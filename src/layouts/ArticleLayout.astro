@@ -1,0 +1,88 @@
+---
+import type { MarkdownHeading } from 'astro';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Toc from '@components/guias/Toc.astro';
+import Icon from '@components/ui/Icon.astro';
+import NewsletterForm from '@components/newsletter/NewsletterForm.astro';
+import { articuloLd, migasLd, type Miga } from '@lib/seo';
+import { fechaLarga } from '@lib/dates';
+import { SITE } from '@data/site';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  path: string;
+  eyebrow?: string;
+  migas: Miga[];
+  headings?: MarkdownHeading[];
+  publicado: Date;
+  actualizado?: Date;
+  tipoLd?: 'TechArticle' | 'NewsArticle' | 'Article';
+  meta?: { icono: 'clock' | 'school' | 'calendar' | 'robot'; texto: string }[];
+  anterior?: { titulo: string; href: string };
+  siguiente?: { titulo: string; href: string };
+  editarUrl?: string;
+  image?: string;
+}
+
+const { titulo, descripcion, path, eyebrow, migas, headings = [], publicado, actualizado, tipoLd = 'TechArticle', meta = [], anterior, siguiente, editarUrl, image } = Astro.props;
+const compartir = `https://x.com/intent/tweet?text=${encodeURIComponent(`${titulo} · AyudaDev`)}&url=${encodeURIComponent(new URL(path, SITE.url).toString())}`;
+---
+
+<BaseLayout
+  title={titulo}
+  description={descripcion}
+  path={path}
+  type="article"
+  publishedTime={publicado}
+  modifiedTime={actualizado}
+  image={image}
+  jsonLd={[migasLd(migas), articuloLd({ tipo: tipoLd, titulo, descripcion, path, publicado, actualizado, imagen: image })]}
+>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+
+    <header class="max-w-3xl">
+      {eyebrow && <p class="eyebrow mb-3">{eyebrow}</p>}
+      <h1 class="text-3xl font-bold tracking-tight text-balance sm:text-5xl">{titulo}</h1>
+      <p class="mt-4 text-lg text-pretty text-muted">{descripcion}</p>
+      <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
+        <span class="inline-flex items-center gap-1.5"><Icon name="calendar" class="h-4 w-4" /> <time datetime={publicado.toISOString()}>{fechaLarga(publicado)}</time></span>
+        {actualizado && <span class="inline-flex items-center gap-1.5">Actualizado el <time datetime={actualizado.toISOString()}>{fechaLarga(actualizado)}</time></span>}
+        {meta.map((m) => <span class="inline-flex items-center gap-1.5"><Icon name={m.icono} class="h-4 w-4" /> {m.texto}</span>)}
+      </div>
+    </header>
+
+    <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
+      <article class="prose min-w-0">
+        <slot />
+      </article>
+
+      <aside class="order-first lg:order-none">
+        <div class="lg:sticky lg:top-24 space-y-8">
+          <Toc headings={headings} />
+          <div class="hidden space-y-2 lg:block">
+            <a href={compartir} rel="noopener" target="_blank" class="btn btn-secondary btn-sm w-full"><Icon name="share" class="h-4 w-4" /> Compartir</a>
+            {editarUrl && <a href={editarUrl} rel="noopener" target="_blank" class="btn btn-ghost btn-sm w-full"><Icon name="github" class="h-4 w-4" /> Sugerir un cambio</a>}
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    {(anterior || siguiente) && (
+      <nav aria-label="Más páginas" class="mt-14 grid gap-3 sm:grid-cols-2">
+        {anterior ? (
+          <a href={anterior.href} class="card card-hover p-5"><span class="text-xs text-muted">Anterior</span><span class="mt-1 block font-semibold">{anterior.titulo}</span></a>
+        ) : <span />}
+        {siguiente && (
+          <a href={siguiente.href} class="card card-hover p-5 text-right"><span class="text-xs text-muted">Siguiente</span><span class="mt-1 block font-semibold">{siguiente.titulo}</span></a>
+        )}
+      </nav>
+    )}
+
+    <div class="mt-14 max-w-3xl">
+      <NewsletterForm />
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,28 @@
+name: Reportar un enlace roto
+description: Un recurso ya no carga, cambió de dirección o dejó de ser gratuito.
+title: '[Enlace roto] '
+labels: ['enlace-roto']
+body:
+  - type: input
+    id: recurso
+    attributes:
+      label: Recurso afectado
+      description: Título o enlace tal como aparece en AyudaDev.
+    validations:
+      required: true
+  - type: dropdown
+    id: problema
+    attributes:
+      label: Qué pasa
+      options: [No carga (404 o error), Cambió de dirección, Ya no es gratuito, Otro]
+    validations:
+      required: true
+  - type: input
+    id: nueva
+    attributes:
+      label: Nueva dirección (si la conoces)
+      placeholder: https://
+  - type: textarea
+    id: detalle
+    attributes:
+      label: Detalles

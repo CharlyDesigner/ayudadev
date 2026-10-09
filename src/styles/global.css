@@ -1,0 +1,144 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import './components.css';
+@import './prose.css';
+
+/* ─────────────────────────────────────────────────────────────
+   AYUDADEV: sistema de diseño (derivado del sistema Mark House 2026)
+   Tokens semánticos en :root. El modo (data-theme o prefers-color-scheme)
+   solo cambia valores. Un solo acento. Botones píldora, tarjetas 20px.
+   ───────────────────────────────────────────────────────────── */
+
+@theme inline {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  --color-bg: var(--ad-bg);
+  --color-surface: var(--ad-surface);
+  --color-surface-2: var(--ad-surface-2);
+  --color-fg: var(--ad-fg);
+  --color-muted: var(--ad-muted);
+  --color-line: var(--ad-line);
+  --color-accent: var(--ad-accent);
+  --color-accent-ink: var(--ad-accent-ink);
+  --color-on-accent: var(--ad-on-accent);
+  --color-danger: var(--ad-danger);
+
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Neutros: modo oscuro (default) ── */
+:root {
+  color-scheme: dark;
+  --ad-bg: #0b0b0c;
+  --ad-surface: #151517;
+  --ad-surface-2: #1c1c1f;
+  --ad-fg: #f2f2ee;
+  --ad-muted: #a3a3a0;
+  --ad-line: rgb(242 242 238 / 0.12);
+  --ad-accent: #c6f24e;
+  --ad-accent-ink: #c6f24e;
+  --ad-on-accent: #0b0b0c;
+  --ad-danger: #ff8a80;
+  --ad-glow: rgb(198 242 78 / 0.18);
+}
+
+/* ── Neutros: modo claro ── */
+:root[data-theme='light'] {
+  color-scheme: light;
+  --ad-bg: #f3f3f1;
+  --ad-surface: #ffffff;
+  --ad-surface-2: #ebebe8;
+  --ad-fg: #0e0e10;
+  --ad-muted: #55555a;
+  --ad-line: rgb(14 14 16 / 0.12);
+  --ad-accent-ink: #4a6800;
+  --ad-danger: #b3261e;
+  --ad-glow: rgb(111 154 0 / 0.16);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --ad-bg: #f3f3f1;
+    --ad-surface: #ffffff;
+    --ad-surface-2: #ebebe8;
+    --ad-fg: #0e0e10;
+    --ad-muted: #55555a;
+    --ad-line: rgb(14 14 16 / 0.12);
+    --ad-accent-ink: #4a6800;
+    --ad-danger: #b3261e;
+    --ad-glow: rgb(111 154 0 / 0.16);
+  }
+}
+
+/* ── Base ── */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+}
+body {
+  background-color: var(--ad-bg);
+  color: var(--ad-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  min-height: 100dvh;
+  transition: background-color 0.3s var(--ease-out-expo), color 0.3s var(--ease-out-expo);
+}
+::selection {
+  background-color: var(--ad-accent);
+  color: var(--ad-on-accent);
+}
+:focus-visible {
+  outline: 2px solid var(--ad-accent-ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+
+/* Fondo con resplandor sutil del acento en el hero. */
+.bg-glow {
+  background-image: radial-gradient(60rem 30rem at 50% -10rem, var(--ad-glow), transparent 70%);
+}
+
+/* ── Código (Shiki tema dual) ── */
+.astro-code,
+.astro-code span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+:root[data-theme='light'] .astro-code,
+:root[data-theme='light'] .astro-code span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) .astro-code,
+  :root:not([data-theme='dark']) .astro-code span {
+    color: var(--shiki-light);
+    background-color: var(--shiki-light-bg);
+  }
+}
+.astro-code {
+  border: 1px solid var(--ad-line);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  tab-size: 2;
+}
+
+/* ── Movimiento ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

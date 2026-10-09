@@ -1,0 +1,203 @@
+---
+import Icon from '@components/ui/Icon.astro';
+---
+
+<div class="fixed inset-0 z-50" data-command-palette hidden>
+  <button type="button" class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-command-close aria-label="Cerrar búsqueda"></button>
+  <section
+    class="card absolute top-[8vh] left-1/2 w-[min(92vw,40rem)] -translate-x-1/2 overflow-hidden shadow-2xl"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Búsqueda rápida"
+  >
+    <div class="flex items-center gap-3 border-b border-line px-4 py-3">
+      <Icon name="search" class="h-5 w-5 shrink-0 text-muted" />
+      <input
+        data-command-input
+        type="search"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Busca temas, recursos, guías, IA..."
+        class="w-full bg-transparent text-base outline-none placeholder:text-muted"
+        aria-label="Buscar"
+        role="combobox"
+        aria-expanded="true"
+        aria-controls="command-list"
+        aria-autocomplete="list"
+      />
+      <kbd>ESC</kbd>
+    </div>
+    <div id="command-list" data-command-list role="listbox" class="max-h-[60vh] overflow-y-auto p-2" aria-label="Resultados"></div>
+    <p class="border-t border-line px-4 py-2 text-xs text-muted">Flechas para moverte · Enter para abrir · Esc para cerrar</p>
+  </section>
+</div>
+
+<script>
+  import { normalizar } from '@/lib/text';
+  import { alternarTema } from '@/scripts/theme';
+
+  interface Item {
+    tipo: string;
+    titulo: string;
+    url: string;
+    sub?: string;
+    tags?: string;
+  }
+
+  const palette = document.querySelector<HTMLElement>('[data-command-palette]');
+  const input = palette?.querySelector<HTMLInputElement>('[data-command-input]');
+  const list = palette?.querySelector<HTMLElement>('[data-command-list]');
+
+  if (palette && input && list) {
+    const GRUPOS: Record<string, string> = {
+      accion: 'Acciones',
+      pagina: 'Páginas',
+      tema: 'Temas',
+      guia: 'Guías',
+      ia: 'IA',
+      recurso: 'Recursos',
+      noticia: 'Noticias',
+      prompt: 'Prompts',
+    };
+    const ORDEN = Object.keys(GRUPOS);
+    const ACCIONES: Item[] = [
+      { tipo: 'accion', titulo: 'Cambiar tema claro u oscuro', url: '#tema' },
+      { tipo: 'accion', titulo: 'Ver mis favoritos', url: '/biblioteca/favoritos/' },
+      { tipo: 'accion', titulo: 'Enviar un recurso', url: '/enviar-recurso/' },
+      { tipo: 'accion', titulo: 'Apoyar el proyecto', url: '/apoya/' },
+    ];
+
+    let indice: Item[] | null = null;
+    let cargando: Promise<Item[]> | null = null;
+    let activo = 0;
+    let ultimoFoco: HTMLElement | null = null;
+
+    const cargar = (): Promise<Item[]> => {
+      if (indice) return Promise.resolve(indice);
+      cargando ??= fetch('/search-index.json')
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data: Item[]) => (indice = data))
+        .catch(() => (indice = []));
+      return cargando;
+    };
+
+    const puntuar = (item: Item, palabras: string[]): number => {
+      const titulo = normalizar(item.titulo);
+      const resto = normalizar(`${item.sub ?? ''} ${item.tags ?? ''}`);
+      let score = 0;
+      for (const p of palabras) {
+        if (titulo.startsWith(p)) score += 6;
+        else if (titulo.includes(p)) score += 4;
+        else if (resto.includes(p)) score += 1;
+        else return 0;
+      }
+      return score;
+    };
+
+    const render = (items: Item[]) => {
+      list.innerHTML = '';
+      if (!items.length) {
+        list.innerHTML = '<p class="px-3 py-6 text-center text-sm text-muted">Sin resultados. Prueba con otra palabra.</p>';
+        return;
+      }
+      const grupos = new Map<string, Item[]>();
+      for (const it of items) grupos.set(it.tipo, [...(grupos.get(it.tipo) ?? []), it]);
+      let n = 0;
+      for (const tipo of ORDEN) {
+        const lista = grupos.get(tipo);
+        if (!lista) continue;
+        const h = document.createElement('p');
+        h.className = 'px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted';
+        h.textContent = GRUPOS[tipo] ?? tipo;
+        list.append(h);
+        for (const it of lista) {
+          const a = document.createElement('a');
+          a.href = it.url;
+          a.setAttribute('role', 'option');
+          a.dataset.commandItem = '';
+          a.dataset.index = String(n++);
+          a.className = 'flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-surface-2 aria-selected:bg-surface-2';
+          a.innerHTML = `<span class="min-w-0"><span class="block truncate font-medium">${escapar(it.titulo)}</span>${it.sub ? `<span class="block truncate text-xs text-muted">${escapar(it.sub)}</span>` : ''}</span><span class="text-muted">↵</span>`;
+          if (it.url === '#tema') {
+            a.addEventListener('click', (e) => {
+              e.preventDefault();
+              alternarTema();
+              cerrar();
+            });
+          }
+          list.append(a);
+        }
+      }
+      seleccionar(0);
+    };
+
+    const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
+
+    const items = () => [...list.querySelectorAll<HTMLAnchorElement>('[data-command-item]')];
+    const seleccionar = (i: number) => {
+      const lista = items();
+      if (!lista.length) return;
+      activo = (i + lista.length) % lista.length;
+      lista.forEach((el, k) => {
+        el.setAttribute('aria-selected', String(k === activo));
+        if (k === activo) el.scrollIntoView({ block: 'nearest' });
+      });
+    };
+
+    const buscar = async () => {
+      const todo = [...ACCIONES, ...(await cargar())];
+      const q = normalizar(input.value);
+      if (!q) {
+        render([...ACCIONES, ...todo.filter((it) => it.tipo === 'pagina' || it.tipo === 'tema').slice(0, 14)]);
+        return;
+      }
+      const palabras = q.split(/\s+/).filter(Boolean);
+      const resultados = todo
+        .map((it) => ({ it, s: puntuar(it, palabras) }))
+        .filter((x) => x.s > 0)
+        .sort((a, b) => b.s - a.s || ORDEN.indexOf(a.it.tipo) - ORDEN.indexOf(b.it.tipo))
+        .slice(0, 30)
+        .map((x) => x.it);
+      render(resultados);
+    };
+
+    const abrir = () => {
+      ultimoFoco = document.activeElement as HTMLElement;
+      palette.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+      input.value = '';
+      void buscar();
+      requestAnimationFrame(() => input.focus());
+    };
+    const cerrar = () => {
+      palette.setAttribute('hidden', '');
+      document.body.style.overflow = '';
+      ultimoFoco?.focus();
+    };
+
+    document.querySelectorAll<HTMLElement>('[data-command-open]').forEach((b) => b.addEventListener('click', abrir));
+    palette.querySelectorAll<HTMLElement>('[data-command-close]').forEach((b) => b.addEventListener('click', cerrar));
+    input.addEventListener('input', () => void buscar());
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        palette.hasAttribute('hidden') ? abrir() : cerrar();
+        return;
+      }
+      if (palette.hasAttribute('hidden')) return;
+      if (e.key === 'Escape') cerrar();
+      else if (e.key === 'ArrowDown') { e.preventDefault(); seleccionar(activo + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); seleccionar(activo - 1); }
+      else if (e.key === 'Enter') { e.preventDefault(); items()[activo]?.click(); }
+      else if (e.key === 'Tab') {
+        // Mantiene el foco dentro del diálogo.
+        const focusables: HTMLElement[] = [input, ...items()];
+        const i = focusables.indexOf(document.activeElement as HTMLElement);
+        const next = e.shiftKey ? (i <= 0 ? focusables.length - 1 : i - 1) : (i + 1) % focusables.length;
+        e.preventDefault();
+        focusables[next]?.focus();
+      }
+    });
+  }
+</script>

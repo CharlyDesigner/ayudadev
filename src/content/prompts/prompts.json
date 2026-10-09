@@ -1,0 +1,220 @@
+[
+  {
+    "id": "explica-como-si-tuviera-12",
+    "titulo": "Explícame un concepto a mi nivel",
+    "categoria": "aprender",
+    "prompt": "Explícame qué es [CONCEPTO] en [LENGUAJE] como si fuera mi primera semana programando. Usa una analogía de la vida diaria, luego un ejemplo de código de máximo 10 líneas con comentarios en español, y termina con una pregunta para comprobar que lo entendí. No uses jerga sin definirla.",
+    "herramientas": ["claude", "chatgpt", "gemini"],
+    "nota": "Cambia [CONCEPTO] por closures, punteros, promesas, etc."
+  },
+  {
+    "id": "encuentra-el-error",
+    "titulo": "Ayúdame a encontrar el error sin darme la solución",
+    "categoria": "depurar",
+    "prompt": "Tengo este código en [LENGUAJE] y obtengo este error: [PEGA EL ERROR]. Código: [PEGA EL CÓDIGO]. No me des la solución directa. Primero dime qué significa el error en palabras simples, luego dame 3 pistas ordenadas de menos a más específicas para que lo encuentre yo. Si pido la solución, entonces explícamela línea por línea.",
+    "herramientas": ["claude", "chatgpt", "claude-code", "cursor", "copilot"]
+  },
+  {
+    "id": "explica-este-codigo",
+    "titulo": "Explica este código línea por línea",
+    "categoria": "explicar",
+    "prompt": "Explica este código en [LENGUAJE] línea por línea, en español sencillo. Para cada parte indica: qué hace, por qué está ahí y qué pasaría si la quitara. Al final, resume en 3 frases qué hace el programa completo y señala cualquier riesgo o mala práctica que veas. Código: [PEGA EL CÓDIGO]",
+    "herramientas": ["claude", "chatgpt", "gemini", "claude-code"]
+  },
+  {
+    "id": "modo-tutor",
+    "titulo": "Configura a la IA como tu tutor",
+    "categoria": "aprender",
+    "prompt": "Estoy aprendiendo [LENGUAJE]. Llevo [TIEMPO] y ya entiendo [LO QUE SABES], pero todavía no domino [LO QUE NO SABES]. Quiero que seas mi tutor: explícame conceptos, dame pistas cuando me atore y revisa mi código, pero no escribas soluciones completas a menos que te lo pida de forma explícita. Si te pido código, que sea de máximo 10 líneas y con comentarios en español.",
+    "herramientas": ["claude", "chatgpt", "gemini", "cursor", "claude-code"],
+    "nota": "Úsalo como primer mensaje de cada sesión. En Claude Code puedes guardarlo en CLAUDE.md."
+  },
+  {
+    "id": "tres-analogias",
+    "titulo": "Explícame con tres analogías distintas",
+    "categoria": "aprender",
+    "prompt": "Explícame qué es [CONCEPTO] con tres analogías diferentes: una de cocina, una de deportes y una de la escuela. Después dime cuál de las tres se parece más a cómo funciona en el código real y en qué punto cada analogía deja de servir. Cierra con la definición técnica en una sola frase.",
+    "herramientas": ["claude", "chatgpt", "gemini", "ollama"]
+  },
+  {
+    "id": "ejercicios-a-mi-nivel",
+    "titulo": "Dame ejercicios a mi nivel sin soluciones",
+    "categoria": "aprender",
+    "prompt": "Dame 5 ejercicios para practicar [CONCEPTO] en [LENGUAJE], ordenados de fácil a difícil. Cada uno debe caber en 15 líneas, practicar solo ese concepto e incluir un ejemplo de entrada y la salida esperada. No incluyas las soluciones. Cuando te mande mi respuesta, revísala y dime una sola cosa que mejorarías.",
+    "herramientas": ["claude", "chatgpt", "gemini", "ollama"],
+    "nota": "Agrega 'ambientados en [TEMA QUE TE GUSTA]' si quieres ejercicios menos abstractos."
+  },
+  {
+    "id": "plan-de-diez-dias",
+    "titulo": "Hazme un plan de estudio de 10 días",
+    "categoria": "aprender",
+    "prompt": "Hazme un plan de 10 días para pasar de [NIVEL ACTUAL] a [OBJETIVO] en [LENGUAJE]. Para cada día indica un concepto, por qué importa, un ejercicio de máximo 20 líneas y una pregunta de repaso. Asume que tengo [MINUTOS] minutos diarios y no incluyas las soluciones de los ejercicios.",
+    "herramientas": ["claude", "chatgpt", "gemini", "perplexity"]
+  },
+  {
+    "id": "traduce-el-error",
+    "titulo": "Traduce este mensaje de error",
+    "categoria": "depurar",
+    "prompt": "Obtuve este error en [LENGUAJE]: [PEGA EL ERROR COMPLETO]. Explícame qué significa cada parte del mensaje en palabras simples y cuáles son las tres causas más comunes de este tipo de error. No me digas cómo arreglar mi código todavía; primero quiero entender el mensaje.",
+    "herramientas": ["claude", "chatgpt", "gemini", "perplexity", "copilot"]
+  },
+  {
+    "id": "resultado-incorrecto",
+    "titulo": "Corre pero da un resultado incorrecto",
+    "categoria": "depurar",
+    "prompt": "Este código en [LENGUAJE] se ejecuta sin errores pero da un resultado incorrecto. Esperaba [RESULTADO ESPERADO] y obtengo [RESULTADO REAL]. Código: [PEGA EL CÓDIGO]. No lo corrijas. Dime qué revisarías primero y qué valores imprimirías, y en qué líneas, para encontrar dónde se desvía.",
+    "herramientas": ["claude", "chatgpt", "claude-code", "cursor", "copilot"]
+  },
+  {
+    "id": "por-que-funciono-el-arreglo",
+    "titulo": "Explícame por qué funcionó el arreglo",
+    "categoria": "depurar",
+    "prompt": "Tenía este error: [PEGA EL ERROR]. Lo arreglé cambiando [LO QUE CAMBIASTE]. Explícame por qué eso resolvió el problema, qué estaba pasando por dentro antes del cambio y cómo puedo detectar este mismo error más rápido la próxima vez.",
+    "herramientas": ["claude", "chatgpt", "gemini", "claude-code"]
+  },
+  {
+    "id": "explica-antes-de-aplicar",
+    "titulo": "Explica el cambio antes de aplicarlo",
+    "categoria": "depurar",
+    "prompt": "Antes de aplicar la corrección que propones en [ARCHIVO], explícame qué estaba mal, qué hace exactamente tu cambio y si existe otra forma de resolverlo. Quiero decidir yo cuál usar. No modifiques nada hasta que te confirme.",
+    "herramientas": ["claude-code", "cursor", "copilot"],
+    "nota": "Pensado para agentes que editan archivos. Haz commit antes de empezar."
+  },
+  {
+    "id": "explica-la-estructura-del-proyecto",
+    "titulo": "Explícame la estructura de este proyecto",
+    "categoria": "explicar",
+    "prompt": "Explícame la estructura de carpetas de este proyecto. Para cada carpeta y archivo importante dime qué contiene, por qué está ahí y cuál es el punto de entrada del programa. No modifiques nada; solo quiero entender cómo está organizado antes de tocarlo.",
+    "herramientas": ["claude-code", "cursor", "copilot"]
+  },
+  {
+    "id": "que-pasa-si-cambio-esto",
+    "titulo": "Qué pasa si cambio esta línea",
+    "categoria": "explicar",
+    "prompt": "En este código en [LENGUAJE]: [PEGA EL CÓDIGO]. Quiero entender la línea [NÚMERO O TEXTO DE LA LÍNEA]. Explícame qué hace, qué pasaría si la quito y qué pasaría si la cambio por [ALTERNATIVA]. Usa un ejemplo concreto con valores reales para mostrar la diferencia.",
+    "herramientas": ["claude", "chatgpt", "gemini", "cursor"]
+  },
+  {
+    "id": "compara-dos-formas",
+    "titulo": "Compara dos formas de hacer lo mismo",
+    "categoria": "explicar",
+    "prompt": "Estas dos versiones hacen lo mismo en [LENGUAJE]. Versión A: [PEGA EL CÓDIGO A]. Versión B: [PEGA EL CÓDIGO B]. Explícame en qué se diferencian, cuándo conviene cada una y cuál usarías tú para alguien que está aprendiendo. Si una tiene un error o un riesgo, señálalo.",
+    "herramientas": ["claude", "chatgpt", "gemini"]
+  },
+  {
+    "id": "explica-con-mis-palabras",
+    "titulo": "Comprueba si entendí el código",
+    "categoria": "explicar",
+    "prompt": "Te voy a explicar con mis palabras qué hace este código: [PEGA EL CÓDIGO]. Mi explicación: [TU EXPLICACIÓN]. Dime si entendí bien, qué me faltó o qué entendí mal, y hazme una pregunta para comprobar que realmente lo domino.",
+    "herramientas": ["claude", "chatgpt", "gemini", "ollama"],
+    "nota": "Úsalo antes de aceptar cualquier código que no escribiste tú."
+  },
+  {
+    "id": "revision-de-mentor",
+    "titulo": "Revisa mi código como un mentor",
+    "categoria": "refactorizar",
+    "prompt": "Esta función que escribí funciona. Revísala como un mentor con experiencia en [LENGUAJE]: dime qué está bien, qué casos no cubre (entradas vacías, valores negativos, tipos inesperados), qué nombre o estructura mejorarías y por qué. No la reescribas; señala las líneas y explica el cambio. Código: [PEGA EL CÓDIGO]",
+    "herramientas": ["claude", "chatgpt", "gemini", "claude-code", "cursor", "copilot"]
+  },
+  {
+    "id": "una-sola-mejora",
+    "titulo": "Dime una sola cosa que mejorarías",
+    "categoria": "refactorizar",
+    "prompt": "Revisa este código en [LENGUAJE] y dime una sola cosa que mejorarías, la más importante. Explica por qué importa y muéstrame solo las líneas afectadas, no el archivo completo. Cuando aplique el cambio, te lo mando y me dices la siguiente. Código: [PEGA EL CÓDIGO]",
+    "herramientas": ["claude", "chatgpt", "gemini", "ollama"],
+    "nota": "Las mejoras de una en una se entienden y se recuerdan."
+  },
+  {
+    "id": "nombres-mas-claros",
+    "titulo": "Mejora los nombres de variables y funciones",
+    "categoria": "refactorizar",
+    "prompt": "Revisa los nombres de variables, funciones y parámetros de este código en [LENGUAJE]: [PEGA EL CÓDIGO]. Para cada nombre poco claro propón uno mejor y explica por qué comunica más. Respeta las convenciones del lenguaje. No cambies la lógica ni reescribas el código; solo dame la lista de cambios de nombre.",
+    "herramientas": ["claude", "chatgpt", "cursor", "copilot"]
+  },
+  {
+    "id": "divide-en-funciones",
+    "titulo": "Ayúdame a dividir una función larga",
+    "categoria": "refactorizar",
+    "prompt": "Esta función en [LENGUAJE] es muy larga y hace varias cosas: [PEGA EL CÓDIGO]. Dime en qué partes la dividirías, qué nombre le pondrías a cada función nueva y qué recibiría y devolvería cada una. No escribas el código; quiero hacer la división yo y luego pedirte que la revises.",
+    "herramientas": ["claude", "chatgpt", "claude-code", "cursor"]
+  },
+  {
+    "id": "casos-de-prueba",
+    "titulo": "Sugiere casos de prueba para mi función",
+    "categoria": "refactorizar",
+    "prompt": "Para esta función en [LENGUAJE]: [PEGA EL CÓDIGO]. Dame una lista de casos de prueba que debería cubrir, incluyendo casos límite y entradas inválidas. Para cada caso indica la entrada y la salida esperada. No escribas el código de las pruebas; lo voy a escribir yo con [FRAMEWORK DE PRUEBAS].",
+    "herramientas": ["claude", "chatgpt", "claude-code", "copilot", "cursor"]
+  },
+  {
+    "id": "plan-antes-de-codigo",
+    "titulo": "Planea antes de escribir código",
+    "categoria": "escribir",
+    "prompt": "Quiero crear [FUNCIÓN, COMPONENTE O SCRIPT] en [LENGUAJE] que haga [DESCRIPCIÓN]. Antes de escribir código, dame un plan de 4 o 5 pasos pequeños y las preguntas que me harías para entender mejor el requisito. Voy a escribir cada paso yo y te pediré revisión al terminar cada uno.",
+    "herramientas": ["claude", "chatgpt", "gemini", "claude-code", "cursor"]
+  },
+  {
+    "id": "mini-proyecto-de-fin-de-semana",
+    "titulo": "Dame un mini proyecto para practicar",
+    "categoria": "escribir",
+    "prompt": "Dame un mini proyecto de fin de semana para practicar [TEMA] en [LENGUAJE], pensado para alguien de nivel [NIVEL]. Divídelo en 5 pasos pequeños y para cada paso dime qué debo lograr y cómo sé que lo logré. No me des el código; quiero escribirlo yo y después pedirte que lo revises.",
+    "herramientas": ["claude", "chatgpt", "gemini"]
+  },
+  {
+    "id": "comentarios-utiles",
+    "titulo": "Escribe comentarios que expliquen el porqué",
+    "categoria": "escribir",
+    "prompt": "Revisa este código en [LENGUAJE] y dime dónde hace falta un comentario y dónde sobra: [PEGA EL CÓDIGO]. Los comentarios deben explicar el porqué de una decisión, no repetir lo que ya dice el código. Propón el texto de cada comentario en español y explícame tu criterio para decidir dónde van.",
+    "herramientas": ["claude", "chatgpt", "copilot", "cursor"]
+  },
+  {
+    "id": "readme-del-proyecto",
+    "titulo": "Ayúdame a escribir el README",
+    "categoria": "escribir",
+    "prompt": "Ayúdame a escribir el README de mi proyecto [NOMBRE], hecho en [LENGUAJE O TECNOLOGÍAS], que sirve para [DESCRIPCIÓN]. Primero hazme las preguntas que necesites (cómo se instala, cómo se corre, qué requisitos tiene). Luego dame una estructura de secciones y un borrador corto en español que yo pueda completar.",
+    "herramientas": ["claude", "chatgpt", "gemini", "claude-code"]
+  },
+  {
+    "id": "mensaje-de-commit",
+    "titulo": "Redacta un mensaje de commit claro",
+    "categoria": "escribir",
+    "prompt": "Hice estos cambios en mi proyecto: [DESCRIBE O PEGA EL DIFF]. Ayúdame a escribir un mensaje de commit claro con una primera línea corta en imperativo y, si hace falta, un párrafo que explique el porqué del cambio. Dame dos opciones y dime cuál prefieres y por qué.",
+    "herramientas": ["claude", "chatgpt", "claude-code", "copilot"],
+    "nota": "En Claude Code puedes pedir directamente que revise el diff con git."
+  },
+  {
+    "id": "preguntas-de-repaso",
+    "titulo": "Hazme preguntas de repaso",
+    "categoria": "estudiar",
+    "prompt": "Hoy estudié [TEMA] en [LENGUAJE]. Hazme 5 preguntas de repaso de fácil a difícil, una a la vez. Espera mi respuesta antes de pasar a la siguiente. Al final dime cuáles acerté, en cuáles me equivoqué y qué debería repasar mañana.",
+    "herramientas": ["claude", "chatgpt", "gemini", "ollama"]
+  },
+  {
+    "id": "resumen-en-tarjetas",
+    "titulo": "Convierte un tema en tarjetas de memoria",
+    "categoria": "estudiar",
+    "prompt": "Convierte este tema en tarjetas de estudio: [TEMA O PEGA TUS NOTAS]. Cada tarjeta debe tener una pregunta corta al frente y una respuesta de máximo 3 frases al reverso. Haz entre 8 y 12 tarjetas, de lo básico a lo avanzado, y evita preguntas que se respondan con sí o no.",
+    "herramientas": ["claude", "chatgpt", "gemini"]
+  },
+  {
+    "id": "simula-entrevista",
+    "titulo": "Simula una entrevista técnica básica",
+    "categoria": "estudiar",
+    "prompt": "Simula una entrevista técnica para un puesto de [PUESTO] de nivel principiante en [LENGUAJE O TECNOLOGÍA]. Hazme una pregunta a la vez, espera mi respuesta y dame retroalimentación breve antes de la siguiente. Haz 6 preguntas, mezcla conceptos y un ejercicio pequeño, y al final dime en qué estuve bien y qué debo preparar mejor.",
+    "herramientas": ["claude", "chatgpt", "gemini"]
+  },
+  {
+    "id": "que-aprender-despues",
+    "titulo": "Qué debería aprender después",
+    "categoria": "estudiar",
+    "prompt": "Ya sé [LISTA DE LO QUE SABES] en [LENGUAJE] y mi meta es [META: trabajo, proyecto, examen]. Dime qué tres cosas debería aprender a continuación, en qué orden y por qué. Para cada una sugiere un ejercicio corto para comprobar que la dominé. Si necesitas más información sobre mi nivel, pregúntame antes de responder.",
+    "herramientas": ["claude", "chatgpt", "gemini", "perplexity"]
+  },
+  {
+    "id": "verifica-con-fuentes",
+    "titulo": "Verifica esto con fuentes oficiales",
+    "categoria": "estudiar",
+    "prompt": "Quiero confirmar si esto es cierto: [AFIRMACIÓN SOBRE UN LENGUAJE, LIBRERÍA O HERRAMIENTA]. Busca en la documentación oficial o en el repositorio del proyecto, dime si es correcto hoy, si cambió en alguna versión reciente y dame los enlaces exactos donde lo verificaste. No uses blogs ni respuestas sin fuente.",
+    "herramientas": ["perplexity", "gemini", "chatgpt", "claude"],
+    "nota": "Ideal para comprobar lo que otra IA te dijo antes de darlo por hecho."
+  }
+]

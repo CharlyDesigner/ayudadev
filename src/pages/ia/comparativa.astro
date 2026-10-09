@@ -1,0 +1,66 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { COMPARATIVA, VERIFICADO } from '@data/comparativa-ia';
+import { fechaLarga } from '@lib/dates';
+import { migasLd } from '@lib/seo';
+
+const titulo = 'Comparativa de herramientas de IA';
+const descripcion = 'Qué herramienta usar según lo que estás aprendiendo. Comparación cualitativa, sin precios inventados: cada fila enlaza a la página oficial de precios.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'IA', href: '/ia/' },
+  { nombre: 'Comparativa', href: '/ia/comparativa/' },
+];
+const PLAN: Record<string, string> = { si: 'Sí', limitado: 'Con límites', no: 'No', pendiente: 'Consultar' };
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/ia/comparativa/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="IA" titulo={titulo} descripcion={descripcion} />
+    <p class="mt-4 text-sm text-muted">Verificado el {fechaLarga(VERIFICADO)}. Las herramientas cambian seguido: confirma siempre en el sitio oficial.</p>
+
+    <div class="card mt-8 overflow-x-auto">
+      <table class="w-full min-w-[56rem] text-sm">
+        <thead class="bg-surface-2 text-left text-xs uppercase tracking-wider text-muted">
+          <tr>
+            <th class="px-4 py-3">Herramienta</th>
+            <th class="px-4 py-3">Tipo</th>
+            <th class="px-4 py-3">Dónde corre</th>
+            <th class="px-4 py-3">Plan gratis</th>
+            <th class="px-4 py-3">Brilla en</th>
+            <th class="px-4 py-3">Ideal si</th>
+            <th class="px-4 py-3">Precios</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-line">
+          {COMPARATIVA.map((f) => (
+            <tr class="align-top">
+              <td class="px-4 py-3 font-semibold"><a href={`/ia/${f.slug}/`} class="hover:text-accent-ink">{f.nombre}</a></td>
+              <td class="px-4 py-3">{f.tipo}</td>
+              <td class="px-4 py-3">{f.dondeCorre}</td>
+              <td class="px-4 py-3"><span class:list={['badge', f.planGratis === 'si' && 'badge-accent']}>{PLAN[f.planGratis]}</span></td>
+              <td class="px-4 py-3 text-muted">{f.brillaEn}</td>
+              <td class="px-4 py-3 text-muted">{f.ideal}</td>
+              <td class="px-4 py-3"><a href={f.precioUrl} rel="noopener" target="_blank" class="inline-flex items-center gap-1 text-accent-ink">Ver <Icon name="arrow-up-right" class="h-3.5 w-3.5" /></a></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose mt-10">
+      <h2>Cómo leer esta tabla</h2>
+      <ul>
+        <li><strong>Chat:</strong> conversas en el navegador o la app. Lo más fácil para empezar y para pedir explicaciones.</li>
+        <li><strong>Asistente de código / Editor:</strong> vive dentro de tu editor y completa o edita código mientras escribes. Muy cómodo, pero fácil de usar sin entender.</li>
+        <li><strong>Terminal (agente):</strong> trabaja sobre tu proyecto completo: lee archivos, corre comandos y propone cambios. Potente; revisa siempre lo que hace.</li>
+        <li><strong>Local:</strong> el modelo corre en tu computadora. Privado y sin costo por uso, a cambio de modelos más pequeños.</li>
+      </ul>
+      <p>Si estás empezando, nuestra recomendación es usar un chat para entender conceptos y escribir el código tú, y pasar a los asistentes de editor cuando ya puedas leer y juzgar lo que te proponen. Lee la guía <a href="/ia/aprende/aprender-sin-copiar/">Cómo aprender a programar con IA sin copiar y pegar</a>.</p>
+    </div>
+  </div>
+</BaseLayout>
