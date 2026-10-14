@@ -21,6 +21,7 @@
   border-radius: 6px;
   padding: 0.1em 0.4em;
 }
+.prose :not(pre) > code { overflow-wrap: anywhere; }
 .prose pre { margin-top: 1em; }
 .prose pre code { font-family: var(--font-mono); }
 .prose blockquote { border-left: 3px solid var(--ad-accent); padding-left: 1rem; color: var(--ad-muted); font-style: italic; }

@@ -4395,5 +4395,140 @@
       "open-source"
     ],
     "tema": "linux"
+  },
+  {
+    "id": "claude",
+    "termino": "Claude",
+    "definicion": "Familia de modelos de lenguaje creada por Anthropic y nombre de su asistente de chat. Hay varias líneas, como Fable, Opus, Sonnet y Haiku, con distinta velocidad y capacidad.",
+    "categoria": "ia",
+    "ejemplo": "Escribirle a Claude en claude.ai",
+    "relacionados": [
+      "llm",
+      "modelo",
+      "asistente-de-codigo",
+      "claude-code"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "claude-code",
+    "termino": "Claude Code",
+    "definicion": "Agente de programación de Anthropic que trabaja en tu terminal, editor o app de escritorio. Lee tu proyecto, propone cambios, corre comandos y pide tu permiso antes de actuar.",
+    "categoria": "ia",
+    "ejemplo": "claude",
+    "relacionados": [
+      "agente-ia",
+      "asistente-de-codigo",
+      "claude-md",
+      "modo-de-permisos",
+      "claude"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "claude-md",
+    "termino": "CLAUDE.md",
+    "definicion": "Archivo de texto que Claude Code lee al inicio de cada sesión con instrucciones del proyecto: comandos, estilo y reglas. Funciona como guía, no como barrera obligatoria.",
+    "categoria": "ia",
+    "ejemplo": "Pruebas: npm test",
+    "relacionados": [
+      "claude-code",
+      "contexto",
+      "hook",
+      "skill"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "skill",
+    "termino": "skill",
+    "definicion": "Instrucciones empaquetadas en una carpeta con un archivo SKILL.md, que un agente carga solo cuando hacen falta o cuando las invocas con una barra diagonal.",
+    "categoria": "ia",
+    "ejemplo": "/resumir-cambios",
+    "relacionados": [
+      "claude-code",
+      "claude-md",
+      "agente-ia"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "hook",
+    "termino": "hook (de un agente)",
+    "definicion": "Comando que se ejecuta automáticamente en un momento fijo del trabajo de un agente, por ejemplo antes de usar una herramienta. A diferencia de una instrucción escrita, siempre se cumple.",
+    "categoria": "ia",
+    "ejemplo": "Un hook que bloquea rm -rf",
+    "relacionados": [
+      "claude-code",
+      "claude-md",
+      "guardrails",
+      "principio-de-minimo-privilegio"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "modo-plan",
+    "termino": "modo plan",
+    "definicion": "Modo de Claude Code en el que el agente solo lee y propone un plan, sin editar tus archivos hasta que lo apruebas. Sirve para entender un proyecto antes de cambiarlo.",
+    "categoria": "ia",
+    "ejemplo": "claude --permission-mode plan",
+    "relacionados": [
+      "claude-code",
+      "modo-de-permisos"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "modo-de-permisos",
+    "termino": "modo de permisos",
+    "definicion": "Ajuste de Claude Code que define qué acciones puede hacer el agente sin preguntarte. Va desde preguntar todo hasta saltarse las preguntas, y esto último solo es seguro en entornos aislados.",
+    "categoria": "ia",
+    "ejemplo": "Shift+Tab para cambiar de modo",
+    "relacionados": [
+      "claude-code",
+      "modo-plan",
+      "principio-de-minimo-privilegio",
+      "sandbox"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "esfuerzo-de-razonamiento",
+    "termino": "esfuerzo de razonamiento",
+    "definicion": "Control que decide cuánto razona un modelo antes de responder. Más esfuerzo suele mejorar problemas difíciles, pero tarda más y consume más tokens.",
+    "categoria": "ia",
+    "ejemplo": "/effort high",
+    "relacionados": [
+      "modelo-de-razonamiento",
+      "token",
+      "llm"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "servidor-mcp",
+    "termino": "servidor MCP",
+    "definicion": "Programa que ofrece herramientas o datos a una herramienta de IA mediante el Model Context Protocol, por ejemplo un gestor de tareas, una base de datos o tus apuntes.",
+    "categoria": "ia",
+    "ejemplo": "claude mcp add --transport http notion https://mcp.notion.com/mcp",
+    "relacionados": [
+      "mcp",
+      "tool-use",
+      "agente-ia",
+      "claude-code"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "sandbox",
+    "termino": "sandbox",
+    "definicion": "Entorno aislado donde un programa corre con acceso limitado a archivos y red, para que un error o un ataque no dañe el resto del sistema.",
+    "categoria": "seguridad",
+    "ejemplo": "Correr un agente dentro de un contenedor",
+    "relacionados": [
+      "contenedor",
+      "principio-de-minimo-privilegio",
+      "modo-de-permisos"
+    ]
   }
 ]

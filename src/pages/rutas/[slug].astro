@@ -108,8 +108,8 @@ const pasos = e.data.pasos.map((p, i) => {
               )}
 
               <div class="mt-4 flex flex-wrap gap-2">
-                {p.guia && <a href={`/guias/${p.guia.id}/`} class="btn btn-primary btn-sm"><Icon name="code" class="h-4 w-4" /> Guía: {p.guia.data.titulo}</a>}
-                {p.tema && <a href={`/biblioteca/${p.tema.slug}/`} class="btn btn-secondary btn-sm">Biblioteca de {p.tema.nombre}</a>}
+                {p.guia && <a href={`/guias/${p.guia.id}/`} class="btn btn-primary btn-sm max-w-full whitespace-normal text-left leading-snug"><Icon name="code" class="h-4 w-4 shrink-0" /> Guía: {p.guia.data.titulo}</a>}
+                {p.tema && <a href={`/biblioteca/${p.tema.slug}/`} class="btn btn-secondary btn-sm max-w-full whitespace-normal text-left leading-snug">Biblioteca de {p.tema.nombre}</a>}
               </div>
 
               {p.recs.length > 0 && (

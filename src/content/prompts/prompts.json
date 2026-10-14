@@ -216,5 +216,69 @@
     "prompt": "Quiero confirmar si esto es cierto: [AFIRMACIÓN SOBRE UN LENGUAJE, LIBRERÍA O HERRAMIENTA]. Busca en la documentación oficial o en el repositorio del proyecto, dime si es correcto hoy, si cambió en alguna versión reciente y dame los enlaces exactos donde lo verificaste. No uses blogs ni respuestas sin fuente.",
     "herramientas": ["perplexity", "gemini", "chatgpt", "claude"],
     "nota": "Ideal para comprobar lo que otra IA te dijo antes de darlo por hecho."
+  },
+  {
+    "id": "claude-explorar-sin-cambiar",
+    "titulo": "Explorar un proyecto sin modificar nada",
+    "categoria": "agentes",
+    "prompt": "Estás en modo de solo lectura. Explícame este proyecto: qué hace, cuál es el punto de entrada, cómo se ejecuta y cómo están organizadas las carpetas. Para cada afirmación indica el archivo en el que te basas. No modifiques ni crees archivos.",
+    "herramientas": ["claude-code"],
+    "nota": "Úsalo en tu primera sesión con un proyecto nuevo, mejor en modo plan."
+  },
+  {
+    "id": "claude-entrevista-especificacion",
+    "titulo": "Que Claude te entreviste antes de programar",
+    "categoria": "agentes",
+    "prompt": "Quiero construir [DESCRIPCIÓN BREVE]. Hazme preguntas, de una en una, sobre funciones, casos límite, diseño y decisiones que yo no haya considerado. No hagas preguntas obvias. Cuando terminemos, escribe una especificación en SPEC.md con los archivos involucrados, lo que queda fuera del alcance y una verificación final de punta a punta.",
+    "herramientas": ["claude-code", "claude"],
+    "nota": "Después abre una sesión limpia para implementar con la especificación."
+  },
+  {
+    "id": "claude-implementa-con-verificacion",
+    "titulo": "Implementar un paso con pruebas que Claude corra",
+    "categoria": "agentes",
+    "prompt": "Implementa solo el paso [N] del plan. Escribe primero la prueba, córrela para ver que falla, implementa el código y vuelve a correrla. Muéstrame la salida de las pruebas y la lista de archivos que cambiaste. Si algo no está claro, pregúntame antes de suponer.",
+    "herramientas": ["claude-code"],
+    "nota": "Un paso a la vez facilita revisar el diff y volver atrás."
+  },
+  {
+    "id": "claude-revisor-independiente",
+    "titulo": "Revisión independiente contra la especificación",
+    "categoria": "revisar",
+    "prompt": "Revisa el diff de esta rama contra [SPEC.md O PLAN.md]. Comprueba que cada requisito esté implementado, que los casos límite tengan prueba y que no se haya cambiado nada fuera del alcance. Reporta solo hallazgos que afecten la correctitud o incumplan la especificación, con archivo y línea. No propongas cambios de estilo.",
+    "herramientas": ["claude-code"],
+    "nota": "Ejecútalo en una sesión nueva o con un subagente para tener ojos frescos."
+  },
+  {
+    "id": "claude-escribe-claude-md",
+    "titulo": "Redactar un CLAUDE.md corto y verificable",
+    "categoria": "agentes",
+    "prompt": "Lee este proyecto y propón un CLAUDE.md de máximo 15 líneas. Incluye solo lo que no se pueda deducir leyendo el código: comandos de pruebas y verificación, reglas de estilo distintas a las comunes y cosas que no debes tocar. Cada línea debe ser concreta y comprobable. No incluyas secretos ni frases vacías.",
+    "herramientas": ["claude-code"],
+    "nota": "Después bórrale todo lo que no pase la prueba: si lo quito, ¿Claude se equivocaría?"
+  },
+  {
+    "id": "claude-pruebas-de-casos-limite",
+    "titulo": "Casos límite antes de escribir pruebas",
+    "categoria": "tests",
+    "prompt": "Para esta función: [PEGA EL CÓDIGO]. Lista los casos de prueba que debería cubrir, incluyendo entradas vacías, valores extremos y entradas inválidas. Para cada caso da la entrada y la salida esperada. Todavía no escribas el código de las pruebas.",
+    "herramientas": ["claude", "claude-code"],
+    "nota": "Escribe tú las pruebas y pide ayuda solo cuando una falle."
+  },
+  {
+    "id": "claude-prompt-con-etiquetas",
+    "titulo": "Separar instrucciones y datos con etiquetas",
+    "categoria": "escribir",
+    "prompt": "Resume el texto que está entre las etiquetas en [NÚMERO] viñetas y luego propón [TAREA SIGUIENTE]. Responde en español de México.\n\n<texto>\n[PEGA AQUÍ EL TEXTO]\n</texto>",
+    "herramientas": ["claude"],
+    "nota": "Las etiquetas evitan que Claude confunda el material con las instrucciones."
+  },
+  {
+    "id": "claude-critica-mi-prompt",
+    "titulo": "Que Claude critique tu prompt",
+    "categoria": "revisar",
+    "prompt": "Voy a mostrarte un prompt que escribí. No lo ejecutes. Dime qué información falta (contexto, nivel, formato, restricciones), qué es ambiguo y cómo lo reescribirías. Prompt: [PEGA TU PROMPT]",
+    "herramientas": ["claude"],
+    "nota": "Funciona bien como paso previo a un trabajo largo."
   }
 ]
