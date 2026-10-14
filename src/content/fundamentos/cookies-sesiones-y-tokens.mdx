@@ -1,0 +1,208 @@
+---
+titulo: 'Cookies, sesiones y tokens'
+descripcion: 'Cómo una web recuerda quién eres si HTTP olvida todo: qué son las cookies, las sesiones y los tokens JWT, sus banderas de seguridad y cuándo usar cada uno.'
+categoria: seguridad
+nivel: intermedio
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [nodejs, javascript]
+etiquetas: [cookies, sesiones, tokens, jwt, autenticacion, seguridad]
+orden: 12
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Inicias sesión en una página, navegas a otra sección y sigues dentro. Parece lo más natural del mundo, pero choca con un hecho de HTTP: **cada petición llega sin memoria de la anterior**. Si el servidor no recuerda quién eres, tendrías que escribir tu contraseña en cada clic. Las cookies, las sesiones y los tokens son las tres piezas con las que se resuelve eso. Entenderlas te ayuda a programar un login y, más importante, a no abrir huecos de seguridad.
+
+## Qué es
+
+Piensa en un **guardarropa**. Entregas tu abrigo y recibes un número de ficha. No te llevas el abrigo, te llevas una ficha. Cuando regresas, muestras la ficha y te devuelven tu abrigo.
+
+| Guardarropa | Web |
+| --- | --- |
+| La ficha con número | El identificador de sesión (o un token) |
+| El guardarropa donde está tu abrigo | El servidor, con tus datos de sesión |
+| Mostrar la ficha cada vez | El navegador envía la cookie en cada petición |
+
+Los tres conceptos se mezclan seguido, pero son distintos:
+
+- **Cookie:** un pequeño dato que el servidor le pide guardar al navegador, y que el navegador devuelve en cada petición a ese sitio. Es un **mecanismo de transporte**.
+- **Sesión:** los datos que el **servidor** guarda sobre ti ("este identificador es Ana, que entró hace poco"). La cookie suele llevar solo el identificador.
+- **Token:** una credencial que el servidor entrega y que el cliente guarda y envía. A veces contiene la información dentro (como un JWT).
+
+Un recordatorio rápido de cómo viaja todo: mira [HTTP: cómo hablan el cliente y el servidor](/fundamentos/http-cliente-servidor/).
+
+## Cookies
+
+El servidor crea una cookie con el encabezado de respuesta `Set-Cookie`. A partir de entonces, el navegador la incluye en cada petición a ese sitio con el encabezado `Cookie`.
+
+```text
+Respuesta del servidor:
+  Set-Cookie: sid=abc123; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=3600
+
+Siguientes peticiones del navegador:
+  Cookie: sid=abc123
+```
+
+Las **banderas** son lo que vuelve segura (o no) una cookie:
+
+| Bandera | Qué hace |
+| --- | --- |
+| `HttpOnly` | JavaScript de la página no puede leerla. Protege contra el robo si hay un fallo XSS. |
+| `Secure` | Solo se envía por HTTPS. |
+| `SameSite` | Controla si se envía en peticiones que vienen de otros sitios. `Lax` y `Strict` ayudan contra CSRF. |
+| `Max-Age` o `Expires` | Cuándo caduca. Sin ellas, se borra al cerrar el navegador (cookie de sesión). |
+| `Path` y `Domain` | Para qué rutas y dominios aplica. |
+
+Las cookies también guardan preferencias, carritos y analítica. Por eso existen los avisos de cookies: varias leyes de privacidad piden consentimiento para las que rastrean, y varían por país.
+
+## Sesiones en el servidor
+
+El enfoque clásico:
+
+1. Envías usuario y contraseña.
+2. El servidor los verifica, crea un registro de sesión y genera un identificador **largo y aleatorio**.
+3. Responde con `Set-Cookie: sid=...`.
+4. En cada petición, el navegador envía la cookie; el servidor busca el identificador y sabe quién eres.
+5. Al cerrar sesión, el servidor **borra** el registro y la ficha deja de servir.
+
+```text
+Navegador                               Servidor
+   |  POST /entrar (usuario, clave) --->  verifica, guarda sesiones[id] = ana
+   |  <--- Set-Cookie: sid=id
+   |  GET /perfil  Cookie: sid=id  --->   busca sesiones[id], reconoce a ana
+   |  <--- 200 "Hola, ana"
+```
+
+Lo mejor de este modelo es que el servidor tiene el **control total**: puede cerrar una sesión cuando quiera. Lo costoso es que debe guardar las sesiones (en memoria, en una base de datos o en un almacén como Redis; ver [NoSQL](/fundamentos/bases-de-datos-nosql/)).
+
+Aquí hay un servidor de ejemplo con Node.js y sin librerías. Guárdalo como `sesion.mjs`:
+
+```js
+// Sesiones con cookies, sin librerías: el servidor recuerda quién eres
+import http from 'node:http';
+import { randomUUID } from 'node:crypto';
+
+const sesiones = new Map(); // id de sesión -> datos (vive en memoria del servidor)
+
+function leerCookie(req, nombre) {
+  const cookies = (req.headers.cookie ?? '').split('; ');
+  const par = cookies.find((c) => c.startsWith(nombre + '='));
+  return par?.slice(nombre.length + 1);
+}
+
+http.createServer((req, res) => {
+  if (req.url === '/entrar') {
+    const id = randomUUID();                      // identificador difícil de adivinar
+    sesiones.set(id, { usuario: 'ana' });
+    res.setHeader('Set-Cookie', `sid=${id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600`);
+    res.end('Sesión iniciada\n');
+  } else if (req.url === '/perfil') {
+    const sesion = sesiones.get(leerCookie(req, 'sid'));
+    if (!sesion) {
+      res.statusCode = 401;
+      res.end('No has iniciado sesión\n');
+    } else {
+      res.end(`Hola, ${sesion.usuario}\n`);
+    }
+  } else {
+    res.statusCode = 404;
+    res.end('No encontrado\n');
+  }
+}).listen(3100, () => console.log('http://localhost:3100'));
+```
+
+Es un ejemplo para aprender: no verifica contraseñas ni incluye la bandera `Secure` porque trabajas en `localhost` sin HTTPS. En producción se añade `Secure` y se usa una librería probada de sesiones.
+
+## Tokens y JWT
+
+Un **token** es una credencial que el cliente guarda y manda en cada petición, normalmente en el encabezado `Authorization: Bearer <token>`. Es muy común en APIs y apps móviles, donde no hay un navegador manejando cookies.
+
+El formato más conocido es **JWT** (JSON Web Token). Tiene tres partes en base64url separadas por puntos: **encabezado**, **carga** (los datos, llamados "claims") y **firma**. La firma garantiza que nadie modificó el contenido. Guarda esto como `jwt.mjs` para verlo por dentro:
+
+```js
+// Un token firmado (JWT) armado a mano para ver cómo es por dentro
+import { createHmac } from 'node:crypto';
+
+const secreto = 'clave-de-ejemplo-cambiala'; // en la vida real viene de una variable de entorno
+const base64url = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
+
+const encabezado = { alg: 'HS256', typ: 'JWT' };
+const carga = { sub: 'ana', rol: 'lectora', exp: 1893456000 }; // exp: segundos desde 1970 en que vence
+
+const firmar = (datos) => createHmac('sha256', secreto).update(datos).digest('base64url');
+
+const datos = `${base64url(encabezado)}.${base64url(carga)}`;
+const token = `${datos}.${firmar(datos)}`;
+console.log(token);
+
+// Cualquiera puede LEER la carga (solo está codificada, no cifrada)
+const [, cargaTexto] = token.split('.');
+console.log(JSON.parse(Buffer.from(cargaTexto, 'base64url').toString()));
+
+// Pero si alguien cambia la carga, la firma ya no coincide
+const falsa = `${base64url(encabezado)}.${base64url({ ...carga, rol: 'admin' })}`;
+console.log('Firma válida del original:', token.split('.')[2] === firmar(datos));
+console.log('Firma válida del modificado:', token.split('.')[2] === firmar(falsa));
+```
+
+Salida real:
+
+```text
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbmEiLCJyb2wiOiJsZWN0b3JhIiwiZXhwIjoxODkzNDU2MDAwfQ.XyyZDOVkG-OEcbJe7TBkLFLnLNQQgkysg75mOg7aadY
+{ sub: 'ana', rol: 'lectora', exp: 1893456000 }
+Firma válida del original: true
+Firma válida del modificado: false
+```
+
+La enseñanza clave: **la carga de un JWT se puede leer, no está cifrada.** Lo que protege es la firma, que detecta cambios. Por eso nunca pongas contraseñas ni datos privados dentro. En una app real no armes tokens a mano, usa una librería mantenida y verifica siempre firma, algoritmo esperado y vencimiento.
+
+La ventaja del token autocontenido es que el servidor no tiene que guardar nada para validarlo. La desventaja es la contraparte: **es difícil revocarlo** antes de que venza. Por eso se les da una vida corta y se combinan con un token de renovación (refresh token) que sí se puede invalidar.
+
+## Sesión o token: cómo elegir
+
+| Pregunta | Sesión con cookie | Token (por ejemplo JWT) |
+| --- | --- | --- |
+| ¿Quién guarda el estado? | El servidor | El cliente lleva los datos |
+| ¿Se puede cerrar de inmediato? | Sí, borrando la sesión | Más difícil, hay que esperar o llevar una lista de revocados |
+| ¿Ideal para...? | Sitios web tradicionales | APIs, apps móviles, servicios entre sí |
+| ¿Dónde se guarda en el navegador? | Cookie `HttpOnly` | Cookie `HttpOnly` es la opción más segura; en `localStorage` queda al alcance de cualquier script de la página |
+
+<Callout tipo="tip" titulo="Para un sitio web, empieza con sesión y cookie HttpOnly">
+Es el modelo más simple de razonar y de proteger: el navegador guarda la cookie sin que JavaScript la toque, y tú controlas la sesión desde el servidor. Los tokens son una herramienta genial, pero no una mejora automática.
+</Callout>
+
+<Callout tipo="warning" titulo="Guardar tokens en localStorage tiene un costo">
+Todo lo que está en `localStorage` lo puede leer cualquier JavaScript que corra en tu página. Si un atacante logra inyectar un script (XSS), se lleva el token. Una cookie `HttpOnly` no se puede leer desde JavaScript. Revisa [seguridad web y OWASP](/fundamentos/seguridad-web-owasp/).
+</Callout>
+
+## Dos ataques que debes conocer
+
+- **XSS (Cross-Site Scripting):** un atacante logra que se ejecute su JavaScript dentro de tu página. Puede leer lo que JavaScript pueda leer. Defensa: escapar todo lo que muestras, evitar `innerHTML` con datos de usuarios y usar `HttpOnly`.
+- **CSRF (Cross-Site Request Forgery):** otro sitio hace que tu navegador envíe una petición a tu servidor, y el navegador adjunta tu cookie automáticamente. Defensa: `SameSite`, tokens anti-CSRF y no cambiar datos con `GET`.
+
+## Pruébalo tú
+
+1. Ejecuta `node sesion.mjs`.
+2. En otra terminal consulta sin sesión: `curl -i http://localhost:3100/perfil`. Verás `401`.
+3. Inicia sesión y guarda la cookie en un archivo: `curl -i -c jar.txt http://localhost:3100/entrar`. En la respuesta verás una línea `Set-Cookie: sid=` seguida de un identificador aleatorio y las banderas.
+4. Usa la cookie guardada: `curl -b jar.txt http://localhost:3100/perfil`. Debe responder `Hola, ana`.
+5. Reinicia el servidor y repite el paso 4. Como las sesiones viven en memoria, ya no te reconoce. Así verás por qué en producción se guardan en un almacén persistente.
+6. Ejecuta `node jwt.mjs`, cambia `rol: 'lectora'` en la carga y observa cómo cambia el token. Cambia el `secreto` y comprueba que la firma ya no coincide con la anterior.
+7. En tu navegador, abre las herramientas de desarrollo (F12), pestaña **Aplicación** (o **Almacenamiento**), sección **Cookies**, y revisa las banderas de las cookies de un sitio que uses.
+
+## Errores y mitos comunes
+
+- **"Un JWT está cifrado."** No. Está firmado. Su contenido se puede leer con cualquier decodificador.
+- **"Guardar la contraseña en la cookie para recordarme."** Nunca. Se guarda un identificador aleatorio o un token revocable, jamás la contraseña.
+- **"Basta con ocultar los botones de admin."** El servidor debe comprobar permisos en cada petición. Mira [autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/).
+- **"Un identificador de sesión corto o predecible está bien."** Debe ser largo y aleatorio generado con funciones criptográficas, como `randomUUID`, no un contador.
+
+## Qué sigue
+
+- [Autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/): verificar quién eres y qué puedes hacer.
+- [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/): XSS, CSRF y otros riesgos con más detalle.
+- [Variables de entorno](/fundamentos/variables-de-entorno/): dónde guardar el secreto con el que firmas.
+- [HTTP: cómo hablan el cliente y el servidor](/fundamentos/http-cliente-servidor/) para repasar los encabezados.
+- [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/): dónde más verás tokens.
+- [Glosario](/glosario/).

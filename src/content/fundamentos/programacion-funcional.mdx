@@ -1,0 +1,191 @@
+---
+titulo: 'Programación funcional: la idea central'
+descripcion: 'Funciones puras, inmutabilidad, map, filter y reduce explicados con ejemplos en Python y JavaScript, y por qué esta forma de pensar reduce errores.'
+categoria: programacion
+nivel: intermedio
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [javascript, python, haskell]
+etiquetas: [funcional, funciones-puras, inmutabilidad, map, reduce]
+orden: 23
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Llamas a la misma función dos veces con los mismos datos y obtienes resultados distintos. Revisas el código y no encuentras el motivo: otra parte del programa cambió una variable global a escondidas. La programación funcional ataca ese problema de raíz con una idea sencilla: haz que tus funciones sean predecibles.
+
+## Qué es
+
+La **programación funcional** es un estilo en el que construyes el programa combinando funciones que no cambian nada fuera de sí mismas. Piensa en una calculadora: tecleas `5 + 5` y siempre da `10`. Nunca da otra cosa según la hora ni según lo que hiciste antes.
+
+Dos ideas sostienen todo lo demás:
+
+1. **Funciones puras.** Dan siempre el mismo resultado con las mismas entradas y no tienen efectos secundarios.
+2. **Datos inmutables.** En vez de modificar un dato, creas uno nuevo con el cambio.
+
+No necesitas un lenguaje especial. Python y JavaScript permiten este estilo, y lenguajes como Haskell lo llevan al extremo.
+
+## Funciones puras e impuras
+
+Una función es **pura** si cumple dos condiciones: su resultado depende solo de sus argumentos, y no modifica nada fuera de ella (no cambia variables globales, no imprime, no escribe archivos, no toca la red). Todo lo que sí hace fuera de su resultado se llama **efecto secundario**.
+
+<Ejemplo numero={1} titulo="Pura contra impura" archivo="pureza.py" ejecutar="uv run pureza.py" salida={"5 10\n10 10"}>
+
+```python
+total = 0
+
+def sumar_impura(x):
+    global total
+    total += x          # modifica algo de afuera
+    return total
+
+print(sumar_impura(5), sumar_impura(5))   # 5 10: misma llamada, distinto resultado
+
+def sumar_pura(a, b):
+    return a + b        # solo usa sus argumentos
+
+print(sumar_pura(5, 5), sumar_pura(5, 5)) # 10 10
+```
+
+La primera función da resultados distintos con la misma entrada, porque depende de un estado escondido. La segunda siempre responde igual, así que puedes probarla fácil y razonar sobre ella sin mirar el resto del programa.
+
+</Ejemplo>
+
+Las funciones puras son más fáciles de probar (no necesitas preparar un entorno), de reutilizar y de ejecutar en paralelo. Esto se conecta con [Pruebas automáticas](/fundamentos/pruebas-automaticas/) y con [Concurrencia y asincronía](/fundamentos/concurrencia-y-asincronia/): sin estado compartido, no hay condiciones de carrera.
+
+Un programa útil no puede ser 100 por ciento puro, porque necesita leer entradas y mostrar salidas. La práctica común es separar: un "centro" puro con la lógica y una "cáscara" delgada que hace las operaciones con efectos.
+
+## Inmutabilidad
+
+Una estructura **inmutable** no se modifica después de crearse. Si quieres un cambio, produces una copia con el cambio incluido. Esto evita los alias peligrosos que viste en [Variables, tipos y memoria](/fundamentos/variables-tipos-y-memoria/).
+
+```js
+const usuario = Object.freeze({ nombre: "Ana", edad: 28 });
+const cumple = { ...usuario, edad: usuario.edad + 1 };   // objeto nuevo
+console.log(usuario, cumple);
+// { nombre: 'Ana', edad: 28 } { nombre: 'Ana', edad: 29 }
+```
+
+`Object.freeze` bloquea el objeto. Si intentas `usuario.edad = 99` en modo estricto (que es el modo por defecto en módulos), JavaScript lanza un `TypeError`; fuera de modo estricto lo ignora en silencio. Lo importante es la idea: el original sigue intacto y `cumple` es otro valor.
+
+En Python, `sorted(lista)` devuelve una lista nueva sin tocar la original, mientras que `lista.sort()` la modifica en su lugar:
+
+```python
+original = [3, 1, 2]
+ordenada = sorted(original)
+print(original, ordenada)   # [3, 1, 2] [1, 2, 3]
+original.sort()
+print(original)             # [1, 2, 3]  la original cambió
+```
+
+## Funciones de orden superior: map, filter y reduce
+
+Una función de **orden superior** recibe otra función como argumento o la devuelve (viste esto en [Funciones y recursión](/fundamentos/funciones-y-recursion/)). Tres de ellas resuelven la mayoría de los recorridos de listas:
+
+| Función | Qué hace | Ejemplo |
+| --- | --- | --- |
+| `map` | Transforma cada elemento | cuadrado de cada número |
+| `filter` | Se queda con los que cumplen una condición | solo los pares |
+| `reduce` | Combina todos en un solo valor | la suma total |
+
+Imagina una línea de producción: `filter` descarta piezas defectuosas, `map` las pinta y `reduce` las empaca en una caja.
+
+<Ejemplo numero={2} titulo="Pares, cuadrados y suma" archivo="pipeline.mjs" ejecutar="node pipeline.mjs" salida="56">
+
+```js
+const numeros = [1, 2, 3, 4, 5, 6];
+
+const resultado = numeros
+  .filter((n) => n % 2 === 0)   // [2, 4, 6]
+  .map((n) => n ** 2)           // [4, 16, 36]
+  .reduce((acc, n) => acc + n, 0);  // 56
+
+console.log(resultado);
+```
+
+Cada paso devuelve un arreglo nuevo y no toca `numeros`. El resultado se lee de arriba hacia abajo como una receta.
+
+</Ejemplo>
+
+En Python lo mismo se escribe con `map`, `filter` y `functools.reduce`, aunque lo más común es una comprensión o una expresión generadora:
+
+```python
+from functools import reduce
+
+numeros = [1, 2, 3, 4, 5, 6]
+pares = list(filter(lambda n: n % 2 == 0, numeros))
+cuadrados = list(map(lambda n: n ** 2, pares))
+print(reduce(lambda acc, n: acc + n, cuadrados, 0))   # 56
+
+# La versión que preferiría un pythonista:
+print(sum(n ** 2 for n in numeros if n % 2 == 0))     # 56
+```
+
+<Callout tipo="tip" titulo="Usa el estilo que se lea mejor">
+No tienes que escribir todo con `reduce`. Si un bucle `for` se entiende más rápido, úsalo. Lo valioso de la programación funcional no es la sintaxis, sino los hábitos: funciones pequeñas, sin efectos escondidos y sin modificar datos compartidos.
+</Callout>
+
+## Composición
+
+Si tus funciones son pequeñas y puras, puedes **componerlas**: la salida de una es la entrada de la siguiente, como piezas de Lego.
+
+```python
+def componer(*fs):
+    def aplicar(x):
+        for f in reversed(fs):
+            x = f(x)
+        return x
+    return aplicar
+
+doble = lambda x: x * 2
+mas_uno = lambda x: x + 1
+print(componer(doble, mas_uno)(5))   # primero mas_uno(5)=6, luego doble(6)=12
+```
+
+También puedes fijar parte de los argumentos de una función con `functools.partial`, lo que se conoce como **aplicación parcial**:
+
+```python
+from functools import partial
+
+def potencia(base, exp):
+    return base ** exp
+
+cubo = partial(potencia, exp=3)
+print(cubo(2))   # 8
+```
+
+<Callout tipo="warning" titulo="Funcional no significa ilegible">
+Una cadena de ocho `map` y `filter` anidados con funciones anónimas es más difícil de leer que un bucle claro. Dale nombre a los pasos intermedios. Además, copiar una lista completa en cada paso gasta memoria y tiempo si trabajas con millones de elementos. Mide antes de asumir que algo es lento.
+</Callout>
+
+## Cuándo conviene
+
+- **Transformar datos:** limpiar, filtrar y resumir listas, resultados de una API o filas de una tabla.
+- **Lógica de negocio que debe ser fácil de probar:** cálculos de precios, validaciones, reglas.
+- **Código concurrente:** menos estado compartido, menos sorpresas.
+- **Interfaces de usuario modernas:** muchas bibliotecas de interfaces recomiendan tratar el estado como inmutable.
+
+En cambio, para modelar entidades con mucho estado que cambia (un personaje de videojuego, una conexión abierta) a veces la [programación orientada a objetos](/fundamentos/programacion-orientada-a-objetos/) resulta más natural. Los dos estilos se complementan.
+
+## Pruébalo tú
+
+1. Toma la lista `[12, 7, 3, 20, 15]` y, usando solo `filter`, `map` y `reduce` (o sus equivalentes), calcula la suma de los números mayores que 10, multiplicados por 2.
+2. Escribe una función pura `agregar_iva(precio, tasa)` y otra que aplique esa función a una lista de precios.
+3. Convierte esta función impura en una pura: la que recibe una lista y le agrega un elemento con `append`. Que devuelva una lista nueva.
+4. En JavaScript, prueba `Object.freeze` en un objeto y comprueba la diferencia entre ejecutar tu archivo como módulo (`.mjs`) y como script clásico.
+
+## Errores y mitos comunes
+
+- **"Programación funcional es solo usar `map` y `filter`."** Esas son herramientas. La idea de fondo es evitar efectos escondidos y cambios compartidos.
+- **"Necesitas Haskell para hacerlo."** No. Puedes aplicar estos hábitos en cualquier lenguaje.
+- **"Las funciones puras no pueden imprimir ni leer archivos."** Correcto, por eso se separan de la parte que sí hace esas cosas.
+- **"Inmutable significa lento."** Copiar datos tiene costo, pero muchos lenguajes optimizan estructuras que comparten partes. Mide antes de decidir.
+- **"Funcional y orientado a objetos se excluyen."** En la práctica se mezclan todo el tiempo.
+
+## Qué sigue
+
+- Revisa cómo escribir código limpio con estas ideas: [Código limpio y refactorización](/fundamentos/codigo-limpio-y-refactorizacion/).
+- Entiende cómo pensar el costo de los recorridos: [Complejidad y notación Big O](/fundamentos/complejidad-y-big-o/).
+- Si te atrae el estilo funcional puro, mira los recursos de [Haskell](/biblioteca/haskell/) en la biblioteca.
+- Practica con la [guía de JavaScript](/guias/javascript/), consulta el [glosario](/glosario/) y prueba los [retos](/retos/).

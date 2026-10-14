@@ -1,0 +1,161 @@
+---
+titulo: 'Cómo funciona internet'
+descripcion: 'Qué pasa entre tu teléfono y un sitio web: redes, direcciones IP, paquetes, protocolos y servidores, explicado con analogías y un script que puedes correr.'
+categoria: internet
+nivel: principiante
+tiempoLectura: 9
+publicado: 2026-10-09
+temas: [javascript, nodejs]
+etiquetas: [internet, redes, ip, tcp, protocolos]
+orden: 1
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Abres una página y aparece en un parpadeo. Pero entre tu dedo y la pantalla hay cables, antenas, computadoras de otras personas y muchas reglas que se ponen de acuerdo en milésimas de segundo. Si vas a programar para la web, entender ese viaje te ahorra horas de confusión. Aquí lo vemos paso a paso, sin tecnicismos innecesarios.
+
+## Qué es
+
+Internet es una **red de redes**. Tu casa tiene una red (tu módem y tus dispositivos). Tu proveedor tiene otra. Las empresas, las universidades y los centros de datos tienen las suyas. Internet es el acuerdo que permite que todas esas redes se hablen entre sí.
+
+No es una nube mágica ni una sola empresa. Es una malla de cables (muchos van por el fondo del mar), antenas y equipos que reenvían mensajes. Cada equipo conectado se llama **host**.
+
+La analogía más útil es el **correo postal**:
+
+| En el correo | En internet |
+| --- | --- |
+| Tu domicilio | Tu dirección IP |
+| El sobre con remitente y destinatario | Un paquete con origen y destino |
+| Las oficinas de correo que reenvían | Los routers |
+| El idioma en que escribes la carta | El protocolo (HTTP, por ejemplo) |
+| La guía telefónica de domicilios | El DNS |
+
+## Direcciones IP: el domicilio de cada equipo
+
+Para que algo llegue, hay que saber a dónde. Cada host tiene una **dirección IP**. Hay dos formatos:
+
+- **IPv4**: cuatro números separados por puntos, como `203.0.113.10`.
+- **IPv6**: más larga, con letras y números en hexadecimal, como `2001:db8::1`. Existe porque las direcciones IPv4 ya no alcanzan para todos los dispositivos.
+
+Esas dos direcciones de ejemplo están reservadas para documentación, así que no pertenecen a nadie real.
+
+Las personas no memorizamos números, memorizamos nombres como `ejemplo.com`. Convertir un nombre en una IP es trabajo del DNS, que tiene [su propio artículo](/fundamentos/dns-y-dominios/).
+
+## Paquetes: cortar el mensaje en pedazos
+
+Cuando descargas una imagen, no viaja entera como un bloque. Se **corta en paquetes** pequeños. Cada paquete lleva la IP de origen, la IP de destino y un número de orden.
+
+¿Por qué? Porque así muchos usuarios comparten los mismos cables sin bloquearse. Y si un paquete se pierde, solo se vuelve a enviar ese pedazo, no todo el archivo.
+
+Los paquetes pueden tomar rutas distintas. Los routers deciden en cada salto cuál es el siguiente mejor camino. Al llegar, el receptor los **reordena** y arma el archivo original. Es como mandar un rompecabezas en varios sobres.
+
+```text
+Tu equipo --> router de casa --> proveedor --> ... varios routers ... --> servidor
+   |                                                                        |
+   +--- paquete 1, paquete 2, paquete 3 (pueden ir por caminos distintos) --+
+```
+
+## Protocolos: las reglas de la conversación
+
+Un **protocolo** es un acuerdo sobre cómo hablar. Internet funciona por capas, y cada capa resuelve un problema distinto:
+
+| Capa | Protocolo | Qué resuelve |
+| --- | --- | --- |
+| Aplicación | HTTP, HTTPS, SMTP | Qué se dicen las aplicaciones (pedir una página, enviar un correo) |
+| Transporte | TCP, UDP | Que los datos lleguen completos y en orden (TCP) o rápido y sin garantías (UDP) |
+| Internet | IP | A dónde va cada paquete |
+| Enlace | Wi-Fi, Ethernet | Cómo viaja la señal por el cable o el aire |
+
+**TCP** es como una llamada donde confirmas cada cosa: "¿me oyes?", "sí te oigo". Antes de enviar datos hace un saludo inicial para abrir la conexión y confirma que cada pieza llegó. **UDP** es como gritar un mensaje: más rápido, sin confirmación. Se usa en videollamadas y juegos en línea, donde perder un cuadro importa menos que esperar.
+
+**HTTPS** es HTTP más cifrado (TLS). El candado del navegador significa que lo que viaja entre tú y el sitio va cifrado, y que el sitio presentó un certificado válido para ese dominio. No significa que el sitio sea confiable ni que sus dueños sean buenas personas.
+
+## Cliente y servidor
+
+Casi todo en la web sigue un patrón: un **cliente** pide y un **servidor** responde.
+
+- El cliente es tu navegador, tu app del teléfono o un script.
+- El servidor es una computadora, casi siempre en un centro de datos, que está encendida todo el tiempo esperando peticiones.
+
+Un servidor no es una máquina especial. Es una computadora con un programa que escucha en un **puerto**. Si la IP es el domicilio del edificio, el puerto es el número de departamento. Por convención, HTTP usa el puerto 80 y HTTPS el 443.
+
+## El viaje completo de una visita
+
+Cuando escribes una dirección y presionas Enter, pasa esto, en orden:
+
+1. **DNS:** tu equipo pregunta qué IP corresponde al nombre.
+2. **TCP:** abre una conexión con esa IP y el puerto 443.
+3. **TLS:** se ponen de acuerdo en las claves para cifrar.
+4. **HTTP:** el cliente envía la petición y el servidor responde.
+5. **Render:** el navegador dibuja la página (el [artículo sobre navegadores](/fundamentos/como-funciona-un-navegador/) lo cuenta).
+
+<Callout tipo="tip" titulo="Cada paso cuesta tiempo">
+Por eso los sitios rápidos reducen viajes: servidores cerca del usuario, conexiones que se reutilizan y menos archivos pequeños pidiéndose uno por uno. Cuando alguien dice "latencia", habla del tiempo que tarda un mensaje en ir y volver.
+</Callout>
+
+## Pruébalo tú
+
+Este script de Node.js mide cada etapa contra `example.com`, un sitio hecho justo para hacer pruebas. Guárdalo como `viaje.mjs` y ejecútalo con `node viaje.mjs`.
+
+```js
+// Mide cada etapa de una visita: DNS, conexión TCP, TLS y respuesta
+import dns from 'node:dns/promises';
+import net from 'node:net';
+import tls from 'node:tls';
+
+const host = 'example.com';
+const t0 = performance.now();
+const marca = (texto) => console.log(`${texto.padEnd(22)} ${Math.round(performance.now() - t0)} ms`);
+
+const { address } = await dns.lookup(host); // 1. DNS: nombre a IP
+marca(`DNS (${address.includes(':') ? 'IPv6' : 'IPv4'})`);
+
+// 2. TCP: abre la conexión y la cierra enseguida
+await new Promise((ok) => net.connect(443, address, function () { marca('TCP conectado'); this.end(); ok(); }));
+
+// 3. TLS: cifrado, y 4. HTTP: la petición
+const socket = tls.connect({ host, port: 443, servername: host }, () => {
+  marca(`TLS listo (${socket.getProtocol()})`);
+  socket.write(`GET / HTTP/1.1\r\nHost: ${host}\r\nConnection: close\r\n\r\n`);
+});
+socket.once('data', (d) => {
+  marca('primer byte');
+  console.log(d.toString().split('\r\n')[0]); // primera línea de la respuesta
+  socket.end();
+});
+```
+
+La salida se ve así. Los milisegundos serán distintos en tu conexión, pero el orden y el crecimiento acumulado siempre se parecen:
+
+```text
+DNS (IPv6)             19 ms
+TCP conectado          69 ms
+TLS listo (TLSv1.3)    185 ms
+primer byte            241 ms
+HTTP/1.1 200 OK
+```
+
+Fíjate en que cada línea suma tiempo a la anterior. Esa es la razón por la que un servidor lejano se siente lento.
+
+<Callout tipo="warning" titulo="Cuidado con el Wi-Fi público">
+HTTPS protege el contenido, pero una red abierta sigue pudiendo ver a qué dominios te conectas. Evita iniciar sesión en sitios que todavía usan HTTP sin cifrar y desconfía de avisos de certificado inválido: no los ignores por prisa.
+</Callout>
+
+## Errores y mitos comunes
+
+- **"Internet y la web son lo mismo."** No. Internet es la red. La web es un servicio que corre sobre ella con HTTP. El correo, los juegos en línea y las videollamadas también usan internet pero no son "la web".
+- **"La nube es otro lugar."** La nube son computadoras de alguien más, en centros de datos reales. Lo vemos en el artículo de [hosting y despliegue](/fundamentos/cloud-hosting-y-despliegue/).
+- **"Mi dirección IP me identifica como persona."** Identifica una conexión, y muchas veces cambia o se comparte entre varios hogares. Aun así, no es un dato que debas publicar sin necesidad.
+- **"Si tarda, es por mi código."** A veces sí, pero muchas veces el tiempo se va en DNS, conexión y distancia al servidor, no en tu programa.
+- **"Un sitio con candado es seguro."** El candado dice que la conexión va cifrada. No dice nada sobre las intenciones del sitio.
+
+## Qué sigue
+
+Ya sabes cómo viaja un mensaje. Ahora aprende el idioma que hablan los dos extremos y cómo se traduce un nombre en una dirección:
+
+- [HTTP: cómo hablan el cliente y el servidor](/fundamentos/http-cliente-servidor/)
+- [DNS y dominios explicados](/fundamentos/dns-y-dominios/)
+- [Cómo funciona un navegador](/fundamentos/como-funciona-un-navegador/)
+- [Terminal explicada](/fundamentos/terminal-explicada/), para ejecutar comandos como los de este artículo
+- [Glosario](/glosario/) para repasar términos como IP, puerto o protocolo
+- La [biblioteca de Node.js](/biblioteca/nodejs/) si quieres seguir con scripts de red

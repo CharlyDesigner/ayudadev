@@ -1,0 +1,414 @@
+---
+titulo: 'Android con Kotlin y Jetpack Compose'
+descripcion: 'Instala Android Studio y crea tu primera app con Kotlin y Jetpack Compose: pantallas, un contador, una lista, estado y navegación, paso a paso.'
+tema: android
+nivel: principiante
+tiempoLectura: 40
+publicado: 2026-10-09
+libros: ['android-aspectos-basicos-compose', 'android-instructivo-jetpack-compose', 'android-compose-ya', 'android-curso-nativo-kotlin-mouredev']
+requisitos: ['Haber visto lo básico de Kotlin (variables, funciones, clases y lambdas)', 'Una computadora con buena memoria RAM y espacio libre en disco para Android Studio']
+etiquetas: ['android', 'kotlin', 'jetpack-compose', 'android-studio', 'estado', 'navegacion']
+orden: 60
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Android es el sistema operativo móvil de Google. Hoy, la forma recomendada de crear apps nativas es usar Kotlin como lenguaje y Jetpack Compose para construir la interfaz. Con eso haces desde una calculadora hasta una app que se conecta a internet y se publica en Google Play.
+
+Lo que necesitas tener claro:
+
+- **Android Studio es tu herramienta**: el IDE oficial. Trae el editor, el emulador, el depurador, el compilador y el administrador de dependencias (Gradle).
+- **Una app es un proyecto de Gradle**: el código vive en `app/src/main/java` (aunque sea Kotlin), y el archivo `AndroidManifest.xml` declara la app, sus pantallas y sus permisos.
+- **Compose es declarativo**: no dices "cambia este texto", sino "así se ve la pantalla para este estado". Cuando el estado cambia, Compose vuelve a dibujar lo necesario.
+- **Una interfaz se arma con funciones `@Composable`**: cada una describe un trozo de pantalla, como `Text`, `Button` o `Column`, y se combinan como bloques.
+- **El estado manda**: si un valor cambia y debe verse en pantalla, tiene que vivir en un objeto de estado que Compose observe (`mutableStateOf`). Una variable normal no avisa a nadie.
+- **Recomposición**: cuando el estado cambia, Compose ejecuta de nuevo solo las funciones que lo usan. Por eso las funciones composables deben ser rápidas y no tener efectos secundarios.
+- **El ciclo de vida importa**: al girar el teléfono, Android recrea la pantalla. El estado simple se conserva con `rememberSaveable`.
+- **Material 3**: es el sistema de diseño de Google que trae componentes y temas listos.
+
+## Instálalo y corre tu primera app
+
+<Pasos>
+
+1. Descarga Android Studio desde [developer.android.com/studio](https://developer.android.com/studio). En Windows ejecuta el instalador; en macOS abre el `.dmg` y arrastra la app a Aplicaciones; en Linux descomprime el archivo y ejecuta `studio.sh` desde la carpeta `bin`.
+2. Al abrirlo por primera vez, el asistente descarga el SDK y los componentes que necesita. Acepta la configuración estándar y espera a que termine.
+3. En la pantalla de bienvenida pulsa **New Project** (o usa **File > New > New Project**). Elige la plantilla **Empty Activity**, que ya está lista para Compose, y pulsa **Next**.
+4. Escribe un **Name**, por ejemplo `MiPrimeraApp`, deja **Language** en Kotlin y elige un **Minimum API level**. Si dudas, usa el que sugiere el asistente. Pulsa **Finish** y espera a que Gradle termine de sincronizar el proyecto.
+5. Prepara dónde correrla. Abre **Device Manager** y crea un dispositivo virtual, o conecta un teléfono con la depuración USB activada. El emulador necesita que la virtualización esté habilitada en tu equipo.
+6. Elige el dispositivo en la barra superior y pulsa **Run** (el triángulo verde). La primera vez tarda. Cuando termine, verás en pantalla un "Hello Android!" o un saludo parecido.
+7. Abre `MainActivity.kt`. Ahí verás una función `Greeting` marcada con `@Composable`, y otra con `@Preview`. Con el panel **Split** activado puedes ver esa vista previa sin ejecutar la app.
+
+</Pasos>
+
+Para los ejemplos, crea archivos nuevos dentro del mismo paquete que `MainActivity.kt`: clic derecho sobre la carpeta del paquete, **New > Kotlin Class/File** y elige **File**. Android Studio agrega solo la línea `package` al inicio; no la borres. Si algún nombre aparece en rojo, pon el cursor encima y pulsa Alt+Enter (Option+Enter en macOS) para importarlo.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Tu primera función composable" archivo="Saludo.kt" ejecutar="Run (el triángulo verde) o la vista previa en el panel Split" salida="Un texto grande que dice Hola, Ana y debajo otro que dice Esta es tu primera pantalla con Compose">
+
+```kotlin
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun Saludo(nombre: String, modifier: Modifier = Modifier) {
+    // Column apila a sus hijos en vertical
+    Column(modifier = modifier.padding(16.dp)) {
+        Text(text = "Hola, $nombre", style = MaterialTheme.typography.headlineMedium)
+        Text(text = "Esta es tu primera pantalla con Compose")
+    }
+}
+
+// La vista previa solo existe para el editor: no forma parte de la app
+@Preview(showBackground = true)
+@Composable
+fun SaludoPreview() {
+    Saludo("Ana")
+}
+```
+
+Una función composable no devuelve nada: dibuja. Recibe datos por parámetros y siempre acepta un `Modifier` opcional para que quien la use pueda cambiarle el tamaño o el margen. `Column` apila elementos; su hermano `Row` los pone en horizontal. Para ver esto en el teléfono, sustituye la llamada a `Greeting` dentro de `setContent` en `MainActivity.kt` por `Saludo("Ana")`. En el ejemplo 6 verás cómo queda ese archivo completo.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Un contador con estado" archivo="Contador.kt" ejecutar="Run, y toca los botones en el teléfono o el emulador" salida="El texto Has pulsado 0 veces. Cada toque en Sumar aumenta el número en uno y Reiniciar lo regresa a cero. Si giras la pantalla, el número se conserva">
+
+```kotlin
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun Contador(modifier: Modifier = Modifier) {
+    // rememberSaveable guarda el valor entre recomposiciones y al girar la pantalla
+    var cuenta by rememberSaveable { mutableIntStateOf(0) }
+
+    Column(
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("Has pulsado $cuenta veces")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { cuenta++ }) { Text("Sumar") }
+            OutlinedButton(onClick = { cuenta = 0 }) { Text("Reiniciar") }
+        }
+    }
+}
+```
+
+Aquí está la idea central de Compose. `mutableIntStateOf(0)` crea un valor observable. Cuando `cuenta++` lo cambia, Compose vuelve a ejecutar `Contador` y el texto se actualiza solo. `remember` conserva el valor mientras la función se recompone, y `rememberSaveable` además lo conserva al girar el teléfono. La palabra `by` permite leer y escribir `cuenta` como una variable normal, pero requiere los imports de `getValue` y `setValue`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Una lista con campo de texto" archivo="ListaTareas.kt" ejecutar="Run, escribe una tarea y toca Agregar" salida="Un campo de texto con el botón Agregar y debajo dos tareas iniciales: Aprender Kotlin e Instalar Android Studio. Cada tarea nueva que escribes aparece al final de la lista y el campo se vacía">
+
+```kotlin
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun ListaTareas(modifier: Modifier = Modifier) {
+    var texto by rememberSaveable { mutableStateOf("") }
+    // mutableStateListOf es una lista que avisa a Compose cuando cambia
+    val tareas = remember { mutableStateListOf("Aprender Kotlin", "Instalar Android Studio") }
+
+    Column(modifier = modifier.padding(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = texto,
+                onValueChange = { texto = it },
+                label = { Text("Nueva tarea") },
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = {
+                if (texto.isNotBlank()) {
+                    tareas.add(texto.trim())
+                    texto = ""
+                }
+            }) { Text("Agregar") }
+        }
+
+        // LazyColumn solo dibuja las filas que caben en pantalla: ideal para listas largas
+        LazyColumn(modifier = Modifier.padding(top = 8.dp)) {
+            items(tareas) { tarea ->
+                Text(text = tarea, modifier = Modifier.padding(vertical = 8.dp))
+            }
+        }
+    }
+}
+```
+
+Un campo de texto en Compose no guarda lo que escribes: tú le pasas `value` y él te avisa de cada cambio con `onValueChange`, y tú actualizas el estado. `LazyColumn` es el equivalente moderno de una lista larga: reciclar filas lo hace por ti. Como `tareas` usa `remember` y no `rememberSaveable`, esa lista se pierde al girar la pantalla; para algo que debe sobrevivir, guarda los datos en un ViewModel o en una base de datos, que verás en la ruta oficial.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Navegar entre dos pantallas" archivo="Navegacion.kt" ejecutar="Run, toca Ver Kotlin y luego Volver" salida="Una pantalla con el título Elige un lenguaje y tres botones. Al tocar Ver Kotlin aparece Detalle de Kotlin con un botón Volver que regresa a la pantalla anterior">
+
+Primero agrega la biblioteca de navegación. Abre `gradle/libs.versions.toml` y añade las dos líneas marcadas. Para la versión, usa la que aparece en la página oficial [Navegación con Compose](https://developer.android.com/develop/ui/compose/navigation?hl=es-419).
+
+```toml
+[versions]
+navigationCompose = "VERSION_DE_LA_DOCUMENTACION"
+
+[libraries]
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+```
+
+Luego, en `app/build.gradle.kts`, dentro del bloque `dependencies`, agrega `implementation(libs.androidx.navigation.compose)` y pulsa **Sync Now**. Después crea el archivo:
+
+```kotlin
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
+@Composable
+fun PantallaInicio(onVerDetalle: (String) -> Unit, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text("Elige un lenguaje", style = MaterialTheme.typography.titleLarge)
+        listOf("Kotlin", "Dart", "Ruby").forEach { nombre ->
+            Button(onClick = { onVerDetalle(nombre) }) { Text("Ver $nombre") }
+        }
+    }
+}
+
+@Composable
+fun PantallaDetalle(nombre: String, onVolver: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.padding(16.dp)) {
+        Text("Detalle de $nombre", style = MaterialTheme.typography.titleLarge)
+        Button(onClick = onVolver) { Text("Volver") }
+    }
+}
+
+@Composable
+fun AppNavegacion(modifier: Modifier = Modifier) {
+    // El controlador recuerda la pila de pantallas
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = "inicio",
+        modifier = modifier,
+    ) {
+        composable("inicio") {
+            PantallaInicio(onVerDetalle = { nombre -> navController.navigate("detalle/$nombre") })
+        }
+        // {nombre} es un argumento que viaja en la ruta
+        composable("detalle/{nombre}") { entrada ->
+            val nombre = entrada.arguments?.getString("nombre") ?: "desconocido"
+            PantallaDetalle(nombre = nombre, onVolver = { navController.popBackStack() })
+        }
+    }
+}
+```
+
+Cada pantalla es una ruta con nombre. `NavHost` muestra la ruta actual, `navigate` agrega una pantalla a la pila y `popBackStack` regresa. Fíjate que las pantallas no conocen al `navController`: reciben funciones como `onVerDetalle` y `onVolver`. Eso las hace fáciles de probar y de reutilizar. Esta versión usa rutas de texto; la documentación oficial también muestra rutas con tipos seguros, que conviene aprender después.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Elevar el estado" archivo="Carrito.kt" ejecutar="Run, y toca los botones más y menos de cada producto" salida="Dos filas, Pan y Leche, cada una con su cantidad y botones menos y más. Debajo, el texto Total de piezas con la suma de ambas cantidades. El botón menos queda deshabilitado cuando la cantidad es cero">
+
+```kotlin
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+// Sin estado propio: muestra lo que recibe y avisa lo que el usuario hace
+@Composable
+fun FilaProducto(
+    nombre: String,
+    cantidad: Int,
+    onSumar: () -> Unit,
+    onRestar: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text("$nombre: $cantidad")
+        Row {
+            OutlinedButton(onClick = onRestar, enabled = cantidad > 0) { Text("-") }
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = onSumar) { Text("+") }
+        }
+    }
+}
+
+// El estado vive aquí, en el padre, y se baja a los hijos
+@Composable
+fun Carrito(modifier: Modifier = Modifier) {
+    var pan by rememberSaveable { mutableIntStateOf(0) }
+    var leche by rememberSaveable { mutableIntStateOf(0) }
+
+    Column(modifier = modifier.padding(16.dp)) {
+        FilaProducto("Pan", pan, onSumar = { pan++ }, onRestar = { pan-- })
+        FilaProducto("Leche", leche, onSumar = { leche++ }, onRestar = { leche-- })
+        Text(
+            text = "Total de piezas: ${pan + leche}",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 12.dp),
+        )
+    }
+}
+```
+
+A este patrón se le llama *elevar el estado* (state hoisting): el estado sube al padre más cercano que lo necesita y los hijos solo reciben valores y funciones. Así `FilaProducto` se reutiliza sin copiar código, y el padre puede calcular datos derivados, como el total, sin guardar otro estado. Es la regla de oro en Compose: los datos bajan, los eventos suben.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Conectarlo todo en MainActivity" archivo="MainActivity.kt" ejecutar="Run" salida="La app arranca en la pantalla de navegación del ejemplo 4. Cambia AppNavegacion por Contador, ListaTareas o Carrito para ver cada ejemplo por separado">
+
+```kotlin
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Modifier
+// Deja el import del tema que ya trae tu archivo: su nombre depende de tu proyecto
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            // Si tu proyecto se llama MiPrimeraApp, el tema se llama MiPrimeraAppTheme
+            MiPrimeraAppTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    // Cambia esta línea para probar los otros ejemplos
+                    AppNavegacion(modifier = Modifier.padding(innerPadding))
+                }
+            }
+        }
+    }
+}
+```
+
+`MainActivity` es la puerta de entrada de la app. `setContent` es el puente entre el sistema Android y Compose: todo lo que está dentro es interfaz. El tema aplica colores y tipografías de Material 3. `Scaffold` da la estructura básica de una pantalla y te entrega `innerPadding`, el margen que evita que el contenido quede tapado por la barra de estado o la de navegación. Pásalo siempre a tu contenido con `Modifier.padding(innerPadding)`.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Cambias una variable y la pantalla no se actualiza">
+
+Si escribes `var cuenta = 0` dentro de una función composable y la incrementas, el valor cambia pero Compose no se entera, y además se reinicia en cada recomposición. Todo valor que deba reflejarse en pantalla tiene que vivir en un estado: `var cuenta by remember { mutableIntStateOf(0) }`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="mutableStateOf sin remember">
+
+Si escribes `mutableStateOf(0)` sin `remember`, cada recomposición crea un estado nuevo en cero y el contador "no cuenta". Siempre envuelve el estado local con `remember`, o con `rememberSaveable` si debe sobrevivir a un giro de pantalla.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Falta de imports en el delegado by">
+
+El error `Type 'MutableState<Int>' has no method 'getValue()' and thus it cannot serve as a delegate` significa que faltan los imports `androidx.compose.runtime.getValue` y `androidx.compose.runtime.setValue`. Con Alt+Enter sobre la línea roja, Android Studio los agrega.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Usar una biblioteca sin sincronizar Gradle">
+
+Si agregas una dependencia y el código marca `Unresolved reference`, casi siempre falta sincronizar. Pulsa **Sync Now** en la barra amarilla, o usa **File > Sync Project with Gradle Files**. Si falla, revisa que escribiste bien el nombre y la versión, y que tienes conexión a internet.
+
+</Callout>
+
+<Callout tipo="warning" titulo="La app se cierra al abrirla">
+
+Cuando la app se cierra sola, el error real está en el panel **Logcat** de Android Studio. Filtra por nivel Error y busca la línea que empieza con `FATAL EXCEPTION`: ahí viene el tipo de error y el archivo y la línea donde ocurrió. Aprender a leer Logcat te ahorra horas.
+
+</Callout>
+
+## Buenas prácticas
+
+- Mantén las funciones composables pequeñas y con un solo propósito.
+- Siempre recibe un `Modifier` opcional como último parámetro y aplícalo al elemento raíz.
+- Eleva el estado: las pantallas internas reciben valores y funciones, no estado propio.
+- Usa `rememberSaveable` para el estado de interfaz que deba sobrevivir a un giro de pantalla.
+- Usa `LazyColumn` para listas largas y agrega una clave estable a cada elemento cuando la lista cambia.
+- Pon los textos visibles en `res/values/strings.xml` cuando la app crezca, para poder traducirla.
+- No hagas trabajo pesado dentro de una función composable: peticiones de red y base de datos van fuera, normalmente en un ViewModel.
+- Usa vistas previas con `@Preview` para iterar el diseño sin ejecutar la app.
+- Prueba en un dispositivo real de vez en cuando, no solo en el emulador.
+
+## Siguiente paso
+
+Ya sabes crear pantallas, manejar estado, mostrar listas y navegar. Lo que sigue es el ViewModel para sacar la lógica de la interfaz, guardar datos con Room o DataStore, y llamar a una API con Retrofit o Ktor. La ruta oficial de Google cubre todo eso con proyectos guiados. También conviene entender la arquitectura de apps y cómo publicar en Google Play.
+
+Refuerza el lenguaje con [Kotlin desde cero](/guias/kotlin/). Si quieres compartir un mismo lenguaje de interfaz entre móvil, web y escritorio, mira [Dart desde cero](/guias/dart/), la base de Flutter. Y guarda tus proyectos en un repositorio con [Git y GitHub desde cero](/guias/git/). Todos los recursos están en [la biblioteca de Android](/biblioteca/android/) y en [la de Kotlin](/biblioteca/kotlin/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

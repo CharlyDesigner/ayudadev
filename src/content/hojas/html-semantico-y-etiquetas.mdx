@@ -1,0 +1,316 @@
+---
+titulo: 'HTML semántico y etiquetas esenciales'
+descripcion: 'Estructura de un documento HTML5, etiquetas semánticas (header, main, article, section), texto, listas, enlaces, imágenes, formularios, tablas y atributos clave.'
+tema: html-css
+etiquetas: ['html', 'semántica', 'etiquetas', 'formularios', 'accesibilidad']
+publicado: 2026-10-09
+orden: 16
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+HTML describe el significado del contenido, no su aspecto. Elegir la etiqueta correcta mejora la accesibilidad, el SEO y el mantenimiento.
+
+## Esqueleto de un documento
+
+```html
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Título de la página</title>
+    <meta name="description" content="Resumen de hasta 160 caracteres.">
+    <link rel="stylesheet" href="estilos.css">
+    <link rel="icon" href="/favicon.svg">
+  </head>
+  <body>
+    <h1>Contenido visible</h1>
+    <script src="app.js" defer></script>
+  </body>
+</html>
+```
+
+| Elemento | Para qué sirve |
+| --- | --- |
+| `<!doctype html>` | Activa el modo estándar del navegador |
+| `<html lang="es">` | Idioma del documento (lectores de pantalla y traductores lo usan) |
+| `<meta charset="utf-8">` | Codificación de caracteres: evita acentos rotos |
+| `<meta name="viewport" ...>` | Necesario para que la página sea responsive en móvil |
+| `<title>` | Texto de la pestaña y del resultado en buscadores |
+| `<script defer>` | Descarga sin bloquear y ejecuta cuando el HTML está listo |
+
+## Estructura de página (semántica)
+
+| Etiqueta | Qué representa |
+| --- | --- |
+| `<header>` | Cabecera de la página o de una sección (logo, título, navegación) |
+| `<nav>` | Bloque de enlaces de navegación principal |
+| `<main>` | Contenido principal. Solo uno por página |
+| `<article>` | Contenido que tiene sentido por sí solo: una entrada de blog, una tarjeta de producto |
+| `<section>` | Sección temática, normalmente con su propio encabezado |
+| `<aside>` | Contenido relacionado pero secundario: barra lateral, notas |
+| `<footer>` | Pie de la página o de una sección |
+| `<figure>` y `<figcaption>` | Imagen, diagrama o código con su leyenda |
+| `<address>` | Información de contacto del autor o la organización |
+| `<search>` | Región de búsqueda o filtrado |
+
+```html
+<body>
+  <header>
+    <a href="/">Mi sitio</a>
+    <nav aria-label="Principal">
+      <ul>
+        <li><a href="/blog">Blog</a></li>
+        <li><a href="/contacto">Contacto</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <h1>Título del artículo</h1>
+      <p>Introducción.</p>
+      <section>
+        <h2>Primer apartado</h2>
+        <p>Texto.</p>
+      </section>
+    </article>
+    <aside>Artículos relacionados</aside>
+  </main>
+
+  <footer>
+    <p>Contacto: <a href="mailto:hola@ejemplo.com">hola@ejemplo.com</a></p>
+  </footer>
+</body>
+```
+
+<Callout tipo="tip" titulo="div y span son el último recurso">
+
+`<div>` y `<span>` no tienen significado. Úsalos solo cuando ninguna etiqueta semántica encaje o necesites un contenedor para dar estilo.
+
+</Callout>
+
+## Texto
+
+| Etiqueta | Uso |
+| --- | --- |
+| `<h1>` a `<h6>` | Encabezados. Un solo `<h1>` y sin saltar niveles (`h2` luego `h3`) |
+| `<p>` | Párrafo |
+| `<br>` | Salto de línea dentro de un texto (poemas, direcciones) |
+| `<hr>` | Cambio de tema entre párrafos |
+| `<strong>` | Importancia fuerte (normalmente negrita) |
+| `<em>` | Énfasis (normalmente cursiva) |
+| `<mark>` | Texto resaltado por relevancia |
+| `<small>` | Letra pequeña: avisos legales, derechos |
+| `<code>` | Fragmento de código |
+| `<pre>` | Texto preformateado (conserva espacios y saltos) |
+| `<kbd>` | Tecla o atajo: `<kbd>Ctrl</kbd>` |
+| `<blockquote>` | Cita larga (con `cite` opcional) |
+| `<q>` | Cita corta en línea |
+| `<abbr title="...">` | Abreviatura con su significado |
+| `<time datetime="2026-10-09">` | Fecha o duración legible por máquinas |
+| `<del>` y `<ins>` | Texto eliminado e insertado |
+| `<sub>` y `<sup>` | Subíndice y superíndice |
+
+Usa `<strong>` y `<em>` por su significado, no por el aspecto. Para solo negrita o cursiva visual, usa CSS.
+
+## Listas
+
+```html
+<ul>                  <!-- lista sin orden -->
+  <li>Pan</li>
+  <li>Leche</li>
+</ul>
+
+<ol start="3" reversed>   <!-- lista ordenada -->
+  <li>Tercero</li>
+  <li>Segundo</li>
+</ol>
+
+<dl>                  <!-- lista de definiciones -->
+  <dt>HTML</dt>
+  <dd>Lenguaje de marcado de la web.</dd>
+</dl>
+```
+
+## Enlaces e imágenes
+
+```html
+<a href="/guias/">Guías</a>
+<a href="https://ejemplo.com" target="_blank" rel="noopener noreferrer">Externo en pestaña nueva</a>
+<a href="#seccion-2">Salto interno</a>
+<a href="mailto:hola@ejemplo.com">Correo</a>
+<a href="tel:+525512345678">Llamar</a>
+<a href="doc.pdf" download>Descargar</a>
+
+<img src="foto.jpg" alt="Perro dormido sobre un sofá azul" width="800" height="600" loading="lazy">
+<img src="separador.png" alt="">   <!-- decorativa: alt vacío -->
+
+<picture>
+  <source srcset="foto.avif" type="image/avif">
+  <source srcset="foto.webp" type="image/webp">
+  <img src="foto.jpg" alt="Descripción" width="800" height="600">
+</picture>
+
+<img srcset="foto-400.jpg 400w, foto-800.jpg 800w" sizes="(max-width: 600px) 100vw, 600px"
+     src="foto-800.jpg" alt="Descripción" width="800" height="600">
+```
+
+| Atributo | Para qué sirve |
+| --- | --- |
+| `href` | Destino del enlace |
+| `target="_blank"` | Abre en otra pestaña. Añade `rel="noopener"` por seguridad |
+| `alt` | Texto alternativo. Obligatorio; vacío (`alt=""`) si la imagen es decorativa |
+| `width` y `height` | Reservan el espacio y evitan que el contenido salte al cargar |
+| `loading="lazy"` | Carga la imagen cuando se acerca a la pantalla |
+| `srcset` y `sizes` | El navegador elige la imagen según el ancho |
+| `download` | Descarga el archivo en lugar de navegar a él |
+
+El texto de un enlace debe tener sentido solo: "Ver los precios" y no "haz clic aquí".
+
+## Formularios
+
+```html
+<form action="/enviar" method="post">
+  <label for="nombre">Nombre</label>
+  <input id="nombre" name="nombre" type="text" required autocomplete="name">
+
+  <label for="correo">Correo</label>
+  <input id="correo" name="correo" type="email" required autocomplete="email">
+
+  <label for="edad">Edad</label>
+  <input id="edad" name="edad" type="number" min="18" max="99">
+
+  <label for="pais">País</label>
+  <select id="pais" name="pais">
+    <option value="mx">México</option>
+    <option value="co">Colombia</option>
+  </select>
+
+  <label for="mensaje">Mensaje</label>
+  <textarea id="mensaje" name="mensaje" rows="4"></textarea>
+
+  <fieldset>
+    <legend>Plan</legend>
+    <label><input type="radio" name="plan" value="gratis" checked> Gratis</label>
+    <label><input type="radio" name="plan" value="pro"> Pro</label>
+  </fieldset>
+
+  <label><input type="checkbox" name="acepto" required> Acepto los términos</label>
+
+  <button type="submit">Enviar</button>
+</form>
+```
+
+| Tipo de `input` | Para qué |
+| --- | --- |
+| `text`, `password`, `search` | Texto, contraseña, búsqueda |
+| `email`, `url`, `tel` | Con teclado y validación adecuados |
+| `number`, `range` | Número y deslizador (`min`, `max`, `step`) |
+| `date`, `time`, `datetime-local` | Selectores de fecha y hora |
+| `checkbox`, `radio` | Casilla y opción única (comparten `name`) |
+| `file` | Subir archivos (`accept="image/*"`) |
+| `color`, `hidden` | Selector de color, campo oculto |
+
+| Atributo | Efecto |
+| --- | --- |
+| `required` | Obligatorio |
+| `pattern="[0-9]{5}"` | Expresión regular que debe cumplir |
+| `minlength`, `maxlength` | Longitud mínima y máxima |
+| `placeholder` | Pista dentro del campo. No sustituye a `<label>` |
+| `autocomplete` | Pista para autorrelleno (`name`, `email`, `new-password`) |
+| `disabled` | Campo inactivo (no se envía) |
+| `readonly` | Se ve y se envía, pero no se edita |
+
+Todo campo necesita un `<label>` enlazado con `for` e `id` (o que lo envuelva). `<button>` dentro de un formulario envía por defecto; usa `type="button"` para los que no deben enviar.
+
+## Tablas
+
+```html
+<table>
+  <caption>Ventas por trimestre</caption>
+  <thead>
+    <tr><th scope="col">Trimestre</th><th scope="col">Ventas</th></tr>
+  </thead>
+  <tbody>
+    <tr><th scope="row">T1</th><td>1200</td></tr>
+    <tr><th scope="row">T2</th><td>1500</td></tr>
+  </tbody>
+</table>
+```
+
+Las tablas son para datos, no para maquetar. `<th scope>` ayuda a los lectores de pantalla a relacionar cada celda con su encabezado. `colspan` y `rowspan` combinan celdas.
+
+## Medios y contenido incrustado
+
+| Etiqueta | Ejemplo |
+| --- | --- |
+| `<video>` | `<video src="clip.mp4" controls width="640"></video>` |
+| `<audio>` | `<audio src="pista.mp3" controls></audio>` |
+| `<iframe>` | `<iframe src="https://..." title="Mapa" loading="lazy"></iframe>` |
+| `<canvas>` | Superficie de dibujo para JavaScript |
+| `<svg>` | Gráficos vectoriales dentro del HTML |
+
+Los `<iframe>` necesitan `title`. Los vídeos con sonido no deben reproducirse solos.
+
+## Elementos interactivos sin JavaScript
+
+```html
+<details>
+  <summary>Más información</summary>
+  <p>Este texto se muestra al hacer clic.</p>
+</details>
+
+<dialog id="aviso">
+  <p>Mensaje</p>
+  <form method="dialog"><button>Cerrar</button></form>
+</dialog>
+<button onclick="document.getElementById('aviso').showModal()">Abrir</button>
+```
+
+## Atributos globales
+
+| Atributo | Para qué |
+| --- | --- |
+| `id` | Identificador único en la página |
+| `class` | Una o varias clases separadas por espacios |
+| `lang` | Idioma de un fragmento (`<span lang="en">`) |
+| `title` | Tooltip. No lo uses como única forma de dar información |
+| `hidden` | Oculta el elemento |
+| `tabindex="0"` | Hace enfocable con teclado. `-1` solo por código |
+| `data-*` | Datos propios: `data-id="7"`, accesibles desde JavaScript con `el.dataset.id` |
+| `aria-label` | Nombre accesible cuando no hay texto visible |
+| `contenteditable` | El usuario puede editar el contenido |
+
+## Caracteres especiales
+
+| Escribes | Muestra |
+| --- | --- |
+| `&lt;` | Signo menor |
+| `&gt;` | Signo mayor |
+| `&amp;` | Ampersand |
+| `&quot;` | Comillas dobles |
+| `&nbsp;` | Espacio que no se parte en dos líneas |
+| `&copy;` | Símbolo de copyright |
+
+Si escribes `<` suelto en un texto, el navegador puede tomarlo como el inicio de una etiqueta. Usa `&lt;`.
+
+## Buenas prácticas
+
+| Haz | Evita |
+| --- | --- |
+| Un `<h1>` por página y encabezados en orden | Elegir el encabezado por su tamaño |
+| `<button>` para acciones y `<a>` para navegar | `<div onclick>` o enlaces que no llevan a ningún lado |
+| `alt` en cada imagen | Imágenes con texto sin versión escrita |
+| `<label>` en cada campo | Usar solo `placeholder` |
+| `lang` en `<html>` | Omitirlo |
+| Validar el HTML en el validador del W3C | Etiquetas sin cerrar o mal anidadas |
+
+## Para ir más a fondo
+
+- [Referencia de elementos HTML en MDN](https://developer.mozilla.org/es/docs/Web/HTML/Element)
+- [Sintaxis básica de HTML en MDN](https://developer.mozilla.org/es/docs/Learn_web_development/Core/Structuring_content/Basic_HTML_syntax)
+- Hoja de AyudaDev: [CSS Flexbox, referencia rápida](/hojas/css-flexbox/)
+- Guía de AyudaDev: [HTML y CSS desde cero](/guias/html-css/)
+- Biblioteca: [libros y cursos de HTML y CSS](/biblioteca/html-css/)

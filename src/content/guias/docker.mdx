@@ -1,0 +1,266 @@
+---
+titulo: 'Docker desde cero'
+descripcion: 'Qué son los contenedores, cómo instalar Docker, escribir un Dockerfile y levantar una app con Redis usando Docker Compose, con comandos reales.'
+tema: docker
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['docker-docs-conceptos-que-es-un-contenedor', 'docker-curso-introduccion-iesgn', 'docker-docs-compose', 'docker-freecodecamp-guia-para-principiantes']
+requisitos: ['Saber usar una terminal básica', 'Haber visto qué es un servidor web y un puerto']
+etiquetas: ['docker', 'contenedores', 'dockerfile', 'compose', 'redis']
+orden: 71
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Docker te deja empaquetar tu aplicación junto con todo lo que necesita (runtime, librerías, configuración) en una unidad que corre igual en tu laptop, en la de tu compañera y en un servidor. Se acabó el "en mi máquina sí funciona".
+
+El modelo mental que necesitas:
+
+- **Imagen**: una plantilla de solo lectura con tu app y sus dependencias. Se construye a partir de un archivo llamado `Dockerfile`. Piensa en ella como una receta ya cocinada y congelada.
+- **Contenedor**: una imagen en ejecución. Puedes crear muchos contenedores desde la misma imagen. Es un proceso aislado, no una máquina virtual completa: comparte el kernel con el sistema que lo aloja y por eso arranca en segundos.
+- **Capas**: cada instrucción del `Dockerfile` crea una capa que se guarda en caché. Si no cambió, Docker la reutiliza y construir es rápido.
+- **Registro**: un lugar donde se guardan imágenes. Docker Hub es el público por defecto; de ahí bajan `nginx`, `node` o `redis`.
+- **Contenedores efímeros**: lo que escribes dentro de un contenedor se pierde cuando lo borras. Para guardar datos usas **volúmenes**.
+- **Redes y puertos**: cada contenedor tiene su propia red. Para entrar desde tu navegador publicas un puerto con `-p 8080:80` (puerto de tu máquina : puerto del contenedor).
+- **Compose**: un archivo YAML que describe varios contenedores (tu app, una base de datos, una caché) y los levanta juntos con un solo comando.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows o macOS**: instala Docker Desktop siguiendo la [guía oficial para obtener Docker](https://docs.docker.com/get-started/get-docker/). En Windows el instalador te guía para activar WSL 2. Si lo vas a usar en una empresa, revisa antes las condiciones de licencia de Docker Desktop en el sitio oficial.
+2. **Linux**: instala Docker Engine con los pasos de tu distribución en [docs.docker.com/engine/install](https://docs.docker.com/engine/install/). Para no escribir `sudo` en cada comando, revisa la sección de pasos posteriores a la instalación de esa misma documentación.
+3. Abre Docker Desktop (en Windows y macOS) y espera a que diga que está en ejecución. En Linux el servicio ya corre solo.
+4. Abre una terminal y comprueba la instalación con `docker --version` y `docker compose version`. Los dos deben responder con un número de versión.
+5. Corre tu primer contenedor con `docker run --rm hello-world`. Si ves un saludo que empieza con "Hello from Docker!", todo quedó bien.
+
+</Pasos>
+
+Los ejemplos usan una carpeta de trabajo llamada `visitas`. Los identificadores de contenedor y los tiempos que veas en tu terminal serán distintos a los de esta guía. Lo importante es que la forma de la salida coincida.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Tu primer contenedor" archivo="01-hola.sh" ejecutar="bash 01-hola.sh" salida={"Hello from Docker!\nThis message shows that your installation appears to be working correctly."}>
+
+```bash
+# Docker busca la imagen hello-world; si no la tiene, la descarga de Docker Hub
+# --rm borra el contenedor al terminar para no acumular basura
+# grep deja solo las dos líneas que nos interesan del saludo
+docker run --rm hello-world | grep -A1 "Hello from Docker"
+```
+
+Acabas de descargar una imagen, crear un contenedor, correr su programa y borrarlo, todo en un comando. La primera vez tarda por la descarga; las siguientes veces es instantáneo porque la imagen ya está en tu máquina. Con `docker images` ves las imágenes descargadas y con `docker ps -a` todos los contenedores, incluso los detenidos.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Un servidor web con un solo comando" archivo="02-nginx.sh" ejecutar="bash 02-nginx.sh" salida={"<!DOCTYPE html>\n<html>\n<head>\n<title>Welcome to nginx!</title>"}>
+
+```bash
+# -d lo deja corriendo en segundo plano, -p publica el puerto 80 del contenedor en el 8080 de tu máquina
+docker run -d --rm -p 8080:80 --name web nginx:alpine
+
+# Pide la página de inicio y muestra las primeras 4 líneas
+curl -s http://localhost:8080 | head -n 4
+
+# Detiene el contenedor; --rm lo borra solo
+docker stop web
+```
+
+Con `-p 8080:80` el tráfico que llega al puerto 8080 de tu máquina se reenvía al puerto 80 dentro del contenedor, donde escucha nginx. También puedes abrir `http://localhost:8080` en el navegador. `docker stop web` imprime el nombre del contenedor al terminar. El sufijo `alpine` indica una variante pequeña de la imagen, basada en Alpine Linux.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Empaqueta tu propia app con un Dockerfile" archivo="Dockerfile" ejecutar={"docker build -t visitas . && docker images visitas --format \"{{.Repository}}:{{.Tag}}\""} salida="visitas:latest">
+
+Primero crea la app. Este servidor de Node cuenta las visitas guardándolas en Redis. Guarda este código como `server.js`:
+
+```js
+import { createServer } from 'node:http';
+import { createClient } from 'redis';
+
+const puerto = process.env.PORT || 3000;
+// La dirección de Redis llega por variable de entorno, no va escrita en el código
+const redis = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
+redis.on('error', (error) => console.error('Error de Redis:', error.message));
+await redis.connect();
+
+createServer(async (req, res) => {
+  // INCR suma 1 a la clave y devuelve el valor nuevo
+  const visitas = await redis.incr('visitas');
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ mensaje: 'Hola desde Docker', visitas }));
+}).listen(puerto, () => console.log(`Escuchando en el puerto ${puerto}`));
+```
+
+Y el `package.json` en la misma carpeta:
+
+```json
+{
+  "name": "visitas",
+  "private": true,
+  "type": "module",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "redis": "^6.3.0" }
+}
+```
+
+Ahora el `Dockerfile` y un `.dockerignore` para que Docker no copie lo que sobra:
+
+```dockerfile
+# Imagen base: Node con Alpine Linux
+FROM node:24-alpine
+
+# Carpeta de trabajo dentro de la imagen
+WORKDIR /app
+
+# Primero solo el package.json: si no cambia, la capa de npm se reutiliza de la caché
+COPY package.json ./
+RUN npm install --omit=dev
+
+# Después el código, que cambia más seguido
+COPY server.js ./
+
+# No corras como root dentro del contenedor
+USER node
+
+# Documenta el puerto en el que escucha la app
+EXPOSE 3000
+
+# Comando que se ejecuta al iniciar el contenedor
+CMD ["node", "server.js"]
+```
+
+```text
+node_modules
+.git
+*.log
+```
+
+Construye la imagen con `docker build -t visitas .` (el punto es la carpeta actual). Docker imprime el progreso de cada capa mientras trabaja. Después `docker images` con la opción `--format` muestra solo el nombre y la etiqueta de la imagen; sin ella verías también el id, la antigüedad y el tamaño, que son propios de tu máquina. El orden de las instrucciones importa: lo que cambia menos va arriba para aprovechar la caché de capas.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Dos contenedores juntos con Docker Compose" archivo="compose.yaml" ejecutar={"docker compose up -d --build && sleep 3 && curl -s localhost:3000 && curl -s localhost:3000"} salida={"{\"mensaje\":\"Hola desde Docker\",\"visitas\":1}{\"mensaje\":\"Hola desde Docker\",\"visitas\":2}"}>
+
+Tu app necesita Redis. En vez de levantar cada contenedor a mano, descríbelos en un archivo `compose.yaml`:
+
+```yaml
+services:
+  app:
+    build: .                       # construye la imagen con el Dockerfile de esta carpeta
+    ports:
+      - "3000:3000"                # puerto de tu máquina : puerto del contenedor
+    environment:
+      REDIS_URL: redis://redis:6379   # "redis" es el nombre del otro servicio
+    depends_on:
+      - redis                      # arranca Redis antes que la app
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]   # guarda los datos en disco
+    volumes:
+      - datos-redis:/data          # volumen con nombre para que los datos sobrevivan
+
+volumes:
+  datos-redis:
+```
+
+Con `docker compose up -d --build` Compose construye la imagen, crea una red propia para el proyecto y arranca los dos servicios. Dentro de esa red, cada servicio se encuentra por su nombre: la app llega a Redis con `redis://redis:6379`, no con `localhost`. Cada `curl` suma una visita; los dos JSON salen pegados porque la app no agrega salto de línea. Compose también imprime líneas de estado mientras crea los contenedores, y aquí se omiten.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Los datos sobreviven con un volumen" archivo="05-persistencia.sh" ejecutar="bash 05-persistencia.sh" salida={"{\"mensaje\":\"Hola desde Docker\",\"visitas\":3}\n{\"mensaje\":\"Hola desde Docker\",\"visitas\":1}"}>
+
+```bash
+# Continúa del ejemplo anterior, donde el contador llegó a 2
+# down borra los contenedores y la red, pero conserva los volúmenes
+docker compose down
+docker compose up -d
+sleep 3
+curl -s localhost:3000; echo
+
+# down -v borra también los volúmenes: ahora sí se pierde el contador
+docker compose down -v
+docker compose up -d
+sleep 3
+curl -s localhost:3000; echo
+```
+
+La primera respuesta muestra 3: el contenedor de Redis es nuevo, pero el volumen `datos-redis` conservó el dato y el contador siguió. La segunda muestra 1 porque `-v` eliminó el volumen. Recuerda esta diferencia: `down` es seguro, `down -v` borra datos.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Mirar dentro de un contenedor: logs y exec" archivo="06-depurar.sh" ejecutar="bash 06-depurar.sh" salida={"Escuchando en el puerto 3000\n1"}>
+
+```bash
+# Los registros (stdout) de un servicio; tail limita a las últimas líneas
+docker compose logs --no-log-prefix --tail 5 app
+
+# Ejecuta un comando dentro del contenedor de Redis
+# -T desactiva la terminal interactiva para que la salida sea texto limpio
+docker compose exec -T redis redis-cli get visitas
+
+# Cuando termines, apaga todo
+docker compose down
+```
+
+Después de las pruebas anteriores, el contador vale 1 y la app imprimió una sola línea de arranque. Los registros son tu primera herramienta cuando algo falla: lee siempre `docker compose logs` antes de adivinar. Para entrar a un contenedor con una terminal interactiva usa `docker compose exec redis sh`. En contenedores que ya no corren, `docker ps -a` te muestra cuáles se detuvieron.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Cannot connect to the Docker daemon">
+
+El cliente `docker` no encuentra el servicio que ejecuta los contenedores. En Windows y macOS casi siempre significa que Docker Desktop no está abierto: ábrelo y espera a que termine de arrancar. En Linux revisa que el servicio esté activo y que tu usuario tenga permiso para usar Docker.
+
+</Callout>
+
+<Callout tipo="warning" titulo="port is already allocated">
+
+Si ves `Bind for 0.0.0.0:8080 failed: port is already allocated`, algo ya usa ese puerto de tu máquina: otro contenedor o un programa local. Elige otro puerto en el lado izquierdo (`-p 8081:80`) o detén el contenedor que lo ocupa. Recuerda que el orden es puerto de tu máquina primero y puerto del contenedor después.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Usar localhost para llegar a otro contenedor">
+
+Dentro de un contenedor, `localhost` es el propio contenedor, no tu máquina ni los demás servicios. Si tu app intenta conectarse a Redis en `localhost`, falla con `ECONNREFUSED`. En Compose usa el nombre del servicio (`redis`) como host.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Perder datos al borrar el contenedor">
+
+Todo lo que escribe un contenedor en su sistema de archivos desaparece cuando se elimina. Las bases de datos necesitan un volumen (como `datos-redis:/data` en el ejemplo). Y cuidado con `docker compose down -v` o `docker volume prune`: borran esos volúmenes.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Copiarlo todo y reconstruir sin parar">
+
+Un `COPY . .` al inicio del Dockerfile invalida la caché con cada cambio de código y reinstala dependencias cada vez. Copia primero los archivos de dependencias, instala, y luego copia el resto. Agrega un `.dockerignore` para excluir `node_modules`, `.git` y archivos con secretos como `.env`.
+
+</Callout>
+
+## Buenas prácticas
+
+- Usa imágenes oficiales y pequeñas (variantes `alpine` o `slim`) y fija la versión: `node:24-alpine` en lugar de `node:latest`.
+- Un proceso por contenedor. Si necesitas varios servicios, usa Compose.
+- No guardes secretos en el Dockerfile ni en la imagen. Pásalos con variables de entorno o con los mecanismos de secretos de Compose.
+- No corras la app como root: añade `USER node` (u otro usuario sin privilegios).
+- Escribe un `.dockerignore` desde el primer día.
+- Para instalar dependencias de forma reproducible en proyectos reales, versiona el `package-lock.json` y usa `npm ci` en el Dockerfile.
+- Limpia de vez en cuando con `docker system prune`, pero lee antes qué va a borrar.
+- Lee la guía oficial de buenas prácticas para construir imágenes cuando tu Dockerfile crezca.
+
+## Siguiente paso
+
+Ya sabes ejecutar contenedores, construir una imagen y levantar varios servicios con Compose. Lo que sigue es practicar con tus propios proyectos: contenedoriza una API que ya hayas escrito, agrégale una base de datos y súbela a un registro. Después aprende compilaciones de varias etapas (*multi-stage*) para imágenes más pequeñas y revisa la seguridad de tus imágenes con el libro Docker Seguro de la biblioteca.
+
+Si aún no dominas la terminal, repasa [Linux y terminal](/biblioteca/linux/). Si tu app usa Node, la guía de [JavaScript desde cero](/guias/javascript/) te ayuda con el código del ejemplo. Y para versionar tus Dockerfiles, la guía de [Git y GitHub](/guias/git/). Todos los recursos están en [la biblioteca de Docker](/biblioteca/docker/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

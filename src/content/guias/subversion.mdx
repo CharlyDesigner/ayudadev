@@ -1,0 +1,263 @@
+---
+titulo: 'Subversion (SVN) desde cero'
+descripcion: 'Qué es Subversion, cómo instalarlo y el flujo diario con checkout, commit, ramas, conflictos y etiquetas, probado con un repositorio local.'
+tema: subversion
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['subversion-control-de-versiones-svnbook', 'subversion-tortoisesvn-manual-es', 'subversion-apache-documentacion', 'subversion-video-tutorial-tortoisesvn']
+requisitos: ['Saber usar una terminal básica', 'Haber visto qué es el control de versiones']
+etiquetas: ['svn', 'subversion', 'control-de-versiones', 'tortoisesvn', 'ramas']
+orden: 74
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Subversion (SVN) es un sistema de control de versiones **centralizado**. Hay un repositorio central que guarda todo el historial, y cada persona trabaja con una copia de trabajo de ese repositorio. Todavía lo encontrarás en proyectos antiguos y en empresas que nunca migraron a Git, así que entenderlo te abre puertas.
+
+El modelo mental que necesitas:
+
+- **Repositorio central**: el historial vive en un solo lugar. Tu máquina tiene una **copia de trabajo** con los archivos y una carpeta oculta `.svn` con información de control. Casi todo comando que consulta el historial habla con el repositorio.
+- **Revisiones globales**: cada `commit` crea un número de revisión que sube de uno en uno para todo el repositorio. "r42" es el estado completo del proyecto en ese momento, no de un solo archivo.
+- **Commits atómicos**: un commit se guarda completo o no se guarda. No quedan cambios a medias.
+- **Copiar, modificar, fusionar**: dos personas pueden editar el mismo archivo. Al hacer `update` Subversion fusiona los cambios y, si tocaron las mismas líneas, marca un **conflicto** que resuelves a mano.
+- **Ramas y etiquetas son carpetas**: no son un concepto aparte. Una rama o una etiqueta es una copia barata de `trunk` dentro del repositorio, hecha con `svn copy`. Por convención, el repositorio tiene tres carpetas: `trunk` (la línea principal), `branches` (ramas) y `tags` (versiones congeladas).
+- **Ciclo diario**: `update` para traer cambios, editar, `status` y `diff` para revisar, `commit` para publicar.
+- **Comparado con Git**: en Git cada persona tiene todo el historial y hace commits sin conexión. En Subversion el commit va directo al servidor.
+- **Archivos cambiados vs no versionados**: Subversion solo vigila los archivos que le dijiste con `svn add`. Los demás aparecen con un signo de interrogación.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows**: instala [TortoiseSVN](https://tortoisesvn.net/), un cliente gráfico que se integra al explorador de archivos. Durante la instalación puedes activar las herramientas de línea de comandos, que son las que usa esta guía. También puedes consultar la [página de paquetes de Apache Subversion](https://subversion.apache.org/packages.html) para otros instaladores.
+2. **macOS**: con Homebrew, `brew install subversion`.
+3. **Linux**: en Debian o Ubuntu, `sudo apt install subversion`; en Fedora, `sudo dnf install subversion`.
+4. Comprueba que quedó instalado con `svn --version --quiet`. Debe imprimir un número de versión.
+5. Esta guía trabaja con un repositorio local que creas en tu propia máquina, sin servidor. Crea una carpeta de práctica y entra: `mkdir taller && cd taller`.
+
+</Pasos>
+
+Para los ejemplos usa Linux, macOS, WSL o Git Bash. En Git Bash de Windows, cambia en cada script la línea del repositorio por `REPO="file:///$(pwd -W)/repo"`. Un servidor remoto se usa igual, solo cambia la dirección: `https://servidor/repo` en lugar de `file:///...`. Los textos exactos de `svn` pueden variar un poco entre versiones; lo importante es la forma de la salida. Los ejemplos se siguen en orden y todos se corren dentro de la carpeta `taller`.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Crea un repositorio con trunk, branches y tags" archivo="01-repo.sh" ejecutar="bash 01-repo.sh" salida={"branches/\ntags/\ntrunk/"}>
+
+```bash
+# svnadmin crea un repositorio vacío en la carpeta repo
+svnadmin create repo
+
+# Una variable con la dirección del repositorio (file:// porque es local)
+REPO="file://$PWD/repo"
+
+# Crea la estructura estándar en un solo commit (la revisión 1)
+# La confirmación se envía a /dev/null para dejar la salida limpia
+svn mkdir -m "Estructura inicial" "$REPO/trunk" "$REPO/branches" "$REPO/tags" > /dev/null
+
+# Lista el contenido de la raíz del repositorio
+svn list "$REPO"
+```
+
+Un repositorio nuevo está vacío. Crear `trunk`, `branches` y `tags` es una convención muy extendida, y muchas herramientas la esperan. Nota que `svn mkdir` con una dirección (y no una carpeta local) hace el commit de inmediato, por eso lleva `-m` con el mensaje. Si no lo redirigieras, verías `Committed revision 1.` al final.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Checkout, agregar un archivo y primer commit" archivo="02-primer-commit.sh" ejecutar="bash 02-primer-commit.sh" salida={"A       hola.txt\nAdding         hola.txt\nTransmitting file data .done\nCommitting transaction...\nCommitted revision 2.\n2"}>
+
+```bash
+REPO="file://$PWD/repo"
+
+# checkout baja una copia de trabajo de trunk a la carpeta copia
+svn checkout -q "$REPO/trunk" copia
+cd copia
+
+# Crea un archivo. Subversion todavía no lo conoce
+echo "Hola SVN" > hola.txt
+
+# add lo marca para el próximo commit, status muestra el estado: A = agregado
+svn add -q hola.txt
+svn status
+
+# Publica los cambios en el repositorio
+svn commit -m "Agrega hola.txt"
+
+# Revisión en la que cambió el archivo por última vez
+svn info --show-item last-changed-revision hola.txt
+```
+
+El ciclo es siempre el mismo: cambiar, `svn add` si hay archivos nuevos, `svn status` para revisar y `svn commit -m` para publicar. El checkout trajo solo `trunk`, no todo el repositorio, y eso es lo que normalmente quieres. El mensaje del commit es obligatorio en la práctica: es lo que otras personas leerán en el historial.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Revisar con status y diff, y deshacer con revert" archivo="03-cambios.sh" ejecutar="bash 03-cambios.sh" salida={"M       hola.txt\nIndex: hola.txt\n===================================================================\n--- hola.txt\t(revision 2)\n+++ hola.txt\t(working copy)\n@@ -1 +1,2 @@\n Hola SVN\n+Segunda linea\nSending        hola.txt\nTransmitting file data .done\nCommitting transaction...\nCommitted revision 3.\nReverted 'hola.txt'"}>
+
+```bash
+# Continúa dentro de la copia de trabajo del ejemplo anterior
+cd copia
+
+# Agrega una línea al archivo
+echo "Segunda linea" >> hola.txt
+
+# M = modificado. diff muestra exactamente qué cambió respecto a la última revisión
+svn status
+svn diff
+
+# Publica el cambio
+svn commit -m "Agrega una segunda linea"
+
+# Otro cambio que no queremos conservar
+echo "borrar esto" >> hola.txt
+svn revert hola.txt
+```
+
+`svn diff` compara tu copia de trabajo con la última revisión que bajaste: las líneas con `+` son nuevas y las que empiezan con `-` se quitaron. Hazlo antes de cada commit. `svn revert` descarta los cambios locales de un archivo y lo deja como estaba en el repositorio; no se puede deshacer, así que revisa con `diff` antes. Para ver el historial usa `svn log`, y `svn log -v` agrega la lista de archivos que tocó cada revisión.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Dos personas, un conflicto" archivo="04-conflicto.sh" ejecutar="bash 04-conflicto.sh" salida={"Updating '.':\nC    hola.txt\nUpdated to revision 4.\nSummary of conflicts:\n  Text conflicts: 1\n<<<<<<< .mine\nHola desde Luis\n=======\nHola desde Ana\n>>>>>>> .r4\nSegunda linea\nResolved conflicted state of 'hola.txt'"}>
+
+```bash
+REPO="file://$PWD/repo"
+
+# Dos copias de trabajo del mismo trunk: una de Ana y una de Luis
+svn checkout -q "$REPO/trunk" ana
+svn checkout -q "$REPO/trunk" luis
+
+# Ana cambia la primera línea y publica (revisión 4); el mensaje de commit se oculta aquí
+cd ana
+printf 'Hola desde Ana\nSegunda linea\n' > hola.txt
+svn commit -m "Ana cambia el saludo" > /dev/null
+
+# Luis, sin saberlo, cambia la misma línea. Si intentara hacer commit,
+# Subversion le diría que su archivo está desactualizado (out of date)
+cd ../luis
+printf 'Hola desde Luis\nSegunda linea\n' > hola.txt
+
+# update trae lo de Ana. postpone deja el conflicto pendiente en lugar de preguntar
+svn update --accept postpone
+
+# El archivo ahora trae marcas de conflicto
+cat hola.txt
+
+# Luis decide el texto final, lo guarda y avisa a Subversion que ya resolvió
+printf 'Hola desde Ana y Luis\nSegunda linea\n' > hola.txt
+svn resolve --accept working hola.txt
+svn commit -m "Resuelve el conflicto del saludo" > /dev/null
+```
+
+Un conflicto aparece cuando dos cambios tocan las mismas líneas y Subversion no sabe cuál elegir. Entre `<<<<<<< .mine` y `=======` está lo tuyo; entre `=======` y `>>>>>>> .r4` está lo que venía del repositorio. Junto al archivo, Subversion deja copias auxiliares (`hola.txt.mine` y las revisiones involucradas). Mientras el conflicto no se marque como resuelto con `svn resolve`, el commit se rechaza. Antes de editar a mano, también puedes elegir una versión completa con `--accept theirs-full` o `--accept mine-full`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Crear una rama y fusionarla de vuelta a trunk" archivo="05-ramas.sh" ejecutar="bash 05-ramas.sh" salida={"--- antes de fusionar\nHola desde Ana y Luis\nSegunda linea\n--- después de fusionar\nHola desde Ana y Luis\nSegunda linea\nAdios SVN"}>
+
+```bash
+REPO="file://$PWD/repo"
+cd copia
+svn update -q
+
+# Una rama es una copia barata de trunk. Se hace en el servidor
+svn copy -m "Crea la rama despedida" "$REPO/trunk" "$REPO/branches/despedida" > /dev/null
+
+# switch cambia tu copia de trabajo para que apunte a la rama
+svn switch -q "$REPO/branches/despedida"
+echo "Adios SVN" >> hola.txt
+svn commit -m "Agrega la despedida" > /dev/null
+
+# Regresa a trunk: el cambio de la rama todavía no está aquí
+svn switch -q "$REPO/trunk"
+echo "--- antes de fusionar"
+cat hola.txt
+
+# merge trae a trunk los cambios de la rama; luego se publica como cualquier cambio
+svn merge -q "$REPO/branches/despedida"
+echo "--- después de fusionar"
+cat hola.txt
+svn commit -m "Fusiona la rama despedida" > /dev/null
+```
+
+Con `svn merge` desde una copia de trabajo de `trunk`, Subversion calcula qué revisiones de la rama aún no se han fusionado y las aplica a tus archivos. Después de fusionar, sigue siendo un cambio local: revísalo con `svn status` y `svn diff` y publícalo con `svn commit`. Si hay conflictos, se resuelven igual que en el ejemplo anterior. Haz `svn update` antes de fusionar y trabaja con una copia de trabajo sin cambios pendientes.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Etiquetas y archivos que se ignoran" archivo="06-tags-ignore.sh" ejecutar="bash 06-tags-ignore.sh" salida={"v1.0/\nproperty 'svn:ignore' set on '.'\n?       nuevo.txt"}>
+
+```bash
+REPO="file://$PWD/repo"
+
+# Una etiqueta es otra copia barata, pero que por convención nadie modifica
+svn copy -m "Etiqueta de la versión 1.0" "$REPO/trunk" "$REPO/tags/v1.0" > /dev/null
+svn list "$REPO/tags"
+
+# svn:ignore es una propiedad de la carpeta: los archivos que coinciden dejan de aparecer
+cd copia
+svn propset svn:ignore "*.log" .
+
+# Un archivo ignorado y uno que no
+echo "x" > depuracion.log
+echo "y" > nuevo.txt
+
+# Solo nuevo.txt aparece como no versionado (?)
+svn status | grep "^?"
+```
+
+Las etiquetas congelan el estado del proyecto en una versión que puedes recuperar luego con `svn checkout "$REPO/tags/v1.0"`. La propiedad `svn:ignore` se guarda como un cambio más: la carpeta queda modificada y debes hacer `svn commit` para compartir la regla con el resto. Úsala para registros, carpetas de compilación y archivos temporales; nunca para ocultar archivos que sí deben versionarse.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Olvidar svn add">
+
+Crear un archivo no basta: si no haces `svn add`, aparece con `?` en `svn status` y el commit lo ignora, así que tus compañeros nunca lo reciben. Revisa siempre `svn status` antes de publicar y busca los signos de interrogación.
+
+</Callout>
+
+<Callout tipo="warning" titulo="El commit falla porque tu copia está desactualizada">
+
+Si alguien publicó cambios en un archivo que tú también editaste, Subversion rechaza el commit con un mensaje que incluye `out of date`. No es grave: ejecuta `svn update`, resuelve conflictos si los hay y vuelve a hacer el commit. Acostúmbrate a hacer `svn update` al empezar el día.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Mover o borrar archivos desde el explorador">
+
+Si renombras o borras un archivo versionado con el explorador de archivos, Subversion lo ve como "faltante" (`!`) y pierde el historial del archivo. Usa `svn move` y `svn delete` (o los menús de TortoiseSVN) para que el cambio quede registrado como un movimiento y no como un borrado más un archivo nuevo.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Hacer checkout de la raíz del repositorio">
+
+Si haces checkout de la dirección base (sin `/trunk`), descargas la línea principal y todas las ramas y etiquetas juntas, y trabajas sobre carpetas que no querías. Haz checkout de `trunk` o de la rama en la que vas a trabajar.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Resolver el conflicto en el archivo pero no en Subversion">
+
+Si editas el archivo, quitas las marcas `<<<<<<<` y `>>>>>>>` pero no ejecutas `svn resolve`, el commit se rechaza con un aviso de que el archivo `remains in conflict`. Después de arreglar el texto, usa `svn resolve --accept working archivo`. Y no hagas commit con las marcas dentro del archivo.
+
+</Callout>
+
+## Buenas prácticas
+
+- Haz `svn update` al empezar y antes de publicar, y revisa con `svn status` y `svn diff` antes de cada commit.
+- Escribe mensajes de commit claros que expliquen el porqué del cambio.
+- Haz commits pequeños y completos: que el proyecto funcione después de cada uno.
+- Usa la estructura `trunk`, `branches` y `tags`, y no modifiques el contenido de las etiquetas.
+- Haz checkout de `trunk` o de la rama que necesitas, no de la raíz del repositorio.
+- Usa `svn move`, `svn copy` y `svn delete` para operaciones sobre archivos versionados.
+- No subas archivos generados ni secretos; para lo primero usa `svn:ignore`.
+- Si tu equipo usa un cliente gráfico, aprende también los comandos equivalentes: te sacan de apuros en un servidor.
+
+## Siguiente paso
+
+Ya sabes crear un repositorio, trabajar con copias de trabajo, resolver conflictos, ramificar y etiquetar. Lo que sigue es leer el libro oficial de Subversion, que explica a fondo la fusión de ramas, las propiedades y la administración del servidor, y practicar con el manual en español de TortoiseSVN si trabajas en Windows.
+
+Si tu equipo está pensando en migrar, o quieres usar Git sobre un servidor Subversion, revisa los capítulos de Pro Git sobre `git svn` y migración que están en la biblioteca. Para aprender Git desde cero, ve a [Git y GitHub desde cero](/guias/git/); para moverte con soltura en la terminal, a [Linux y terminal](/guias/linux/). Todos los recursos están en [la biblioteca de Subversion](/biblioteca/subversion/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

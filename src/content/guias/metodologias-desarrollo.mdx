@@ -1,0 +1,244 @@
+---
+titulo: 'Metodologías ágiles desde cero'
+descripcion: 'Qué es agile, cómo funcionan Scrum y Kanban, y plantillas listas para usar: historias de usuario, tablero de sprint, límite de trabajo en curso y retrospectiva.'
+tema: metodologias-desarrollo
+nivel: principiante
+tiempoLectura: 25
+publicado: 2026-10-09
+libros: ['metodologias-desarrollo-guia-scrum-2020', 'metodologias-desarrollo-manifiesto-agil', 'metodologias-desarrollo-guias-kanban', 'metodologias-desarrollo-atlassian-agile']
+requisitos: ['Haber participado, o querer participar, en un proyecto de software en equipo']
+etiquetas: ['agile', 'scrum', 'kanban', 'retrospectiva', 'historias-de-usuario']
+orden: 4
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Programar bien no basta si el equipo no sabe qué construir, en qué orden y cómo corregir el rumbo. Las metodologías ágiles son formas de trabajar en ciclos cortos, mostrar avances reales y aprender del resultado. Esta guía te explica las ideas centrales y te deja plantillas que puedes usar hoy con tu equipo, aunque sea de dos personas.
+
+## Qué es y para qué sirve
+
+- **Agile es un conjunto de valores, no un método.** El [Manifiesto Ágil](https://agilemanifesto.org/iso/es/manifesto.html) de 2001 prefiere personas e interacciones, software funcionando, colaboración con el cliente y responder al cambio, sin despreciar lo que hay del otro lado.
+- **Scrum es un marco con roles, eventos y artefactos.** Hay tres responsabilidades (Product Owner, Scrum Master y Developers), eventos fijos (Sprint, planificación, Scrum diario, revisión y retrospectiva) y tres artefactos (backlog del producto, backlog del sprint e incremento). La definición oficial es la [Guía de Scrum](https://scrumguides.org/docs/scrumguide/v2020/2020-Scrum-Guide-Spanish-Latin-South-American.pdf).
+- **Kanban gestiona el flujo del trabajo.** Visualizas las tareas en un tablero, limitas cuánto trabajo está en curso al mismo tiempo y mides cuánto tarda en terminar. No exige roles ni ciclos fijos. La referencia es la [Guía Kanban](https://kanbanguides.org/es-es/).
+- **XP (Extreme Programming) pone el foco en la técnica.** Pruebas automáticas, integración continua, programación en pareja y refactorización. Se combina muy bien con Scrum.
+- **Lo que comparten.** Ciclos cortos, trabajo priorizado, retroalimentación frecuente y mejora continua del propio proceso.
+- **No es obligatorio ni universal.** Para proyectos con requisitos fijos y contratos cerrados, o para tareas muy repetitivas, otras formas de trabajo pueden encajar mejor.
+
+## Prepara tu entorno
+
+No necesitas instalar nada. Necesitas un lugar para ver el trabajo y un acuerdo con tu equipo.
+
+<Pasos>
+
+1. **Elige dónde vivirá tu tablero.** Una pared con notas adhesivas funciona bien. Si trabajan a distancia, una herramienta digital como GitHub Projects o cualquier tablero en línea que ya usen.
+2. **Define las columnas.** Para empezar: Por hacer, En progreso, En revisión y Hecho.
+3. **Escribe todo lo pendiente** como tarjetas, una por tarea o historia de usuario, y ordénalas por prioridad.
+4. **Pónganse de acuerdo en un ritmo.** Por ejemplo, una reunión corta cada día y una revisión cada dos semanas.
+5. **Acuerden qué significa "terminado"** (definición de hecho) antes de empezar: código revisado, pruebas pasando, desplegado en un entorno de prueba.
+
+</Pasos>
+
+## Ejemplos paso a paso
+
+Los ejemplos usan datos inventados para ilustrar. Cámbialos por los de tu proyecto.
+
+<Ejemplo numero={1} titulo="Una buena historia de usuario" archivo="historia.txt">
+
+```text
+Historia
+Como persona usuaria registrada,
+quiero recuperar mi contraseña desde mi correo,
+para volver a entrar a mi cuenta si la olvido.
+
+Criterios de aceptación
+- Dado que escribo un correo registrado, cuando envío el formulario,
+  entonces recibo un mensaje con un enlace de recuperación.
+- Dado que el enlace tiene más de un día de antigüedad,
+  cuando intento usarlo, entonces veo que expiró y puedo pedir otro.
+- Dado que escribo un correo que no existe, cuando envío el formulario,
+  entonces veo el mismo mensaje de confirmación que con uno válido.
+
+Fuera de alcance
+- Recuperación por mensaje de texto.
+```
+
+Una historia cuenta quién, qué y para qué, sin decir cómo. Los criterios de aceptación en formato "dado, cuando, entonces" convierten la historia en algo que se puede probar. El último criterio evita revelar qué correos existen en el sistema. La sección "fuera de alcance" ahorra discusiones durante el sprint.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Planificación del sprint con capacidad" archivo="sprint.py" ejecutar="python sprint.py" salida={"Meta del sprint: que las personas puedan entrar a su cuenta\nEntran al sprint: ['Iniciar sesión con correo', 'Recuperar contraseña', 'Ver mi perfil']\nPuntos comprometidos: 10 de 13\nQuedan en el backlog: ['Subir foto de perfil', 'Exportar datos a CSV']"}>
+
+```python
+# Planificación del sprint: tomamos historias del backlog, por prioridad, hasta llenar la capacidad
+backlog = [
+    ("Iniciar sesión con correo", 5),
+    ("Recuperar contraseña", 3),
+    ("Ver mi perfil", 2),
+    ("Subir foto de perfil", 5),
+    ("Exportar datos a CSV", 8),
+]
+capacidad = 13   # puntos que el equipo cree poder terminar en este sprint
+
+sprint, total = [], 0
+for historia, puntos in backlog:      # el backlog ya viene ordenado por prioridad
+    if total + puntos <= capacidad:
+        sprint.append(historia)
+        total += puntos
+
+print("Meta del sprint: que las personas puedan entrar a su cuenta")
+print("Entran al sprint:", sprint)
+print(f"Puntos comprometidos: {total} de {capacidad}")
+print("Quedan en el backlog:", [h for h, _ in backlog if h not in sprint])
+```
+
+El script imita lo que hace el equipo en la planificación: toma lo más prioritario hasta donde alcanza la capacidad. Los puntos son una estimación relativa del esfuerzo, no horas. En la vida real el equipo decide con conversación, no con un bucle, y se guía por la meta del sprint. Aun así, dejar tres puntos libres es sano: siempre aparece trabajo imprevisto.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Tablero del sprint después de tres días">
+
+Así se ve el tablero a mitad de sprint. Cada columna cuenta una parte de la historia del equipo:
+
+| Por hacer | En progreso | En revisión | Hecho |
+| --- | --- | --- | --- |
+| Subir foto de perfil (5) | Recuperar contraseña (3) | Ver mi perfil (2) | Iniciar sesión con correo (5) |
+| Pruebas de carga | | | |
+
+```text
+Scrum diario (15 minutos como máximo)
+1. ¿Qué avancé desde ayer que acerca la meta del sprint?
+2. ¿Qué haré hoy?
+3. ¿Qué me bloquea?
+```
+
+Lo importante del tablero es que todo el equipo vea de un vistazo dónde está el trabajo y dónde se acumula. Si "En revisión" se llena y "Hecho" no crece, el cuello de botella son las revisiones. El Scrum diario no es un reporte para la jefatura: es un momento para coordinarse. Los bloqueos largos se conversan después, solo con quien participa.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Kanban con límite de trabajo en curso (WIP)" archivo="kanban.py" ejecutar="python kanban.py" salida={"Día 1: por hacer=['T3', 'T4', 'T5']  en progreso=['T1', 'T2']  hecho=[]\nDía 2: por hacer=['T4', 'T5']  en progreso=['T2', 'T3']  hecho=['T1']\nDía 3: por hacer=['T5']  en progreso=['T3', 'T4']  hecho=['T1', 'T2']\nDía 4: por hacer=[]  en progreso=['T4', 'T5']  hecho=['T1', 'T2', 'T3']\nDía 5: por hacer=[]  en progreso=['T5']  hecho=['T1', 'T2', 'T3', 'T4']"}>
+
+```python
+# Sistema Kanban de arrastre (pull) con límite de trabajo en curso (WIP) en "En progreso"
+LIMITE_WIP = 2
+
+por_hacer = ["T1", "T2", "T3", "T4", "T5"]
+en_progreso = []
+hecho = []
+
+for dia in range(1, 6):
+    # 1) Termina trabajo: la tarea más antigua en progreso pasa a Hecho
+    if en_progreso:
+        hecho.append(en_progreso.pop(0))
+    # 2) Empieza trabajo nuevo solo si hay espacio (nadie empuja tareas al tablero)
+    while por_hacer and len(en_progreso) < LIMITE_WIP:
+        en_progreso.append(por_hacer.pop(0))
+    print(f"Día {dia}: por hacer={por_hacer}  en progreso={en_progreso}  hecho={hecho}")
+```
+
+El límite de WIP impide que "En progreso" tenga más de dos tarjetas: no se empieza algo nuevo hasta que se termina algo. Es una simulación simplificada en la que se termina una tarea por día. Para practicar, cambia `LIMITE_WIP` a 5 y observa cómo todo queda empezado y nada terminado durante más tiempo. Terminar cosas pronto da valor antes y deja ver los problemas más rápido.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Medir el flujo: tiempo de ciclo y rendimiento" archivo="flujo.py" ejecutar="python flujo.py" salida={"Login      4 días\nPerfil     5 días\nReportes   9 días\nExportar   3 días\nPromedio: 5.25 días\nMás lenta: Reportes\nTerminadas por semana ISO: {41: 3, 42: 1}"}>
+
+```python
+from datetime import date
+from statistics import mean
+
+# Fechas en que cada tarea empezó y terminó (datos de ejemplo)
+tareas = {
+    "Login":      (date(2026, 10, 1), date(2026, 10, 5)),
+    "Perfil":     (date(2026, 10, 2), date(2026, 10, 7)),
+    "Reportes":   (date(2026, 10, 5), date(2026, 10, 14)),
+    "Exportar":   (date(2026, 10, 6), date(2026, 10, 9)),
+}
+
+# Tiempo de ciclo: días desde que empieza el trabajo hasta que termina
+ciclos = {nombre: (fin - inicio).days for nombre, (inicio, fin) in tareas.items()}
+for nombre, dias in ciclos.items():
+    print(f"{nombre:<10} {dias} días")
+
+print("Promedio:", mean(ciclos.values()), "días")
+print("Más lenta:", max(ciclos, key=ciclos.get))
+
+# Rendimiento (throughput): tareas terminadas por semana
+semanas = {}
+for _, (_, fin) in tareas.items():
+    semana = fin.isocalendar().week
+    semanas[semana] = semanas.get(semana, 0) + 1
+print("Terminadas por semana ISO:", dict(sorted(semanas.items())))
+```
+
+Estas dos métricas son la base de Kanban: cuánto tarda una tarea desde que empieza hasta que termina, y cuántas terminas por semana. El promedio no cuenta toda la historia: la tarea "Reportes" tardó más del doble que el promedio de las demás, y eso merece una conversación en la retrospectiva. Con unas pocas semanas de datos reales puedes dar estimaciones basadas en tu historial en vez de adivinar.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Plantilla de retrospectiva">
+
+Para un sprint de dos semanas, una retrospectiva de una hora suele alcanzar. Copia esta plantilla y llénala con el equipo:
+
+| Fase | Pregunta | Tiempo sugerido |
+| --- | --- | --- |
+| Abrir | ¿Cómo llegamos? Una palabra por persona | 5 min |
+| Recordar | ¿Qué pasó en el sprint? Línea de tiempo con hechos | 10 min |
+| Analizar | ¿Qué funcionó, qué no y por qué? | 20 min |
+| Decidir | ¿Qué probamos en el próximo sprint? Máximo dos acuerdos | 15 min |
+| Cerrar | ¿Qué nos llevamos? Agradecimientos | 5 min |
+
+```text
+Empezar:   tener las revisiones de código el mismo día
+Parar:     añadir tareas nuevas a mitad del sprint sin hablarlo
+Continuar: el Scrum diario de 15 minutos
+
+Acuerdo 1: revisar código antes de las 12:00. Responsable: Ana. Se revisa en la próxima retro.
+Acuerdo 2: poner un límite de 3 tarjetas en "En revisión". Responsable: Luis.
+```
+
+Lo valioso son los acuerdos pequeños, con una persona responsable y una fecha para revisarlos. Una retrospectiva sin acciones es solo una queja. Al abrir la siguiente, empieza revisando si los acuerdos anteriores se cumplieron. Si quieres variar la dinámica, [Retromat](https://retromat.org/es/) tiene decenas de actividades por fase.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Hacer los rituales sin entender el para qué">
+Tener un Scrum diario donde cada persona "reporta" a la jefatura, o una retrospectiva sin acuerdos, es teatro ágil. Cada evento existe para algo concreto (coordinarse, mostrar avance real, mejorar). Si no sabes para qué sirve uno, pregúntalo antes de repetirlo cada semana.
+</Callout>
+
+<Callout tipo="warning" titulo="Usar la velocidad para presionar al equipo">
+Los puntos y la velocidad sirven para planear, no para comparar equipos ni para exigir más. Cuando se usan como meta, la gente infla estimaciones y se pierde la confianza. Úsalos solo para decidir cuánto cabe en el próximo sprint.
+</Callout>
+
+<Callout tipo="warning" titulo="Un backlog gigante y sin orden">
+Cien tarjetas sin prioridad no son un backlog, son una lista de deseos. Mantén detallado solo lo próximo, ordenado por valor, y deja lo lejano en forma de ideas. Revisa y elimina lo que ya no tiene sentido.
+</Callout>
+
+<Callout tipo="warning" titulo="Ignorar el límite de trabajo en curso">
+Si el límite de WIP se rompe "solo por esta vez", se pierde el efecto. Cuando se alcanza, la regla es ayudar a terminar algo, no empezar otra cosa. El límite hace visibles los cuellos de botella; no los esconde.
+</Callout>
+
+<Callout tipo="warning" titulo="Cambiar la meta del sprint a mitad del camino">
+Meter trabajo nuevo cada día rompe el compromiso del equipo y esconde el costo del cambio. Lo urgente de verdad se habla con la persona responsable del producto y se decide qué sale a cambio. Lo demás espera al siguiente sprint.
+</Callout>
+
+## Buenas prácticas
+
+- Empieza con lo mínimo: un tablero, una reunión corta y una retrospectiva. Añade prácticas solo cuando las necesites.
+- Escribe historias pequeñas, que se terminen en pocos días y que se puedan probar.
+- Muestra software funcionando al final de cada ciclo, aunque sea poco.
+- Ten una definición de hecho clara, por escrito y visible en el tablero.
+- Mide el flujo (tiempo de ciclo y rendimiento) en lugar de adivinar fechas.
+- Combina el proceso con buenas prácticas técnicas: pruebas automáticas, revisión de código y versionado con [Git](/guias/git/).
+- Cambia una sola cosa a la vez y revisa en la siguiente retrospectiva si funcionó.
+- Lee las fuentes originales: la Guía de Scrum son pocas páginas y aclara muchas dudas.
+
+## Siguiente paso
+
+- **Lee la Guía de Scrum** completa, y después la [Guía Kanban](https://kanbanguides.org/es-es/). Ambas son cortas y están disponibles en español.
+- **Prueba con un proyecto pequeño.** Organiza con un tablero tu próximo proyecto personal o de clase y haz una retrospectiva al final de cada semana.
+- **Mejora tu técnica.** Las pruebas automáticas y el control de versiones hacen que los ciclos cortos sean realistas. Empieza con la [guía de Git](/guias/git/).
+- **Piensa como programador.** Revisa la guía [Cómo pensar como programador](/guias/generales/) y la [biblioteca de metodologías](/biblioteca/metodologias-desarrollo/) para más lecturas.
+
+<LibrosRecomendados ids={frontmatter.libros} />

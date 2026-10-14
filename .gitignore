@@ -11,3 +11,4 @@ entregas/
 *.log
 .DS_Store
 Thumbs.db
+.tmp-build/

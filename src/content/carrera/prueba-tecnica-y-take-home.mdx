@@ -1,0 +1,150 @@
+---
+titulo: 'Cómo enfrentar una prueba técnica o take-home'
+descripcion: 'Cómo leer el enunciado, planear el tiempo, entregar código limpio con README y comunicarte con la empresa durante una prueba técnica para hacer en casa.'
+tiempoLectura: 9
+publicado: 2026-10-09
+etiquetas: ['prueba técnica', 'take-home', 'entrega', 'README']
+orden: 6
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Una prueba técnica o take-home es un mini proyecto que te mandan para resolver por tu cuenta, con un plazo. Puede durar unas horas o varios días. Es más relajada que una entrevista en vivo, pero también más fácil de hacer mal por no planear. Esta guía te da un método para abordarla con orden.
+
+## Qué buscan con la prueba
+
+Casi nunca buscan solo que "funcione". Quieren ver:
+
+- Si entiendes lo que te piden.
+- Cómo organizas un proyecto pequeño.
+- Si escribes código legible y razonablemente probado.
+- Si explicas tus decisiones.
+- Si respetas el tiempo y los requisitos.
+
+Muchas veces la entrega es el punto de partida de una conversación posterior, donde te pedirán que expliques tu código.
+
+## Paso 1: lee el enunciado dos veces
+
+Antes de escribir una línea:
+
+- Subraya los requisitos obligatorios y los opcionales.
+- Anota las restricciones: tecnologías pedidas, formato de entrega, fecha límite.
+- Identifica qué es ambiguo.
+
+Si hay dudas, pregunta. Escribir un correo breve con preguntas concretas se ve bien, no mal.
+
+```text
+Hola, gracias por la prueba. Antes de empezar tengo dos dudas:
+1. ¿Debo usar una base de datos real o basta con datos en memoria?
+2. ¿Hay un límite de tiempo recomendado para dedicarle?
+Gracias, quedo atento.
+```
+
+## Paso 2: planea el tiempo
+
+Aunque te den una semana, no la uses completa sin sentido. Y no te pases de lo que te sugieren. Si dicen "unas cuatro horas", no gastes veinte esperando un resultado perfecto.
+
+Un reparto razonable:
+
+- **10 %** entender el problema y hacer un plan.
+- **60 %** construir la funcionalidad obligatoria.
+- **15 %** pruebas y correcciones.
+- **15 %** README, limpieza y entrega.
+
+Es una guía, no una regla. Lo importante es dejar tiempo para pulir y documentar.
+
+## Paso 3: construye en capas
+
+1. Haz que funcione lo más simple y obligatorio, de punta a punta.
+2. Haz commits pequeños con mensajes claros, como en un trabajo real.
+3. Refactoriza lo evidente: nombres claros, funciones cortas, sin código repetido.
+4. Agrega lo opcional solo si el tiempo alcanza.
+
+Es mejor una entrega pequeña y sólida que una grande a medias. Si algo no alcanzó, dilo en el README.
+
+## Paso 4: calidad visible
+
+Sin llegar a la perfección, cuida estas señales:
+
+- **Estructura clara**: carpetas ordenadas y archivos con propósito.
+- **Nombres descriptivos** en variables y funciones.
+- **Manejo de errores** en lo importante: entradas vacías, fallos de red.
+- **Algunas pruebas** de lo más crítico, si el lenguaje lo permite fácilmente.
+- **Sin código muerto**: borra comentarios y pruebas olvidadas.
+- **Sin secretos**: ninguna clave en el repositorio.
+- **Instrucciones que funcionan** en una máquina limpia.
+
+## Plantilla de README para la entrega
+
+El README puede ser lo primero y lo único que lean con cuidado.
+
+```markdown
+# Prueba técnica: nombre de la prueba
+
+## Cómo ejecutarlo
+
+1. Requisitos: versión del lenguaje o herramientas.
+2. Instalación: comandos.
+3. Ejecución: comandos.
+4. Pruebas: comandos.
+
+## Qué incluye
+
+- Requisito 1: hecho
+- Requisito 2: hecho
+- Opcional 1: hecho
+- Opcional 2: no alcancé
+
+## Decisiones
+
+- Elegí X porque Y.
+- Descarté Z porque no encajaba con el tiempo disponible.
+
+## Supuestos
+
+- Asumí que A cuando el enunciado no decía nada.
+
+## Qué mejoraría con más tiempo
+
+- Mejora 1
+- Mejora 2
+```
+
+Esta plantilla muestra que piensas como alguien de equipo: dices qué hiciste, por qué y qué falta, sin fingir.
+
+## Paso 5: la entrega
+
+- Respeta el formato pedido: repositorio, zip o enlace.
+- Si usas GitHub, revisa si debe ser público o privado y cómo compartirlo.
+- Clona tu entrega en una carpeta nueva y ejecútala con tus propias instrucciones.
+- Envía un correo corto con el enlace, el resumen y las notas importantes.
+- Entrega a tiempo. Si necesitas más, avisa antes del plazo, no después.
+
+## Después de entregar
+
+- Prepárate para explicar cada archivo y decisión. Releer tu código antes de la siguiente entrevista es buena idea.
+- Pide retroalimentación aunque no pases. No siempre la darán, pero a veces sí.
+- Guarda tu prueba como práctica. Puedes quitar los datos de la empresa y, si el enunciado lo permite, convertirla en un proyecto de portafolio.
+
+## Checklist de entrega
+
+- Leí el enunciado completo y resolví los requisitos obligatorios.
+- Hice preguntas sobre lo ambiguo, o documenté mis supuestos.
+- El código corre en una máquina limpia siguiendo mi README.
+- Los commits cuentan una historia ordenada.
+- No hay claves, contraseñas ni archivos sobrantes.
+- Probé los casos de error principales.
+- El README dice qué hice, por qué y qué faltó.
+- Entregué dentro del plazo.
+
+<Callout tipo="tip" titulo="Una entrega modesta y clara gana a una ambiciosa y rota">
+Si dudas entre agregar una función extra o revisar que lo básico funcione, revisa lo básico. Casi siempre pesa más.
+</Callout>
+
+<Callout tipo="warning" titulo="Cuidado con las pruebas que piden demasiado">
+Algunas pruebas piden muchas horas de trabajo sin pago. Es razonable pedir que el tiempo sea acotado. Desconfía si el enunciado parece un proyecto real de la empresa, sin límites claros, porque podría aprovecharse tu trabajo. Pregunta por el tiempo esperado y decide si te conviene.
+</Callout>
+
+## Tu siguiente paso
+
+Antes de tu próxima prueba, ensaya con una versión propia: elige una idea de [Proyectos](/proyectos/), ponte un límite de horas y entrega con README. Para practicar la parte de explicación, repasa [Entrevistas técnicas: cómo prepararte](/carrera/entrevistas-tecnicas/). Y para mejorar la calidad de tu código, usa los [Retos](/retos/) y las [Herramientas](/herramientas/).

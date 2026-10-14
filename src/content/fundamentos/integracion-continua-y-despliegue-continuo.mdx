@@ -1,0 +1,182 @@
+---
+titulo: 'CI/CD explicado con GitHub Actions'
+descripcion: 'Qué son la integración continua y el despliegue continuo, y cómo montar tu primer flujo de trabajo en GitHub Actions que prueba y construye tu proyecto solo.'
+categoria: calidad
+nivel: intermedio
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [git, docker, linux]
+etiquetas: [ci, cd, github-actions, automatizacion, despliegue]
+orden: 28
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+"En mi computadora funciona." Seguro lo has dicho o lo vas a decir. Alguien sube un cambio sin correr las pruebas, otra persona lo mezcla, y el sitio se cae el viernes por la tarde. CI/CD es la costumbre de que una máquina revise y publique tu trabajo de forma automática y siempre igual, para que ese tipo de sorpresas pasen en segundos y no en producción.
+
+## Qué es
+
+**CI/CD** son tres ideas encadenadas:
+
+- **Integración continua (CI):** cada vez que alguien sube un cambio, un servidor lo descarga, instala las dependencias, corre las pruebas y construye el proyecto. Si algo falla, avisa de inmediato.
+- **Entrega continua (CD, delivery):** si todo salió bien, el proyecto queda listo para publicarse con un clic.
+- **Despliegue continuo (CD, deployment):** va un paso más allá y publica solo, sin intervención humana.
+
+La sigla CD se usa para las dos últimas, así que fíjate en el contexto.
+
+Una analogía: una línea de ensamblaje con inspectores. Cada pieza (cambio) pasa por las mismas estaciones (instalar, revisar estilo, probar, construir, publicar). Si una estación rechaza la pieza, la línea se detiene y no avanza hasta arreglarla.
+
+```text
+tú haces push
+     |
+     v
+[ descargar código ] -> [ instalar ] -> [ lint ] -> [ pruebas ] -> [ build ]
+                                                                      |
+                                              si todo pasó (main) ----+--> [ desplegar ]
+                                              si algo falla -> te avisan y no se publica
+```
+
+## GitHub Actions en tres conceptos
+
+[GitHub Actions](https://docs.github.com/actions) es el sistema de automatización integrado en GitHub. Se configura con archivos YAML dentro de la carpeta `.github/workflows/` de tu repositorio. Necesitas conocer tres palabras:
+
+- **Workflow (flujo de trabajo):** un archivo YAML con todo el proceso.
+- **Job (trabajo):** un grupo de pasos que corre en una máquina virtual limpia. Un workflow puede tener varios jobs.
+- **Step (paso):** una acción individual: ejecutar un comando (`run`) o usar una acción ya hecha (`uses`).
+
+Además, `on` define **cuándo** se dispara (por ejemplo, al hacer push o al abrir un pull request) y `runs-on` define en qué sistema corre.
+
+## Tu primer workflow
+
+Este ejemplo es para un proyecto de Node.js que tiene los scripts `lint`, `test` y `build` en su `package.json`. Guárdalo como `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Revisar estilo
+        run: npm run lint
+
+      - name: Correr las pruebas
+        run: npm test
+
+      - name: Construir el proyecto
+        run: npm run build
+```
+
+Qué hace cada parte:
+
+- `on` hace que corra con cada push a `main` y con cada pull request.
+- `permissions: contents: read` da al flujo solo los permisos mínimos. Es una buena práctica de seguridad.
+- `actions/checkout` descarga tu código a la máquina, que empieza vacía.
+- `actions/setup-node` instala Node.js y guarda en caché las dependencias para que la siguiente corrida sea más rápida.
+- `npm ci` instala exactamente lo que dice el archivo de bloqueo, de forma reproducible.
+- Cada `run` ejecuta un comando de terminal. Si alguno devuelve error, el job se detiene y se marca en rojo.
+
+<Callout tipo="tip" titulo="Las acciones tienen versiones">
+Los sufijos como `@v4` fijan la versión de cada acción. Con el tiempo salen versiones nuevas: consulta la página de cada acción en GitHub para ver cuál es la vigente y actualízala de vez en cuando. Para un proyecto en otro lenguaje, solo cambias los pasos de instalación y prueba. Por ejemplo, en Python usarías un paso que instale Python y luego `pytest`, como en [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+</Callout>
+
+## Cómo probarlo, paso a paso
+
+<Pasos>
+
+1. **Crea un repositorio en GitHub** y sube tu proyecto. Si Git es nuevo para ti, empieza con la [guía de Git](/guias/git/).
+2. **Crea la carpeta `.github/workflows/`** en la raíz del proyecto y dentro el archivo `ci.yml` con el contenido de arriba.
+3. **Haz commit y push** a la rama `main`.
+4. **Abre la pestaña "Actions"** de tu repositorio en GitHub. Verás tu workflow corriendo, con una paloma verde si todo salió bien o una cruz roja si algo falló.
+5. **Rompe algo a propósito** en una rama nueva (una prueba que falle), abre un pull request y comprueba que GitHub bloquea o marca el cambio en rojo.
+
+</Pasos>
+
+Puedes pedir en la configuración del repositorio que no se pueda mezclar un pull request si el CI está en rojo. Así, la rama principal siempre contiene código que pasó las pruebas.
+
+## Del CI al despliegue
+
+Para publicar automáticamente después del CI puedes crear un segundo workflow que dependa del primero:
+
+```yaml
+name: Desplegar
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  desplegar:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment: produccion
+    steps:
+      - uses: actions/checkout@v4
+      - name: Desplegar
+        run: ./scripts/desplegar.sh
+        env:
+          TOKEN_DE_DESPLIEGUE: ${{ secrets.TOKEN_DE_DESPLIEGUE }}
+```
+
+Este flujo solo corre si el CI terminó bien en `main`. El script `desplegar.sh` es tuyo: depende de dónde publiques (un servidor, un servicio de hospedaje o un registro de contenedores, con [Docker](/biblioteca/docker/) por ejemplo). Muchos servicios de hospedaje ofrecen su propia acción o su propia integración con GitHub, que puede ser más sencilla que escribir el script.
+
+### Secretos y variables
+
+La línea `secrets.TOKEN_DE_DESPLIEGUE` lee un **secreto**: un valor sensible que guardas en la configuración del repositorio (Settings, Secrets and variables, Actions) y que GitHub oculta en los registros. Nunca escribas contraseñas ni tokens dentro del archivo YAML ni dentro del código. Para entender cómo se pasan valores de configuración a un programa, revisa [Variables de entorno](/fundamentos/variables-de-entorno/).
+
+<Callout tipo="warning" titulo="Un workflow puede hacer daño si lo configuras mal">
+Los workflows corren código con acceso a tus secretos. Dale permisos mínimos con `permissions`, desconfía de las acciones de terceros que no conoces, y ten cuidado con los pull requests que vienen de forks de extraños: no les entregues secretos. Además, si un secreto se filtra en un commit, cámbialo de inmediato: borrarlo del historial no basta. Más en [Seguridad web: las vulnerabilidades más comunes](/fundamentos/seguridad-web-owasp/).
+</Callout>
+
+## Buenas prácticas
+
+- **Mantén el CI rápido.** Si tarda mucho, la gente deja de esperarlo. Usa caché y deja las pruebas lentas (E2E) para un job aparte.
+- **Que sea reproducible.** Fija versiones de herramientas y usa archivos de bloqueo de dependencias.
+- **Falla pronto.** Pon primero lo barato (lint, pruebas unitarias) y al final lo caro.
+- **Un cambio rojo se arregla primero.** Si el CI falla en `main`, esa es la prioridad del equipo.
+- **Cambios pequeños y frecuentes.** Integrar seguido evita choques enormes al juntar el trabajo de varias personas.
+
+## Pruébalo tú
+
+1. Crea un repositorio nuevo con un proyecto mínimo y una sola prueba. Agrega el workflow de este artículo, adaptado a tu lenguaje.
+2. Provoca un fallo: cambia el valor esperado de una prueba. Observa en la pestaña "Actions" cómo se marca el paso que falló y lee su registro.
+3. Agrega un segundo job que corra el `lint` por separado y comprueba que ambos corren en paralelo.
+4. Activa la protección de la rama `main` para exigir que el CI pase antes de mezclar un pull request.
+
+## Errores y mitos comunes
+
+- **"CI/CD es solo para empresas grandes."** Es gratis de empezar en un proyecto personal y te ahorra errores desde el primer día. Revisa los límites vigentes en la documentación oficial de GitHub.
+- **"Con CI ya no necesito pruebas."** Al revés: el CI es tan útil como las pruebas que ejecuta.
+- **"Despliegue continuo significa publicar sin control."** Puedes exigir aprobaciones manuales con entornos protegidos.
+- **"Es complicado de aprender."** Un workflow básico son veinte líneas de YAML.
+- **"Si funciona en mi computadora, funciona en CI."** El CI parte de una máquina limpia, y por eso detecta dependencias que olvidaste declarar.
+
+## Qué sigue
+
+- Aprende a escribir las pruebas que el CI ejecutará: [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+- Empaqueta tu app para que corra igual en todos lados con la [biblioteca de Docker](/biblioteca/docker/).
+- Domina el flujo de ramas y pull requests en la [biblioteca de Git](/biblioteca/git/).
+- Consulta el [glosario](/glosario/) y practica con los [retos](/retos/).

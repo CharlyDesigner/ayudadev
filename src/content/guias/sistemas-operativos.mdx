@@ -1,0 +1,282 @@
+---
+titulo: 'Sistemas operativos explicados'
+descripcion: 'Qué hace un sistema operativo y cómo ver procesos, archivos, tuberías, señales, planificación y memoria virtual con ejemplos en Python que corren en tu equipo.'
+tema: sistemas-operativos
+nivel: intermedio
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['sistemas-operativos-fundamentos-wolf', 'sistemas-operativos-aproximacion-practica-linux', 'sistemas-operativos-ostep', 'sistemas-operativos-ocw-uc3m']
+requisitos: ['Saber ejecutar un programa de Python desde la terminal', 'Conocer lo básico de bucles, funciones y diccionarios']
+etiquetas: ['procesos', 'memoria', 'archivos', 'senales', 'planificacion']
+orden: 3
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Todo programa que escribes corre encima de un sistema operativo. Él decide quién usa el procesador, cuánta memoria recibe cada programa, dónde viven los archivos y cómo hablan entre sí los procesos. Esta guía te muestra esas ideas con ejemplos pequeños que ejecutas en tu propio equipo.
+
+## Qué es y para qué sirve
+
+- **Es el intermediario entre los programas y el hardware.** Ningún programa toca el disco o la red directamente: pide el servicio al sistema operativo mediante llamadas al sistema.
+- **Un proceso es un programa en ejecución.** Tiene su propio identificador (PID), su memoria y sus archivos abiertos. Un hilo es una línea de ejecución dentro de un proceso, y comparte su memoria.
+- **El planificador reparte el procesador.** Con pocos núcleos y muchos procesos, el sistema los turna tan rápido que parece que todos corren a la vez.
+- **La memoria virtual da a cada proceso su propio espacio de direcciones.** El sistema traduce esas direcciones a memoria física por páginas y manda al disco lo que no cabe.
+- **El sistema de archivos organiza el almacenamiento.** Nombres, carpetas, permisos y metadatos viven ahí. Los programas usan descriptores de archivo, que son números que el sistema entrega al abrir.
+- **La comunicación entre procesos es explícita.** Tuberías, señales, memoria compartida y sockets son las vías para que dos procesos cooperen sin pisarse.
+- **Windows, macOS y Linux comparten las ideas.** Cambian los nombres y los detalles, pero procesos, memoria y archivos funcionan con los mismos principios.
+
+## Prepara tu entorno
+
+Para esta guía basta con Python 3, que corre igual en Windows, macOS y Linux. Si quieres ver el lado Linux con más detalle, un terminal de Linux o WSL en Windows te ayudará.
+
+<Pasos>
+
+1. **Instala Python 3.** En **Windows** descarga el instalador desde [python.org/downloads](https://www.python.org/downloads/) y marca **"Add python.exe to PATH"**. En **macOS** usa el instalador de python.org o `brew install python`. En **Linux** suele venir instalado; si no, `sudo apt install python3`.
+2. **Comprueba la versión** con `python --version` (en macOS y Linux, `python3 --version`).
+3. **Crea una carpeta** `so` y guarda ahí cada ejemplo con el nombre de archivo indicado.
+4. **Ejecuta cada archivo** con `python nombre.py`. Con [uv](https://docs.astral.sh/uv/) también funciona `uv run nombre.py`.
+5. **Mira tus procesos reales.** En **Windows** abre el Administrador de tareas. En **macOS** abre el Monitor de actividad. En **Linux** usa `top`, `htop` o `ps aux`.
+
+</Pasos>
+
+## Ejemplos paso a paso
+
+En los comandos usamos `python`; si tu sistema solo reconoce `python3`, cámbialo. Todos los ejemplos dan el mismo resultado en Windows, macOS y Linux.
+
+<Ejemplo numero={1} titulo="Procesos: padre, hijo y código de salida" archivo="procesos.py" ejecutar="python procesos.py" salida={"El hijo tiene otro PID: True\nEl hijo ve como padre a este proceso: True\nCódigo de salida del hijo: 0\nCódigo de salida del segundo hijo: 3"}>
+
+```python
+import os
+import subprocess
+import sys
+
+# Cada programa en ejecución es un proceso con su propio identificador (PID)
+mi_pid = os.getpid()
+
+# Lanzamos un proceso hijo: otro intérprete de Python que ejecuta una línea
+codigo = "import os; print(os.getpid(), os.getppid())"
+resultado = subprocess.run(
+    [sys.executable, "-c", codigo],
+    capture_output=True,
+    text=True,
+)
+
+pid_hijo, pid_padre_visto_por_hijo = map(int, resultado.stdout.split())
+
+print("El hijo tiene otro PID:", pid_hijo != mi_pid)
+print("El hijo ve como padre a este proceso:", pid_padre_visto_por_hijo == mi_pid)
+print("Código de salida del hijo:", resultado.returncode)
+
+# Un código de salida distinto de 0 indica error
+fallo = subprocess.run([sys.executable, "-c", "raise SystemExit(3)"])
+print("Código de salida del segundo hijo:", fallo.returncode)
+```
+
+No imprimimos los PID porque cambian en cada ejecución; comparamos las relaciones, que sí son estables. Cada proceso hijo tiene su propio PID y conoce el de su padre. El código de salida es la forma estándar de decir si un programa terminó bien (`0`) o mal (cualquier otro número). Los scripts y las herramientas de automatización dependen de él.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Archivos: descriptores, metadatos y permisos de creación" archivo="archivos.py" ejecutar="python archivos.py" salida={"Tipo del descriptor: int\nTamaño en bytes: 23\nNo se puede crear de nuevo un archivo existente\nArchivos en la carpeta: ['renombrada.txt']\nDespués de borrar: []"}>
+
+```python
+import os
+import tempfile
+from pathlib import Path
+
+# Trabajamos en una carpeta temporal para no ensuciar tu disco
+with tempfile.TemporaryDirectory() as carpeta:
+    ruta = Path(carpeta) / "nota.txt"
+
+    # Crear y escribir: el sistema operativo entrega un descriptor de archivo
+    with open(ruta, "w", encoding="utf-8", newline="\n") as f:
+        f.write("hola sistema operativo\n")
+        print("Tipo del descriptor:", type(f.fileno()).__name__)
+
+    # Los metadatos vienen del sistema de archivos
+    info = os.stat(ruta)
+    print("Tamaño en bytes:", info.st_size)
+
+    # El modo "x" falla si el archivo ya existe: el sistema lo impide
+    try:
+        open(ruta, "x").close()
+    except FileExistsError:
+        print("No se puede crear de nuevo un archivo existente")
+
+    # Renombrar y borrar son operaciones del sistema de archivos
+    nueva = ruta.with_name("renombrada.txt")
+    ruta.rename(nueva)
+    print("Archivos en la carpeta:", sorted(p.name for p in Path(carpeta).iterdir()))
+    nueva.unlink()
+    print("Después de borrar:", sorted(p.name for p in Path(carpeta).iterdir()))
+```
+
+Cuando abres un archivo, el sistema operativo te da un descriptor, un simple número entero. Con `os.stat` lees el tamaño: son 23 bytes porque indicamos `newline="\n"`, así no varía entre sistemas. El modo `"x"` pide crear el archivo y falla si ya existe. La carpeta temporal se borra sola al salir del bloque `with`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Tuberías: conectar la salida de un proceso con la entrada de otro" archivo="tuberias.py" ejecutar="python tuberias.py" salida={"mango\nmanzana\npera"}>
+
+```python
+import subprocess
+import sys
+
+# Equivalente a:  productor | sort
+# La salida estándar del primer proceso se conecta a la entrada del segundo
+productor = subprocess.Popen(
+    [sys.executable, "-c", "print('mango'); print('pera'); print('manzana')"],
+    stdout=subprocess.PIPE,
+)
+orden = subprocess.Popen(
+    [sys.executable, "-c", "import sys; print(''.join(sorted(sys.stdin)), end='')"],
+    stdin=productor.stdout,
+    stdout=subprocess.PIPE,
+    text=True,
+)
+productor.stdout.close()  # el segundo proceso es ahora el único lector
+salida, _ = orden.communicate()
+print(salida, end="")
+```
+
+Una tubería es un canal que el sistema operativo mantiene entre dos procesos: lo que uno escribe, el otro lo lee. Es exactamente lo que hace el símbolo `|` en la terminal. En Linux o macOS lo ves así: `printf 'mango\npera\nmanzana\npera\n' | sort | uniq -c`, que ordena las líneas y cuenta cuántas veces aparece cada una. Cada programa hace una sola cosa, y las tuberías los combinan.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Señales: avisos del sistema a un proceso" archivo="senales.py" ejecutar="python senales.py" salida={"Antes de la señal\nRecibí la señal SIGINT, cierro con calma\nEl programa sigue vivo"}>
+
+```python
+import signal
+
+
+# Una señal es un aviso que el sistema operativo entrega a un proceso
+def al_recibir(numero, marco):
+    print(f"Recibí la señal {signal.Signals(numero).name}, cierro con calma")
+
+
+signal.signal(signal.SIGINT, al_recibir)   # lo mismo que pulsar Ctrl+C
+
+print("Antes de la señal")
+signal.raise_signal(signal.SIGINT)         # nos la enviamos a nosotros mismos
+print("El programa sigue vivo")
+```
+
+Cuando pulsas Ctrl+C, el sistema envía `SIGINT` al programa. Por defecto Python lo convierte en `KeyboardInterrupt`; aquí lo reemplazamos por nuestra función y el programa continúa. Las señales más comunes son `SIGINT` (interrumpir), `SIGTERM` (pedir que termine con educación) y `SIGKILL` (matar sin avisar, y no se puede capturar). Un servicio bien hecho captura `SIGTERM` para cerrar archivos y conexiones antes de salir.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Planificación Round Robin" archivo="planificacion.py" ejecutar="python planificacion.py" salida={"t= 0  A usa la CPU 3 unidades\nt= 3  B usa la CPU 3 unidades\nt= 6  C usa la CPU 3 unidades\nt= 9  A usa la CPU 2 unidades\nt=11  C usa la CPU 3 unidades\nt=14  C usa la CPU 2 unidades\nTerminan en: {'B': 6, 'A': 11, 'C': 16}"}>
+
+```python
+from collections import deque
+
+# Planificación Round Robin: cada proceso usa la CPU un quantum y vuelve al final de la cola
+procesos = {"A": 5, "B": 3, "C": 8}   # tiempo de CPU que necesita cada uno
+quantum = 3
+
+cola = deque(procesos.items())
+reloj = 0
+terminan = {}
+
+while cola:
+    nombre, restante = cola.popleft()
+    uso = min(quantum, restante)
+    print(f"t={reloj:>2}  {nombre} usa la CPU {uso} unidades")
+    reloj += uso
+    restante -= uso
+    if restante > 0:
+        cola.append((nombre, restante))
+    else:
+        terminan[nombre] = reloj
+
+print("Terminan en:", terminan)
+```
+
+Es una simulación, no el planificador real, pero ilustra la idea: ningún proceso monopoliza el procesador. B necesita 3 unidades y termina en la primera vuelta; C, que necesita 8, es el último. Un quantum muy pequeño reparte mejor, pero gasta tiempo en cambiar de proceso. Uno muy grande se parece a ejecutar los procesos uno por uno.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Memoria virtual: fallos de página con FIFO y LRU" archivo="paginas.py" ejecutar="python paginas.py" salida={"FIFO: 10 fallos de página\nLRU:  9 fallos de página"}>
+
+```python
+from collections import OrderedDict, deque
+
+# Memoria virtual: ¿cuántos fallos de página hay con 3 marcos de memoria física?
+referencias = [7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2]
+marcos = 3
+
+
+def fifo(refs, n):
+    en_memoria, orden, fallos = set(), deque(), 0
+    for p in refs:
+        if p not in en_memoria:
+            fallos += 1
+            if len(en_memoria) == n:
+                en_memoria.remove(orden.popleft())   # sale la página más antigua
+            en_memoria.add(p)
+            orden.append(p)
+    return fallos
+
+
+def lru(refs, n):
+    memoria, fallos = OrderedDict(), 0
+    for p in refs:
+        if p in memoria:
+            memoria.move_to_end(p)                   # la usamos, es la más reciente
+        else:
+            fallos += 1
+            if len(memoria) == n:
+                memoria.popitem(last=False)          # sale la menos usada recientemente
+            memoria[p] = True
+    return fallos
+
+
+print("FIFO:", fifo(referencias, marcos), "fallos de página")
+print("LRU: ", lru(referencias, marcos), "fallos de página")
+```
+
+Cada número es una página que el programa necesita. Si no está en memoria física, ocurre un fallo de página y el sistema debe traerla del disco, que es mucho más lento. Cuando la memoria se llena, hay que elegir una víctima. FIFO expulsa la página más antigua; LRU, la que lleva más tiempo sin usarse. Con esta secuencia LRU provoca un fallo menos, porque aprovecha que las páginas usadas hace poco se vuelven a usar pronto.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Confundir proceso con hilo">
+Los procesos tienen memoria separada; los hilos de un mismo proceso comparten la suya. Por eso los hilos se comunican fácil pero necesitan candados para no corromper los datos, mientras que los procesos están aislados y se comunican con tuberías, sockets o memoria compartida explícita.
+</Callout>
+
+<Callout tipo="warning" titulo="No revisar el código de salida de un subproceso">
+Si lanzas un comando desde un script y no miras su código de salida, un fallo pasa desapercibido. Usa `subprocess.run(..., check=True)` para que Python lance una excepción cuando el comando falla.
+</Callout>
+
+<Callout tipo="warning" titulo="Armar comandos con texto del usuario y shell=True">
+Concatenar datos externos en un comando y ejecutarlo con `shell=True` permite inyección de comandos. Pasa los argumentos como lista, `subprocess.run(["ls", carpeta])`, y el sistema no los interpretará como código de la shell.
+</Callout>
+
+<Callout tipo="warning" titulo="Suponer que una ruta funciona igual en todos los sistemas">
+Windows usa `\` y letras de unidad; macOS y Linux usan `/`. Además, Linux distingue mayúsculas de minúsculas en los nombres y Windows normalmente no. Construye rutas con `pathlib.Path` en lugar de concatenar texto.
+</Callout>
+
+<Callout tipo="warning" titulo="Dejar procesos o archivos abiertos">
+Cada archivo abierto y cada proceso consume recursos del sistema, que son limitados. Usa `with` para abrir archivos y espera siempre a tus subprocesos (`wait` o `communicate`) para no dejar procesos zombi.
+</Callout>
+
+## Buenas prácticas
+
+- Mira el sistema trabajar: abre el Administrador de tareas, el Monitor de actividad o `top` mientras ejecutas tus programas.
+- Termina los procesos con `SIGTERM` primero y usa `SIGKILL` solo como último recurso.
+- Cierra archivos con `with` y borra los temporales; el módulo `tempfile` lo hace por ti.
+- Usa tuberías y programas pequeños que hacen una sola cosa antes de escribir un programa enorme.
+- Captura `SIGTERM` en servicios y programas largos para cerrar conexiones con orden.
+- Respeta los permisos: ejecuta tus programas con el usuario menos privilegiado que funcione.
+- Aprende un poco de la terminal de tu sistema; casi todo lo que muestran los libros de sistemas operativos se prueba ahí.
+
+## Siguiente paso
+
+- **Lee el libro base.** [Fundamentos de sistemas operativos](https://sistop.org/) cubre procesos, memoria y archivos en español, y el libro práctico de la URJC lo hace programando en C sobre Linux.
+- **Practica en Linux.** La [biblioteca de Linux y terminal](/biblioteca/linux/) tiene cursos para aprender la línea de comandos que usarás para probar todo esto.
+- **Baja un nivel.** Con la [guía de C](/guias/c/) puedes llamar al sistema operativo directamente con `fork`, `exec` y `pipe`.
+- **Explora más material** en la [biblioteca de sistemas operativos](/biblioteca/sistemas-operativos/) y entiende por qué importan los algoritmos en la guía de [Algoritmos y estructuras de datos](/guias/algoritmos/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

@@ -3,146 +3,247 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '@layouts/BaseLayout.astro';
 import Icon from '@components/ui/Icon.astro';
 import SectionHeader from '@components/ui/SectionHeader.astro';
+import TemaBadge from '@components/ui/TemaBadge.astro';
 import RecursoCard from '@components/biblioteca/RecursoCard.astro';
+import CardContenido from '@components/ui/CardContenido.astro';
 import NewsletterForm from '@components/newsletter/NewsletterForm.astro';
 import { SITE } from '@data/site';
-import { AREAS_INFO } from '@data/areas';
-import { TEMAS, temasPorArea } from '@data/temas';
-import { RECURSOS, conteoPorArea, recursosDestacados } from '@data/library';
+import { TEMAS } from '@data/temas';
+import { RECURSOS, recursosDestacados } from '@data/library';
+import { HERRAMIENTAS } from '@data/herramientas';
+import { COMUNIDAD } from '@data/comunidad';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
 import { fechaCorta } from '@lib/dates';
 
-const porArea = conteoPorArea();
+const visibles = <T extends { data: { borrador?: boolean } }>(e: T) => !e.data.borrador;
+const [guiasAll, rutasAll, iaAll, noticiasAll, retosAll, proyectosAll, hojasAll, glosarioAll, fundamentosAll, aprendeAll] = await Promise.all([
+  getCollection('guias', visibles),
+  getCollection('rutas', visibles),
+  getCollection('ia', visibles),
+  getCollection('noticias', visibles),
+  getCollection('retos', visibles),
+  getCollection('proyectos', visibles),
+  getCollection('hojas', visibles),
+  getCollection('glosario'),
+  getCollection('fundamentos', visibles),
+  getCollection('aprende', visibles),
+]);
+
+const guias = [...guiasAll].sort((a, b) => a.data.orden - b.data.orden).slice(0, 6);
+const rutas = [...rutasAll].sort((a, b) => a.data.orden - b.data.orden).slice(0, 3);
+const ia = [...iaAll].sort((a, b) => a.data.orden - b.data.orden).slice(0, 8);
+const noticias = [...noticiasAll].sort((a, b) => b.data.publicado.getTime() - a.data.publicado.getTime()).slice(0, 3);
+const fundamentos = [...fundamentosAll].sort((a, b) => a.data.orden - b.data.orden).slice(0, 3);
 const destacados = recursosDestacados(6);
-const guias = (await getCollection('guias', (g) => !g.data.borrador)).sort((a, b) => a.data.orden - b.data.orden).slice(0, 6);
-const ia = (await getCollection('ia', (h) => !h.data.borrador)).sort((a, b) => a.data.orden - b.data.orden).slice(0, 6);
-const noticias = (await getCollection('noticias', (n) => !n.data.borrador)).sort((a, b) => b.data.publicado.getTime() - a.data.publicado.getTime()).slice(0, 3);
-const totalGuias = (await getCollection('guias', (g) => !g.data.borrador)).length;
-const sugerencias = ['javascript', 'python', 'html-css', 'git', 'sql', 'inteligencia-artificial'].map((s) => TEMAS.find((t) => t.slug === s)).filter(Boolean);
+
+const ORDEN_TEC = ['javascript', 'typescript', 'python', 'html-css', 'react', 'nodejs', 'java', 'c-sharp', 'go', 'rust', 'php', 'kotlin', 'git', 'docker', 'linux', 'nosql', 'angular', 'astro', 'android', 'django', 'cpp', 'c', 'ruby', 'scratch'];
+const tecnologias = ORDEN_TEC.map((s) => TEMAS.find((t) => t.slug === s && t.logo)).filter((t) => t !== undefined);
+const chips = ['javascript', 'python', 'html-css', 'git', 'sql', 'inteligencia-artificial'].map((s) => TEMAS.find((t) => t.slug === s)).filter((t) => t !== undefined);
+const OBJ: Record<string, string> = { web: 'Desarrollo web', movil: 'Apps móviles', 'datos-ia': 'Datos e IA', sistemas: 'Sistemas', juegos: 'Videojuegos', general: 'Primeros pasos' };
+
+const caminos = [
+  { titulo: 'Nunca he programado', texto: 'Responde tres preguntas y te armamos un plan con tu primer paso para hoy.', href: '/empieza-aqui/', icono: 'compass', cta: 'Encontrar mi ruta' },
+  { titulo: 'Quiero una ruta clara', texto: 'Caminos paso a paso: web, datos, móvil, sistemas y más, con guías, retos y proyectos.', href: '/rutas/', icono: 'route', cta: 'Ver las rutas' },
+  { titulo: 'Quiero practicar', texto: 'Retos con pistas y solución, y proyectos para llenar tu portafolio.', href: '/retos/', icono: 'puzzle', cta: 'Ir a practicar' },
+  { titulo: 'Quiero usar IA', texto: 'Aprende con Claude, ChatGPT y más como tutor, sin dejar de entender tu código.', href: '/ia/aprende/', icono: 'sparkles', cta: 'Aprender con IA' },
+];
+const stats: [string, string][] = [
+  [String(RECURSOS.length), 'recursos gratis'],
+  [String(guiasAll.length), 'guías con ejemplos'],
+  [String(rutasAll.length), 'rutas de estudio'],
+  [String(retosAll.length + proyectosAll.length), 'retos y proyectos'],
+  [String(glosarioAll.length), 'términos en el glosario'],
+];
 ---
 
 <BaseLayout title={`${SITE.nombre}: ${SITE.lema}`} description={SITE.descripcion} path="/">
   <!-- Hero -->
   <section class="bg-glow">
-    <div class="container-site flex flex-col items-center py-16 text-center sm:py-24">
+    <div class="container-site flex flex-col items-center py-14 text-center sm:py-24">
       <p class="eyebrow reveal">Gratis, en español y sin registro</p>
-      <h1 class="reveal reveal-delay-1 mt-5 max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
-        Aprende a programar con <span class="text-accent-ink">recursos gratis</span>, guías con ejemplos e IA
+      <h1 class="reveal reveal-delay-1 mt-5 max-w-4xl text-4xl font-bold tracking-tight text-balance sm:text-6xl">
+        Aprende a programar con <span class="text-accent-ink">un plan</span>, ejemplos reales e IA
       </h1>
       <p class="reveal reveal-delay-2 mt-5 max-w-2xl text-lg text-pretty text-muted">
-        {RECURSOS.length} libros, cursos y documentación curados en {TEMAS.length} temas. Guías paso a paso que puedes copiar y ejecutar. Y un apartado para aprender con Claude, ChatGPT, Gemini y más.
+        Rutas de estudio, guías con código que puedes ejecutar, retos con solución y {RECURSOS.length} recursos gratuitos curados en {TEMAS.length} temas. Todo en un solo lugar y en español.
       </p>
+
+      <div class="reveal reveal-delay-3 mt-8 flex flex-wrap items-center justify-center gap-3">
+        <a href="/empieza-aqui/" class="btn btn-primary !px-6 !py-3.5 text-base"><Icon name="compass" class="h-5 w-5" /> Empieza aquí</a>
+        <a href="/biblioteca/" class="btn btn-secondary !px-6 !py-3.5 text-base"><Icon name="book" class="h-5 w-5" /> Explorar la biblioteca</a>
+      </div>
 
       <div class="reveal reveal-delay-3 mt-8 w-full max-w-xl">
         <button type="button" data-command-open class="field flex items-center gap-3 text-left text-muted shadow-lg shadow-black/10 hover:border-fg">
           <Icon name="search" class="h-5 w-5 shrink-0" />
-          <span class="flex-1">Busca un tema, lenguaje o herramienta...</span>
+          <span class="flex-1">Busca un tema, guía, reto o término...</span>
           <kbd class="hidden sm:inline">Ctrl K</kbd>
         </button>
-        <div class="mt-3 flex flex-wrap justify-center gap-2">
-          {sugerencias.map((t) => t && <a href={`/biblioteca/${t.slug}/`} class="chip">{t.nombre}</a>)}
-        </div>
+        <ul class="mt-4 flex flex-wrap justify-center gap-2">
+          {chips.map((t) => (
+            <li>
+              <a href={`/biblioteca/${t!.slug}/`} class="chip !py-1.5 !pr-3.5 !pl-1.5">
+                <TemaBadge tema={t!} class="h-6 w-6 !rounded-full !p-1" />
+                {t!.nombre}
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <dl class="mt-12 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          [String(RECURSOS.length), 'recursos'],
-          [String(TEMAS.length), 'temas'],
-          [String(totalGuias), 'guías con ejemplos'],
-          ['0 $', 'siempre'],
-        ].map(([n, l]) => (
+      <dl class="mt-12 flex w-full max-w-4xl flex-wrap justify-center gap-3 [&>div]:min-w-[8.5rem] [&>div]:flex-1">
+        {stats.filter(([n]) => n !== '0').map(([n, l]) => (
           <div class="card p-4">
-            <dt class="text-xs text-muted">{l}</dt>
-            <dd class="text-2xl font-bold tracking-tight">{n}</dd>
+            <dd class="text-3xl font-bold tracking-tight">{n}</dd>
+            <dt class="mt-0.5 text-xs text-muted">{l}</dt>
           </div>
         ))}
       </dl>
     </div>
   </section>
 
-  <!-- Áreas -->
-  <section class="container-site py-12" aria-labelledby="areas-titulo">
-    <SectionHeader eyebrow="Biblioteca" titulo="Explora por área" descripcion="Cada tema enlaza a recursos verificados y, cuando existe, a su guía con ejemplos." enlace={{ href: '/biblioteca/', label: 'Ver toda la biblioteca' }} />
-    <div id="areas-titulo" class="visually-hidden">Áreas</div>
+  <!-- Elige tu camino -->
+  <section class="container-site py-12" aria-labelledby="caminos-titulo">
+    <SectionHeader eyebrow="Por dónde empezar" titulo="Elige tu camino" descripcion="No hace falta saber qué estudiar. Elige lo que más se parezca a ti hoy." />
+    <h2 id="caminos-titulo" class="visually-hidden">Elige tu camino</h2>
     <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {AREAS_INFO.map((area) => {
-        const temas = temasPorArea(area.id);
-        return (
-          <div class="card flex flex-col p-5">
-            <div class="flex items-center gap-3">
-              <span class="grid h-10 w-10 place-items-center rounded-2xl bg-accent text-on-accent"><Icon name={area.icono as any} class="h-5 w-5" /></span>
-              <div>
-                <h3 class="font-semibold">{area.nombre}</h3>
-                <p class="text-xs text-muted">{porArea.get(area.id) ?? 0} recursos</p>
-              </div>
-            </div>
-            <p class="mt-3 text-sm text-muted">{area.descripcion}</p>
-            <ul class="mt-4 flex flex-wrap gap-1.5">
-              {temas.map((t) => (
-                <li><a href={`/biblioteca/${t.slug}/`} class="chip">{t.nombre}</a></li>
-              ))}
-            </ul>
-          </div>
-        );
-      })}
+      {caminos.map((c) => (
+        <a href={c.href} class="card card-hover group flex flex-col gap-4 p-6">
+          <span class="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-on-accent"><Icon name={c.icono as any} class="h-6 w-6" /></span>
+          <span>
+            <span class="block text-lg font-semibold leading-snug">{c.titulo}</span>
+            <span class="mt-1 block text-sm leading-relaxed text-muted">{c.texto}</span>
+          </span>
+          <span class="mt-auto inline-flex items-center gap-1 text-sm font-medium text-accent-ink">{c.cta} <Icon name="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+        </a>
+      ))}
     </div>
   </section>
+
+  <!-- Tecnologías con logos -->
+  <section class="container-site py-12" aria-labelledby="tec-titulo">
+    <SectionHeader eyebrow="Biblioteca" titulo="Explora por tecnología" descripcion="Elige un lenguaje, framework o herramienta y encuentra sus guías, retos, hojas de referencia y recursos gratis." enlace={{ href: '/biblioteca/', label: `Ver los ${TEMAS.length} temas` }} />
+    <h2 id="tec-titulo" class="visually-hidden">Tecnologías</h2>
+    <ul class="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+      {tecnologias.map((t) => (
+        <li>
+          <a href={`/biblioteca/${t.slug}/`} class="card card-hover flex flex-col items-center gap-2.5 p-4 text-center">
+            <TemaBadge tema={t} class="h-12 w-12" />
+            <span class="text-xs font-medium leading-tight">{t.nombre}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <!-- Rutas -->
+  {rutas.length > 0 && (
+    <section class="container-site py-12" aria-labelledby="rutas-titulo">
+      <SectionHeader eyebrow="Aprende con un plan" titulo="Rutas de estudio" descripcion="Cada paso tiene su guía, sus recursos, algo para practicar y una meta clara." enlace={{ href: '/rutas/', label: 'Todas las rutas' }} />
+      <h2 id="rutas-titulo" class="visually-hidden">Rutas de estudio</h2>
+      <div class="mt-8 grid gap-5 lg:grid-cols-3">
+        {rutas.map((r) => (
+          <article class="card card-hover group relative flex flex-col gap-4 p-6">
+            <ul class="flex -space-x-1.5" aria-label="Tecnologías">
+              {r.data.logos.slice(0, 5).map((l) => <li class="logo-tile grid h-10 w-10 place-items-center rounded-xl p-2 ring-2 ring-[var(--ad-surface)]"><img src={`/logos/${l}.svg`} alt={l} width="28" height="28" loading="lazy" decoding="async" class="h-full w-full object-contain" /></li>)}
+            </ul>
+            <div class="flex flex-wrap gap-1.5"><span class="badge badge-accent">{OBJ[r.data.objetivo]}</span><span class="badge">{ETIQUETAS_NIVEL[r.data.nivel]}</span></div>
+            <h3 class="text-xl font-semibold leading-snug"><a href={`/rutas/${r.id}/`} class="after:absolute after:inset-0 after:rounded-[var(--radius-card)] hover:text-accent-ink">{r.data.titulo}</a></h3>
+            <p class="text-sm leading-relaxed text-muted">{r.data.descripcion}</p>
+            <p class="mt-auto flex items-center justify-between text-xs text-muted"><span class="inline-flex items-center gap-1"><Icon name="clock" class="h-3.5 w-3.5" /> {r.data.duracion}</span><span>{r.data.pasos.length} pasos</span></p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
 
   <!-- Guías -->
   {guias.length > 0 && (
     <section class="container-site py-12" aria-labelledby="guias-titulo">
-      <SectionHeader eyebrow="Guías con ejemplos" titulo="Empieza hoy con código que puedes ejecutar" descripcion="Modelo mental, instalación en 5 minutos, ejemplos comentados, trampas comunes y los libros gratis para seguir." enlace={{ href: '/guias/', label: 'Todas las guías' }} />
-      <div id="guias-titulo" class="visually-hidden">Guías</div>
+      <SectionHeader eyebrow="Guías con ejemplos" titulo="Código que puedes copiar y ejecutar" descripcion="Modelo mental, instalación en 5 minutos, ejemplos comentados con su salida real, errores comunes y los mejores libros gratis para seguir." enlace={{ href: '/guias/', label: `Las ${guiasAll.length} guías` }} />
+      <h2 id="guias-titulo" class="visually-hidden">Guías</h2>
       <div class="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {guias.map((g) => {
           const tema = TEMAS.find((t) => t.slug === g.data.tema);
           return (
-            <a href={`/guias/${g.id}/`} class="card card-hover group flex flex-col gap-3 p-5">
-              <div class="flex items-center gap-3">
-                <span class="grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-accent-ink group-hover:bg-accent group-hover:text-on-accent"><Icon name={(tema?.icono ?? 'code') as any} class="h-5 w-5" /></span>
-                <span class="badge">{g.data.nivel}</span>
-              </div>
-              <h3 class="text-lg font-semibold">{g.data.titulo}</h3>
-              <p class="text-sm text-muted">{g.data.descripcion}</p>
-              <span class="mt-auto inline-flex items-center gap-1 text-sm font-medium text-accent-ink">Leer la guía <Icon name="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
-            </a>
+            <CardContenido
+              href={`/guias/${g.id}/`}
+              titulo={g.data.titulo}
+              descripcion={g.data.descripcion}
+              badges={[ETIQUETAS_NIVEL[g.data.nivel]]}
+              meta={g.data.tiempoLectura ? `${g.data.tiempoLectura} min` : undefined}
+              tema={tema}
+            />
           );
         })}
       </div>
     </section>
   )}
 
+  <!-- Practica y referencia -->
+  <section class="container-site py-12" aria-labelledby="practica-titulo">
+    <SectionHeader eyebrow="Practica y consulta" titulo="Aprender es hacer" descripcion="Retos para entrenar, proyectos para tu portafolio y referencias para cuando se te olvide una sintaxis." />
+    <h2 id="practica-titulo" class="visually-hidden">Practica y consulta</h2>
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {[
+        ['Retos', `${retosAll.length} ejercicios con pistas y solución`, '/retos/', 'puzzle'],
+        ['Proyectos', `${proyectosAll.length} ideas con pasos y retos extra`, '/proyectos/', 'rocket'],
+        ['Hojas de referencia', `${hojasAll.length} cheatsheets para consultar rápido`, '/hojas/', 'file-text'],
+        ['Glosario', `${glosarioAll.length} términos en lenguaje sencillo`, '/glosario/', 'layers'],
+      ].map(([t, d, h, i]) => (
+        <a href={h} class="card card-hover group flex items-center gap-4 p-5">
+          <span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink transition-colors group-hover:bg-accent group-hover:text-on-accent"><Icon name={i as any} class="h-6 w-6" /></span>
+          <span><span class="block font-semibold">{t}</span><span class="block text-sm leading-snug text-muted">{d}</span></span>
+        </a>
+      ))}
+    </div>
+  </section>
+
   <!-- IA -->
   <section class="container-site py-12" aria-labelledby="ia-titulo">
     <div class="card bg-glow overflow-hidden p-6 sm:p-10">
-      <SectionHeader eyebrow="Inteligencia artificial" titulo="Aprende con IA sin depender de ella" descripcion="Fichas de Claude, ChatGPT, Gemini, Copilot y más. Prompts listos para copiar, una comparativa honesta y guías para usar la IA como tutor, no como atajo." enlace={{ href: '/ia/', label: 'Ir al apartado de IA' }} />
-      <div id="ia-titulo" class="visually-hidden">IA</div>
-      <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {ia.length > 0
-          ? ia.map((h) => (
-              <a href={`/ia/${h.id}/`} class="card card-hover flex items-center gap-3 p-4">
-                <span class="grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-accent-ink"><Icon name="robot" class="h-5 w-5" /></span>
-                <span class="min-w-0"><span class="block font-semibold">{h.data.nombre}</span><span class="block truncate text-xs text-muted">{h.data.empresa}</span></span>
-              </a>
-            ))
-          : [
-              ['Prompts para aprender', '/ia/prompts/', 'bulb'],
-              ['Comparativa de herramientas', '/ia/comparativa/', 'layers'],
-              ['Aprende con IA', '/ia/aprende/', 'school'],
-            ].map(([l, h, i]) => (
-              <a href={h} class="card card-hover flex items-center gap-3 p-4">
-                <span class="grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-accent-ink"><Icon name={i as any} class="h-5 w-5" /></span>
-                <span class="font-semibold">{l}</span>
-              </a>
-            ))}
+      <SectionHeader eyebrow="Inteligencia artificial" titulo="Aprende con IA sin depender de ella" descripcion="Fichas de las herramientas que vale la pena conocer, prompts listos para copiar, guías para usarla como tutor y una comparativa honesta." enlace={{ href: '/ia/', label: 'Ir al apartado de IA' }} />
+      <h2 id="ia-titulo" class="visually-hidden">IA</h2>
+      <ul class="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {ia.map((h) => (
+          <li>
+            <a href={`/ia/${h.id}/`} class="card card-hover flex items-center gap-3 p-3.5">
+              {h.data.logo ? (
+                <span class="logo-tile grid h-10 w-10 shrink-0 place-items-center rounded-xl p-2" aria-hidden="true"><img src={`/logos/ia/${h.data.logo}.svg`} alt="" width="28" height="28" loading="lazy" decoding="async" class="h-full w-full object-contain" /></span>
+              ) : (
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface-2 text-accent-ink"><Icon name="robot" class="h-5 w-5" /></span>
+              )}
+              <span class="min-w-0"><span class="block truncate text-sm font-semibold">{h.data.nombre}</span><span class="block truncate text-xs text-muted">{h.data.empresa}</span></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="mt-6 flex flex-wrap gap-2">
+        <a href="/ia/aprende/" class="btn btn-primary btn-sm">Aprende con IA ({aprendeAll.length} guías)</a>
+        <a href="/ia/prompts/" class="btn btn-secondary btn-sm">Biblioteca de prompts</a>
+        <a href="/ia/comparativa/" class="btn btn-ghost btn-sm">Comparativa</a>
       </div>
     </div>
   </section>
 
+  <!-- Fundamentos -->
+  {fundamentos.length > 0 && (
+    <section class="container-site py-12" aria-labelledby="fund-titulo">
+      <SectionHeader eyebrow="Fundamentos" titulo="Entiende cómo funcionan las cosas" descripcion="Artículos que explican los conceptos que todos usan y pocos entienden: internet, APIs, bases de datos, seguridad, pruebas." enlace={{ href: '/fundamentos/', label: `Los ${fundamentosAll.length} artículos` }} />
+      <h2 id="fund-titulo" class="visually-hidden">Fundamentos</h2>
+      <div class="mt-8 grid gap-4 md:grid-cols-3">
+        {fundamentos.map((f) => (
+          <CardContenido href={`/fundamentos/${f.id}/`} titulo={f.data.titulo} descripcion={f.data.descripcion} badges={[ETIQUETAS_NIVEL[f.data.nivel]]} meta={f.data.tiempoLectura ? `${f.data.tiempoLectura} min` : undefined} tema={f.data.temas[0] ? TEMAS.find((t) => t.slug === f.data.temas[0]) : undefined} />
+        ))}
+      </div>
+    </section>
+  )}
+
   <!-- Destacados -->
   {destacados.length > 0 && (
     <section class="container-site py-12" aria-labelledby="destacados-titulo">
-      <SectionHeader eyebrow="Recomendados" titulo="Recursos destacados" descripcion="Los que más recomendamos para empezar en cada área." />
-      <div id="destacados-titulo" class="visually-hidden">Destacados</div>
+      <SectionHeader eyebrow="Recomendados" titulo="Recursos para empezar" descripcion="Los que más recomendamos en cada área. Todos gratis y enlazados a su fuente original." enlace={{ href: '/biblioteca/', label: `Los ${RECURSOS.length} recursos` }} />
+      <h2 id="destacados-titulo" class="visually-hidden">Destacados</h2>
       <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {destacados.map((r) => <RecursoCard recurso={r} mostrarTema />)}
       </div>
@@ -153,18 +254,26 @@ const sugerencias = ['javascript', 'python', 'html-css', 'git', 'sql', 'intelige
   {noticias.length > 0 && (
     <section class="container-site py-12" aria-labelledby="noticias-titulo">
       <SectionHeader eyebrow="Noticias" titulo="Novedades del proyecto y del mundo dev" enlace={{ href: '/noticias/', label: 'Todas las noticias' }} />
-      <div id="noticias-titulo" class="visually-hidden">Noticias</div>
+      <h2 id="noticias-titulo" class="visually-hidden">Noticias</h2>
       <div class="mt-8 grid gap-4 md:grid-cols-3">
         {noticias.map((n) => (
           <a href={`/noticias/${n.id}/`} class="card card-hover flex flex-col gap-2 p-5">
             <time datetime={n.data.publicado.toISOString()} class="text-xs text-muted">{fechaCorta(n.data.publicado)}</time>
-            <h3 class="font-semibold">{n.data.titulo}</h3>
+            <h3 class="font-semibold leading-snug">{n.data.titulo}</h3>
             <p class="text-sm text-muted">{n.data.descripcion}</p>
           </a>
         ))}
       </div>
     </section>
   )}
+
+  <!-- Herramientas y comunidad -->
+  <section class="container-site py-12">
+    <div class="grid gap-4 md:grid-cols-2">
+      <a href="/herramientas/" class="card card-hover group flex items-center gap-4 p-6"><span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink group-hover:bg-accent group-hover:text-on-accent"><Icon name="tool" class="h-6 w-6" /></span><span><span class="block text-lg font-semibold">Herramientas para programar</span><span class="block text-sm text-muted">{HERRAMIENTAS.length > 0 ? `${HERRAMIENTAS.length} herramientas: editores, terminales y playgrounds.` : 'Editores, terminales y playgrounds.'}</span></span></a>
+      <a href="/comunidad/" class="card card-hover group flex items-center gap-4 p-6"><span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink group-hover:bg-accent group-hover:text-on-accent"><Icon name="users" class="h-6 w-6" /></span><span><span class="block text-lg font-semibold">Comunidad y canales</span><span class="block text-sm text-muted">{COMUNIDAD.length > 0 ? `${COMUNIDAD.length} canales, podcasts y comunidades.` : 'Canales, podcasts y comunidades para no aprender solo.'}</span></span></a>
+    </div>
+  </section>
 
   <!-- Newsletter + Apoyo -->
   <section class="container-site grid gap-4 py-12 lg:grid-cols-2">

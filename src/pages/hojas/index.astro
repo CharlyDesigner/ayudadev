@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import CardContenido from '@components/ui/CardContenido.astro';
+import FiltroChips from '@components/ui/FiltroChips.astro';
+import { temaPorSlug } from '@data/temas';
+
+const lista = (await getCollection('hojas', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+const temasUsados = [...new Set(lista.map((h) => h.data.tema))];
+const opciones = temasUsados
+  .map((s) => ({ valor: s, etiqueta: temaPorSlug(s)?.nombre ?? 'General', conteo: lista.filter((h) => h.data.tema === s).length }))
+  .sort((a, b) => a.etiqueta.localeCompare(b.etiqueta, 'es'));
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Hojas de referencia', href: '/hojas/' },
+];
+---
+
+<ListadoLayout
+  titulo="Hojas de referencia"
+  descripcion="Resúmenes de una página para consultar rápido: comandos de Git y Linux, sintaxis de lenguajes, expresiones regulares, CSS, SQL y más. Con ejemplos listos para copiar."
+  path="/hojas/"
+  eyebrow="Referencia"
+  migas={migas}
+  total={lista.length}
+  placeholder="Busca: git, regex, flexbox, bash..."
+  unidad="hojas"
+>
+  <Fragment slot="filtros">
+    {opciones.length > 1 && <FiltroChips grupo="tema" etiqueta="Tema" opciones={opciones} />}
+  </Fragment>
+
+  {lista.length === 0 && <p class="card p-8 text-center text-muted">Las primeras hojas están en camino.</p>}
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {lista.map((h) => {
+      const tema = temaPorSlug(h.data.tema);
+      return (
+        <CardContenido
+          href={`/hojas/${h.id}/`}
+          titulo={h.data.titulo}
+          descripcion={h.data.descripcion}
+          badges={[tema?.nombre ?? 'General']}
+          tema={tema}
+          datos={{ tema: h.data.tema }}
+          texto={`${h.data.titulo} ${h.data.descripcion} ${h.data.etiquetas.join(' ')}`}
+        />
+      );
+    })}
+  </div>
+</ListadoLayout>

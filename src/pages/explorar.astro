@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import TemaBadge from '@components/ui/TemaBadge.astro';
+import { RECURSOS } from '@data/library';
+import { TEMAS } from '@data/temas';
+import { HERRAMIENTAS } from '@data/herramientas';
+import { COMUNIDAD } from '@data/comunidad';
+import { migasLd } from '@lib/seo';
+
+const n = async (c: 'guias' | 'rutas' | 'fundamentos' | 'hojas' | 'retos' | 'proyectos' | 'carrera' | 'ia' | 'aprende' | 'noticias' | 'glosario' | 'prompts') =>
+  (await getCollection(c as any, (e: any) => !e.data.borrador)).length;
+const [guias, rutas, fundamentos, hojas, retos, proyectos, carrera, ia, aprende, noticias, glosario, prompts] = await Promise.all([
+  n('guias'), n('rutas'), n('fundamentos'), n('hojas'), n('retos'), n('proyectos'), n('carrera'), n('ia'), n('aprende'), n('noticias'), n('glosario'), n('prompts'),
+]);
+
+const secciones = [
+  {
+    grupo: 'Aprende',
+    items: [
+      ['Empieza aquí', 'Responde 3 preguntas y te recomendamos una ruta.', '/empieza-aqui/', 'compass', 'Cuestionario'],
+      ['Rutas de estudio', 'Caminos ordenados paso a paso, de cero a tu primer proyecto.', '/rutas/', 'route', `${rutas} rutas`],
+      ['Guías con ejemplos', 'Código que puedes copiar y ejecutar, lenguaje por lenguaje.', '/guias/', 'code', `${guias} guías`],
+      ['Biblioteca gratis', 'Libros, cursos y documentación curados por tema.', '/biblioteca/', 'book', `${RECURSOS.length} recursos`],
+      ['Fundamentos', 'Los conceptos que todo programador necesita entender.', '/fundamentos/', 'school', `${fundamentos} artículos`],
+    ],
+  },
+  {
+    grupo: 'Practica y consulta',
+    items: [
+      ['Retos', 'Ejercicios cortos con pistas y solución.', '/retos/', 'puzzle', `${retos} retos`],
+      ['Proyectos', 'Ideas para llenar tu portafolio.', '/proyectos/', 'rocket', `${proyectos} proyectos`],
+      ['Hojas de referencia', 'Cheatsheets para consultar rápido.', '/hojas/', 'file-text', `${hojas} hojas`],
+      ['Glosario', 'Términos explicados en lenguaje sencillo.', '/glosario/', 'layers', `${glosario} términos`],
+      ['Mi progreso', 'Lo que has completado, guardado en tu navegador.', '/progreso/', 'trophy', 'Personal'],
+    ],
+  },
+  {
+    grupo: 'IA',
+    items: [
+      ['Herramientas de IA', 'Fichas de Claude, ChatGPT, Gemini y más.', '/ia/', 'sparkles', `${ia} fichas`],
+      ['Aprende con IA', 'Guías para usar la IA como tutor y como copiloto.', '/ia/aprende/', 'bulb', `${aprende} guías`],
+      ['Prompts', 'Biblioteca de prompts para copiar y adaptar.', '/ia/prompts/', 'copy', `${prompts} prompts`],
+      ['Comparativa', 'Qué herramienta usar según lo que necesitas.', '/ia/comparativa/', 'layout-grid', 'Sin precios inventados'],
+    ],
+  },
+  {
+    grupo: 'Más allá del código',
+    items: [
+      ['Carrera', 'Portafolio, GitHub, entrevistas y freelance.', '/carrera/', 'flag', `${carrera} artículos`],
+      ['Herramientas', 'Editores, terminales, playgrounds y más.', '/herramientas/', 'tool', `${HERRAMIENTAS.length} herramientas`],
+      ['Comunidad', 'Canales, podcasts, newsletters y comunidades.', '/comunidad/', 'users', `${COMUNIDAD.length} enlaces`],
+      ['Noticias', 'Novedades del proyecto y del mundo dev.', '/noticias/', 'newspaper', `${noticias} noticias`],
+    ],
+  },
+] as const;
+
+const titulo = 'Explora todo AyudaDev';
+const descripcion = 'Un mapa de todo lo que hay en el sitio: rutas, guías, biblioteca, práctica, referencia, IA, carrera y comunidad.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Explorar', href: '/explorar/' },
+];
+const conLogo = TEMAS.filter((t) => t.logo);
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/explorar/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Mapa del sitio" titulo={titulo} descripcion={descripcion} />
+
+    <div class="mt-10 space-y-12">
+      {secciones.map((g) => (
+        <section aria-labelledby={`g-${g.grupo}`}>
+          <h2 id={`g-${g.grupo}`} class="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">{g.grupo}</h2>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {g.items.map(([t, d, h, i, c]) => (
+              <a href={h} class="card card-hover group flex items-start gap-4 p-5">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink transition-colors group-hover:bg-accent group-hover:text-on-accent"><Icon name={i as any} class="h-5 w-5" /></span>
+                <span class="min-w-0 flex-1">
+                  <span class="flex items-center justify-between gap-2"><span class="font-semibold">{t}</span><span class="badge">{c}</span></span>
+                  <span class="mt-1 block text-sm leading-snug text-muted">{d}</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section aria-labelledby="g-tec">
+        <h2 id="g-tec" class="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">Por tecnología</h2>
+        <ul class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+          {conLogo.map((t) => (
+            <li>
+              <a href={`/biblioteca/${t.slug}/`} class="card card-hover flex flex-col items-center gap-2 p-3 text-center">
+                <TemaBadge tema={t} class="h-12 w-12" />
+                <span class="text-xs font-medium leading-tight">{t.nombre}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  </div>
+</BaseLayout>

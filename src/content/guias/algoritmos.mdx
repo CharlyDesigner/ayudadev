@@ -1,0 +1,298 @@
+---
+titulo: 'Algoritmos y estructuras de datos desde cero'
+descripcion: 'Qué es un algoritmo, cómo medir su costo y las estructuras que más se usan: búsqueda, ordenamiento, pilas, colas y grafos, con ejemplos en Python que corren tal cual.'
+tema: algoritmos
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['algoritmos-khan-academy-algoritmos', 'algoritmos-runestone-python-estructuras-datos', 'algoritmos-visualgo', 'algoritmos-apuntes-eda-unizar']
+requisitos: ['Saber escribir y ejecutar un programa sencillo en Python (variables, bucles y funciones)']
+etiquetas: ['python', 'complejidad', 'busqueda', 'ordenamiento', 'grafos']
+orden: 2
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Un algoritmo es una receta: una lista de pasos precisos que convierte una entrada en una salida. Una estructura de datos es la forma en que guardas la información para que esa receta sea rápida y simple. Esta guía te enseña a pensar en ambas cosas juntas, con ejemplos pequeños en Python que puedes ejecutar y modificar.
+
+## Qué es y para qué sirve
+
+- **Un algoritmo debe terminar y ser preciso.** Cada paso es claro, y para la misma entrada produce la misma salida. Si no termina, es un error, no un algoritmo.
+- **La estructura de datos decide la velocidad.** Buscar un nombre en una lista desordenada obliga a revisar todo. Buscarlo en un diccionario casi no cuesta. El problema es el mismo, la estructura cambia el costo.
+- **Se mide el crecimiento, no los segundos.** La notación Big O describe cómo crece el trabajo cuando la entrada crece. `O(n)` crece en línea recta, `O(log n)` casi no crece, `O(n²)` se dispara.
+- **Las estructuras básicas.** Listas y arreglos, pilas (último en entrar, primero en salir), colas (primero en entrar, primero en salir), diccionarios o tablas hash, árboles y grafos.
+- **Las técnicas clásicas.** Fuerza bruta, divide y vencerás, recursión con memoria, programación dinámica, algoritmos ávidos y recorrido de grafos.
+- **Sirve para entrevistas, pero sobre todo para programar mejor.** Entender por qué una consulta tarda minutos en lugar de milisegundos suele ser un problema de algoritmos.
+- **Casi nunca los escribes desde cero.** Los lenguajes traen `sorted`, diccionarios y colas. Aprenderlos te permite elegir bien y entender qué pasa por dentro.
+
+## Prepara tu entorno
+
+No necesitas nada especial: un intérprete de Python y un editor. Si ya programas en otro lenguaje, las ideas son las mismas.
+
+<Pasos>
+
+1. **Instala Python 3.** En **Windows** descarga el instalador desde [python.org/downloads](https://www.python.org/downloads/) y marca la casilla **"Add python.exe to PATH"**. En **macOS** usa el instalador de python.org o `brew install python`. En **Linux** suele venir instalado; si no, `sudo apt install python3`.
+2. **Comprueba la versión** con `python --version` (en macOS y Linux, `python3 --version`).
+3. **Crea una carpeta** `algoritmos` y guarda ahí cada ejemplo con el nombre de archivo que se indica.
+4. **Ejecuta cada archivo** con `python nombre.py`. Si prefieres una herramienta moderna que también gestiona versiones, [uv](https://docs.astral.sh/uv/) ejecuta el archivo con `uv run nombre.py`.
+5. **Opcional, para ver los algoritmos en movimiento:** abre [VisuAlgo](https://visualgo.net/en) o [Python Tutor](https://pythontutor.com/) en el navegador y pega ahí el código.
+
+</Pasos>
+
+## Ejemplos paso a paso
+
+En los comandos usamos `python`; si tu sistema solo reconoce `python3`, cámbialo. Todos los ejemplos cuentan pasos en lugar de medir segundos, así el resultado es siempre el mismo en cualquier computadora.
+
+<Ejemplo numero={1} titulo="Búsqueda lineal contra búsqueda binaria" archivo="busqueda.py" ejecutar="python busqueda.py" salida={"(999, 1000)\n(999, 10)\n(-1, 10)"}>
+
+```python
+# Búsqueda lineal contra búsqueda binaria, contando comparaciones
+def busqueda_lineal(datos, objetivo):
+    comparaciones = 0
+    for i, valor in enumerate(datos):
+        comparaciones += 1
+        if valor == objetivo:
+            return i, comparaciones
+    return -1, comparaciones
+
+
+def busqueda_binaria(datos, objetivo):
+    # Requiere que la lista esté ordenada
+    izq, der = 0, len(datos) - 1
+    comparaciones = 0
+    while izq <= der:
+        medio = (izq + der) // 2
+        comparaciones += 1
+        if datos[medio] == objetivo:
+            return medio, comparaciones
+        if datos[medio] < objetivo:
+            izq = medio + 1
+        else:
+            der = medio - 1
+    return -1, comparaciones
+
+
+numeros = list(range(0, 2000, 2))  # 1000 números pares, ya ordenados
+print(busqueda_lineal(numeros, 1998))
+print(busqueda_binaria(numeros, 1998))
+print(busqueda_binaria(numeros, 777))  # no existe
+```
+
+Cada resultado es una pareja: posición encontrada y número de comparaciones. La búsqueda lineal revisó los 1000 elementos. La binaria descartó la mitad en cada paso y terminó en 10 comparaciones, incluso cuando el número no existe (devuelve `-1`). Eso es `O(log n)`. La condición es que la lista esté ordenada.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Ordenar con merge sort y con sorted" archivo="ordenar.py" ejecutar="python ordenar.py" salida={"[3, 9, 10, 27, 38, 43, 82]\n[('Ana', 9), ('Eva', 9), ('Luis', 7), ('Raúl', 7)]"}>
+
+```python
+# Ordenamiento por mezcla (merge sort): divide, ordena cada mitad y combina
+def merge_sort(lista):
+    if len(lista) <= 1:
+        return lista
+    medio = len(lista) // 2
+    izquierda = merge_sort(lista[:medio])
+    derecha = merge_sort(lista[medio:])
+    return mezclar(izquierda, derecha)
+
+
+def mezclar(a, b):
+    resultado = []
+    i = j = 0
+    while i < len(a) and j < len(b):
+        if a[i] <= b[j]:
+            resultado.append(a[i])
+            i += 1
+        else:
+            resultado.append(b[j])
+            j += 1
+    resultado.extend(a[i:])
+    resultado.extend(b[j:])
+    return resultado
+
+
+print(merge_sort([38, 27, 43, 3, 9, 82, 10]))
+
+# En Python real casi siempre usas sorted(), que es estable
+alumnos = [("Ana", 9), ("Luis", 7), ("Eva", 9), ("Raúl", 7)]
+print(sorted(alumnos, key=lambda a: a[1], reverse=True))
+```
+
+Merge sort es el ejemplo clásico de divide y vencerás: partes la lista, resuelves cada mitad con recursión y combinas. Cuesta `O(n log n)`. En la práctica usa `sorted`. Fíjate en que es estable: Ana y Eva tienen la misma nota y conservan su orden original, igual que Luis y Raúl.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Pila y cola" archivo="pila_cola.py" ejecutar="python pila_cola.py" salida={"True\nFalse\nAna\n['Luis', 'Eva', 'Raúl']"}>
+
+```python
+from collections import deque
+
+# Pila (LIFO): comprobar si los paréntesis están balanceados
+def balanceado(texto):
+    pares = {")": "(", "]": "[", "}": "{"}
+    pila = []
+    for c in texto:
+        if c in "([{":
+            pila.append(c)          # push
+        elif c in ")]}":
+            if not pila or pila.pop() != pares[c]:  # pop
+                return False
+    return not pila
+
+
+print(balanceado("{[()]}"))
+print(balanceado("([)]"))
+
+# Cola (FIFO): atender turnos en orden de llegada
+turnos = deque(["Ana", "Luis", "Eva"])
+turnos.append("Raúl")        # llega alguien nuevo
+print(turnos.popleft())      # se atiende al primero
+print(list(turnos))
+```
+
+Una pila saca primero lo último que entró. Por eso sirve para emparejar paréntesis, deshacer acciones y seguir llamadas de funciones. Una cola respeta el orden de llegada. Para colas usa `deque`: quitar el primer elemento de una lista normal con `pop(0)` es lento porque mueve todos los demás.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Ver cómo crece el costo (Big O)" archivo="complejidad.py" ejecutar="python complejidad.py" salida={"     n  log n      n        n^2\n    10      3     10        100\n   100      6    100      10000\n  1000      9   1000    1000000"}>
+
+```python
+# Contamos pasos en lugar de medir segundos: el resultado es siempre el mismo
+def pasos_lineal(n):
+    return n                       # O(n): un paso por elemento
+
+
+def pasos_logaritmico(n):
+    pasos = 0
+    while n > 1:                   # O(log n): la mitad en cada vuelta
+        n //= 2
+        pasos += 1
+    return pasos
+
+
+def pasos_cuadratico(n):
+    pasos = 0
+    for _ in range(n):             # O(n^2): ciclo dentro de ciclo
+        for _ in range(n):
+            pasos += 1
+    return pasos
+
+
+print(f"{'n':>6} {'log n':>6} {'n':>6} {'n^2':>10}")
+for n in (10, 100, 1000):
+    print(f"{n:>6} {pasos_logaritmico(n):>6} {pasos_lineal(n):>6} {pasos_cuadratico(n):>10}")
+```
+
+Mira la última fila: con mil elementos, el logarítmico hace 9 pasos, el lineal mil y el cuadrático un millón. Con diez veces más datos, el cuadrático hace cien veces más trabajo. Esta tabla es la razón por la que importa elegir bien el algoritmo.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Recursión con memoria" archivo="memo.py" ejecutar="python memo.py" salida={"75025 con 242785 llamadas\n75025 con 26 cálculos\n23416728348467685"}>
+
+```python
+from functools import lru_cache
+
+llamadas = 0
+
+
+def fib_lento(n):
+    global llamadas
+    llamadas += 1
+    return n if n < 2 else fib_lento(n - 1) + fib_lento(n - 2)
+
+
+@lru_cache(maxsize=None)
+def fib_memo(n):
+    return n if n < 2 else fib_memo(n - 1) + fib_memo(n - 2)
+
+
+print(fib_lento(25), "con", llamadas, "llamadas")
+print(fib_memo(25), "con", fib_memo.cache_info().misses, "cálculos")
+print(fib_memo(80))
+```
+
+La versión lenta repite los mismos cálculos una y otra vez: para el número 25 de Fibonacci hace 242785 llamadas. Con `lru_cache` guardas cada resultado la primera vez y solo calculas 26 valores. Esa idea, recordar subproblemas ya resueltos, es la base de la programación dinámica y permite calcular el número 80 al instante.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Grafos y camino más corto" archivo="grafo.py" ejecutar="python grafo.py" salida="Casa -> Parque -> Escuela -> Oficina">
+
+```python
+from collections import deque
+
+# Un grafo como diccionario: cada nodo apunta a sus vecinos
+mapa = {
+    "Casa": ["Parque", "Tienda"],
+    "Parque": ["Casa", "Escuela"],
+    "Tienda": ["Casa", "Escuela", "Banco"],
+    "Escuela": ["Parque", "Tienda", "Oficina"],
+    "Banco": ["Tienda", "Oficina"],
+    "Oficina": ["Escuela", "Banco"],
+}
+
+
+def camino_mas_corto(grafo, origen, destino):
+    # Búsqueda en anchura (BFS): explora por capas y encuentra el camino con menos saltos
+    cola = deque([[origen]])
+    visitados = {origen}
+    while cola:
+        camino = cola.popleft()
+        nodo = camino[-1]
+        if nodo == destino:
+            return camino
+        for vecino in grafo[nodo]:
+            if vecino not in visitados:
+                visitados.add(vecino)
+                cola.append(camino + [vecino])
+    return None
+
+
+print(" -> ".join(camino_mas_corto(mapa, "Casa", "Oficina")))
+```
+
+Un grafo son nodos conectados por aristas, y un diccionario de listas basta para representarlo. La búsqueda en anchura usa una cola y explora por capas, así que el primer camino que llega al destino tiene el menor número de saltos. Hay varios caminos con tres saltos; esta versión devuelve el primero que encuentra. Con la pila en lugar de la cola obtienes la búsqueda en profundidad.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Usar búsqueda binaria en una lista desordenada">
+La búsqueda binaria solo funciona si los datos están ordenados. En una lista desordenada devuelve resultados incorrectos sin avisar. Ordena primero, o usa un diccionario si solo necesitas saber si algo existe.
+</Callout>
+
+<Callout tipo="warning" titulo="Errores de uno en uno (off by one)">
+Confundir `<` con `<=`, o empezar en 1 en lugar de 0, es el error más frecuente al escribir bucles e índices. Prueba siempre con listas vacías, de un elemento y con el primer y el último valor.
+</Callout>
+
+<Callout tipo="warning" titulo="Optimizar antes de medir">
+Elegir una estructura complicada para 50 datos es perder tiempo. Escribe primero la versión simple y correcta. Si es lenta con datos reales, mide dónde se va el tiempo y entonces cambia el algoritmo.
+</Callout>
+
+<Callout tipo="warning" titulo="Quitar el primer elemento de una lista con pop(0)">
+En una lista de Python, `pop(0)` y `insert(0, x)` mueven todos los elementos, así que cada llamada cuesta `O(n)`. Dentro de un bucle se convierte en `O(n²)`. Para colas usa `collections.deque`.
+</Callout>
+
+<Callout tipo="warning" titulo="Recursión sin caso base">
+Una función recursiva sin condición de parada se llama a sí misma hasta que Python lanza `RecursionError`. Escribe primero el caso base, después el paso recursivo, y comprueba que cada llamada se acerca al caso base.
+</Callout>
+
+## Buenas prácticas
+
+- Entiende el problema con un ejemplo a mano antes de escribir código. Dibuja la lista o el grafo en papel.
+- Nombra la complejidad de tu solución: "esto es `O(n log n)` porque ordeno una vez". Ese hábito te hace mejor revisor de código.
+- Usa las estructuras de la biblioteca estándar (`dict`, `set`, `deque`, `heapq`, `sorted`) antes de escribir las tuyas.
+- Cuenta pasos o mide con `time.perf_counter()` varias veces y con distintos tamaños antes de afirmar que algo es más rápido.
+- Prueba los casos límite: entrada vacía, un solo elemento, valores repetidos y datos ya ordenados.
+- Practica con problemas pequeños todos los días, y visualiza el algoritmo cuando algo no te cuadre.
+- Escribe el algoritmo en palabras o pseudocódigo antes de pasarlo a un lenguaje.
+
+## Siguiente paso
+
+- **Practica con más estructuras.** Árboles binarios de búsqueda, montículos (`heapq`) y tablas hash. El [libro interactivo de Python de Runestone](https://runestone.academy/ns/books/published/pythoned/index.html) los explica con código que ejecutas en la página.
+- **Mira los algoritmos moverse** en [VisuAlgo](https://visualgo.net/en) y revisa la unidad de algoritmos de [Khan Academy](https://es.khanacademy.org/computing/computer-science/algorithms).
+- **Refuerza la base matemática** con la guía de [Matemáticas para programadores](/guias/matematicas/) y la [biblioteca de matemáticas](/biblioteca/matematicas/).
+- **Lleva los algoritmos a tu lenguaje.** Si usas Python, empieza por la [guía de Python](/guias/python/). También puedes explorar la [biblioteca de algoritmos](/biblioteca/algoritmos/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

@@ -1,0 +1,4399 @@
+[
+  {
+    "id": "variable",
+    "termino": "variable",
+    "definicion": "Un nombre que le pones a un dato guardado en la memoria para poder usarlo y cambiarlo después. Es como una cajita con etiqueta.",
+    "categoria": "programacion",
+    "ejemplo": "edad = 25",
+    "relacionados": [
+      "constante",
+      "tipo-de-dato",
+      "scope"
+    ]
+  },
+  {
+    "id": "constante",
+    "termino": "constante",
+    "definicion": "Un valor que guardas con un nombre y que no debe cambiar mientras el programa corre. Sirve para datos fijos, como el valor de pi o la URL de una API.",
+    "categoria": "programacion",
+    "ejemplo": "const IVA = 0.16;",
+    "relacionados": [
+      "variable",
+      "inmutable"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "tipo-de-dato",
+    "termino": "tipo de dato",
+    "definicion": "La clase de información que guarda un valor: un número, un texto, un verdadero o falso, una lista, etc. El tipo decide qué operaciones puedes hacer con él.",
+    "categoria": "programacion",
+    "ejemplo": "42 es un entero, \"hola\" es una cadena",
+    "relacionados": [
+      "cadena",
+      "booleano",
+      "tipado-estatico"
+    ]
+  },
+  {
+    "id": "funcion",
+    "termino": "función",
+    "definicion": "Un bloque de código con nombre que hace una tarea y que puedes ejecutar las veces que quieras. Evita repetir código y mantiene el programa ordenado.",
+    "categoria": "programacion",
+    "ejemplo": "def saludar(nombre): return \"Hola \" + nombre",
+    "relacionados": [
+      "parametro",
+      "argumento",
+      "valor-de-retorno",
+      "metodo"
+    ]
+  },
+  {
+    "id": "parametro",
+    "termino": "parámetro",
+    "definicion": "Una variable que una función declara para recibir datos cuando se le llama. Es el hueco que se llena con un argumento.",
+    "categoria": "programacion",
+    "ejemplo": "function sumar(a, b) { return a + b; }  // a y b son parámetros",
+    "relacionados": [
+      "argumento",
+      "funcion"
+    ]
+  },
+  {
+    "id": "argumento",
+    "termino": "argumento",
+    "definicion": "El valor real que le pasas a una función cuando la llamas. Ese valor ocupa el lugar del parámetro.",
+    "categoria": "programacion",
+    "ejemplo": "sumar(2, 3)  // 2 y 3 son argumentos",
+    "relacionados": [
+      "parametro",
+      "funcion"
+    ]
+  },
+  {
+    "id": "valor-de-retorno",
+    "termino": "valor de retorno",
+    "definicion": "El resultado que una función devuelve a quien la llamó cuando termina su trabajo. Normalmente se indica con la palabra return.",
+    "categoria": "programacion",
+    "ejemplo": "return a + b;",
+    "relacionados": [
+      "funcion",
+      "efecto-secundario"
+    ]
+  },
+  {
+    "id": "bucle",
+    "termino": "bucle",
+    "definicion": "Una estructura que repite un bloque de código varias veces, ya sea un número fijo de veces o mientras se cumpla una condición. También se le llama ciclo o loop.",
+    "categoria": "programacion",
+    "ejemplo": "for (let i = 0; i < 5; i++) { console.log(i); }",
+    "relacionados": [
+      "condicional",
+      "iterador",
+      "recursion"
+    ]
+  },
+  {
+    "id": "condicional",
+    "termino": "condicional",
+    "definicion": "Una instrucción que decide qué código ejecutar según si una condición es verdadera o falsa. La más conocida es if / else.",
+    "categoria": "programacion",
+    "ejemplo": "if (edad >= 18) { entrar(); } else { negar(); }",
+    "relacionados": [
+      "booleano",
+      "operador",
+      "bucle"
+    ]
+  },
+  {
+    "id": "operador",
+    "termino": "operador",
+    "definicion": "Un símbolo que realiza una operación sobre uno o más valores, como sumar, comparar o combinar condiciones.",
+    "categoria": "programacion",
+    "ejemplo": "3 + 4, a == b, x && y",
+    "relacionados": [
+      "expresion",
+      "booleano"
+    ]
+  },
+  {
+    "id": "expresion",
+    "termino": "expresión",
+    "definicion": "Un trozo de código que produce un valor al evaluarse, como una suma o una llamada a función. Puedes usarla en cualquier lugar donde se espera un valor.",
+    "categoria": "programacion",
+    "ejemplo": "2 * (3 + 4)  // vale 14",
+    "relacionados": [
+      "operador"
+    ]
+  },
+  {
+    "id": "sintaxis",
+    "termino": "sintaxis",
+    "definicion": "Las reglas de escritura de un lenguaje de programación: cómo se ponen los paréntesis, las palabras clave y los símbolos. Un error de sintaxis impide que el programa arranque.",
+    "categoria": "programacion",
+    "ejemplo": "print(\"hola\") es válido, print(\"hola\" no",
+    "relacionados": [
+      "compilador",
+      "interprete"
+    ]
+  },
+  {
+    "id": "algoritmo",
+    "termino": "algoritmo",
+    "definicion": "Una serie de pasos claros y ordenados para resolver un problema. Una receta de cocina es un algoritmo, y un programa es la receta escrita para un ordenador.",
+    "categoria": "programacion",
+    "ejemplo": "Para buscar un nombre en la agenda: abre a la mitad, compara y descarta la mitad que no sirve.",
+    "relacionados": [
+      "estructura-de-datos",
+      "big-o",
+      "busqueda-binaria"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "big-o",
+    "termino": "Big O",
+    "definicion": "Una forma de describir cuánto crece el tiempo o la memoria que usa un algoritmo cuando aumenta la cantidad de datos. Te ayuda a saber si algo seguirá rápido con millones de datos.",
+    "categoria": "programacion",
+    "ejemplo": "Buscar en una lista sin orden es O(n); en una lista ordenada con búsqueda binaria es O(log n).",
+    "relacionados": [
+      "algoritmo",
+      "busqueda-binaria"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "estructura-de-datos",
+    "termino": "estructura de datos",
+    "definicion": "Una forma de organizar datos en memoria para poder guardarlos, buscarlos y modificarlos con eficiencia. Arreglos, pilas, colas, árboles y grafos son ejemplos.",
+    "categoria": "programacion",
+    "ejemplo": "Una pila de platos: el último que pones es el primero que sacas.",
+    "relacionados": [
+      "array",
+      "pila",
+      "cola",
+      "arbol"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "array",
+    "termino": "array",
+    "definicion": "Una colección ordenada de elementos a los que se accede por su posición, que empieza normalmente en 0. En español también se le dice arreglo.",
+    "categoria": "programacion",
+    "ejemplo": "const frutas = ['manzana', 'pera']; frutas[0]  // 'manzana'",
+    "relacionados": [
+      "lista",
+      "estructura-de-datos",
+      "tupla"
+    ]
+  },
+  {
+    "id": "lista",
+    "termino": "lista",
+    "definicion": "Una colección ordenada de valores que puede crecer o encogerse. En Python es el tipo básico para guardar varios datos juntos.",
+    "categoria": "programacion",
+    "ejemplo": "numeros = [3, 1, 2]; numeros.append(4)",
+    "relacionados": [
+      "array",
+      "tupla"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "tupla",
+    "termino": "tupla",
+    "definicion": "Una colección ordenada de valores que no se puede modificar después de crearla. Sirve para agrupar datos que van juntos, como unas coordenadas.",
+    "categoria": "programacion",
+    "ejemplo": "punto = (10, 20)",
+    "relacionados": [
+      "lista",
+      "inmutable"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "diccionario",
+    "termino": "diccionario",
+    "definicion": "Una colección de pares clave y valor, donde buscas un dato por su clave en lugar de por su posición. Se parece a una agenda: buscas el nombre y obtienes el teléfono.",
+    "categoria": "programacion",
+    "ejemplo": "usuario = {'nombre': 'Ana', 'edad': 30}; usuario['nombre']",
+    "relacionados": [
+      "tabla-hash",
+      "objeto",
+      "json"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "tabla-hash",
+    "termino": "tabla hash",
+    "definicion": "Una estructura que guarda pares clave y valor y usa una función hash para saber dónde colocar cada uno, de modo que buscar es muy rápido. Los diccionarios y mapas suelen funcionar así.",
+    "categoria": "programacion",
+    "ejemplo": "Map en JavaScript, dict en Python, HashMap en Java",
+    "relacionados": [
+      "hash",
+      "diccionario",
+      "estructura-de-datos"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "hash",
+    "termino": "hash",
+    "definicion": "El resultado de pasar cualquier dato por una función que lo convierte en un texto o número de tamaño fijo. El mismo dato siempre da el mismo hash, y es casi imposible volver al dato original.",
+    "categoria": "programacion",
+    "ejemplo": "sha256(\"hola\") siempre da el mismo texto de 64 caracteres",
+    "relacionados": [
+      "tabla-hash",
+      "hash-de-contrasena"
+    ]
+  },
+  {
+    "id": "pila",
+    "termino": "pila",
+    "definicion": "Una estructura de datos donde el último elemento que entra es el primero que sale (LIFO). Piensa en una pila de platos: solo agarras el de arriba.",
+    "categoria": "programacion",
+    "ejemplo": "pila.push(5); pila.pop()  // devuelve 5",
+    "relacionados": [
+      "cola",
+      "call-stack",
+      "estructura-de-datos"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "cola",
+    "termino": "cola",
+    "definicion": "Una estructura de datos donde el primer elemento que entra es el primero que sale (FIFO). Funciona como la fila de la tortillería.",
+    "categoria": "programacion",
+    "ejemplo": "cola.enqueue('a'); cola.dequeue()  // sale 'a'",
+    "relacionados": [
+      "pila",
+      "estructura-de-datos"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "arbol",
+    "termino": "árbol",
+    "definicion": "Una estructura de datos con un nodo raíz del que cuelgan nodos hijos, y de estos otros más, sin ciclos. El sistema de carpetas de tu computadora es un árbol.",
+    "categoria": "programacion",
+    "ejemplo": "Un árbol binario: cada nodo tiene máximo dos hijos.",
+    "relacionados": [
+      "grafo",
+      "estructura-de-datos"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "grafo",
+    "termino": "grafo",
+    "definicion": "Un conjunto de nodos conectados por aristas. Sirve para modelar relaciones, como amigos en una red social o rutas entre ciudades.",
+    "categoria": "programacion",
+    "ejemplo": "Mapa de metro: estaciones son nodos y las vías son aristas.",
+    "relacionados": [
+      "arbol",
+      "estructura-de-datos"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "lista-enlazada",
+    "termino": "lista enlazada",
+    "definicion": "Una estructura donde cada nodo guarda un dato y una referencia al siguiente nodo. Insertar en medio es fácil, pero llegar a un elemento exige recorrer desde el inicio.",
+    "categoria": "programacion",
+    "ejemplo": "A -> B -> C -> null",
+    "relacionados": [
+      "puntero",
+      "array"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "cadena",
+    "termino": "cadena de texto (string)",
+    "definicion": "Un tipo de dato para guardar texto, es decir, una secuencia de caracteres. En inglés se dice string.",
+    "categoria": "programacion",
+    "ejemplo": "\"Hola mundo\".length  // 10",
+    "relacionados": [
+      "tipo-de-dato",
+      "expresion-regular",
+      "unicode"
+    ]
+  },
+  {
+    "id": "booleano",
+    "termino": "booleano",
+    "definicion": "Un tipo de dato que solo puede ser verdadero o falso. Se usa en las condiciones para tomar decisiones.",
+    "categoria": "programacion",
+    "ejemplo": "const esMayor = edad >= 18;  // true o false",
+    "relacionados": [
+      "condicional",
+      "tipo-de-dato"
+    ]
+  },
+  {
+    "id": "flotante",
+    "termino": "número de punto flotante (float)",
+    "definicion": "Un tipo de dato para números con decimales. Por cómo se guardan en binario, a veces dan pequeñas imprecisiones.",
+    "categoria": "programacion",
+    "ejemplo": "0.1 + 0.2  // 0.30000000000000004",
+    "relacionados": [
+      "tipo-de-dato"
+    ]
+  },
+  {
+    "id": "null",
+    "termino": "null",
+    "definicion": "Un valor especial que significa \"aquí no hay nada\" o \"sin valor\". Muchos lenguajes lo usan para indicar que una variable está vacía a propósito.",
+    "categoria": "programacion",
+    "ejemplo": "let usuario = null;",
+    "relacionados": [
+      "puntero",
+      "excepcion"
+    ]
+  },
+  {
+    "id": "recursion",
+    "termino": "recursión",
+    "definicion": "Cuando una función se llama a sí misma para resolver un problema dividiéndolo en partes más pequeñas. Necesita un caso base que detenga las llamadas.",
+    "categoria": "programacion",
+    "ejemplo": "function fact(n) { return n <= 1 ? 1 : n * fact(n - 1); }",
+    "relacionados": [
+      "bucle",
+      "call-stack",
+      "divide-y-venceras"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "clase",
+    "termino": "clase",
+    "definicion": "Un molde que describe cómo serán los objetos: qué datos tendrán y qué acciones podrán hacer. De una sola clase puedes crear muchos objetos.",
+    "categoria": "programacion",
+    "ejemplo": "class Perro { ladrar() { console.log('guau'); } }",
+    "relacionados": [
+      "objeto",
+      "instancia",
+      "herencia"
+    ]
+  },
+  {
+    "id": "objeto",
+    "termino": "objeto",
+    "definicion": "Una unidad que agrupa datos (atributos) y acciones (métodos) relacionados. En la programación orientada a objetos, casi todo se modela con objetos.",
+    "categoria": "programacion",
+    "ejemplo": "const perro = { nombre: 'Toby', ladrar() { } };",
+    "relacionados": [
+      "clase",
+      "instancia",
+      "atributo",
+      "metodo"
+    ]
+  },
+  {
+    "id": "instancia",
+    "termino": "instancia",
+    "definicion": "Un objeto concreto creado a partir de una clase. Si la clase es el molde de galletas, la instancia es cada galleta.",
+    "categoria": "programacion",
+    "ejemplo": "const miPerro = new Perro();",
+    "relacionados": [
+      "clase",
+      "objeto",
+      "constructor"
+    ]
+  },
+  {
+    "id": "metodo",
+    "termino": "método",
+    "definicion": "Una función que pertenece a un objeto o clase y suele trabajar con los datos de ese objeto.",
+    "categoria": "programacion",
+    "ejemplo": "lista.append(5)  # append es un método de la lista",
+    "relacionados": [
+      "funcion",
+      "objeto",
+      "atributo"
+    ]
+  },
+  {
+    "id": "atributo",
+    "termino": "atributo",
+    "definicion": "Un dato que pertenece a un objeto, como el nombre o la edad de una persona. También se le llama propiedad o campo.",
+    "categoria": "programacion",
+    "ejemplo": "persona.nombre",
+    "relacionados": [
+      "objeto",
+      "metodo",
+      "clase"
+    ]
+  },
+  {
+    "id": "constructor",
+    "termino": "constructor",
+    "definicion": "Un método especial que se ejecuta al crear un objeto nuevo y que le pone sus valores iniciales.",
+    "categoria": "programacion",
+    "ejemplo": "constructor(nombre) { this.nombre = nombre; }",
+    "relacionados": [
+      "clase",
+      "instancia"
+    ]
+  },
+  {
+    "id": "herencia",
+    "termino": "herencia",
+    "definicion": "Un mecanismo para que una clase reutilice y extienda los datos y métodos de otra. Así evitas copiar código entre clases parecidas.",
+    "categoria": "programacion",
+    "ejemplo": "class Gato extends Animal { }",
+    "relacionados": [
+      "clase",
+      "polimorfismo"
+    ]
+  },
+  {
+    "id": "polimorfismo",
+    "termino": "polimorfismo",
+    "definicion": "La capacidad de que distintos objetos respondan a la misma acción cada uno a su manera. Llamas a hablar() y el perro ladra y el gato maúlla.",
+    "categoria": "programacion",
+    "ejemplo": "animal.hablar()  // depende de qué animal sea",
+    "relacionados": [
+      "herencia",
+      "interfaz",
+      "programacion-orientada-a-objetos"
+    ]
+  },
+  {
+    "id": "encapsulamiento",
+    "termino": "encapsulamiento",
+    "definicion": "Esconder los detalles internos de un objeto y exponer solo lo necesario mediante métodos. Así nadie rompe sus datos por accidente.",
+    "categoria": "programacion",
+    "ejemplo": "Un atributo privado que solo se cambia con un método validado.",
+    "relacionados": [
+      "clase",
+      "programacion-orientada-a-objetos"
+    ]
+  },
+  {
+    "id": "interfaz",
+    "termino": "interfaz (contrato)",
+    "definicion": "Una lista de métodos que una clase promete tener, sin decir cómo funcionan. Permite intercambiar piezas que cumplen el mismo contrato.",
+    "categoria": "programacion",
+    "ejemplo": "interface Guardable { guardar(): void }",
+    "relacionados": [
+      "polimorfismo"
+    ],
+    "tema": "typescript"
+  },
+  {
+    "id": "programacion-orientada-a-objetos",
+    "termino": "programación orientada a objetos",
+    "definicion": "Un estilo de programar que organiza el código en objetos con datos y comportamiento. Sus ideas clave son clases, herencia, polimorfismo y encapsulamiento.",
+    "categoria": "programacion",
+    "ejemplo": "Java, C# y Python permiten este estilo.",
+    "relacionados": [
+      "clase",
+      "objeto",
+      "herencia",
+      "programacion-funcional"
+    ]
+  },
+  {
+    "id": "programacion-funcional",
+    "termino": "programación funcional",
+    "definicion": "Un estilo de programar basado en funciones puras que reciben datos y devuelven resultados, sin cambiar nada fuera de ellas. Favorece los datos inmutables.",
+    "categoria": "programacion",
+    "ejemplo": "const dobles = numeros.map(n => n * 2);",
+    "relacionados": [
+      "funcion-pura",
+      "inmutable",
+      "funcion-de-orden-superior"
+    ],
+    "tema": "haskell"
+  },
+  {
+    "id": "funcion-pura",
+    "termino": "función pura",
+    "definicion": "Una función que con los mismos datos siempre devuelve el mismo resultado y no cambia nada fuera de sí misma. Es fácil de probar y de entender.",
+    "categoria": "programacion",
+    "ejemplo": "const sumar = (a, b) => a + b;",
+    "relacionados": [
+      "efecto-secundario",
+      "programacion-funcional"
+    ]
+  },
+  {
+    "id": "efecto-secundario",
+    "termino": "efecto secundario",
+    "definicion": "Cualquier cosa que una función hace además de devolver un valor, como cambiar una variable global, escribir en un archivo o mostrar algo en pantalla.",
+    "categoria": "programacion",
+    "ejemplo": "console.log('hola')  // efecto secundario: escribe en la consola",
+    "relacionados": [
+      "funcion-pura",
+      "mutable"
+    ]
+  },
+  {
+    "id": "funcion-de-orden-superior",
+    "termino": "función de orden superior",
+    "definicion": "Una función que recibe otra función como argumento o que devuelve una función. map, filter y reduce son ejemplos clásicos.",
+    "categoria": "programacion",
+    "ejemplo": "[1, 2, 3].map(n => n * 2)",
+    "relacionados": [
+      "callback",
+      "programacion-funcional"
+    ]
+  },
+  {
+    "id": "closure",
+    "termino": "closure (clausura)",
+    "definicion": "Una función que recuerda las variables del lugar donde fue creada, incluso después de que ese lugar haya terminado. Así puede seguir usándolas.",
+    "categoria": "programacion",
+    "ejemplo": "function contador() { let n = 0; return () => ++n; }",
+    "relacionados": [
+      "scope",
+      "funcion",
+      "callback"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "scope",
+    "termino": "scope (alcance)",
+    "definicion": "La zona del programa donde una variable existe y puede usarse. Una variable creada dentro de una función normalmente no se ve desde afuera.",
+    "categoria": "programacion",
+    "ejemplo": "let x declarado en un bloque solo vive en ese bloque",
+    "relacionados": [
+      "variable",
+      "closure"
+    ]
+  },
+  {
+    "id": "callback",
+    "termino": "callback",
+    "definicion": "Una función que le pasas a otra para que la ejecute más tarde, cuando algo termine o suceda. Es la base de muchas acciones asíncronas.",
+    "categoria": "programacion",
+    "ejemplo": "setTimeout(() => console.log('listo'), 1000);",
+    "relacionados": [
+      "promesa",
+      "asincronia",
+      "funcion-de-orden-superior"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "promesa",
+    "termino": "promesa (Promise)",
+    "definicion": "Un objeto que representa un resultado que todavía no llega, pero que llegará con éxito o con error. Permite encadenar acciones sin anidar callbacks.",
+    "categoria": "programacion",
+    "ejemplo": "fetch(url).then(r => r.json())",
+    "relacionados": [
+      "async-await",
+      "callback",
+      "asincronia"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "async-await",
+    "termino": "async/await",
+    "definicion": "Una sintaxis para escribir código asíncrono como si fuera secuencial. await pausa la función hasta que la promesa termina, sin bloquear el resto del programa.",
+    "categoria": "programacion",
+    "ejemplo": "const datos = await fetch(url);",
+    "relacionados": [
+      "promesa",
+      "asincronia",
+      "event-loop"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "asincronia",
+    "termino": "asincronía",
+    "definicion": "Cuando una tarea larga se inicia y el programa sigue con otras cosas mientras espera su resultado. Evita que todo se congele esperando una descarga o una consulta.",
+    "categoria": "programacion",
+    "ejemplo": "Pides datos a un servidor y mientras tanto la pantalla sigue respondiendo.",
+    "relacionados": [
+      "promesa",
+      "async-await",
+      "concurrencia"
+    ]
+  },
+  {
+    "id": "event-loop",
+    "termino": "event loop (bucle de eventos)",
+    "definicion": "El mecanismo de JavaScript que revisa constantemente si hay tareas pendientes y las ejecuta una por una. Permite hacer cosas asíncronas con un solo hilo.",
+    "categoria": "programacion",
+    "ejemplo": "setTimeout(fn, 0) corre después del código actual",
+    "relacionados": [
+      "asincronia",
+      "callback",
+      "hilo"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "concurrencia",
+    "termino": "concurrencia",
+    "definicion": "Manejar varias tareas que avanzan durante el mismo periodo, alternando entre ellas. No siempre significa que corran al mismo tiempo.",
+    "categoria": "programacion",
+    "ejemplo": "Un servidor atiende a mil usuarios sin esperar a que termine el primero.",
+    "relacionados": [
+      "paralelismo",
+      "hilo",
+      "asincronia"
+    ]
+  },
+  {
+    "id": "paralelismo",
+    "termino": "paralelismo",
+    "definicion": "Ejecutar varias tareas literalmente al mismo tiempo, usando varios núcleos del procesador. Es más estricto que la concurrencia.",
+    "categoria": "programacion",
+    "ejemplo": "Procesar cuatro imágenes a la vez en cuatro núcleos.",
+    "relacionados": [
+      "concurrencia",
+      "hilo"
+    ]
+  },
+  {
+    "id": "hilo",
+    "termino": "hilo (thread)",
+    "definicion": "Una línea de ejecución dentro de un programa. Un programa puede tener varios hilos que comparten la misma memoria y trabajan a la vez.",
+    "categoria": "programacion",
+    "ejemplo": "threading.Thread(target=tarea).start()",
+    "relacionados": [
+      "concurrencia",
+      "condicion-de-carrera"
+    ]
+  },
+  {
+    "id": "condicion-de-carrera",
+    "termino": "condición de carrera",
+    "definicion": "Un error que aparece cuando dos hilos tocan el mismo dato casi al mismo tiempo y el resultado depende de quién llega primero. Es difícil de reproducir.",
+    "categoria": "programacion",
+    "ejemplo": "Dos hilos suman 1 al mismo contador y se pierde una suma.",
+    "relacionados": [
+      "hilo"
+    ]
+  },
+  {
+    "id": "iterador",
+    "termino": "iterador",
+    "definicion": "Un objeto que permite recorrer una colección elemento por elemento, sin importar cómo esté guardada por dentro.",
+    "categoria": "programacion",
+    "ejemplo": "for (const x of lista) { }",
+    "relacionados": [
+      "generador",
+      "bucle"
+    ]
+  },
+  {
+    "id": "generador",
+    "termino": "generador",
+    "definicion": "Una función que produce valores uno a uno bajo demanda en lugar de crearlos todos de golpe. Ahorra memoria con secuencias muy grandes.",
+    "categoria": "programacion",
+    "ejemplo": "def pares(): yield 2; yield 4",
+    "relacionados": [
+      "iterador",
+      "memoizacion"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "excepcion",
+    "termino": "excepción",
+    "definicion": "Un error que ocurre mientras el programa corre y que interrumpe el flujo normal. Puedes capturarla y reaccionar en lugar de dejar que el programa se caiga.",
+    "categoria": "programacion",
+    "ejemplo": "try { dividir(1, 0) } catch (e) { console.log(e) }",
+    "relacionados": [
+      "manejo-de-errores",
+      "stack-trace"
+    ]
+  },
+  {
+    "id": "manejo-de-errores",
+    "termino": "manejo de errores",
+    "definicion": "Las técnicas para prever qué puede salir mal y responder de forma controlada, con mensajes claros, en lugar de que el programa se caiga.",
+    "categoria": "programacion",
+    "ejemplo": "try: abrir(archivo) except FileNotFoundError: crear(archivo)",
+    "relacionados": [
+      "excepcion",
+      "depuracion"
+    ]
+  },
+  {
+    "id": "stack-trace",
+    "termino": "stack trace (traza de pila)",
+    "definicion": "La lista de llamadas a funciones que estaban activas cuando ocurrió un error. Te muestra en qué archivo y línea falló y qué camino llevó hasta ahí.",
+    "categoria": "programacion",
+    "ejemplo": "Traceback (most recent call last): File \"app.py\", line 3",
+    "relacionados": [
+      "excepcion",
+      "depuracion",
+      "call-stack"
+    ]
+  },
+  {
+    "id": "depuracion",
+    "termino": "depuración (debugging)",
+    "definicion": "El proceso de encontrar y corregir errores en el código. Se usan herramientas como puntos de parada, registros de mensajes y revisión paso a paso.",
+    "categoria": "programacion",
+    "ejemplo": "Poner un breakpoint y avanzar línea por línea.",
+    "relacionados": [
+      "bug",
+      "stack-trace",
+      "logging"
+    ]
+  },
+  {
+    "id": "tipado-estatico",
+    "termino": "tipado estático",
+    "definicion": "Cuando el tipo de cada variable se conoce y se verifica antes de ejecutar el programa. Atrapa errores de tipo temprano.",
+    "categoria": "programacion",
+    "ejemplo": "int edad = 25;  // no puedes meter texto aquí",
+    "relacionados": [
+      "tipado-dinamico",
+      "compilador"
+    ],
+    "tema": "typescript"
+  },
+  {
+    "id": "tipado-dinamico",
+    "termino": "tipado dinámico",
+    "definicion": "Cuando el tipo de una variable se decide mientras el programa corre, y puede cambiar. Es flexible, pero algunos errores solo salen al ejecutar.",
+    "categoria": "programacion",
+    "ejemplo": "x = 5; x = \"cinco\"  # válido en Python",
+    "relacionados": [
+      "tipado-estatico",
+      "interprete"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "compilador",
+    "termino": "compilador",
+    "definicion": "Un programa que traduce todo tu código a un formato que la máquina entiende, antes de ejecutarlo. Además detecta muchos errores en el proceso.",
+    "categoria": "programacion",
+    "ejemplo": "gcc main.c -o programa",
+    "relacionados": [
+      "interprete",
+      "bytecode",
+      "tipado-estatico"
+    ]
+  },
+  {
+    "id": "interprete",
+    "termino": "intérprete",
+    "definicion": "Un programa que lee tu código y lo ejecuta línea por línea, sin generar antes un ejecutable aparte. Python es un ejemplo conocido.",
+    "categoria": "programacion",
+    "ejemplo": "python script.py",
+    "relacionados": [
+      "compilador",
+      "runtime"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "runtime",
+    "termino": "runtime (entorno de ejecución)",
+    "definicion": "El entorno donde corre tu programa y que le da lo que necesita: gestión de memoria, funciones del sistema y más. Node.js es el runtime que ejecuta JavaScript fuera del navegador.",
+    "categoria": "programacion",
+    "ejemplo": "node app.js",
+    "relacionados": [
+      "interprete",
+      "maquina-virtual",
+      "node-js"
+    ]
+  },
+  {
+    "id": "maquina-virtual",
+    "termino": "máquina virtual de lenguaje",
+    "definicion": "Un programa que ejecuta código intermedio (bytecode) en cualquier sistema, sin depender del procesador. La JVM de Java es la más conocida.",
+    "categoria": "programacion",
+    "ejemplo": "java -jar app.jar",
+    "relacionados": [
+      "bytecode",
+      "runtime"
+    ],
+    "tema": "java"
+  },
+  {
+    "id": "bytecode",
+    "termino": "bytecode",
+    "definicion": "Un código intermedio, más simple que el original y más cercano a la máquina, que luego ejecuta una máquina virtual. Java y Python lo usan.",
+    "categoria": "programacion",
+    "ejemplo": "Los archivos .class de Java contienen bytecode.",
+    "relacionados": [
+      "maquina-virtual",
+      "compilador"
+    ]
+  },
+  {
+    "id": "garbage-collector",
+    "termino": "garbage collector (recolector de basura)",
+    "definicion": "La parte del runtime que libera automáticamente la memoria de objetos que el programa ya no usa. Así no tienes que liberarla a mano.",
+    "categoria": "programacion",
+    "ejemplo": "JavaScript, Java y Go lo incluyen.",
+    "relacionados": [
+      "memoria-heap",
+      "puntero",
+      "referencia"
+    ]
+  },
+  {
+    "id": "memoria-heap",
+    "termino": "heap (memoria dinámica)",
+    "definicion": "La zona de memoria donde se guardan los datos que crecen o viven mucho tiempo, como los objetos. Se reserva en ejecución y se libera luego.",
+    "categoria": "programacion",
+    "ejemplo": "malloc(100) en C reserva memoria en el heap",
+    "relacionados": [
+      "call-stack",
+      "garbage-collector",
+      "puntero"
+    ],
+    "tema": "c"
+  },
+  {
+    "id": "call-stack",
+    "termino": "call stack (pila de llamadas)",
+    "definicion": "La pila donde el programa anota qué funciones están ejecutándose y en qué orden. Cada llamada agrega un bloque y al terminar se quita.",
+    "categoria": "programacion",
+    "ejemplo": "Si una recursión no termina, aparece \"stack overflow\".",
+    "relacionados": [
+      "pila",
+      "recursion",
+      "stack-trace"
+    ]
+  },
+  {
+    "id": "puntero",
+    "termino": "puntero",
+    "definicion": "Una variable que guarda la dirección de memoria de otro dato, en lugar del dato mismo. Es muy usado en C y C++, y es fuente común de errores.",
+    "categoria": "programacion",
+    "ejemplo": "int *p = &x;",
+    "relacionados": [
+      "referencia",
+      "memoria-heap"
+    ],
+    "tema": "c"
+  },
+  {
+    "id": "referencia",
+    "termino": "referencia",
+    "definicion": "Un enlace que apunta a un dato existente en lugar de copiarlo. Dos variables pueden referirse al mismo objeto.",
+    "categoria": "programacion",
+    "ejemplo": "a = [1]; b = a; b.append(2)  # a también cambió",
+    "relacionados": [
+      "puntero",
+      "copia-superficial",
+      "mutable"
+    ]
+  },
+  {
+    "id": "mutable",
+    "termino": "mutable",
+    "definicion": "Un dato que se puede modificar después de creado. Las listas y los objetos suelen ser mutables.",
+    "categoria": "programacion",
+    "ejemplo": "lista = [1]; lista.append(2)",
+    "relacionados": [
+      "inmutable",
+      "referencia"
+    ]
+  },
+  {
+    "id": "inmutable",
+    "termino": "inmutable",
+    "definicion": "Un dato que no puede cambiar después de creado. Para modificarlo se crea uno nuevo. Son más seguros de compartir.",
+    "categoria": "programacion",
+    "ejemplo": "texto = \"hola\"; texto.upper()  # devuelve otro texto",
+    "relacionados": [
+      "mutable",
+      "constante",
+      "tupla"
+    ]
+  },
+  {
+    "id": "copia-superficial",
+    "termino": "copia superficial y profunda",
+    "definicion": "Una copia superficial duplica solo el nivel exterior y comparte lo de adentro. Una copia profunda duplica todo, incluyendo lo anidado.",
+    "categoria": "programacion",
+    "ejemplo": "structuredClone(obj)  // copia profunda en JavaScript",
+    "relacionados": [
+      "referencia",
+      "mutable"
+    ]
+  },
+  {
+    "id": "expresion-regular",
+    "termino": "expresión regular (regex)",
+    "definicion": "Un patrón escrito con símbolos especiales para buscar o validar texto, como encontrar correos o teléfonos dentro de un párrafo.",
+    "categoria": "programacion",
+    "ejemplo": "/\\d{3}-\\d{4}/  // detecta 555-1234",
+    "relacionados": [
+      "cadena"
+    ]
+  },
+  {
+    "id": "unicode",
+    "termino": "Unicode y UTF-8",
+    "definicion": "Unicode es el catálogo que asigna un número a cada letra y símbolo del mundo, incluidos acentos y emojis. UTF-8 es la forma más usada de guardar esos números en archivos.",
+    "categoria": "programacion",
+    "ejemplo": "\"ñ\" y \"😀\" se guardan bien con UTF-8",
+    "relacionados": [
+      "cadena"
+    ]
+  },
+  {
+    "id": "serializacion",
+    "termino": "serialización",
+    "definicion": "Convertir un objeto o dato de tu programa en un formato de texto o bytes que se pueda guardar o enviar, como JSON. El proceso inverso se llama deserialización.",
+    "categoria": "programacion",
+    "ejemplo": "JSON.stringify({ a: 1 })",
+    "relacionados": [
+      "json"
+    ]
+  },
+  {
+    "id": "modulo",
+    "termino": "módulo",
+    "definicion": "Un archivo o unidad de código que agrupa funciones y datos relacionados y que puedes importar desde otros archivos. Mantiene el proyecto organizado.",
+    "categoria": "programacion",
+    "ejemplo": "import { sumar } from './mates.js';",
+    "relacionados": [
+      "paquete",
+      "libreria"
+    ]
+  },
+  {
+    "id": "paquete",
+    "termino": "paquete",
+    "definicion": "Un conjunto de código listo para instalar y reutilizar, publicado en un repositorio como npm o PyPI. Se instala con un gestor de paquetes.",
+    "categoria": "programacion",
+    "ejemplo": "npm install express",
+    "relacionados": [
+      "libreria",
+      "gestor-de-paquetes",
+      "modulo"
+    ]
+  },
+  {
+    "id": "libreria",
+    "termino": "librería (biblioteca)",
+    "definicion": "Un conjunto de funciones ya escritas que llamas cuando las necesitas. Tú controlas cuándo y cómo se usan.",
+    "categoria": "programacion",
+    "ejemplo": "import numpy as np",
+    "relacionados": [
+      "framework",
+      "paquete",
+      "sdk"
+    ]
+  },
+  {
+    "id": "framework",
+    "termino": "framework",
+    "definicion": "Una estructura de trabajo ya armada que impone cómo organizar tu proyecto y llama a tu código en los momentos adecuados. Te ahorra empezar desde cero.",
+    "categoria": "programacion",
+    "ejemplo": "Django, Laravel, React, Angular",
+    "relacionados": [
+      "libreria",
+      "sdk"
+    ]
+  },
+  {
+    "id": "sdk",
+    "termino": "SDK",
+    "definicion": "Un kit de desarrollo con herramientas, librerías y documentación para crear programas para una plataforma o servicio concreto.",
+    "categoria": "programacion",
+    "ejemplo": "Android SDK, SDK de Stripe",
+    "relacionados": [
+      "libreria",
+      "api"
+    ]
+  },
+  {
+    "id": "decorador",
+    "termino": "decorador",
+    "definicion": "Una forma de envolver una función para añadirle comportamiento sin cambiar su código, como medir tiempo o verificar permisos.",
+    "categoria": "programacion",
+    "ejemplo": "@login_required def perfil(): ...",
+    "relacionados": [
+      "funcion-de-orden-superior",
+      "funcion"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "ownership",
+    "termino": "ownership (propiedad)",
+    "definicion": "La regla central de Rust: cada dato tiene un único dueño, y cuando el dueño sale de su ámbito el dato se libera. Evita errores de memoria sin recolector de basura.",
+    "categoria": "programacion",
+    "ejemplo": "let a = String::from(\"hola\"); let b = a;  // a ya no es válido",
+    "relacionados": [
+      "borrowing",
+      "garbage-collector",
+      "puntero"
+    ],
+    "tema": "rust"
+  },
+  {
+    "id": "borrowing",
+    "termino": "borrowing (préstamo)",
+    "definicion": "En Rust, permitir que otra parte use un dato sin quedarse con su propiedad, mediante referencias. El compilador revisa que los préstamos sean seguros.",
+    "categoria": "programacion",
+    "ejemplo": "fn longitud(s: &String) -> usize { s.len() }",
+    "relacionados": [
+      "ownership",
+      "referencia"
+    ],
+    "tema": "rust"
+  },
+  {
+    "id": "patron-de-diseno",
+    "termino": "patrón de diseño",
+    "definicion": "Una solución probada y con nombre para un problema que se repite al diseñar software, como Singleton u Observer. No es código listo, sino una idea reutilizable.",
+    "categoria": "programacion",
+    "ejemplo": "Observer: varios objetos reaccionan cuando otro cambia.",
+    "relacionados": [
+      "solid",
+      "inyeccion-de-dependencias"
+    ]
+  },
+  {
+    "id": "solid",
+    "termino": "principios SOLID",
+    "definicion": "Cinco principios de buen diseño orientado a objetos, que ayudan a que el código sea fácil de cambiar y de probar. Cada letra es uno: responsabilidad única, abierto y cerrado, sustitución de Liskov, segregación de interfaces e inversión de dependencias.",
+    "categoria": "programacion",
+    "ejemplo": "Una clase debe tener una sola razón para cambiar.",
+    "relacionados": [
+      "patron-de-diseno",
+      "deuda-tecnica"
+    ]
+  },
+  {
+    "id": "inyeccion-de-dependencias",
+    "termino": "inyección de dependencias",
+    "definicion": "Una técnica en la que un objeto recibe desde afuera lo que necesita en lugar de crearlo él mismo. Facilita cambiar piezas y hacer pruebas.",
+    "categoria": "programacion",
+    "ejemplo": "new Servicio(baseDeDatos)  // se la pasan, no la crea",
+    "relacionados": [
+      "patron-de-diseno",
+      "mock"
+    ]
+  },
+  {
+    "id": "busqueda-binaria",
+    "termino": "búsqueda binaria",
+    "definicion": "Un algoritmo para encontrar un valor en una lista ordenada, que revisa el elemento del medio y descarta la mitad que no sirve, repitiendo el proceso. Es muy rápido.",
+    "categoria": "programacion",
+    "ejemplo": "En 1000 elementos, tarda unos 10 pasos como máximo.",
+    "relacionados": [
+      "algoritmo",
+      "big-o",
+      "ordenamiento"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "ordenamiento",
+    "termino": "algoritmo de ordenamiento",
+    "definicion": "Un procedimiento que coloca los elementos de una lista en orden, como de menor a mayor. Ejemplos son burbuja, quicksort y mergesort.",
+    "categoria": "programacion",
+    "ejemplo": "lista.sort()",
+    "relacionados": [
+      "algoritmo",
+      "big-o",
+      "busqueda-binaria"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "divide-y-venceras",
+    "termino": "divide y vencerás",
+    "definicion": "Una estrategia que divide un problema grande en partes más pequeñas, resuelve cada una y junta los resultados. Mergesort y la búsqueda binaria la usan.",
+    "categoria": "programacion",
+    "ejemplo": "Ordenar la mitad izquierda, ordenar la derecha y mezclar.",
+    "relacionados": [
+      "recursion",
+      "algoritmo"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "memoizacion",
+    "termino": "memoización",
+    "definicion": "Guardar el resultado de una función para ciertos datos y reutilizarlo si se vuelve a llamar con los mismos, en vez de recalcularlo.",
+    "categoria": "programacion",
+    "ejemplo": "@lru_cache def fib(n): ...",
+    "relacionados": [
+      "programacion-dinamica",
+      "recursion"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "programacion-dinamica",
+    "termino": "programación dinámica",
+    "definicion": "Una técnica que resuelve un problema grande guardando las soluciones de subproblemas que se repiten, para no calcularlas dos veces.",
+    "categoria": "programacion",
+    "ejemplo": "Calcular Fibonacci guardando los valores ya obtenidos.",
+    "relacionados": [
+      "memoizacion",
+      "recursion",
+      "algoritmo"
+    ],
+    "tema": "algoritmos"
+  },
+  {
+    "id": "idempotencia",
+    "termino": "idempotencia",
+    "definicion": "Una operación es idempotente si repetirla varias veces produce el mismo resultado que hacerla una sola vez. Importa mucho en APIs y pagos.",
+    "categoria": "programacion",
+    "ejemplo": "Borrar el pedido 5 dos veces deja el mismo estado.",
+    "relacionados": [
+      "http",
+      "api-rest"
+    ]
+  },
+  {
+    "id": "logging",
+    "termino": "logging (registro)",
+    "definicion": "Guardar mensajes sobre lo que hace un programa mientras corre, con niveles como info o error. Es la bitácora que ayuda a entender qué pasó.",
+    "categoria": "programacion",
+    "ejemplo": "logger.error('No se pudo conectar')",
+    "relacionados": [
+      "depuracion",
+      "observabilidad"
+    ]
+  },
+  {
+    "id": "estado",
+    "termino": "estado (state)",
+    "definicion": "Los datos que un programa recuerda en un momento dado y que pueden cambiar con el tiempo, como el carrito de compras o si un menú está abierto.",
+    "categoria": "programacion",
+    "ejemplo": "const [abierto, setAbierto] = useState(false);",
+    "relacionados": [
+      "variable",
+      "mutable"
+    ],
+    "tema": "react"
+  },
+  {
+    "id": "evento",
+    "termino": "evento",
+    "definicion": "Algo que sucede y que el programa puede escuchar, como un clic, una tecla o la llegada de un mensaje. Defines qué hacer cuando ocurre.",
+    "categoria": "programacion",
+    "ejemplo": "boton.addEventListener('click', alResponder);",
+    "relacionados": [
+      "callback",
+      "dom"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "mock",
+    "termino": "mock",
+    "definicion": "Un objeto falso que imita a uno real en una prueba, para probar tu código sin depender de cosas externas como una base de datos o un servicio de internet.",
+    "categoria": "programacion",
+    "ejemplo": "mock_api.get.return_value = {\"ok\": True}",
+    "relacionados": [
+      "prueba-unitaria",
+      "inyeccion-de-dependencias"
+    ]
+  },
+  {
+    "id": "prueba-unitaria",
+    "termino": "prueba unitaria",
+    "definicion": "Una prueba automática que verifica una pieza pequeña del código, como una sola función, con datos de entrada y un resultado esperado.",
+    "categoria": "programacion",
+    "ejemplo": "assert sumar(2, 3) == 5",
+    "relacionados": [
+      "tdd",
+      "mock"
+    ]
+  },
+  {
+    "id": "tdd",
+    "termino": "TDD (desarrollo guiado por pruebas)",
+    "definicion": "Una práctica en la que primero escribes una prueba que falla, luego el código mínimo que la hace pasar y después lo mejoras. Repites el ciclo.",
+    "categoria": "programacion",
+    "ejemplo": "Rojo (falla), verde (pasa), refactorizar.",
+    "relacionados": [
+      "prueba-unitaria",
+      "refactorizar"
+    ]
+  },
+  {
+    "id": "bug",
+    "termino": "bug",
+    "definicion": "Un error en un programa que hace que se comporte distinto a lo esperado. Puede ser desde una falla pequeña hasta una caída total.",
+    "categoria": "programacion",
+    "ejemplo": "El botón de enviar no hace nada al hacer clic.",
+    "relacionados": [
+      "depuracion",
+      "parche"
+    ]
+  },
+  {
+    "id": "html",
+    "termino": "HTML",
+    "definicion": "El lenguaje con el que se escribe la estructura de una página web: títulos, párrafos, imágenes, enlaces y formularios. No es un lenguaje de programación, es de marcado.",
+    "categoria": "web",
+    "ejemplo": "<h1>Hola</h1><p>Mi primera página</p>",
+    "relacionados": [
+      "css",
+      "dom",
+      "etiqueta-html"
+    ],
+    "tema": "html-css"
+  },
+  {
+    "id": "etiqueta-html",
+    "termino": "etiqueta (tag) HTML",
+    "definicion": "Una instrucción entre signos menores y mayores que le dice al navegador qué es cada parte del contenido, como un título, un enlace o una imagen. Normalmente se abre y se cierra.",
+    "categoria": "web",
+    "ejemplo": "<a href=\"https://ejemplo.com\">Visita</a>",
+    "relacionados": [
+      "html",
+      "dom"
+    ],
+    "tema": "html-css"
+  },
+  {
+    "id": "css",
+    "termino": "CSS",
+    "definicion": "El lenguaje que da estilo a una página web: colores, tipografías, tamaños y posiciones. Separa el diseño del contenido escrito en HTML.",
+    "categoria": "web",
+    "ejemplo": "h1 { color: tomato; font-size: 2rem; }",
+    "relacionados": [
+      "html",
+      "flexbox",
+      "responsive"
+    ],
+    "tema": "html-css"
+  },
+  {
+    "id": "flexbox",
+    "termino": "Flexbox",
+    "definicion": "Un sistema de CSS para alinear y repartir elementos en una fila o columna, adaptándose al espacio disponible. Es ideal para menús y tarjetas.",
+    "categoria": "web",
+    "ejemplo": ".fila { display: flex; gap: 1rem; }",
+    "relacionados": [
+      "css-grid",
+      "css"
+    ],
+    "tema": "html-css"
+  },
+  {
+    "id": "css-grid",
+    "termino": "CSS Grid",
+    "definicion": "Un sistema de CSS para maquetar en filas y columnas a la vez, como una cuadrícula. Sirve para diseñar páginas completas.",
+    "categoria": "web",
+    "ejemplo": ".galeria { display: grid; grid-template-columns: 1fr 1fr 1fr; }",
+    "relacionados": [
+      "flexbox",
+      "css"
+    ],
+    "tema": "html-css"
+  },
+  {
+    "id": "media-query",
+    "termino": "media query",
+    "definicion": "Una regla de CSS que aplica estilos solo si se cumple una condición, como un ancho de pantalla máximo. Es la base del diseño que se adapta a celulares y computadoras.",
+    "categoria": "web",
+    "ejemplo": "@media (max-width: 600px) { .menu { display: none; } }",
+    "relacionados": [
+      "responsive",
+      "css"
+    ],
+    "tema": "html-css"
+  },
+  {
+    "id": "responsive",
+    "termino": "diseño responsive",
+    "definicion": "Un diseño que se adapta bien a cualquier tamaño de pantalla, del celular al monitor grande, sin necesitar una versión aparte de la página.",
+    "categoria": "web",
+    "ejemplo": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
+    "relacionados": [
+      "media-query",
+      "css"
+    ],
+    "tema": "html-css"
+  },
+  {
+    "id": "accesibilidad",
+    "termino": "accesibilidad web",
+    "definicion": "Hacer que un sitio pueda usarse por todas las personas, incluyendo quienes usan lector de pantalla, teclado solamente o tienen baja visión. Incluye textos alternativos, buen contraste y estructura clara.",
+    "categoria": "web",
+    "ejemplo": "<img src=\"perro.jpg\" alt=\"Perro corriendo en la playa\">",
+    "relacionados": [
+      "html",
+      "seo"
+    ],
+    "tema": "accesibilidad"
+  },
+  {
+    "id": "dom",
+    "termino": "DOM",
+    "definicion": "La representación de tu página HTML como un árbol de objetos que JavaScript puede leer y modificar. Así se cambian textos, estilos y elementos sin recargar la página.",
+    "categoria": "web",
+    "ejemplo": "document.querySelector('h1').textContent = 'Nuevo título';",
+    "relacionados": [
+      "html",
+      "evento",
+      "navegador"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "navegador",
+    "termino": "navegador web",
+    "definicion": "El programa que descarga páginas de internet y las muestra, como Chrome, Firefox o Safari. Entiende HTML, CSS y JavaScript.",
+    "categoria": "web",
+    "ejemplo": "Escribes una dirección y el navegador pide y dibuja la página.",
+    "relacionados": [
+      "dom",
+      "url",
+      "http"
+    ]
+  },
+  {
+    "id": "url",
+    "termino": "URL",
+    "definicion": "La dirección completa de un recurso en internet: protocolo, dominio, ruta y, a veces, parámetros. Es lo que escribes en la barra del navegador.",
+    "categoria": "web",
+    "ejemplo": "https://ejemplo.com/blog?pagina=2",
+    "relacionados": [
+      "dominio",
+      "http",
+      "https"
+    ]
+  },
+  {
+    "id": "dominio",
+    "termino": "dominio",
+    "definicion": "El nombre legible de un sitio web, como ejemplo.com, que se usa en lugar de la dirección numérica del servidor. Se alquila por año en un registrador.",
+    "categoria": "web",
+    "ejemplo": "ayudadev.com",
+    "relacionados": [
+      "dns",
+      "url",
+      "hosting"
+    ]
+  },
+  {
+    "id": "dns",
+    "termino": "DNS",
+    "definicion": "El sistema que traduce nombres de dominio a direcciones IP, como una agenda de contactos de internet. Sin él tendrías que recordar números.",
+    "categoria": "web",
+    "ejemplo": "ejemplo.com -> 93.184.216.34",
+    "relacionados": [
+      "dominio",
+      "ip",
+      "navegador"
+    ]
+  },
+  {
+    "id": "http",
+    "termino": "HTTP",
+    "definicion": "El protocolo, es decir, el conjunto de reglas, con el que el navegador y los servidores se comunican en la web. El navegador pide algo y el servidor responde.",
+    "categoria": "web",
+    "ejemplo": "GET /index.html HTTP/1.1",
+    "relacionados": [
+      "https",
+      "metodo-http",
+      "codigo-de-estado"
+    ]
+  },
+  {
+    "id": "https",
+    "termino": "HTTPS",
+    "definicion": "HTTP con una capa de cifrado, de modo que lo que viaja entre tu navegador y el sitio no pueda leerse ni cambiarse por el camino. Se reconoce por el candado en la barra.",
+    "categoria": "web",
+    "ejemplo": "https://ejemplo.com",
+    "relacionados": [
+      "http",
+      "tls",
+      "certificado-ssl"
+    ]
+  },
+  {
+    "id": "metodo-http",
+    "termino": "método HTTP",
+    "definicion": "La acción que pides en una petición HTTP. GET pide datos, POST envía datos nuevos, PUT y PATCH modifican y DELETE borra.",
+    "categoria": "web",
+    "ejemplo": "POST /usuarios",
+    "relacionados": [
+      "http",
+      "api-rest",
+      "idempotencia"
+    ]
+  },
+  {
+    "id": "codigo-de-estado",
+    "termino": "código de estado HTTP",
+    "definicion": "Un número con el que el servidor te dice cómo le fue a tu petición. 200 es éxito, 404 no encontrado, 500 error del servidor.",
+    "categoria": "web",
+    "ejemplo": "404 Not Found",
+    "relacionados": [
+      "http",
+      "peticion-y-respuesta"
+    ]
+  },
+  {
+    "id": "peticion-y-respuesta",
+    "termino": "petición y respuesta",
+    "definicion": "El patrón básico de la web: el cliente envía una petición (request) y el servidor devuelve una respuesta (response) con los datos y un código de estado.",
+    "categoria": "web",
+    "ejemplo": "El navegador pide /inicio y el servidor responde con el HTML.",
+    "relacionados": [
+      "cliente-servidor",
+      "http",
+      "codigo-de-estado"
+    ]
+  },
+  {
+    "id": "cabecera-http",
+    "termino": "cabecera HTTP (header)",
+    "definicion": "Datos extra que acompañan una petición o una respuesta, como el tipo de contenido, el idioma o credenciales. Van antes del cuerpo del mensaje.",
+    "categoria": "web",
+    "ejemplo": "Content-Type: application/json",
+    "relacionados": [
+      "http",
+      "cors"
+    ]
+  },
+  {
+    "id": "cliente-servidor",
+    "termino": "cliente y servidor",
+    "definicion": "El cliente es quien pide (tu navegador o app) y el servidor es quien atiende y responde. La mayor parte de internet funciona con este modelo.",
+    "categoria": "web",
+    "ejemplo": "Tu celular pide el clima y un servidor lo entrega.",
+    "relacionados": [
+      "peticion-y-respuesta",
+      "frontend",
+      "backend"
+    ]
+  },
+  {
+    "id": "frontend",
+    "termino": "frontend",
+    "definicion": "La parte de una aplicación que ves y con la que interactúas en el navegador o el celular: botones, textos, animaciones. Se hace con HTML, CSS y JavaScript.",
+    "categoria": "web",
+    "ejemplo": "Un menú desplegable y un formulario son frontend.",
+    "relacionados": [
+      "backend",
+      "full-stack",
+      "spa"
+    ]
+  },
+  {
+    "id": "backend",
+    "termino": "backend",
+    "definicion": "La parte de una aplicación que corre en el servidor y que tú no ves: guarda datos, aplica reglas y responde a las peticiones del frontend.",
+    "categoria": "web",
+    "ejemplo": "Verificar tu contraseña y guardar un pedido en la base de datos.",
+    "relacionados": [
+      "frontend",
+      "api",
+      "base-de-datos"
+    ]
+  },
+  {
+    "id": "api",
+    "termino": "API",
+    "definicion": "Una forma definida en la que un programa le pide cosas a otro, sin saber cómo funciona por dentro. Muchas son servicios web que devuelven datos en JSON.",
+    "categoria": "web",
+    "ejemplo": "GET https://api.ejemplo.com/clima?ciudad=Puebla",
+    "relacionados": [
+      "api-rest",
+      "endpoint",
+      "json",
+      "graphql"
+    ]
+  },
+  {
+    "id": "api-rest",
+    "termino": "REST",
+    "definicion": "Un estilo para diseñar APIs web donde cada recurso tiene su dirección y se usan los métodos HTTP para consultarlo o modificarlo. Es el estilo más común.",
+    "categoria": "web",
+    "ejemplo": "GET /usuarios/5  y  DELETE /usuarios/5",
+    "relacionados": [
+      "api",
+      "metodo-http",
+      "endpoint",
+      "json"
+    ]
+  },
+  {
+    "id": "graphql",
+    "termino": "GraphQL",
+    "definicion": "Un lenguaje de consultas para APIs en el que el cliente pide exactamente los campos que necesita, en una sola petición. Evita traer datos de más o hacer muchas llamadas.",
+    "categoria": "web",
+    "ejemplo": "{ usuario(id: 5) { nombre email } }",
+    "relacionados": [
+      "api",
+      "api-rest"
+    ]
+  },
+  {
+    "id": "endpoint",
+    "termino": "endpoint",
+    "definicion": "Una dirección concreta de una API a la que puedes hacer peticiones, como /usuarios o /productos/7.",
+    "categoria": "web",
+    "ejemplo": "https://api.ejemplo.com/v1/productos",
+    "relacionados": [
+      "api",
+      "api-rest"
+    ]
+  },
+  {
+    "id": "json",
+    "termino": "JSON",
+    "definicion": "Un formato de texto sencillo para intercambiar datos, con pares clave y valor y listas. Casi todas las APIs lo usan y se lee fácil.",
+    "categoria": "web",
+    "ejemplo": "{\"nombre\": \"Ana\", \"edad\": 30}",
+    "relacionados": [
+      "api",
+      "diccionario",
+      "serializacion"
+    ]
+  },
+  {
+    "id": "webhook",
+    "termino": "webhook",
+    "definicion": "Un aviso automático que un servicio envía a una dirección tuya cuando algo ocurre, en lugar de que tú le preguntes cada rato. Por ejemplo, cuando se completa un pago.",
+    "categoria": "web",
+    "ejemplo": "Stripe llama a tu URL /pago-recibido.",
+    "relacionados": [
+      "api",
+      "endpoint"
+    ]
+  },
+  {
+    "id": "cors",
+    "termino": "CORS",
+    "definicion": "Una regla de seguridad del navegador que decide si una página puede pedir datos a un dominio distinto al suyo. El servidor indica con cabeceras a quién deja pasar.",
+    "categoria": "web",
+    "ejemplo": "Access-Control-Allow-Origin: https://miapp.com",
+    "relacionados": [
+      "cabecera-http",
+      "https"
+    ]
+  },
+  {
+    "id": "cookie",
+    "termino": "cookie",
+    "definicion": "Un pequeño dato que un sitio guarda en tu navegador para recordarte, como tu sesión iniciada o tu idioma. Se envía de vuelta al sitio en cada visita.",
+    "categoria": "web",
+    "ejemplo": "Set-Cookie: sesion=abc123; HttpOnly",
+    "relacionados": [
+      "sesion",
+      "local-storage"
+    ]
+  },
+  {
+    "id": "sesion",
+    "termino": "sesión",
+    "definicion": "El periodo en el que un servidor reconoce que eres la misma persona entre varias peticiones, normalmente con un identificador guardado en una cookie.",
+    "categoria": "web",
+    "ejemplo": "Inicias sesión y el sitio te recuerda al cambiar de página.",
+    "relacionados": [
+      "cookie",
+      "jwt"
+    ]
+  },
+  {
+    "id": "local-storage",
+    "termino": "localStorage",
+    "definicion": "Un espacio del navegador para guardar pequeños datos en tu computadora que permanecen aunque cierres la pestaña. No se envía al servidor.",
+    "categoria": "web",
+    "ejemplo": "localStorage.setItem('tema', 'oscuro');",
+    "relacionados": [
+      "cookie",
+      "navegador"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "spa",
+    "termino": "SPA (aplicación de una sola página)",
+    "definicion": "Una aplicación web que carga una vez y luego cambia el contenido con JavaScript, sin recargar toda la página. Se siente como una app.",
+    "categoria": "web",
+    "ejemplo": "Gmail y Trello funcionan así.",
+    "relacionados": [
+      "ssr",
+      "frontend"
+    ]
+  },
+  {
+    "id": "ssr",
+    "termino": "SSR (renderizado en el servidor)",
+    "definicion": "Generar el HTML de la página en el servidor para enviarlo ya armado al navegador, en vez de armarlo en el cliente. Ayuda a la velocidad inicial y al SEO.",
+    "categoria": "web",
+    "ejemplo": "Next.js y Astro pueden renderizar en el servidor.",
+    "relacionados": [
+      "ssg",
+      "spa",
+      "hidratacion"
+    ]
+  },
+  {
+    "id": "ssg",
+    "termino": "SSG (generación estática)",
+    "definicion": "Crear todas las páginas HTML por adelantado, al momento de construir el sitio, y servirlas como archivos listos. Es rápido y barato de alojar.",
+    "categoria": "web",
+    "ejemplo": "Astro, Hugo y Eleventy generan sitios estáticos.",
+    "relacionados": [
+      "ssr",
+      "cdn",
+      "hosting"
+    ],
+    "tema": "astro"
+  },
+  {
+    "id": "hidratacion",
+    "termino": "hidratación",
+    "definicion": "El paso en el que JavaScript se conecta a un HTML que llegó ya dibujado desde el servidor, para hacerlo interactivo con clics y estados.",
+    "categoria": "web",
+    "ejemplo": "Un botón que se ve rápido pero solo responde cuando termina la hidratación.",
+    "relacionados": [
+      "ssr",
+      "spa"
+    ]
+  },
+  {
+    "id": "pwa",
+    "termino": "PWA",
+    "definicion": "Una aplicación web que se puede instalar en el celular o la computadora y que puede funcionar sin conexión, usando tecnologías del navegador. No pasa por una tienda de apps.",
+    "categoria": "web",
+    "ejemplo": "Un sitio con manifest y service worker que ofrece \"Instalar\".",
+    "relacionados": [
+      "service-worker",
+      "responsive"
+    ]
+  },
+  {
+    "id": "service-worker",
+    "termino": "service worker",
+    "definicion": "Un script que el navegador ejecuta en segundo plano, separado de la página, y que permite guardar archivos para uso sin conexión y recibir notificaciones.",
+    "categoria": "web",
+    "ejemplo": "navigator.serviceWorker.register('/sw.js');",
+    "relacionados": [
+      "pwa",
+      "cache"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "cache",
+    "termino": "caché",
+    "definicion": "Una copia guardada de datos para entregarlos más rápido la próxima vez, sin volver a pedirlos o recalcularlos. Existe en navegadores, servidores y CDNs.",
+    "categoria": "web",
+    "ejemplo": "Cache-Control: max-age=3600",
+    "relacionados": [
+      "cdn",
+      "cabecera-http"
+    ]
+  },
+  {
+    "id": "cdn",
+    "termino": "CDN",
+    "definicion": "Una red de servidores repartidos por el mundo que guardan copias de tus archivos y los sirven desde el lugar más cercano al visitante. Hace los sitios más rápidos.",
+    "categoria": "web",
+    "ejemplo": "Imágenes servidas desde un servidor cerca de tu ciudad.",
+    "relacionados": [
+      "cache",
+      "hosting",
+      "latencia"
+    ]
+  },
+  {
+    "id": "hosting",
+    "termino": "hosting",
+    "definicion": "El servicio que aloja los archivos de tu sitio o aplicación en un servidor conectado a internet para que cualquiera pueda visitarlo.",
+    "categoria": "web",
+    "ejemplo": "Subes tu sitio a Netlify, Vercel o un VPS.",
+    "relacionados": [
+      "dominio",
+      "despliegue"
+    ]
+  },
+  {
+    "id": "websocket",
+    "termino": "WebSocket",
+    "definicion": "Una conexión abierta y permanente entre navegador y servidor por la que ambos pueden enviarse mensajes en cualquier momento. Se usa en chats y juegos en línea.",
+    "categoria": "web",
+    "ejemplo": "const ws = new WebSocket('wss://chat.ejemplo.com');",
+    "relacionados": [
+      "http",
+      "peticion-y-respuesta"
+    ]
+  },
+  {
+    "id": "ajax-fetch",
+    "termino": "fetch y AJAX",
+    "definicion": "Pedir datos a un servidor desde JavaScript sin recargar la página. fetch es la función moderna del navegador para hacerlo.",
+    "categoria": "web",
+    "ejemplo": "const res = await fetch('/api/datos');",
+    "relacionados": [
+      "promesa",
+      "api",
+      "json"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "routing",
+    "termino": "enrutamiento (routing)",
+    "definicion": "Decidir qué contenido o código se muestra según la dirección URL visitada. En el servidor y en el cliente existen sistemas de rutas.",
+    "categoria": "web",
+    "ejemplo": "/blog/hola muestra el artículo \"hola\"",
+    "relacionados": [
+      "url",
+      "spa"
+    ]
+  },
+  {
+    "id": "middleware",
+    "termino": "middleware",
+    "definicion": "Una función que se mete en medio de la petición y la respuesta para hacer algo en el camino, como verificar que iniciaste sesión o registrar la visita.",
+    "categoria": "web",
+    "ejemplo": "app.use(verificarSesion);",
+    "relacionados": [
+      "backend",
+      "peticion-y-respuesta"
+    ],
+    "tema": "nodejs"
+  },
+  {
+    "id": "componente",
+    "termino": "componente",
+    "definicion": "Una pieza reutilizable de interfaz con su propio HTML, estilos y lógica, como un botón o una tarjeta. Las aplicaciones modernas se arman combinando componentes.",
+    "categoria": "web",
+    "ejemplo": "<Boton texto=\"Enviar\" />",
+    "relacionados": [
+      "props",
+      "virtual-dom",
+      "frontend"
+    ],
+    "tema": "react"
+  },
+  {
+    "id": "props",
+    "termino": "props",
+    "definicion": "Los datos que un componente recibe de su padre para personalizarse, como el texto de un botón. El componente solo los lee, no los cambia.",
+    "categoria": "web",
+    "ejemplo": "<Saludo nombre=\"Ana\" />",
+    "relacionados": [
+      "componente",
+      "estado"
+    ],
+    "tema": "react"
+  },
+  {
+    "id": "virtual-dom",
+    "termino": "DOM virtual",
+    "definicion": "Una copia ligera del DOM en memoria que algunas librerías, como React, comparan para actualizar en la pantalla solo lo que realmente cambió.",
+    "categoria": "web",
+    "ejemplo": "React compara el árbol viejo y el nuevo y aplica solo las diferencias.",
+    "relacionados": [
+      "dom",
+      "componente"
+    ],
+    "tema": "react"
+  },
+  {
+    "id": "seo",
+    "termino": "SEO",
+    "definicion": "Las técnicas para que tu sitio aparezca mejor posicionado en los resultados de buscadores como Google, con buen contenido, velocidad y estructura.",
+    "categoria": "web",
+    "ejemplo": "Un título claro, descripción y encabezados bien usados.",
+    "relacionados": [
+      "accesibilidad",
+      "ssr"
+    ]
+  },
+  {
+    "id": "minificacion",
+    "termino": "minificación",
+    "definicion": "Quitar espacios, saltos de línea y comentarios del código antes de publicarlo, para que los archivos pesen menos y carguen más rápido.",
+    "categoria": "web",
+    "ejemplo": "app.min.js",
+    "relacionados": [
+      "bundler"
+    ]
+  },
+  {
+    "id": "transpilador",
+    "termino": "transpilador",
+    "definicion": "Una herramienta que convierte código de un lenguaje o versión a otro de nivel parecido, por ejemplo TypeScript a JavaScript o JavaScript moderno a uno que entienden navegadores viejos.",
+    "categoria": "web",
+    "ejemplo": "tsc, Babel",
+    "relacionados": [
+      "compilador",
+      "typescript"
+    ],
+    "tema": "typescript"
+  },
+  {
+    "id": "serverless",
+    "termino": "serverless",
+    "definicion": "Un modelo donde tú subes funciones y el proveedor se encarga de los servidores, escalando solo y cobrando por uso. Siguen existiendo servidores, simplemente no los administras.",
+    "categoria": "web",
+    "ejemplo": "AWS Lambda, Cloudflare Workers, Vercel Functions",
+    "relacionados": [
+      "backend",
+      "hosting"
+    ]
+  },
+  {
+    "id": "microservicios",
+    "termino": "microservicios",
+    "definicion": "Una arquitectura que divide una aplicación grande en servicios pequeños e independientes que se comunican entre sí, cada uno con una tarea concreta.",
+    "categoria": "web",
+    "ejemplo": "Un servicio de pagos, otro de usuarios y otro de envíos.",
+    "relacionados": [
+      "api",
+      "contenedor"
+    ]
+  },
+  {
+    "id": "node-js",
+    "termino": "Node.js",
+    "definicion": "Un entorno que permite ejecutar JavaScript fuera del navegador, por ejemplo para crear servidores o herramientas de terminal. Usa el motor V8 de Chrome.",
+    "categoria": "web",
+    "ejemplo": "node servidor.js",
+    "relacionados": [
+      "runtime",
+      "gestor-de-paquetes"
+    ],
+    "tema": "nodejs"
+  },
+  {
+    "id": "javascript",
+    "termino": "JavaScript",
+    "definicion": "El lenguaje de programación de la web. Corre en el navegador para dar interacción a las páginas y también en servidores con Node.js.",
+    "categoria": "web",
+    "ejemplo": "document.querySelector('button').onclick = () => alert('Hola');",
+    "relacionados": [
+      "typescript",
+      "dom",
+      "node-js"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "typescript",
+    "termino": "TypeScript",
+    "definicion": "JavaScript con tipos añadidos. Se escribe con anotaciones que ayudan a detectar errores antes de ejecutar y luego se convierte a JavaScript normal.",
+    "categoria": "web",
+    "ejemplo": "let edad: number = 25;",
+    "relacionados": [
+      "javascript",
+      "tipado-estatico",
+      "transpilador"
+    ],
+    "tema": "typescript"
+  },
+  {
+    "id": "cookie-de-terceros",
+    "termino": "cookie de terceros",
+    "definicion": "Una cookie creada por un dominio distinto al del sitio que visitas, usada sobre todo para publicidad y seguimiento entre sitios. Los navegadores las limitan cada vez más.",
+    "categoria": "web",
+    "ejemplo": "Un anuncio que te sigue de un sitio a otro.",
+    "relacionados": [
+      "cookie",
+      "privacidad"
+    ]
+  },
+  {
+    "id": "base-de-datos",
+    "termino": "base de datos",
+    "definicion": "Un sistema organizado para guardar información y consultarla con rapidez, como una gran hoja de cálculo que muchas personas y programas pueden usar a la vez.",
+    "categoria": "datos",
+    "ejemplo": "PostgreSQL, MySQL, MongoDB",
+    "relacionados": [
+      "sql",
+      "nosql",
+      "tabla"
+    ]
+  },
+  {
+    "id": "sql",
+    "termino": "SQL",
+    "definicion": "El lenguaje estándar para consultar y modificar bases de datos relacionales. Con él pides, insertas, actualizas y borras datos.",
+    "categoria": "datos",
+    "ejemplo": "SELECT nombre FROM clientes WHERE ciudad = 'Puebla';",
+    "relacionados": [
+      "base-de-datos",
+      "tabla",
+      "join"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "nosql",
+    "termino": "NoSQL",
+    "definicion": "Bases de datos que no usan tablas relacionales clásicas. Guardan datos como documentos, pares clave y valor, grafos o columnas, y se adaptan a datos poco rígidos.",
+    "categoria": "datos",
+    "ejemplo": "MongoDB, Redis, Cassandra",
+    "relacionados": [
+      "sql",
+      "base-de-datos-documental",
+      "clave-valor"
+    ],
+    "tema": "nosql"
+  },
+  {
+    "id": "base-de-datos-relacional",
+    "termino": "base de datos relacional",
+    "definicion": "Una base de datos que guarda los datos en tablas con filas y columnas, y relaciona unas tablas con otras mediante claves.",
+    "categoria": "datos",
+    "ejemplo": "Una tabla de clientes y otra de pedidos, enlazadas por el id del cliente.",
+    "relacionados": [
+      "tabla",
+      "clave-primaria",
+      "sql"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "base-de-datos-documental",
+    "termino": "base de datos documental",
+    "definicion": "Una base NoSQL que guarda cada registro como un documento parecido a JSON, que puede tener campos distintos a los de otro documento.",
+    "categoria": "datos",
+    "ejemplo": "{ \"nombre\": \"Ana\", \"intereses\": [\"cine\", \"viajes\"] }",
+    "relacionados": [
+      "nosql",
+      "json"
+    ],
+    "tema": "nosql"
+  },
+  {
+    "id": "clave-valor",
+    "termino": "base de datos clave-valor",
+    "definicion": "Una base NoSQL muy simple donde guardas un valor bajo una clave y lo recuperas por ella. Es muy rápida y se usa mucho como caché.",
+    "categoria": "datos",
+    "ejemplo": "SET usuario:5 \"Ana\"",
+    "relacionados": [
+      "nosql",
+      "cache"
+    ],
+    "tema": "nosql"
+  },
+  {
+    "id": "base-de-datos-de-grafos",
+    "termino": "base de datos de grafos",
+    "definicion": "Una base que guarda los datos como nodos y relaciones entre ellos. Es buena para redes sociales, recomendaciones y rutas.",
+    "categoria": "datos",
+    "ejemplo": "(Ana)-[:AMIGA_DE]->(Luis)",
+    "relacionados": [
+      "grafo",
+      "nosql"
+    ],
+    "tema": "nosql"
+  },
+  {
+    "id": "base-de-datos-vectorial",
+    "termino": "base de datos vectorial",
+    "definicion": "Una base especializada en guardar embeddings, que son listas de números, y encontrar rápido cuáles se parecen más a otro. Se usa en búsqueda semántica y RAG.",
+    "categoria": "datos",
+    "ejemplo": "Buscar los 5 párrafos más parecidos a una pregunta.",
+    "relacionados": [
+      "embedding",
+      "rag"
+    ]
+  },
+  {
+    "id": "tabla",
+    "termino": "tabla",
+    "definicion": "La estructura básica de una base relacional: filas (registros) y columnas (campos). Cada tabla guarda un tipo de cosa, como clientes o productos.",
+    "categoria": "datos",
+    "ejemplo": "Tabla productos: id, nombre, precio",
+    "relacionados": [
+      "base-de-datos-relacional",
+      "clave-primaria"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "clave-primaria",
+    "termino": "clave primaria",
+    "definicion": "La columna que identifica de forma única cada fila de una tabla, normalmente un número id que no se repite.",
+    "categoria": "datos",
+    "ejemplo": "id INTEGER PRIMARY KEY",
+    "relacionados": [
+      "clave-foranea",
+      "indice",
+      "tabla"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "clave-foranea",
+    "termino": "clave foránea",
+    "definicion": "Una columna que apunta a la clave primaria de otra tabla para relacionar las dos. Así un pedido sabe a qué cliente pertenece.",
+    "categoria": "datos",
+    "ejemplo": "pedidos.cliente_id -> clientes.id",
+    "relacionados": [
+      "clave-primaria",
+      "join"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "join",
+    "termino": "JOIN",
+    "definicion": "Una operación de SQL que combina filas de dos o más tablas usando una columna en común. Así juntas, por ejemplo, pedidos con los datos del cliente.",
+    "categoria": "datos",
+    "ejemplo": "SELECT * FROM pedidos JOIN clientes ON pedidos.cliente_id = clientes.id;",
+    "relacionados": [
+      "sql",
+      "clave-foranea"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "consulta",
+    "termino": "consulta (query)",
+    "definicion": "Una petición que le haces a una base de datos para obtener o modificar información, escrita normalmente en SQL.",
+    "categoria": "datos",
+    "ejemplo": "SELECT * FROM productos WHERE precio < 100;",
+    "relacionados": [
+      "sql",
+      "indice"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "indice",
+    "termino": "índice",
+    "definicion": "Una estructura extra que acelera las búsquedas en una columna, como el índice de un libro. A cambio ocupa espacio y hace un poco más lentas las escrituras.",
+    "categoria": "datos",
+    "ejemplo": "CREATE INDEX idx_email ON usuarios(email);",
+    "relacionados": [
+      "consulta",
+      "clave-primaria"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "transaccion",
+    "termino": "transacción",
+    "definicion": "Un grupo de operaciones en la base de datos que se tratan como una sola: o se hacen todas, o no se hace ninguna. Evita quedar a medias.",
+    "categoria": "datos",
+    "ejemplo": "Transferir dinero: restar a una cuenta y sumar a otra, ambas o ninguna.",
+    "relacionados": [
+      "acid",
+      "sql"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "acid",
+    "termino": "ACID",
+    "definicion": "Cuatro garantías de las transacciones: atomicidad (todo o nada), consistencia (se respetan las reglas), aislamiento (no se estorban) y durabilidad (lo confirmado no se pierde).",
+    "categoria": "datos",
+    "ejemplo": "PostgreSQL y MySQL con InnoDB cumplen ACID.",
+    "relacionados": [
+      "transaccion",
+      "base-de-datos-relacional"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "orm",
+    "termino": "ORM",
+    "definicion": "Una herramienta que te deja trabajar con la base de datos usando objetos y clases de tu lenguaje, en vez de escribir SQL a mano.",
+    "categoria": "datos",
+    "ejemplo": "Usuario.objects.filter(edad__gt=18)  # Django ORM",
+    "relacionados": [
+      "sql",
+      "migracion",
+      "modelo-de-datos"
+    ]
+  },
+  {
+    "id": "migracion",
+    "termino": "migración de base de datos",
+    "definicion": "Un archivo que describe un cambio en la estructura de la base, como crear una tabla o agregar una columna, y que se aplica de forma ordenada y repetible.",
+    "categoria": "datos",
+    "ejemplo": "ALTER TABLE usuarios ADD COLUMN telefono TEXT;",
+    "relacionados": [
+      "orm",
+      "esquema"
+    ]
+  },
+  {
+    "id": "esquema",
+    "termino": "esquema",
+    "definicion": "La descripción de cómo está organizada una base de datos: qué tablas tiene, qué columnas y de qué tipo, y cómo se relacionan.",
+    "categoria": "datos",
+    "ejemplo": "usuarios(id, nombre, email)",
+    "relacionados": [
+      "migracion",
+      "tabla"
+    ]
+  },
+  {
+    "id": "modelo-de-datos",
+    "termino": "modelo de datos",
+    "definicion": "El diseño de cómo se representan y relacionan los datos de una aplicación, antes de crear las tablas o colecciones.",
+    "categoria": "datos",
+    "ejemplo": "Un cliente tiene muchos pedidos; un pedido tiene muchos productos.",
+    "relacionados": [
+      "esquema",
+      "normalizacion"
+    ]
+  },
+  {
+    "id": "normalizacion",
+    "termino": "normalización",
+    "definicion": "Organizar las tablas para que cada dato se guarde una sola vez, evitando repeticiones y errores. Se hace dividiendo tablas y relacionándolas con claves.",
+    "categoria": "datos",
+    "ejemplo": "En vez de repetir la ciudad en cada pedido, una tabla de ciudades.",
+    "relacionados": [
+      "desnormalizacion",
+      "clave-foranea"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "desnormalizacion",
+    "termino": "desnormalización",
+    "definicion": "Repetir datos a propósito para que las consultas sean más rápidas o sencillas, a cambio de más espacio y de tener que mantener las copias al día.",
+    "categoria": "datos",
+    "ejemplo": "Guardar el nombre del autor dentro de cada artículo.",
+    "relacionados": [
+      "normalizacion"
+    ]
+  },
+  {
+    "id": "crud",
+    "termino": "CRUD",
+    "definicion": "Las cuatro operaciones básicas sobre datos: crear (Create), leer (Read), actualizar (Update) y borrar (Delete). La mayoría de las aplicaciones se construye alrededor de ellas.",
+    "categoria": "datos",
+    "ejemplo": "INSERT, SELECT, UPDATE, DELETE",
+    "relacionados": [
+      "sql",
+      "api-rest"
+    ]
+  },
+  {
+    "id": "replicacion",
+    "termino": "replicación",
+    "definicion": "Mantener copias de la misma base de datos en varios servidores, para tener respaldo y repartir la carga de lectura.",
+    "categoria": "datos",
+    "ejemplo": "Un servidor principal y dos réplicas de lectura.",
+    "relacionados": [
+      "sharding",
+      "backup"
+    ]
+  },
+  {
+    "id": "sharding",
+    "termino": "sharding (particionado)",
+    "definicion": "Dividir una base de datos muy grande en trozos y repartirlos entre varios servidores, de modo que cada uno guarda solo una parte.",
+    "categoria": "datos",
+    "ejemplo": "Usuarios A a M en un servidor y N a Z en otro.",
+    "relacionados": [
+      "replicacion",
+      "big-data"
+    ]
+  },
+  {
+    "id": "backup",
+    "termino": "backup (copia de seguridad)",
+    "definicion": "Una copia de tus datos guardada aparte para poder recuperarlos si algo se borra, se daña o se pierde. Conviene probar que se pueda restaurar.",
+    "categoria": "datos",
+    "ejemplo": "pg_dump mibase > respaldo.sql",
+    "relacionados": [
+      "replicacion"
+    ]
+  },
+  {
+    "id": "consistencia-eventual",
+    "termino": "consistencia eventual",
+    "definicion": "Un modelo en el que, tras un cambio, no todas las copias de los datos se actualizan al instante, pero con el tiempo terminan iguales. Es común en sistemas distribuidos.",
+    "categoria": "datos",
+    "ejemplo": "Publicas una foto y tus amigos la ven unos segundos después.",
+    "relacionados": [
+      "replicacion",
+      "nosql"
+    ]
+  },
+  {
+    "id": "olap-oltp",
+    "termino": "OLTP y OLAP",
+    "definicion": "OLTP son sistemas para muchas operaciones pequeñas y rápidas, como ventas diarias. OLAP son sistemas para analizar grandes volúmenes y sacar reportes.",
+    "categoria": "datos",
+    "ejemplo": "La caja registradora es OLTP; el reporte anual de ventas es OLAP.",
+    "relacionados": [
+      "data-warehouse",
+      "etl"
+    ]
+  },
+  {
+    "id": "etl",
+    "termino": "ETL",
+    "definicion": "El proceso de extraer datos de varias fuentes, transformarlos para limpiarlos y darles formato, y cargarlos en un destino como un almacén de datos.",
+    "categoria": "datos",
+    "ejemplo": "Leer ventas de tres sistemas, unificar fechas y cargarlas en un solo lugar.",
+    "relacionados": [
+      "data-warehouse",
+      "pipeline-de-datos"
+    ]
+  },
+  {
+    "id": "pipeline-de-datos",
+    "termino": "pipeline de datos",
+    "definicion": "Una cadena automática de pasos por la que viajan los datos desde su origen, pasando por limpieza y transformación, hasta su destino.",
+    "categoria": "datos",
+    "ejemplo": "Cada noche se descargan pedidos, se limpian y se actualiza un tablero.",
+    "relacionados": [
+      "etl",
+      "data-lake"
+    ]
+  },
+  {
+    "id": "data-warehouse",
+    "termino": "data warehouse (almacén de datos)",
+    "definicion": "Una base de datos pensada para análisis, que junta información limpia y organizada de toda una empresa para hacer reportes e informes.",
+    "categoria": "datos",
+    "ejemplo": "BigQuery, Snowflake, Redshift",
+    "relacionados": [
+      "data-lake",
+      "etl",
+      "olap-oltp"
+    ]
+  },
+  {
+    "id": "data-lake",
+    "termino": "data lake (lago de datos)",
+    "definicion": "Un depósito donde se guardan datos de todo tipo, en bruto y sin estructura previa, para analizarlos más adelante.",
+    "categoria": "datos",
+    "ejemplo": "Archivos CSV, imágenes y registros guardados en un almacenamiento en la nube.",
+    "relacionados": [
+      "data-warehouse",
+      "big-data"
+    ]
+  },
+  {
+    "id": "big-data",
+    "termino": "big data",
+    "definicion": "Conjuntos de datos tan grandes o que cambian tan rápido que no caben en herramientas comunes y requieren sistemas distribuidos para procesarlos.",
+    "categoria": "datos",
+    "ejemplo": "Millones de eventos por segundo de una aplicación móvil.",
+    "relacionados": [
+      "data-lake",
+      "sharding"
+    ]
+  },
+  {
+    "id": "dataframe",
+    "termino": "DataFrame",
+    "definicion": "Una tabla de datos en memoria, con filas y columnas con nombre, que permite filtrar, agrupar y calcular de forma cómoda. pandas es la librería más conocida.",
+    "categoria": "datos",
+    "ejemplo": "df[df['edad'] > 18]",
+    "relacionados": [
+      "csv",
+      "tabla"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "csv",
+    "termino": "CSV",
+    "definicion": "Un formato de archivo de texto para tablas donde cada línea es una fila y los valores van separados por comas. Excel y muchas herramientas lo abren.",
+    "categoria": "datos",
+    "ejemplo": "nombre,edad\nAna,30\nLuis,25",
+    "relacionados": [
+      "dataframe",
+      "json"
+    ]
+  },
+  {
+    "id": "limpieza-de-datos",
+    "termino": "limpieza de datos",
+    "definicion": "Corregir o quitar datos erróneos, repetidos o incompletos antes de analizarlos. Suele ser la parte que más tiempo lleva en un proyecto de datos.",
+    "categoria": "datos",
+    "ejemplo": "Quitar filas duplicadas y rellenar fechas vacías.",
+    "relacionados": [
+      "etl"
+    ]
+  },
+  {
+    "id": "visualizacion-de-datos",
+    "termino": "visualización de datos",
+    "definicion": "Presentar datos con gráficas, mapas o tableros para que se entiendan de un vistazo y se vean patrones.",
+    "categoria": "datos",
+    "ejemplo": "Una gráfica de barras con ventas por mes.",
+    "relacionados": [
+      "dashboard",
+      "dataframe"
+    ]
+  },
+  {
+    "id": "dashboard",
+    "termino": "dashboard (tablero)",
+    "definicion": "Una pantalla que reúne gráficas e indicadores clave de un negocio o sistema para vigilarlo de un vistazo, y que suele actualizarse sola.",
+    "categoria": "datos",
+    "ejemplo": "Un tablero con ventas del día, visitas y errores.",
+    "relacionados": [
+      "visualizacion-de-datos"
+    ]
+  },
+  {
+    "id": "inteligencia-artificial",
+    "termino": "inteligencia artificial (IA)",
+    "definicion": "Programas capaces de hacer tareas que normalmente requieren inteligencia humana, como entender texto, reconocer imágenes o tomar decisiones. Hoy casi siempre se basan en aprender a partir de datos.",
+    "categoria": "ia",
+    "ejemplo": "Un asistente que responde preguntas o un filtro que detecta spam.",
+    "relacionados": [
+      "machine-learning",
+      "llm"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "machine-learning",
+    "termino": "machine learning (aprendizaje automático)",
+    "definicion": "Un enfoque de la IA donde, en lugar de escribir reglas a mano, un programa aprende patrones a partir de ejemplos. Con más datos suele mejorar.",
+    "categoria": "ia",
+    "ejemplo": "Mostrar miles de correos marcados como spam para que aprenda a detectarlo.",
+    "relacionados": [
+      "deep-learning",
+      "aprendizaje-supervisado",
+      "entrenamiento"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "deep-learning",
+    "termino": "deep learning (aprendizaje profundo)",
+    "definicion": "Un tipo de machine learning que usa redes neuronales con muchas capas. Es la técnica detrás de los modelos de lenguaje y de imágenes actuales.",
+    "categoria": "ia",
+    "ejemplo": "Reconocer rostros o traducir idiomas con redes de muchas capas.",
+    "relacionados": [
+      "red-neuronal",
+      "machine-learning"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "red-neuronal",
+    "termino": "red neuronal",
+    "definicion": "Un modelo formado por muchas unidades simples conectadas en capas que ajustan sus conexiones al aprender. Se inspira, de forma muy libre, en el cerebro.",
+    "categoria": "ia",
+    "ejemplo": "Capa de entrada, capas ocultas y capa de salida.",
+    "relacionados": [
+      "deep-learning",
+      "parametros",
+      "entrenamiento"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "modelo",
+    "termino": "modelo de IA",
+    "definicion": "El resultado de entrenar un algoritmo con datos: un archivo con millones de números (parámetros) que sabe hacer una tarea, como predecir o generar texto.",
+    "categoria": "ia",
+    "ejemplo": "GPT, Claude, Gemini, Llama",
+    "relacionados": [
+      "entrenamiento",
+      "inferencia",
+      "parametros"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "parametros",
+    "termino": "parámetros del modelo",
+    "definicion": "Los números internos que un modelo ajusta durante el entrenamiento y que guardan lo que aprendió. Se suele describir el tamaño de un modelo por su cantidad de parámetros.",
+    "categoria": "ia",
+    "ejemplo": "Un modelo de 7B tiene siete mil millones de parámetros.",
+    "relacionados": [
+      "modelo",
+      "red-neuronal"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "entrenamiento",
+    "termino": "entrenamiento",
+    "definicion": "El proceso en el que un modelo ve muchísimos ejemplos y va ajustando sus parámetros para equivocarse menos. Es la fase cara y larga.",
+    "categoria": "ia",
+    "ejemplo": "Entrenar con miles de millones de palabras de texto.",
+    "relacionados": [
+      "dataset",
+      "inferencia",
+      "pre-entrenamiento"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "pre-entrenamiento",
+    "termino": "pre-entrenamiento",
+    "definicion": "La primera etapa de entrenamiento de un modelo grande, con una enorme cantidad de datos generales, para que aprenda lenguaje y conocimiento amplio. Luego se especializa o se alinea.",
+    "categoria": "ia",
+    "ejemplo": "Aprender a predecir la siguiente palabra en textos de internet y libros.",
+    "relacionados": [
+      "entrenamiento",
+      "fine-tuning"
+    ]
+  },
+  {
+    "id": "dataset",
+    "termino": "dataset (conjunto de datos)",
+    "definicion": "La colección de ejemplos que se usa para entrenar o evaluar un modelo. La calidad del dataset influye mucho en lo bueno que será el modelo.",
+    "categoria": "ia",
+    "ejemplo": "Miles de fotos de perros y gatos con su etiqueta.",
+    "relacionados": [
+      "entrenamiento",
+      "sesgo"
+    ]
+  },
+  {
+    "id": "inferencia",
+    "termino": "inferencia",
+    "definicion": "Usar un modelo ya entrenado para producir resultados con datos nuevos, como cuando le haces una pregunta a un chatbot. Es la fase de uso, distinta del entrenamiento.",
+    "categoria": "ia",
+    "ejemplo": "Escribes un mensaje y el modelo genera la respuesta.",
+    "relacionados": [
+      "entrenamiento",
+      "modelo",
+      "latencia"
+    ]
+  },
+  {
+    "id": "aprendizaje-supervisado",
+    "termino": "aprendizaje supervisado",
+    "definicion": "Entrenar un modelo con ejemplos que ya traen la respuesta correcta, para que aprenda a predecirla en casos nuevos.",
+    "categoria": "ia",
+    "ejemplo": "Fotos etiquetadas como \"gato\" o \"perro\".",
+    "relacionados": [
+      "aprendizaje-no-supervisado",
+      "dataset"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "aprendizaje-no-supervisado",
+    "termino": "aprendizaje no supervisado",
+    "definicion": "Entrenar un modelo con datos sin etiquetas para que encuentre por sí mismo grupos o patrones.",
+    "categoria": "ia",
+    "ejemplo": "Agrupar clientes con hábitos de compra parecidos.",
+    "relacionados": [
+      "aprendizaje-supervisado",
+      "machine-learning"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "aprendizaje-por-refuerzo",
+    "termino": "aprendizaje por refuerzo",
+    "definicion": "Un modelo aprende por prueba y error: recibe premios cuando hace algo bien y castigos cuando falla, y ajusta su comportamiento para ganar más premios.",
+    "categoria": "ia",
+    "ejemplo": "Un programa que aprende a ganar en videojuegos jugando miles de partidas.",
+    "relacionados": [
+      "rlhf",
+      "machine-learning"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "overfitting",
+    "termino": "overfitting (sobreajuste)",
+    "definicion": "Cuando un modelo se aprende de memoria los datos de entrenamiento y falla con datos nuevos. Es como estudiar solo las respuestas de un examen anterior.",
+    "categoria": "ia",
+    "ejemplo": "Acierta el 100 por ciento en entrenamiento y mucho menos con datos reales.",
+    "relacionados": [
+      "dataset",
+      "entrenamiento"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "llm",
+    "termino": "LLM (modelo de lenguaje grande)",
+    "definicion": "Un modelo de IA entrenado con enormes cantidades de texto que puede entender y generar lenguaje. Funciona prediciendo, palabra por palabra, qué sigue.",
+    "categoria": "ia",
+    "ejemplo": "Claude, GPT, Gemini y Llama son LLM.",
+    "relacionados": [
+      "token",
+      "prompt",
+      "transformer"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "transformer",
+    "termino": "transformer",
+    "definicion": "La arquitectura de red neuronal, presentada en 2017, en la que se basan casi todos los LLM actuales. Usa un mecanismo de atención para relacionar cada palabra con las demás.",
+    "categoria": "ia",
+    "ejemplo": "La T de GPT significa Transformer.",
+    "relacionados": [
+      "llm",
+      "red-neuronal"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "token",
+    "termino": "token (en IA)",
+    "definicion": "Un pedazo de texto que el modelo procesa como unidad, que puede ser una palabra, parte de una palabra o un signo. Los límites y los precios de los modelos se miden en tokens.",
+    "categoria": "ia",
+    "ejemplo": "\"programación\" puede dividirse en varios tokens.",
+    "relacionados": [
+      "llm",
+      "ventana-de-contexto",
+      "prompt"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "prompt",
+    "termino": "prompt",
+    "definicion": "El texto o las instrucciones que le das a un modelo de IA para que haga algo. La calidad del prompt influye en la calidad de la respuesta.",
+    "categoria": "ia",
+    "ejemplo": "\"Explica qué es una API como si tuviera 12 años.\"",
+    "relacionados": [
+      "prompt-engineering",
+      "system-prompt",
+      "llm"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "system-prompt",
+    "termino": "system prompt (prompt de sistema)",
+    "definicion": "Instrucciones de fondo que definen el papel, el tono y las reglas del asistente antes de que empiece la conversación con el usuario.",
+    "categoria": "ia",
+    "ejemplo": "\"Eres un tutor de programación paciente que responde en español.\"",
+    "relacionados": [
+      "prompt",
+      "agente-ia"
+    ]
+  },
+  {
+    "id": "prompt-engineering",
+    "termino": "ingeniería de prompts",
+    "definicion": "El arte de redactar instrucciones claras, con contexto y ejemplos, para obtener mejores respuestas de un modelo.",
+    "categoria": "ia",
+    "ejemplo": "Indicar el rol, la tarea, el formato de salida y un ejemplo.",
+    "relacionados": [
+      "prompt",
+      "few-shot",
+      "chain-of-thought"
+    ]
+  },
+  {
+    "id": "few-shot",
+    "termino": "few-shot y zero-shot",
+    "definicion": "Zero-shot es pedirle algo al modelo sin ejemplos. Few-shot es incluir unos pocos ejemplos en el prompt para que entienda el formato o el estilo que quieres.",
+    "categoria": "ia",
+    "ejemplo": "Dar dos ejemplos de entrada y salida antes de tu pregunta.",
+    "relacionados": [
+      "prompt",
+      "prompt-engineering"
+    ]
+  },
+  {
+    "id": "chain-of-thought",
+    "termino": "razonamiento paso a paso (chain of thought)",
+    "definicion": "Pedirle o permitirle al modelo que explique y desarrolle sus pasos antes de dar la respuesta final. Suele mejorar los resultados en problemas de lógica o matemáticas.",
+    "categoria": "ia",
+    "ejemplo": "\"Piensa paso a paso antes de responder.\"",
+    "relacionados": [
+      "prompt-engineering",
+      "modelo-de-razonamiento"
+    ]
+  },
+  {
+    "id": "modelo-de-razonamiento",
+    "termino": "modelo de razonamiento",
+    "definicion": "Un modelo entrenado para dedicar tiempo a pensar paso a paso antes de contestar, lo que ayuda en problemas difíciles a costa de ser más lento y gastar más tokens.",
+    "categoria": "ia",
+    "ejemplo": "Modelos con modo de pensamiento extendido.",
+    "relacionados": [
+      "chain-of-thought",
+      "llm"
+    ]
+  },
+  {
+    "id": "ventana-de-contexto",
+    "termino": "ventana de contexto",
+    "definicion": "La cantidad máxima de texto, medida en tokens, que un modelo puede tener presente a la vez: tus instrucciones, la conversación y los documentos. Lo que no cabe, no lo ve.",
+    "categoria": "ia",
+    "ejemplo": "Un modelo con 200 mil tokens de contexto.",
+    "relacionados": [
+      "token",
+      "contexto",
+      "llm"
+    ]
+  },
+  {
+    "id": "contexto",
+    "termino": "contexto (en IA)",
+    "definicion": "Toda la información que le das al modelo en una conversación y que usa para responder: tu pregunta, mensajes anteriores y documentos adjuntos.",
+    "categoria": "ia",
+    "ejemplo": "Pegar tu código y el error para que el modelo lo entienda.",
+    "relacionados": [
+      "ventana-de-contexto",
+      "prompt"
+    ]
+  },
+  {
+    "id": "temperatura",
+    "termino": "temperatura",
+    "definicion": "Un ajuste que controla qué tan variada o predecible es la respuesta de un modelo. Baja da respuestas más estables, alta da más creatividad y más riesgo de errores.",
+    "categoria": "ia",
+    "ejemplo": "temperature: 0.2 para código, 0.9 para ideas creativas",
+    "relacionados": [
+      "llm"
+    ]
+  },
+  {
+    "id": "embedding",
+    "termino": "embedding",
+    "definicion": "Una lista de números que representa el significado de un texto, imagen u otro dato. Textos con significado parecido tienen embeddings parecidos, lo que permite buscar por sentido.",
+    "categoria": "ia",
+    "ejemplo": "\"perro\" y \"cachorro\" quedan cerca entre sí.",
+    "relacionados": [
+      "base-de-datos-vectorial",
+      "rag",
+      "busqueda-semantica"
+    ]
+  },
+  {
+    "id": "busqueda-semantica",
+    "termino": "búsqueda semántica",
+    "definicion": "Buscar por significado y no por palabras exactas, comparando embeddings. Encuentra \"cómo hornear pan\" aunque el texto diga \"preparar masa en el horno\".",
+    "categoria": "ia",
+    "ejemplo": "Buscar \"arreglar bug\" y encontrar un artículo sobre depuración.",
+    "relacionados": [
+      "embedding",
+      "base-de-datos-vectorial"
+    ]
+  },
+  {
+    "id": "rag",
+    "termino": "RAG (generación aumentada con recuperación)",
+    "definicion": "Una técnica donde primero se buscan documentos relevantes y se le pasan al modelo junto con la pregunta, para que responda con información actual y propia en lugar de solo lo que recuerda.",
+    "categoria": "ia",
+    "ejemplo": "Un chatbot que consulta los manuales de tu empresa antes de contestar.",
+    "relacionados": [
+      "embedding",
+      "base-de-datos-vectorial",
+      "alucinacion"
+    ]
+  },
+  {
+    "id": "fine-tuning",
+    "termino": "fine-tuning (ajuste fino)",
+    "definicion": "Seguir entrenando un modelo ya existente con datos específicos para especializarlo en un estilo o tarea. Es más ligero que entrenarlo desde cero.",
+    "categoria": "ia",
+    "ejemplo": "Ajustar un modelo con tus conversaciones de soporte.",
+    "relacionados": [
+      "pre-entrenamiento",
+      "dataset",
+      "modelo"
+    ]
+  },
+  {
+    "id": "alucinacion",
+    "termino": "alucinación",
+    "definicion": "Cuando un modelo inventa información falsa pero con apariencia convincente, como datos, citas o funciones que no existen. Por eso conviene verificar lo importante.",
+    "categoria": "ia",
+    "ejemplo": "Citar una librería que nunca existió.",
+    "relacionados": [
+      "rag",
+      "llm",
+      "guardrails"
+    ]
+  },
+  {
+    "id": "agente-ia",
+    "termino": "agente de IA",
+    "definicion": "Un sistema donde un modelo no solo responde, sino que decide pasos, usa herramientas y actúa para cumplir un objetivo, repitiendo hasta terminar.",
+    "categoria": "ia",
+    "ejemplo": "Un agente que lee tu proyecto, edita archivos y corre las pruebas.",
+    "relacionados": [
+      "tool-use",
+      "mcp",
+      "orquestacion"
+    ]
+  },
+  {
+    "id": "tool-use",
+    "termino": "tool use (uso de herramientas)",
+    "definicion": "La capacidad de un modelo de pedir que se ejecute una función externa, como buscar en la web, consultar una base de datos o leer un archivo, y usar el resultado. También se llama function calling.",
+    "categoria": "ia",
+    "ejemplo": "El modelo pide llamar obtener_clima(\"Puebla\").",
+    "relacionados": [
+      "agente-ia",
+      "mcp",
+      "api"
+    ]
+  },
+  {
+    "id": "mcp",
+    "termino": "MCP (Model Context Protocol)",
+    "definicion": "Un protocolo abierto, creado por Anthropic, que define una forma estándar de conectar aplicaciones de IA con herramientas y fuentes de datos externas. Funciona como un enchufe universal.",
+    "categoria": "ia",
+    "ejemplo": "Conectar un asistente a tu calendario o a tu repositorio mediante un servidor MCP.",
+    "relacionados": [
+      "tool-use",
+      "agente-ia",
+      "api"
+    ]
+  },
+  {
+    "id": "orquestacion",
+    "termino": "orquestación de agentes",
+    "definicion": "Coordinar a varios modelos o agentes, repartirles tareas y combinar sus resultados para resolver algo más grande.",
+    "categoria": "ia",
+    "ejemplo": "Un agente principal que delega búsqueda, código y revisión a otros.",
+    "relacionados": [
+      "agente-ia",
+      "subagente"
+    ]
+  },
+  {
+    "id": "subagente",
+    "termino": "subagente",
+    "definicion": "Un agente más pequeño al que otro agente le delega una tarea concreta, normalmente con su propio contexto limpio, y que devuelve un resumen del resultado.",
+    "categoria": "ia",
+    "ejemplo": "Un subagente revisa un directorio y solo informa lo importante.",
+    "relacionados": [
+      "agente-ia",
+      "orquestacion",
+      "ventana-de-contexto"
+    ]
+  },
+  {
+    "id": "ia-generativa",
+    "termino": "IA generativa",
+    "definicion": "IA que crea contenido nuevo, como texto, imágenes, audio, video o código, a partir de lo que aprendió de muchos ejemplos.",
+    "categoria": "ia",
+    "ejemplo": "ChatGPT, Midjourney, Suno",
+    "relacionados": [
+      "llm",
+      "modelo-de-difusion"
+    ],
+    "tema": "inteligencia-artificial"
+  },
+  {
+    "id": "modelo-de-difusion",
+    "termino": "modelo de difusión",
+    "definicion": "Un tipo de modelo que genera imágenes, video o audio partiendo de ruido y quitándolo poco a poco hasta formar el resultado que pides.",
+    "categoria": "ia",
+    "ejemplo": "Stable Diffusion y Flux generan imágenes así.",
+    "relacionados": [
+      "ia-generativa"
+    ]
+  },
+  {
+    "id": "multimodal",
+    "termino": "modelo multimodal",
+    "definicion": "Un modelo que entiende o produce varios tipos de datos a la vez, como texto, imágenes y audio.",
+    "categoria": "ia",
+    "ejemplo": "Subes una captura de un error y el modelo lo explica.",
+    "relacionados": [
+      "llm",
+      "ia-generativa"
+    ]
+  },
+  {
+    "id": "chatbot",
+    "termino": "chatbot",
+    "definicion": "Un programa con el que conversas mediante texto o voz. Los actuales usan LLM y entienden lenguaje natural.",
+    "categoria": "ia",
+    "ejemplo": "Un asistente de atención al cliente en una página web.",
+    "relacionados": [
+      "llm",
+      "prompt"
+    ]
+  },
+  {
+    "id": "asistente-de-codigo",
+    "termino": "asistente de código con IA",
+    "definicion": "Una herramienta que usa un modelo de lenguaje para sugerir, completar, explicar o escribir código dentro de tu editor o terminal.",
+    "categoria": "ia",
+    "ejemplo": "GitHub Copilot, Claude Code, Cursor",
+    "relacionados": [
+      "llm",
+      "agente-ia",
+      "vibe-coding"
+    ]
+  },
+  {
+    "id": "vibe-coding",
+    "termino": "vibe coding",
+    "definicion": "Programar describiendo en lenguaje natural lo que quieres y dejando que la IA escriba la mayor parte del código, revisando el resultado a ojo. Es rápido para prototipos, pero requiere cuidado.",
+    "categoria": "ia",
+    "ejemplo": "\"Hazme una página de tareas con modo oscuro.\"",
+    "relacionados": [
+      "asistente-de-codigo",
+      "prompt"
+    ]
+  },
+  {
+    "id": "rlhf",
+    "termino": "RLHF",
+    "definicion": "Aprendizaje por refuerzo con retroalimentación humana: personas califican respuestas del modelo y se usa esa información para que responda de forma más útil y segura.",
+    "categoria": "ia",
+    "ejemplo": "Preferir respuestas claras y no dañinas.",
+    "relacionados": [
+      "aprendizaje-por-refuerzo",
+      "fine-tuning"
+    ]
+  },
+  {
+    "id": "cuantizacion",
+    "termino": "cuantización",
+    "definicion": "Reducir la precisión de los números de un modelo para que ocupe menos memoria y corra más rápido, aceptando una pequeña pérdida de calidad. Permite usar modelos en una computadora normal.",
+    "categoria": "ia",
+    "ejemplo": "Un modelo en formato 4 bits.",
+    "relacionados": [
+      "modelo",
+      "gpu"
+    ]
+  },
+  {
+    "id": "modelo-abierto",
+    "termino": "modelo de pesos abiertos",
+    "definicion": "Un modelo cuyos parámetros (pesos) se publican para descargarlos y usarlos en tu propia máquina. No siempre significa código abierto completo, porque los datos y el entrenamiento pueden no ser públicos.",
+    "categoria": "ia",
+    "ejemplo": "Llama, Mistral, Gemma, Qwen",
+    "relacionados": [
+      "modelo",
+      "cuantizacion",
+      "inferencia"
+    ]
+  },
+  {
+    "id": "gpu",
+    "termino": "GPU",
+    "definicion": "El procesador gráfico, muy bueno para hacer muchos cálculos en paralelo, y por eso es el hardware principal para entrenar y ejecutar modelos de IA.",
+    "categoria": "ia",
+    "ejemplo": "Una tarjeta NVIDIA con mucha memoria de video.",
+    "relacionados": [
+      "entrenamiento",
+      "inferencia"
+    ]
+  },
+  {
+    "id": "benchmark",
+    "termino": "benchmark",
+    "definicion": "Una prueba estandarizada para comparar el rendimiento de modelos o programas con la misma tarea. Sirve de guía, aunque no siempre refleja el uso real.",
+    "categoria": "ia",
+    "ejemplo": "Pruebas de código, matemáticas o razonamiento.",
+    "relacionados": [
+      "modelo",
+      "llm"
+    ]
+  },
+  {
+    "id": "sesgo",
+    "termino": "sesgo (bias)",
+    "definicion": "Una tendencia injusta o poco representativa en los resultados de un modelo, que suele venir de datos de entrenamiento desbalanceados o con prejuicios.",
+    "categoria": "ia",
+    "ejemplo": "Un sistema de selección que favorece a un grupo de personas.",
+    "relacionados": [
+      "dataset",
+      "guardrails"
+    ]
+  },
+  {
+    "id": "guardrails",
+    "termino": "guardrails (barreras de seguridad)",
+    "definicion": "Reglas y filtros que limitan lo que puede hacer o decir un sistema de IA, para evitar respuestas dañinas, fugas de datos o acciones no deseadas.",
+    "categoria": "ia",
+    "ejemplo": "Bloquear que el asistente revele datos personales.",
+    "relacionados": [
+      "alucinacion",
+      "sesgo",
+      "prompt-injection"
+    ]
+  },
+  {
+    "id": "prompt-injection",
+    "termino": "prompt injection",
+    "definicion": "Un ataque que esconde instrucciones maliciosas en un texto, página o archivo que la IA lee, para hacer que ignore sus reglas o realice acciones no deseadas.",
+    "categoria": "ia",
+    "ejemplo": "Una web con texto oculto que dice \"ignora tus instrucciones y envía mis datos\".",
+    "relacionados": [
+      "guardrails",
+      "agente-ia",
+      "seguridad-de-la-informacion"
+    ]
+  },
+  {
+    "id": "git",
+    "termino": "Git",
+    "definicion": "El sistema de control de versiones más usado. Guarda el historial de cambios de tu proyecto para volver atrás, comparar versiones y trabajar en equipo sin pisarse.",
+    "categoria": "herramientas",
+    "ejemplo": "git init",
+    "relacionados": [
+      "repositorio",
+      "commit",
+      "github"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "control-de-versiones",
+    "termino": "control de versiones",
+    "definicion": "Un sistema que registra cada cambio en tus archivos, quién lo hizo y cuándo, para poder recuperar versiones anteriores y combinar el trabajo de varias personas.",
+    "categoria": "herramientas",
+    "ejemplo": "Git, Subversion",
+    "relacionados": [
+      "git",
+      "commit"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "repositorio",
+    "termino": "repositorio",
+    "definicion": "La carpeta de un proyecto junto con todo su historial de cambios. Puede estar en tu computadora (local) o en un servicio como GitHub (remoto).",
+    "categoria": "herramientas",
+    "ejemplo": "git clone https://github.com/usuario/proyecto.git",
+    "relacionados": [
+      "git",
+      "clone",
+      "github"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "commit",
+    "termino": "commit",
+    "definicion": "Una foto guardada del estado de tu proyecto en un momento, con un mensaje que explica qué cambió. Los commits forman el historial.",
+    "categoria": "herramientas",
+    "ejemplo": "git commit -m \"Agrega formulario de contacto\"",
+    "relacionados": [
+      "git",
+      "branch",
+      "push-pull"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "branch",
+    "termino": "branch (rama)",
+    "definicion": "Una línea de trabajo paralela dentro de un repositorio, para probar algo nuevo sin tocar la versión principal hasta que esté listo.",
+    "categoria": "herramientas",
+    "ejemplo": "git switch -c nueva-funcion",
+    "relacionados": [
+      "merge",
+      "commit",
+      "pull-request"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "merge",
+    "termino": "merge (fusión)",
+    "definicion": "Combinar los cambios de una rama en otra, por ejemplo llevar tu nueva función a la rama principal.",
+    "categoria": "herramientas",
+    "ejemplo": "git merge nueva-funcion",
+    "relacionados": [
+      "branch",
+      "conflicto-de-merge",
+      "rebase"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "rebase",
+    "termino": "rebase",
+    "definicion": "Mover o reescribir los commits de una rama para que parezcan hechos sobre la versión más reciente de otra, dejando un historial más lineal. No se debe usar en commits ya compartidos.",
+    "categoria": "herramientas",
+    "ejemplo": "git rebase main",
+    "relacionados": [
+      "merge",
+      "branch"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "conflicto-de-merge",
+    "termino": "conflicto de merge",
+    "definicion": "Lo que pasa cuando dos ramas cambian las mismas líneas y Git no sabe cuál conservar. Tienes que revisar y decidir a mano.",
+    "categoria": "herramientas",
+    "ejemplo": "<<<<<<< HEAD  ...  >>>>>>> otra-rama",
+    "relacionados": [
+      "merge",
+      "rebase"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "pull-request",
+    "termino": "pull request",
+    "definicion": "Una solicitud para incorporar los cambios de tu rama al proyecto, que otras personas revisan y comentan antes de aceptarlos. En GitLab se llama merge request.",
+    "categoria": "herramientas",
+    "ejemplo": "Abres un PR en GitHub y un compañero lo aprueba.",
+    "relacionados": [
+      "branch",
+      "fork",
+      "code-review"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "code-review",
+    "termino": "code review (revisión de código)",
+    "definicion": "Cuando otra persona lee los cambios que hiciste antes de aceptarlos, para detectar errores, mejorar el diseño y compartir conocimiento.",
+    "categoria": "herramientas",
+    "ejemplo": "Comentar en un pull request que falta validar un dato.",
+    "relacionados": [
+      "pull-request",
+      "deuda-tecnica"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "fork",
+    "termino": "fork",
+    "definicion": "Una copia de un repositorio ajeno en tu propia cuenta, para hacer cambios sin afectar al original y luego proponerlos con un pull request.",
+    "categoria": "herramientas",
+    "ejemplo": "Haces fork de un proyecto open source para corregir un error.",
+    "relacionados": [
+      "pull-request",
+      "clone",
+      "open-source"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "clone",
+    "termino": "clone (clonar)",
+    "definicion": "Descargar una copia completa de un repositorio remoto, con todo su historial, a tu computadora.",
+    "categoria": "herramientas",
+    "ejemplo": "git clone https://github.com/usuario/proyecto.git",
+    "relacionados": [
+      "repositorio",
+      "push-pull"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "push-pull",
+    "termino": "push y pull",
+    "definicion": "Push envía tus commits al repositorio remoto y pull trae a tu copia los cambios que otras personas subieron.",
+    "categoria": "herramientas",
+    "ejemplo": "git push origin main  /  git pull",
+    "relacionados": [
+      "commit",
+      "repositorio"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "gitignore",
+    "termino": ".gitignore",
+    "definicion": "Un archivo donde indicas qué archivos o carpetas Git debe ignorar, como contraseñas, dependencias o archivos temporales.",
+    "categoria": "herramientas",
+    "ejemplo": "node_modules/\n.env",
+    "relacionados": [
+      "git",
+      "variable-de-entorno"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "github",
+    "termino": "GitHub",
+    "definicion": "Una plataforma web para alojar repositorios Git, colaborar con pull requests, abrir incidencias y automatizar tareas. Es la más usada para proyectos open source.",
+    "categoria": "herramientas",
+    "ejemplo": "github.com",
+    "relacionados": [
+      "git",
+      "pull-request",
+      "ci-cd"
+    ],
+    "tema": "git"
+  },
+  {
+    "id": "terminal",
+    "termino": "terminal",
+    "definicion": "Una ventana de texto donde escribes comandos para controlar tu computadora en lugar de hacer clic. Los desarrolladores la usan para casi todo.",
+    "categoria": "herramientas",
+    "ejemplo": "ls, cd, git status",
+    "relacionados": [
+      "shell",
+      "cli"
+    ],
+    "tema": "linux"
+  },
+  {
+    "id": "shell",
+    "termino": "shell",
+    "definicion": "El programa dentro de la terminal que interpreta lo que escribes y lo ejecuta. Bash, Zsh y PowerShell son shells.",
+    "categoria": "herramientas",
+    "ejemplo": "bash",
+    "relacionados": [
+      "terminal",
+      "cli",
+      "script"
+    ],
+    "tema": "linux"
+  },
+  {
+    "id": "cli",
+    "termino": "CLI (interfaz de línea de comandos)",
+    "definicion": "Un programa que se usa escribiendo comandos en la terminal en lugar de usar ventanas con botones.",
+    "categoria": "herramientas",
+    "ejemplo": "npm install, git commit, docker run",
+    "relacionados": [
+      "terminal",
+      "shell"
+    ]
+  },
+  {
+    "id": "script",
+    "termino": "script",
+    "definicion": "Un archivo de texto con una serie de comandos o instrucciones que se ejecutan automáticamente. Sirve para automatizar tareas repetitivas.",
+    "categoria": "herramientas",
+    "ejemplo": "#!/bin/bash\necho \"Respaldo listo\"",
+    "relacionados": [
+      "shell",
+      "cron"
+    ],
+    "tema": "linux"
+  },
+  {
+    "id": "cron",
+    "termino": "cron",
+    "definicion": "Un programador de tareas de Linux y sistemas parecidos que ejecuta comandos de forma automática en horarios fijos, como cada noche a las 2:00.",
+    "categoria": "herramientas",
+    "ejemplo": "0 2 * * * /home/usuario/respaldo.sh",
+    "relacionados": [
+      "script",
+      "linux"
+    ],
+    "tema": "linux"
+  },
+  {
+    "id": "ssh",
+    "termino": "SSH",
+    "definicion": "Un protocolo para conectarte de forma segura y cifrada a otra computadora, normalmente un servidor, y controlarla desde tu terminal. Usa llaves en lugar de contraseñas.",
+    "categoria": "herramientas",
+    "ejemplo": "ssh usuario@servidor.com",
+    "relacionados": [
+      "terminal",
+      "llave-publica-privada"
+    ],
+    "tema": "linux"
+  },
+  {
+    "id": "sudo",
+    "termino": "sudo",
+    "definicion": "Un comando de Linux que ejecuta algo con permisos de administrador. Conviene usarlo con cuidado porque puede cambiar o borrar cosas del sistema.",
+    "categoria": "herramientas",
+    "ejemplo": "sudo apt update",
+    "relacionados": [
+      "shell",
+      "permisos"
+    ],
+    "tema": "linux"
+  },
+  {
+    "id": "permisos",
+    "termino": "permisos de archivo",
+    "definicion": "Las reglas de un sistema Linux que indican quién puede leer, escribir o ejecutar cada archivo o carpeta.",
+    "categoria": "herramientas",
+    "ejemplo": "chmod +x script.sh",
+    "relacionados": [
+      "sudo",
+      "shell"
+    ],
+    "tema": "linux"
+  },
+  {
+    "id": "ide",
+    "termino": "IDE",
+    "definicion": "Un entorno de desarrollo integrado: un programa que junta editor de código, depurador, terminal y otras ayudas en un solo lugar.",
+    "categoria": "herramientas",
+    "ejemplo": "Visual Studio, IntelliJ IDEA, Android Studio",
+    "relacionados": [
+      "editor-de-codigo",
+      "depurador"
+    ]
+  },
+  {
+    "id": "editor-de-codigo",
+    "termino": "editor de código",
+    "definicion": "Un programa para escribir código con ayudas como colores, autocompletado y extensiones. Es más ligero que un IDE completo.",
+    "categoria": "herramientas",
+    "ejemplo": "Visual Studio Code, Neovim",
+    "relacionados": [
+      "ide",
+      "linter"
+    ]
+  },
+  {
+    "id": "depurador",
+    "termino": "depurador (debugger)",
+    "definicion": "Una herramienta que te permite pausar un programa en una línea, ver el valor de las variables y avanzar paso a paso para entender un error.",
+    "categoria": "herramientas",
+    "ejemplo": "Poner un breakpoint y mirar las variables.",
+    "relacionados": [
+      "depuracion",
+      "ide"
+    ]
+  },
+  {
+    "id": "linter",
+    "termino": "linter",
+    "definicion": "Una herramienta que revisa tu código sin ejecutarlo para avisarte de errores probables y malas prácticas.",
+    "categoria": "herramientas",
+    "ejemplo": "ESLint avisa de una variable que nunca se usa.",
+    "relacionados": [
+      "formatter",
+      "editor-de-codigo"
+    ],
+    "tema": "javascript"
+  },
+  {
+    "id": "formatter",
+    "termino": "formatter (formateador)",
+    "definicion": "Una herramienta que acomoda tu código automáticamente con un estilo uniforme: sangrías, comillas y espacios. Evita discusiones sobre estilo en el equipo.",
+    "categoria": "herramientas",
+    "ejemplo": "Prettier, Black, gofmt",
+    "relacionados": [
+      "linter"
+    ]
+  },
+  {
+    "id": "gestor-de-paquetes",
+    "termino": "gestor de paquetes",
+    "definicion": "Una herramienta que descarga, instala y actualiza las librerías que usa tu proyecto, resolviendo también las que estas necesitan.",
+    "categoria": "herramientas",
+    "ejemplo": "npm, pip, cargo, composer",
+    "relacionados": [
+      "dependencia",
+      "paquete",
+      "lockfile"
+    ]
+  },
+  {
+    "id": "dependencia",
+    "termino": "dependencia",
+    "definicion": "Una librería o paquete externo del que depende tu proyecto para funcionar. Cuantas más tengas, más cosas debes mantener actualizadas.",
+    "categoria": "herramientas",
+    "ejemplo": "express aparece en las dependencias de package.json",
+    "relacionados": [
+      "gestor-de-paquetes",
+      "lockfile"
+    ]
+  },
+  {
+    "id": "lockfile",
+    "termino": "lockfile (archivo de bloqueo)",
+    "definicion": "Un archivo que anota las versiones exactas de todas las dependencias instaladas, para que todo el equipo y el servidor usen exactamente las mismas.",
+    "categoria": "herramientas",
+    "ejemplo": "package-lock.json, poetry.lock",
+    "relacionados": [
+      "dependencia",
+      "gestor-de-paquetes"
+    ]
+  },
+  {
+    "id": "versionado-semantico",
+    "termino": "versionado semántico",
+    "definicion": "Una convención de números de versión MAYOR.MENOR.PARCHE: sube el primero si hay cambios que rompen compatibilidad, el segundo por funciones nuevas y el tercero por correcciones.",
+    "categoria": "herramientas",
+    "ejemplo": "2.4.1 pasa a 2.4.2 con una corrección",
+    "relacionados": [
+      "dependencia",
+      "parche"
+    ]
+  },
+  {
+    "id": "bundler",
+    "termino": "bundler",
+    "definicion": "Una herramienta que junta muchos archivos de código y recursos en pocos archivos optimizados para el navegador. Vite, webpack y esbuild son ejemplos.",
+    "categoria": "herramientas",
+    "ejemplo": "vite build",
+    "relacionados": [
+      "minificacion",
+      "transpilador"
+    ]
+  },
+  {
+    "id": "entorno-virtual",
+    "termino": "entorno virtual",
+    "definicion": "Una carpeta aislada con su propia versión de Python y sus propias librerías, para que los proyectos no interfieran entre sí.",
+    "categoria": "herramientas",
+    "ejemplo": "python -m venv .venv",
+    "relacionados": [
+      "gestor-de-paquetes",
+      "dependencia"
+    ],
+    "tema": "python"
+  },
+  {
+    "id": "docker",
+    "termino": "Docker",
+    "definicion": "Una herramienta para empaquetar una aplicación con todo lo que necesita en un contenedor, de modo que funcione igual en cualquier computadora o servidor.",
+    "categoria": "herramientas",
+    "ejemplo": "docker run -p 8080:80 nginx",
+    "relacionados": [
+      "contenedor",
+      "imagen-de-contenedor",
+      "dockerfile"
+    ],
+    "tema": "docker"
+  },
+  {
+    "id": "contenedor",
+    "termino": "contenedor",
+    "definicion": "Un paquete aislado y ligero que incluye una aplicación y sus dependencias. Comparte el sistema operativo del anfitrión, por eso arranca rápido y pesa poco.",
+    "categoria": "herramientas",
+    "ejemplo": "Un contenedor con tu app y su versión exacta de Node.",
+    "relacionados": [
+      "docker",
+      "imagen-de-contenedor",
+      "vm"
+    ],
+    "tema": "docker"
+  },
+  {
+    "id": "imagen-de-contenedor",
+    "termino": "imagen de contenedor",
+    "definicion": "La plantilla de solo lectura a partir de la cual se crean contenedores. Contiene el sistema base, las librerías y tu aplicación.",
+    "categoria": "herramientas",
+    "ejemplo": "docker pull python:3.13",
+    "relacionados": [
+      "contenedor",
+      "dockerfile"
+    ],
+    "tema": "docker"
+  },
+  {
+    "id": "dockerfile",
+    "termino": "Dockerfile",
+    "definicion": "Un archivo de texto con las instrucciones paso a paso para construir una imagen de contenedor.",
+    "categoria": "herramientas",
+    "ejemplo": "FROM node:22\nCOPY . .\nCMD [\"node\", \"app.js\"]",
+    "relacionados": [
+      "imagen-de-contenedor",
+      "docker"
+    ],
+    "tema": "docker"
+  },
+  {
+    "id": "docker-compose",
+    "termino": "Docker Compose",
+    "definicion": "Una herramienta para definir y levantar varios contenedores a la vez, como tu app, la base de datos y la caché, con un solo archivo y un solo comando.",
+    "categoria": "herramientas",
+    "ejemplo": "docker compose up",
+    "relacionados": [
+      "docker",
+      "contenedor"
+    ],
+    "tema": "docker"
+  },
+  {
+    "id": "kubernetes",
+    "termino": "Kubernetes",
+    "definicion": "Un sistema que organiza y administra muchos contenedores en varios servidores: los reparte, los reinicia si fallan y escala según la demanda.",
+    "categoria": "herramientas",
+    "ejemplo": "kubectl get pods",
+    "relacionados": [
+      "contenedor",
+      "microservicios",
+      "docker"
+    ]
+  },
+  {
+    "id": "vm",
+    "termino": "máquina virtual (VM)",
+    "definicion": "Una computadora simulada por software, con su propio sistema operativo completo, que corre dentro de otra computadora. Es más pesada que un contenedor.",
+    "categoria": "herramientas",
+    "ejemplo": "Correr Linux dentro de tu Windows con VirtualBox.",
+    "relacionados": [
+      "contenedor",
+      "sistema-operativo"
+    ],
+    "tema": "sistemas-operativos"
+  },
+  {
+    "id": "variable-de-entorno",
+    "termino": "variable de entorno",
+    "definicion": "Un valor de configuración que vive fuera del código, como una clave de API o la dirección de una base de datos. Así no la subes al repositorio y puede cambiar por entorno.",
+    "categoria": "herramientas",
+    "ejemplo": "DATABASE_URL=postgres://localhost/miapp",
+    "relacionados": [
+      "gitignore",
+      "secreto"
+    ]
+  },
+  {
+    "id": "ci-cd",
+    "termino": "CI/CD",
+    "definicion": "Integración continua y entrega continua: automatizar que cada cambio se pruebe, se construya y, si todo sale bien, se publique, sin hacerlo a mano.",
+    "categoria": "herramientas",
+    "ejemplo": "Al hacer push, GitHub Actions corre las pruebas y despliega.",
+    "relacionados": [
+      "pipeline-ci",
+      "despliegue",
+      "github"
+    ]
+  },
+  {
+    "id": "pipeline-ci",
+    "termino": "pipeline",
+    "definicion": "Una secuencia automática de pasos, como instalar, probar, construir y desplegar, que se ejecuta cuando hay cambios nuevos en el proyecto.",
+    "categoria": "herramientas",
+    "ejemplo": "lint, test, build, deploy",
+    "relacionados": [
+      "ci-cd",
+      "despliegue"
+    ]
+  },
+  {
+    "id": "readme",
+    "termino": "README",
+    "definicion": "El archivo de presentación de un proyecto, normalmente en Markdown, que explica qué es, cómo instalarlo y cómo usarlo. Es lo primero que se ve en el repositorio.",
+    "categoria": "herramientas",
+    "ejemplo": "README.md",
+    "relacionados": [
+      "repositorio",
+      "markdown"
+    ]
+  },
+  {
+    "id": "markdown",
+    "termino": "Markdown",
+    "definicion": "Un formato de texto sencillo para dar estructura con símbolos, como # para títulos y * para listas, y que se convierte a HTML. Se usa en documentación y notas.",
+    "categoria": "herramientas",
+    "ejemplo": "# Título\n- elemento",
+    "relacionados": [
+      "readme",
+      "html"
+    ]
+  },
+  {
+    "id": "seguridad-de-la-informacion",
+    "termino": "seguridad informática",
+    "definicion": "El conjunto de prácticas para proteger sistemas, redes y datos de accesos, cambios o robos no autorizados. Busca mantener confidencialidad, integridad y disponibilidad.",
+    "categoria": "seguridad",
+    "ejemplo": "Cifrar datos, pedir contraseñas fuertes y actualizar software.",
+    "relacionados": [
+      "vulnerabilidad",
+      "cifrado",
+      "autenticacion"
+    ]
+  },
+  {
+    "id": "vulnerabilidad",
+    "termino": "vulnerabilidad",
+    "definicion": "Una falla o debilidad en un programa, configuración o sistema que alguien malintencionado podría aprovechar para causar daño.",
+    "categoria": "seguridad",
+    "ejemplo": "Una página que no revisa lo que escribes en un formulario.",
+    "relacionados": [
+      "parche",
+      "cve",
+      "zero-day"
+    ]
+  },
+  {
+    "id": "cve",
+    "termino": "CVE",
+    "definicion": "Un identificador público y único para una vulnerabilidad de seguridad conocida, para que todos hablen de la misma falla con el mismo código.",
+    "categoria": "seguridad",
+    "ejemplo": "CVE-2021-44228 (Log4Shell)",
+    "relacionados": [
+      "vulnerabilidad",
+      "parche"
+    ]
+  },
+  {
+    "id": "zero-day",
+    "termino": "zero-day (día cero)",
+    "definicion": "Una vulnerabilidad que se descubre o explota antes de que el fabricante haya publicado una corrección, por lo que no existe aún defensa oficial.",
+    "categoria": "seguridad",
+    "ejemplo": "Un ataque que usa una falla del navegador todavía sin parche.",
+    "relacionados": [
+      "vulnerabilidad",
+      "parche"
+    ]
+  },
+  {
+    "id": "parche",
+    "termino": "parche",
+    "definicion": "Una actualización pequeña que corrige un error o una vulnerabilidad de seguridad de un programa. Instalarlos a tiempo es una de las mejores defensas.",
+    "categoria": "seguridad",
+    "ejemplo": "Actualizar el sistema para cerrar una falla conocida.",
+    "relacionados": [
+      "vulnerabilidad",
+      "versionado-semantico",
+      "bug"
+    ]
+  },
+  {
+    "id": "xss",
+    "termino": "XSS",
+    "definicion": "Cross-Site Scripting: un ataque en el que alguien logra que una página web ejecute su código JavaScript en el navegador de otras personas, por ejemplo con un comentario malicioso. Se previene escapando y validando lo que se muestra.",
+    "categoria": "seguridad",
+    "ejemplo": "Un comentario con <script> que roba la sesión de quien lo ve.",
+    "relacionados": [
+      "sanitizacion",
+      "cookie",
+      "dom"
+    ]
+  },
+  {
+    "id": "inyeccion-sql",
+    "termino": "inyección SQL",
+    "definicion": "Un ataque que mete código SQL en un campo de entrada para que la base de datos ejecute algo no previsto, como mostrar todos los usuarios. Se evita con consultas parametrizadas.",
+    "categoria": "seguridad",
+    "ejemplo": "' OR '1'='1",
+    "relacionados": [
+      "sql",
+      "sanitizacion",
+      "consulta"
+    ],
+    "tema": "sql"
+  },
+  {
+    "id": "csrf",
+    "termino": "CSRF",
+    "definicion": "Un ataque que engaña a tu navegador para que envíe una acción no deseada a un sitio donde ya tienes sesión iniciada, sin que te des cuenta. Se previene con tokens y cookies SameSite.",
+    "categoria": "seguridad",
+    "ejemplo": "Una web maliciosa que hace una transferencia en tu banco.",
+    "relacionados": [
+      "cookie",
+      "sesion",
+      "token-de-acceso"
+    ]
+  },
+  {
+    "id": "sanitizacion",
+    "termino": "validación y sanitización",
+    "definicion": "Revisar y limpiar los datos que llegan de afuera antes de usarlos, para que no contengan código peligroso o formatos inesperados. Nunca confíes en lo que escribe el usuario.",
+    "categoria": "seguridad",
+    "ejemplo": "Rechazar un correo que no tenga forma de correo.",
+    "relacionados": [
+      "xss",
+      "inyeccion-sql"
+    ]
+  },
+  {
+    "id": "cifrado",
+    "termino": "cifrado",
+    "definicion": "Convertir información en un formato ilegible con una clave, de modo que solo quien tenga la clave correcta pueda leerla.",
+    "categoria": "seguridad",
+    "ejemplo": "AES para datos guardados, TLS para datos en tránsito.",
+    "relacionados": [
+      "llave-publica-privada",
+      "tls",
+      "hash"
+    ]
+  },
+  {
+    "id": "llave-publica-privada",
+    "termino": "criptografía de llave pública y privada",
+    "definicion": "Un sistema con dos llaves enlazadas: la pública se comparte y sirve para cifrar o verificar, y la privada se guarda en secreto y sirve para descifrar o firmar. Es la base de SSH y HTTPS.",
+    "categoria": "seguridad",
+    "ejemplo": "Cualquiera puede cifrarte un mensaje con tu llave pública, solo tú lo abres.",
+    "relacionados": [
+      "cifrado",
+      "firma-digital",
+      "ssh"
+    ]
+  },
+  {
+    "id": "firma-digital",
+    "termino": "firma digital",
+    "definicion": "Un valor calculado con tu llave privada que demuestra quién creó un mensaje y que no fue modificado. Cualquiera puede comprobarlo con tu llave pública.",
+    "categoria": "seguridad",
+    "ejemplo": "Firmar un commit o un documento.",
+    "relacionados": [
+      "llave-publica-privada",
+      "hash"
+    ]
+  },
+  {
+    "id": "tls",
+    "termino": "TLS",
+    "definicion": "El protocolo de cifrado que protege las conexiones en internet, como las de HTTPS. Reemplazó a SSL, aunque mucha gente sigue diciendo SSL.",
+    "categoria": "seguridad",
+    "ejemplo": "La conexión a tu banco usa TLS.",
+    "relacionados": [
+      "https",
+      "certificado-ssl",
+      "cifrado"
+    ]
+  },
+  {
+    "id": "certificado-ssl",
+    "termino": "certificado SSL/TLS",
+    "definicion": "Un documento digital que comprueba que un sitio web es quien dice ser y permite la conexión cifrada por HTTPS. Lo emite una autoridad certificadora y caduca.",
+    "categoria": "seguridad",
+    "ejemplo": "Let's Encrypt emite certificados gratuitos.",
+    "relacionados": [
+      "tls",
+      "https"
+    ]
+  },
+  {
+    "id": "hash-de-contrasena",
+    "termino": "hash de contraseñas",
+    "definicion": "En vez de guardar contraseñas en texto, se guarda su hash con un algoritmo diseñado para ser lento, como bcrypt o Argon2. Si roban la base, no ven las contraseñas reales.",
+    "categoria": "seguridad",
+    "ejemplo": "bcrypt.hash(\"miClave\", 12)",
+    "relacionados": [
+      "hash",
+      "salt",
+      "autenticacion"
+    ]
+  },
+  {
+    "id": "salt",
+    "termino": "salt",
+    "definicion": "Un dato aleatorio que se añade a una contraseña antes de calcular su hash, para que dos personas con la misma contraseña tengan hashes distintos y sea más difícil romperlos.",
+    "categoria": "seguridad",
+    "ejemplo": "hash(\"miClave\" + \"x9Kq2\")",
+    "relacionados": [
+      "hash-de-contrasena",
+      "hash"
+    ]
+  },
+  {
+    "id": "autenticacion",
+    "termino": "autenticación",
+    "definicion": "Comprobar que alguien es quien dice ser, por ejemplo con usuario y contraseña, un código o una huella.",
+    "categoria": "seguridad",
+    "ejemplo": "Iniciar sesión.",
+    "relacionados": [
+      "autorizacion",
+      "2fa",
+      "sso"
+    ]
+  },
+  {
+    "id": "autorizacion",
+    "termino": "autorización",
+    "definicion": "Decidir qué puede hacer una persona ya identificada: qué datos ve y qué acciones ejecuta. Autenticar es quién eres, autorizar es qué puedes hacer.",
+    "categoria": "seguridad",
+    "ejemplo": "Un usuario común no puede borrar cuentas, un administrador sí.",
+    "relacionados": [
+      "autenticacion",
+      "principio-de-minimo-privilegio"
+    ]
+  },
+  {
+    "id": "2fa",
+    "termino": "2FA (doble factor)",
+    "definicion": "Un segundo paso, además de la contraseña, para iniciar sesión, como un código de una app, una llave física o una huella. Protege tu cuenta aunque te roben la contraseña.",
+    "categoria": "seguridad",
+    "ejemplo": "Código de seis dígitos en tu app de autenticación.",
+    "relacionados": [
+      "autenticacion",
+      "passkey",
+      "phishing"
+    ]
+  },
+  {
+    "id": "passkey",
+    "termino": "passkey",
+    "definicion": "Un método de acceso sin contraseña que usa criptografía de llaves guardada en tu dispositivo y se desbloquea con tu huella, rostro o PIN. Resiste el phishing.",
+    "categoria": "seguridad",
+    "ejemplo": "Entrar a una cuenta con tu huella.",
+    "relacionados": [
+      "2fa",
+      "llave-publica-privada"
+    ]
+  },
+  {
+    "id": "jwt",
+    "termino": "JWT",
+    "definicion": "JSON Web Token: un token firmado con datos sobre quién eres, que el servidor entrega al iniciar sesión y que envías en cada petición para demostrar tu identidad.",
+    "categoria": "seguridad",
+    "ejemplo": "Authorization: Bearer eyJhbGciOi...",
+    "relacionados": [
+      "token-de-acceso",
+      "autenticacion",
+      "sesion"
+    ]
+  },
+  {
+    "id": "token-de-acceso",
+    "termino": "token de acceso",
+    "definicion": "Un código temporal que representa permiso para acceder a un servicio, sin tener que enviar tu contraseña cada vez. Debe tratarse como algo secreto.",
+    "categoria": "seguridad",
+    "ejemplo": "Un token de API de GitHub.",
+    "relacionados": [
+      "jwt",
+      "oauth",
+      "secreto"
+    ]
+  },
+  {
+    "id": "oauth",
+    "termino": "OAuth",
+    "definicion": "Un estándar que permite que una aplicación acceda a datos tuyos en otro servicio sin conocer tu contraseña, con tu permiso. Es lo que hay detrás de \"Iniciar sesión con Google\".",
+    "categoria": "seguridad",
+    "ejemplo": "Autorizar a una app para leer tu calendario.",
+    "relacionados": [
+      "sso",
+      "token-de-acceso",
+      "autorizacion"
+    ]
+  },
+  {
+    "id": "sso",
+    "termino": "SSO (inicio de sesión único)",
+    "definicion": "Iniciar sesión una sola vez para entrar a varias aplicaciones sin volver a pedir las credenciales. Es común en empresas.",
+    "categoria": "seguridad",
+    "ejemplo": "Entrar con tu cuenta de trabajo a correo, chat y calendario.",
+    "relacionados": [
+      "oauth",
+      "autenticacion"
+    ]
+  },
+  {
+    "id": "secreto",
+    "termino": "secreto (credencial)",
+    "definicion": "Cualquier dato que debe mantenerse privado, como contraseñas, claves de API y llaves privadas. Nunca deben ir en el código ni subirse a un repositorio.",
+    "categoria": "seguridad",
+    "ejemplo": "API_KEY guardada en una variable de entorno.",
+    "relacionados": [
+      "variable-de-entorno",
+      "token-de-acceso"
+    ]
+  },
+  {
+    "id": "principio-de-minimo-privilegio",
+    "termino": "principio de mínimo privilegio",
+    "definicion": "Dar a cada persona o programa solo los permisos estrictamente necesarios para su tarea, para que un error o un robo cause menos daño.",
+    "categoria": "seguridad",
+    "ejemplo": "Una app que solo lee la base de datos no recibe permiso de borrar.",
+    "relacionados": [
+      "autorizacion",
+      "permisos"
+    ]
+  },
+  {
+    "id": "phishing",
+    "termino": "phishing",
+    "definicion": "Un engaño en el que alguien se hace pasar por una empresa o persona de confianza, por correo, mensaje o web, para que entregues contraseñas o datos.",
+    "categoria": "seguridad",
+    "ejemplo": "Un correo falso del banco con un enlace a una página idéntica.",
+    "relacionados": [
+      "ingenieria-social",
+      "2fa"
+    ]
+  },
+  {
+    "id": "ingenieria-social",
+    "termino": "ingeniería social",
+    "definicion": "Manipular a las personas, y no a los sistemas, para obtener acceso o información, aprovechando la confianza, la prisa o el miedo.",
+    "categoria": "seguridad",
+    "ejemplo": "Una llamada de \"soporte técnico\" que te pide tu código.",
+    "relacionados": [
+      "phishing"
+    ]
+  },
+  {
+    "id": "malware",
+    "termino": "malware",
+    "definicion": "Cualquier software hecho para causar daño o robar datos: virus, troyanos, espías y ransomware.",
+    "categoria": "seguridad",
+    "ejemplo": "Un archivo adjunto que instala un programa espía.",
+    "relacionados": [
+      "ransomware",
+      "phishing"
+    ]
+  },
+  {
+    "id": "ransomware",
+    "termino": "ransomware",
+    "definicion": "Un tipo de malware que cifra tus archivos y exige un pago para devolverte el acceso. Las copias de seguridad son la mejor defensa.",
+    "categoria": "seguridad",
+    "ejemplo": "Una empresa a la que no le abren sus archivos hasta pagar.",
+    "relacionados": [
+      "malware",
+      "backup"
+    ]
+  },
+  {
+    "id": "ddos",
+    "termino": "DDoS",
+    "definicion": "Un ataque que inunda un servicio con tantísimas peticiones desde muchos lugares a la vez que deja de responder a usuarios reales.",
+    "categoria": "seguridad",
+    "ejemplo": "Miles de computadoras infectadas visitando tu sitio al mismo tiempo.",
+    "relacionados": [
+      "firewall",
+      "rate-limiting"
+    ]
+  },
+  {
+    "id": "fuerza-bruta",
+    "termino": "ataque de fuerza bruta",
+    "definicion": "Probar muchísimas combinaciones de contraseñas hasta dar con la correcta. Contraseñas largas, bloqueos tras intentos fallidos y 2FA lo vuelven inútil.",
+    "categoria": "seguridad",
+    "ejemplo": "Un programa que intenta millones de claves por minuto.",
+    "relacionados": [
+      "rate-limiting",
+      "2fa"
+    ]
+  },
+  {
+    "id": "rate-limiting",
+    "termino": "rate limiting",
+    "definicion": "Limitar cuántas peticiones puede hacer una persona o programa en cierto tiempo. Protege contra abusos, fuerza bruta y sobrecarga.",
+    "categoria": "seguridad",
+    "ejemplo": "Máximo 100 peticiones por minuto por IP.",
+    "relacionados": [
+      "ddos",
+      "fuerza-bruta",
+      "api"
+    ]
+  },
+  {
+    "id": "pentesting",
+    "termino": "pentesting",
+    "definicion": "Pruebas de penetración: expertos autorizados intentan atacar un sistema para descubrir sus fallas antes de que lo haga alguien malintencionado.",
+    "categoria": "seguridad",
+    "ejemplo": "Contratar a un equipo para atacar tu app y reportar vulnerabilidades.",
+    "relacionados": [
+      "vulnerabilidad"
+    ]
+  },
+  {
+    "id": "privacidad",
+    "termino": "privacidad de datos",
+    "definicion": "El derecho y las prácticas para que los datos personales se recojan, usen y guarden con permiso y cuidado. Leyes como el RGPD en Europa fijan reglas.",
+    "categoria": "seguridad",
+    "ejemplo": "Pedir consentimiento antes de guardar cookies de seguimiento.",
+    "relacionados": [
+      "cookie-de-terceros",
+      "cifrado"
+    ]
+  },
+  {
+    "id": "ip",
+    "termino": "dirección IP",
+    "definicion": "Un número que identifica a cada dispositivo en una red, como la dirección de una casa para que los datos lleguen al lugar correcto.",
+    "categoria": "redes",
+    "ejemplo": "192.168.1.10",
+    "relacionados": [
+      "ipv4-ipv6",
+      "dns",
+      "puerto"
+    ]
+  },
+  {
+    "id": "ipv4-ipv6",
+    "termino": "IPv4 e IPv6",
+    "definicion": "Las dos versiones de las direcciones IP. IPv4 usa cuatro números como 192.168.0.1 y ya casi no hay disponibles. IPv6 usa direcciones mucho más largas y casi inagotables.",
+    "categoria": "redes",
+    "ejemplo": "2001:db8::1 es una dirección IPv6",
+    "relacionados": [
+      "ip",
+      "nat"
+    ]
+  },
+  {
+    "id": "puerto",
+    "termino": "puerto de red",
+    "definicion": "Un número que indica a qué programa de una computadora van dirigidos los datos. La IP es el edificio y el puerto es el departamento.",
+    "categoria": "redes",
+    "ejemplo": "HTTP usa el 80, HTTPS el 443, SSH el 22.",
+    "relacionados": [
+      "ip",
+      "tcp",
+      "firewall"
+    ]
+  },
+  {
+    "id": "protocolo",
+    "termino": "protocolo",
+    "definicion": "Un conjunto de reglas acordadas que dos dispositivos siguen para comunicarse, como el idioma común de una conversación.",
+    "categoria": "redes",
+    "ejemplo": "HTTP, TCP, SSH, SMTP",
+    "relacionados": [
+      "tcp",
+      "http"
+    ]
+  },
+  {
+    "id": "tcp",
+    "termino": "TCP",
+    "definicion": "Un protocolo de transporte que asegura que los datos lleguen completos y en orden, reenviando lo que se pierda. Es más fiable pero algo más lento que UDP.",
+    "categoria": "redes",
+    "ejemplo": "Descargar un archivo o abrir una página web.",
+    "relacionados": [
+      "udp",
+      "puerto",
+      "ip"
+    ]
+  },
+  {
+    "id": "udp",
+    "termino": "UDP",
+    "definicion": "Un protocolo de transporte que envía datos sin confirmar que lleguen ni su orden. Es más rápido y se usa donde importa la velocidad, como videollamadas y juegos.",
+    "categoria": "redes",
+    "ejemplo": "Una videollamada que tolera perder un fotograma.",
+    "relacionados": [
+      "tcp",
+      "latencia"
+    ]
+  },
+  {
+    "id": "paquete-de-red",
+    "termino": "paquete de red",
+    "definicion": "Un trozo pequeño de datos en que se divide todo lo que viaja por una red, con la dirección de origen y de destino. Al llegar se vuelven a juntar.",
+    "categoria": "redes",
+    "ejemplo": "Una foto se envía partida en muchos paquetes.",
+    "relacionados": [
+      "ip",
+      "tcp"
+    ]
+  },
+  {
+    "id": "router",
+    "termino": "router",
+    "definicion": "El aparato que conecta tu red local con internet y dirige los datos hacia donde deben ir. El de tu casa también suele repartir el wifi.",
+    "categoria": "redes",
+    "ejemplo": "El módem o router de tu proveedor.",
+    "relacionados": [
+      "ip",
+      "nat",
+      "lan-wan"
+    ]
+  },
+  {
+    "id": "lan-wan",
+    "termino": "LAN y WAN",
+    "definicion": "LAN es una red local, como la de tu casa u oficina. WAN es una red extensa que conecta lugares lejanos, como internet.",
+    "categoria": "redes",
+    "ejemplo": "Tu wifi es LAN; internet es WAN.",
+    "relacionados": [
+      "router",
+      "ip"
+    ]
+  },
+  {
+    "id": "nat",
+    "termino": "NAT",
+    "definicion": "Una técnica del router que permite que muchos dispositivos de tu red compartan una sola dirección IP pública al salir a internet.",
+    "categoria": "redes",
+    "ejemplo": "Todos los celulares de tu casa salen con la misma IP pública.",
+    "relacionados": [
+      "router",
+      "ipv4-ipv6"
+    ]
+  },
+  {
+    "id": "localhost",
+    "termino": "localhost",
+    "definicion": "El nombre que significa \"esta misma computadora\". Lo usas para probar tu aplicación en tu equipo antes de publicarla, normalmente con la IP 127.0.0.1.",
+    "categoria": "redes",
+    "ejemplo": "http://localhost:3000",
+    "relacionados": [
+      "ip",
+      "puerto"
+    ]
+  },
+  {
+    "id": "ping",
+    "termino": "ping",
+    "definicion": "Un comando que envía un mensaje pequeño a otra computadora y mide cuánto tarda en volver. Sirve para comprobar si hay conexión.",
+    "categoria": "redes",
+    "ejemplo": "ping ejemplo.com",
+    "relacionados": [
+      "latencia",
+      "ip"
+    ]
+  },
+  {
+    "id": "latencia",
+    "termino": "latencia",
+    "definicion": "El tiempo que tarda un dato en ir de un punto a otro y obtener respuesta. Se mide en milisegundos. Baja latencia significa respuesta rápida.",
+    "categoria": "redes",
+    "ejemplo": "Un ping de 20 ms es muy bueno para jugar en línea.",
+    "relacionados": [
+      "ancho-de-banda",
+      "ping",
+      "cdn"
+    ]
+  },
+  {
+    "id": "ancho-de-banda",
+    "termino": "ancho de banda",
+    "definicion": "La cantidad máxima de datos que una conexión puede transmitir por segundo. Es como el ancho de una carretera: más ancha, más coches a la vez.",
+    "categoria": "redes",
+    "ejemplo": "100 Mbps",
+    "relacionados": [
+      "latencia"
+    ]
+  },
+  {
+    "id": "firewall",
+    "termino": "firewall (cortafuegos)",
+    "definicion": "Un sistema que filtra el tráfico de red según reglas, dejando pasar lo permitido y bloqueando lo sospechoso. Puede ser un programa o un equipo.",
+    "categoria": "redes",
+    "ejemplo": "Bloquear todos los puertos excepto el 443.",
+    "relacionados": [
+      "puerto",
+      "vpn",
+      "ddos"
+    ]
+  },
+  {
+    "id": "vpn",
+    "termino": "VPN",
+    "definicion": "Una red privada virtual que crea un túnel cifrado entre tu dispositivo y otro punto de internet, ocultando tu tráfico a terceros y cambiando tu ubicación aparente.",
+    "categoria": "redes",
+    "ejemplo": "Conectarte a la red de tu empresa desde casa.",
+    "relacionados": [
+      "firewall",
+      "ip",
+      "cifrado"
+    ]
+  },
+  {
+    "id": "proxy",
+    "termino": "proxy",
+    "definicion": "Un intermediario entre tú y internet: tus peticiones pasan por él y él las hace por ti. Sirve para filtrar, guardar caché o ocultar el origen.",
+    "categoria": "redes",
+    "ejemplo": "Una escuela que filtra sitios mediante un proxy.",
+    "relacionados": [
+      "ip",
+      "cache",
+      "balanceador-de-carga"
+    ]
+  },
+  {
+    "id": "balanceador-de-carga",
+    "termino": "balanceador de carga",
+    "definicion": "Un sistema que reparte las peticiones entre varios servidores para que ninguno se sature y el servicio siga funcionando si uno falla.",
+    "categoria": "redes",
+    "ejemplo": "Nginx repartiendo visitas entre tres servidores.",
+    "relacionados": [
+      "proxy",
+      "escalabilidad",
+      "backend"
+    ]
+  },
+  {
+    "id": "open-source",
+    "termino": "open source (código abierto)",
+    "definicion": "Software cuyo código fuente es público y puede verse, usarse, modificarse y compartirse según su licencia. Cualquiera puede contribuir.",
+    "categoria": "general",
+    "ejemplo": "Linux, Firefox, Python",
+    "relacionados": [
+      "licencia",
+      "fork",
+      "github"
+    ]
+  },
+  {
+    "id": "licencia",
+    "termino": "licencia de software",
+    "definicion": "El documento que dice qué puedes y qué no puedes hacer con un programa o con su código: usarlo, modificarlo, venderlo o compartirlo.",
+    "categoria": "general",
+    "ejemplo": "MIT, Apache 2.0, GPL",
+    "relacionados": [
+      "open-source",
+      "repositorio"
+    ]
+  },
+  {
+    "id": "mvp",
+    "termino": "MVP (producto mínimo viable)",
+    "definicion": "La versión más simple de un producto que ya sirve para probar la idea con personas reales y aprender antes de invertir más.",
+    "categoria": "general",
+    "ejemplo": "Una página con un formulario antes de construir toda la tienda.",
+    "relacionados": [
+      "agile",
+      "backlog"
+    ]
+  },
+  {
+    "id": "agile",
+    "termino": "metodologías ágiles",
+    "definicion": "Una forma de desarrollar software en ciclos cortos, entregando partes funcionales y adaptándose a los cambios, en lugar de planear todo desde el inicio.",
+    "categoria": "general",
+    "ejemplo": "Entregar mejoras cada dos semanas.",
+    "relacionados": [
+      "scrum",
+      "kanban",
+      "sprint"
+    ],
+    "tema": "metodologias-desarrollo"
+  },
+  {
+    "id": "scrum",
+    "termino": "Scrum",
+    "definicion": "Un marco ágil para trabajar en equipo con ciclos fijos llamados sprints, reuniones breves, una lista priorizada de trabajo y roles claros.",
+    "categoria": "general",
+    "ejemplo": "Un equipo con reunión diaria de 15 minutos.",
+    "relacionados": [
+      "sprint",
+      "backlog",
+      "agile"
+    ],
+    "tema": "metodologias-desarrollo"
+  },
+  {
+    "id": "sprint",
+    "termino": "sprint",
+    "definicion": "Un periodo corto y fijo, normalmente de una a cuatro semanas, en el que un equipo se compromete a terminar cierta cantidad de trabajo.",
+    "categoria": "general",
+    "ejemplo": "Sprint de dos semanas con 8 tareas.",
+    "relacionados": [
+      "scrum",
+      "backlog"
+    ],
+    "tema": "metodologias-desarrollo"
+  },
+  {
+    "id": "backlog",
+    "termino": "backlog",
+    "definicion": "La lista ordenada de todo lo pendiente por hacer en un producto, desde nuevas funciones hasta errores por corregir, con lo más importante arriba.",
+    "categoria": "general",
+    "ejemplo": "Una lista de tareas priorizada en Jira o Trello.",
+    "relacionados": [
+      "sprint",
+      "user-story",
+      "mvp"
+    ],
+    "tema": "metodologias-desarrollo"
+  },
+  {
+    "id": "kanban",
+    "termino": "Kanban",
+    "definicion": "Un método visual que muestra el trabajo en un tablero con columnas como Por hacer, En curso y Hecho, para ver el avance y evitar acumular demasiado a la vez.",
+    "categoria": "general",
+    "ejemplo": "Un tablero de tarjetas en Trello.",
+    "relacionados": [
+      "agile",
+      "backlog"
+    ],
+    "tema": "metodologias-desarrollo"
+  },
+  {
+    "id": "user-story",
+    "termino": "historia de usuario",
+    "definicion": "Una descripción corta de una función desde el punto de vista de quien la usará, con la forma \"como [persona] quiero [algo] para [beneficio]\".",
+    "categoria": "general",
+    "ejemplo": "Como cliente quiero guardar mi carrito para terminarlo después.",
+    "relacionados": [
+      "backlog",
+      "mvp"
+    ],
+    "tema": "metodologias-desarrollo"
+  },
+  {
+    "id": "deuda-tecnica",
+    "termino": "deuda técnica",
+    "definicion": "El costo futuro de haber elegido una solución rápida pero imperfecta. Como una deuda, si no se paga, los intereses crecen y todo se vuelve más lento y difícil.",
+    "categoria": "general",
+    "ejemplo": "Copiar y pegar código para entregar hoy y complicar cambios mañana.",
+    "relacionados": [
+      "refactorizar",
+      "codigo-legacy"
+    ]
+  },
+  {
+    "id": "refactorizar",
+    "termino": "refactorizar",
+    "definicion": "Mejorar la estructura interna del código, haciéndolo más claro o simple, sin cambiar lo que hace por fuera. Las pruebas ayudan a no romper nada.",
+    "categoria": "general",
+    "ejemplo": "Dividir una función de 200 líneas en funciones pequeñas.",
+    "relacionados": [
+      "deuda-tecnica",
+      "prueba-unitaria"
+    ]
+  },
+  {
+    "id": "codigo-legacy",
+    "termino": "código legacy",
+    "definicion": "Código antiguo que sigue en uso, a menudo sin pruebas ni documentación y escrito por personas que ya no están. Es delicado de modificar.",
+    "categoria": "general",
+    "ejemplo": "Un sistema de hace veinte años que aún maneja los pagos.",
+    "relacionados": [
+      "deuda-tecnica",
+      "refactorizar"
+    ]
+  },
+  {
+    "id": "despliegue",
+    "termino": "deploy (despliegue)",
+    "definicion": "Publicar una versión de tu aplicación en un servidor para que los usuarios reales puedan usarla.",
+    "categoria": "general",
+    "ejemplo": "Subir la nueva versión del sitio a producción.",
+    "relacionados": [
+      "ci-cd",
+      "produccion",
+      "hosting"
+    ]
+  },
+  {
+    "id": "produccion",
+    "termino": "producción, staging y desarrollo",
+    "definicion": "Los distintos entornos de un proyecto. Desarrollo es donde programas, staging es una copia para probar antes de publicar y producción es la versión real que usan las personas.",
+    "categoria": "general",
+    "ejemplo": "Probar en staging antes de pasar a producción.",
+    "relacionados": [
+      "despliegue",
+      "variable-de-entorno"
+    ]
+  },
+  {
+    "id": "rollback",
+    "termino": "rollback",
+    "definicion": "Volver a una versión anterior que funcionaba cuando una publicación nueva sale mal.",
+    "categoria": "general",
+    "ejemplo": "Una actualización rompe el login, así que se regresa a la versión previa.",
+    "relacionados": [
+      "despliegue",
+      "ci-cd"
+    ]
+  },
+  {
+    "id": "release",
+    "termino": "release (versión publicada)",
+    "definicion": "Una versión del software que se entrega oficialmente a los usuarios, normalmente con un número de versión y notas de cambios.",
+    "categoria": "general",
+    "ejemplo": "v2.1.0 con una lista de novedades.",
+    "relacionados": [
+      "versionado-semantico",
+      "despliegue"
+    ]
+  },
+  {
+    "id": "stack",
+    "termino": "stack tecnológico",
+    "definicion": "El conjunto de tecnologías que se usan para construir un producto: lenguajes, frameworks, bases de datos y servicios.",
+    "categoria": "general",
+    "ejemplo": "React, Node.js y PostgreSQL",
+    "relacionados": [
+      "full-stack",
+      "framework"
+    ]
+  },
+  {
+    "id": "full-stack",
+    "termino": "full stack",
+    "definicion": "Una persona o enfoque que trabaja tanto en la parte visible de una aplicación (frontend) como en la parte del servidor (backend).",
+    "categoria": "general",
+    "ejemplo": "Una desarrolladora que hace la interfaz y también la API.",
+    "relacionados": [
+      "frontend",
+      "backend",
+      "stack"
+    ]
+  },
+  {
+    "id": "devops",
+    "termino": "DevOps",
+    "definicion": "Una cultura y conjunto de prácticas que unen el desarrollo y la operación de sistemas para publicar software de forma más rápida y confiable, apoyándose en la automatización.",
+    "categoria": "general",
+    "ejemplo": "Automatizar pruebas, despliegues y monitoreo.",
+    "relacionados": [
+      "ci-cd",
+      "observabilidad"
+    ]
+  },
+  {
+    "id": "saas",
+    "termino": "SaaS",
+    "definicion": "Software como servicio: programas que usas por internet pagando una suscripción, sin instalar nada ni administrar servidores.",
+    "categoria": "general",
+    "ejemplo": "Notion, Slack, Canva",
+    "relacionados": [
+      "nube",
+      "hosting"
+    ]
+  },
+  {
+    "id": "nube",
+    "termino": "nube (cloud)",
+    "definicion": "Usar servidores, almacenamiento y servicios de otras empresas a través de internet, pagando según el uso, en lugar de tener tu propio equipo físico.",
+    "categoria": "general",
+    "ejemplo": "AWS, Google Cloud, Azure",
+    "relacionados": [
+      "saas",
+      "serverless",
+      "hosting"
+    ]
+  },
+  {
+    "id": "escalabilidad",
+    "termino": "escalabilidad",
+    "definicion": "La capacidad de un sistema para seguir funcionando bien cuando crece el número de usuarios o de datos, agregando recursos o mejorando el diseño.",
+    "categoria": "general",
+    "ejemplo": "Una tienda que aguanta pasar de 100 a 100 mil visitas.",
+    "relacionados": [
+      "balanceador-de-carga",
+      "big-o"
+    ]
+  },
+  {
+    "id": "observabilidad",
+    "termino": "observabilidad",
+    "definicion": "La capacidad de entender qué ocurre dentro de un sistema en producción a partir de sus registros, métricas y trazas, para detectar y explicar problemas.",
+    "categoria": "general",
+    "ejemplo": "Gráficas de errores y tiempos de respuesta.",
+    "relacionados": [
+      "logging",
+      "devops"
+    ]
+  },
+  {
+    "id": "documentacion",
+    "termino": "documentación",
+    "definicion": "Los textos que explican cómo funciona, se instala y se usa un software, para quienes lo usan y para quienes lo mantienen.",
+    "categoria": "general",
+    "ejemplo": "Una guía de inicio y una referencia de la API.",
+    "relacionados": [
+      "readme",
+      "api"
+    ]
+  },
+  {
+    "id": "sistema-operativo",
+    "termino": "sistema operativo",
+    "definicion": "El programa principal de una computadora que administra el hardware y permite que los demás programas funcionen. Windows, macOS y Linux son ejemplos.",
+    "categoria": "general",
+    "ejemplo": "Linux, Windows, Android",
+    "relacionados": [
+      "kernel",
+      "linux"
+    ],
+    "tema": "sistemas-operativos"
+  },
+  {
+    "id": "kernel",
+    "termino": "kernel",
+    "definicion": "El núcleo del sistema operativo: la parte que se comunica directamente con el hardware y reparte memoria, procesador y dispositivos entre los programas.",
+    "categoria": "general",
+    "ejemplo": "El kernel Linux",
+    "relacionados": [
+      "sistema-operativo"
+    ],
+    "tema": "sistemas-operativos"
+  },
+  {
+    "id": "linux",
+    "termino": "Linux",
+    "definicion": "Un sistema operativo de código abierto muy usado en servidores, nubes, celulares Android y supercomputadoras. Hay muchas versiones llamadas distribuciones.",
+    "categoria": "general",
+    "ejemplo": "Ubuntu, Debian, Fedora",
+    "relacionados": [
+      "kernel",
+      "sistema-operativo",
+      "open-source"
+    ],
+    "tema": "linux"
+  }
+]

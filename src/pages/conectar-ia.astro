@@ -1,0 +1,56 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import { SITE } from '@data/site';
+import { migasLd } from '@lib/seo';
+
+const titulo = 'Conecta tu asistente de IA a AyudaDev';
+const descripcion = 'AyudaDev tiene un servidor MCP de solo lectura. Tu asistente puede buscar guías, consultar el catálogo y preparar una propuesta de recurso que tú revisas y envías.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Contribuir', href: '/contribuir/' },
+  { nombre: 'Conectar IA', href: '/conectar-ia/' },
+];
+const endpoint = `${SITE.url}/api/mcp.php`;
+const comando = `claude mcp add --transport http ayudadev ${endpoint}`;
+const herramientas = [
+  ['buscar_contenido', 'Busca en guías, rutas, fundamentos, hojas, retos, proyectos, glosario y más.'],
+  ['obtener_documento', 'Devuelve el texto completo en Markdown de un documento.'],
+  ['listar_temas', 'Lista los temas de la biblioteca con su área y su guía.'],
+  ['listar_recursos', 'Lista los recursos gratuitos del catálogo, con filtros.'],
+  ['definir_termino', 'Busca un término en el glosario.'],
+  ['proponer_recurso', 'Valida un recurso y devuelve el archivo a crear y un enlace al editor de GitHub. No publica nada.'],
+] as const;
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/conectar-ia/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Comunidad" titulo={titulo} descripcion={descripcion} />
+
+    <div class="prose mt-10">
+      <h2>Dirección del servidor</h2>
+      <p>Cualquier cliente que soporte MCP por HTTP puede usar esta dirección:</p>
+      <pre><code>{endpoint}</code></pre>
+      <p>Si usas Claude Code, agrégalo con este comando:</p>
+      <pre><code>{comando}</code></pre>
+      <p>En otros clientes, busca la opción para agregar un servidor MCP remoto y pega la dirección. Los pasos cambian según la herramienta, así que revisa su documentación.</p>
+
+      <h2>Qué puede hacer tu asistente</h2>
+      <ul>
+        {herramientas.map(([nombre, texto]) => <li><code>{nombre}</code>: {texto}</li>)}
+      </ul>
+
+      <h2>Qué no puede hacer</h2>
+      <p>
+        El servidor es de solo lectura. <code>proponer_recurso</code> no publica nada: genera el archivo y un enlace al editor de GitHub. Tú abres el enlace, inicias sesión con tu cuenta y una persona revisa el pull request antes de que se publique.
+      </p>
+
+      <h2>Siguiente paso</h2>
+      <p>
+        Lee <a href="/contribuir/">cómo contribuir</a> o abre el <a href={SITE.repo} rel="noopener" target="_blank">repositorio en GitHub</a>.
+      </p>
+    </div>
+  </div>
+</BaseLayout>

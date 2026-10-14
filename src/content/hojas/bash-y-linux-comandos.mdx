@@ -1,0 +1,262 @@
+---
+titulo: 'Bash y Linux: comandos de terminal'
+descripcion: 'Navegar, copiar, buscar, filtrar texto, tuberías, redirecciones y scripts en Bash. Los comandos de terminal que más usarás en Linux, macOS y Git Bash.'
+tema: linux
+etiquetas: ['bash', 'linux', 'terminal', 'comandos', 'scripts']
+publicado: 2026-10-09
+orden: 3
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Comandos de terminal para Linux, macOS y Git Bash en Windows. Los ejemplos se probaron con Bash 5.3.
+
+## Moverte y ver dónde estás
+
+| Comando | Qué hace |
+| --- | --- |
+| `pwd` | Muestra la carpeta actual |
+| `ls` | Lista archivos |
+| `ls -la` | Lista todo, con ocultos, permisos y tamaños |
+| `ls -lh` | Tamaños legibles (KB, MB) |
+| `cd carpeta` | Entra a una carpeta |
+| `cd ..` | Sube un nivel |
+| `cd` o `cd ~` | Va a tu carpeta personal |
+| `cd -` | Vuelve a la carpeta anterior |
+| `tree -L 2` | Árbol de carpetas a 2 niveles (puede requerir instalarlo) |
+
+## Crear, copiar, mover y borrar
+
+| Comando | Qué hace |
+| --- | --- |
+| `mkdir proyecto` | Crea una carpeta |
+| `mkdir -p a/b/c` | Crea toda la ruta, aunque falten niveles |
+| `touch archivo.txt` | Crea un archivo vacío o actualiza su fecha |
+| `cp origen destino` | Copia un archivo |
+| `cp -r carpeta copia` | Copia una carpeta completa |
+| `mv origen destino` | Mueve o renombra |
+| `rm archivo` | Borra un archivo (sin papelera) |
+| `rm -r carpeta` | Borra una carpeta y su contenido |
+| `rmdir carpeta` | Borra una carpeta solo si está vacía |
+| `ln -s destino enlace` | Crea un enlace simbólico |
+
+<Callout tipo="warning" titulo="rm no tiene papelera">
+
+`rm -rf` borra sin preguntar y sin vuelta atrás. Revisa con `ls` lo que vas a borrar y no lo combines con variables que podrían estar vacías.
+
+</Callout>
+
+## Ver contenido de archivos
+
+| Comando | Qué hace |
+| --- | --- |
+| `cat archivo` | Muestra el archivo completo |
+| `less archivo` | Lo muestra por páginas (`q` sale, `/texto` busca) |
+| `head -n 5 archivo` | Primeras 5 líneas |
+| `tail -n 5 archivo` | Últimas 5 líneas |
+| `tail -f archivo` | Sigue el archivo en vivo (útil con logs) |
+| `wc -l archivo` | Cuenta líneas (`-w` palabras, `-c` bytes) |
+| `diff a.txt b.txt` | Muestra diferencias entre dos archivos |
+| `file archivo` | Dice qué tipo de archivo es |
+
+## Buscar
+
+| Comando | Qué hace |
+| --- | --- |
+| `grep "texto" archivo` | Líneas que contienen el texto |
+| `grep -n "texto" archivo` | Con número de línea |
+| `grep -i "texto" archivo` | Sin distinguir mayúsculas |
+| `grep -v "texto" archivo` | Líneas que NO lo contienen |
+| `grep -c "texto" archivo` | Cuenta las líneas que coinciden |
+| `grep -E "uno\|dos" archivo` | Expresión regular extendida (alternativa) |
+| `grep -rn "texto" .` | Busca en todos los archivos, recursivo |
+| `grep -rl "texto" --include="*.txt" .` | Solo nombres de archivo, solo `.txt` |
+| `find . -name "*.js"` | Busca archivos por nombre desde aquí |
+| `find . -type d` | Solo carpetas (`-type f` solo archivos) |
+| `find . -mtime -1` | Modificados en el último día |
+| `find . -name "*.js" -exec echo {} \;` | Ejecuta un comando por cada resultado |
+| `which node` | Ruta del ejecutable que se usaría |
+| `command -v node` | Igual, y funciona con funciones y alias |
+
+## Tuberías y redirecciones
+
+| Sintaxis | Qué hace |
+| --- | --- |
+| `cmd1 \| cmd2` | Pasa la salida de `cmd1` como entrada de `cmd2` |
+| `cmd > archivo` | Guarda la salida (sobrescribe) |
+| `cmd >> archivo` | Añade la salida al final |
+| `cmd < archivo` | Usa el archivo como entrada |
+| `cmd 2> errores.txt` | Guarda solo los errores |
+| `cmd > todo.txt 2>&1` | Salida y errores al mismo archivo |
+| `cmd > /dev/null` | Descarta la salida |
+| `cmd1 && cmd2` | Ejecuta `cmd2` solo si `cmd1` tuvo éxito |
+| `cmd1 \|\| cmd2` | Ejecuta `cmd2` solo si `cmd1` falló |
+| `cmd1 ; cmd2` | Ejecuta ambos, sin importar el resultado |
+| `cmd \| tee archivo` | Muestra la salida y también la guarda |
+| `cmd &` | Lo ejecuta en segundo plano |
+
+## Filtrar y transformar texto
+
+| Comando | Qué hace |
+| --- | --- |
+| `sort archivo` | Ordena líneas (`-n` numérico, `-r` inverso, `-u` sin repetidas) |
+| `uniq -c` | Cuenta líneas consecutivas repetidas (ordena antes con `sort`) |
+| `cut -d, -f2` | Columna 2 de un texto separado por comas |
+| `tr 'a-z' 'A-Z'` | Cambia caracteres (aquí, a mayúsculas) |
+| `sed 's/viejo/nuevo/' archivo` | Reemplaza la primera coincidencia de cada línea |
+| `sed 's/viejo/nuevo/g' archivo` | Reemplaza todas |
+| `sed -n '2,3p' archivo` | Imprime solo las líneas 2 a 3 |
+| `sed -i 's/a/b/' archivo` | Edita el archivo en el sitio |
+| `awk '{print $1}' archivo` | Imprime la primera columna (separada por espacios) |
+| `awk -F, '{print $3}' archivo` | Tercera columna con separador coma |
+| `xargs` | Convierte la entrada en argumentos de otro comando |
+
+```bash
+# las líneas más repetidas de un log
+sort log.txt | uniq -c | sort -rn | head -5
+# renombra cada resultado de ls con xargs
+ls src | xargs -I{} echo "-> {}"
+```
+
+En macOS, `sed -i` pide un argumento extra: usa `sed -i '' 's/a/b/' archivo`.
+
+## Atajos de teclado en la terminal
+
+| Atajo | Qué hace |
+| --- | --- |
+| `Tab` | Autocompleta nombres |
+| `Ctrl+C` | Cancela el comando en ejecución |
+| `Ctrl+D` | Cierra la sesión o termina la entrada |
+| `Ctrl+L` | Limpia la pantalla |
+| `Ctrl+R` | Busca en el historial |
+| `Ctrl+A` / `Ctrl+E` | Inicio / final de la línea |
+| `Ctrl+W` | Borra la palabra anterior |
+| `Flecha arriba` | Comando anterior |
+| `!!` | Repite el último comando |
+
+## Variables y expansiones
+
+```bash
+nombre="Ana"                  # sin espacios alrededor del =
+echo "Hola, $nombre"          # Hola, Ana
+echo "${nada:-defecto}"       # defecto (valor si la variable está vacía)
+echo "hoy: $(date +%Y)"       # sustitución de comandos
+echo $((5 * 2))               # 10 (aritmética)
+echo file{1..3}               # file1 file2 file3
+echo {a,b}.txt                # a.txt b.txt
+export PATH="$HOME/bin:$PATH" # variable visible para otros procesos
+```
+
+| Variable | Contiene |
+| --- | --- |
+| `$HOME` | Tu carpeta personal |
+| `$PWD` | Carpeta actual |
+| `$?` | Código de salida del último comando (0 es éxito) |
+| `$1`, `$2` | Argumentos del script |
+| `$#` | Cuántos argumentos recibió |
+| `$@` | Todos los argumentos |
+| `$0` | Nombre del script |
+
+Comillas dobles `"..."` expanden variables; comillas simples `'...'` no. Pon siempre comillas alrededor de `"$variable"` para que los espacios no rompan nada.
+
+### Manipular texto en variables
+
+```bash
+f="reporte.final.txt"
+echo "${#f}"          # 17  (longitud)
+echo "${f%.txt}"      # reporte.final  (quita sufijo)
+echo "${f##*.}"       # txt  (quita hasta el último punto)
+echo "${f/final/v2}"  # reporte.v2.txt
+echo "${f:0:7}"       # reporte
+echo "${f^^}"         # REPORTE.FINAL.TXT
+```
+
+## Scripts: condiciones, bucles y funciones
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail                 # falla al primer error, variable sin definir o error en pipe
+
+saludar() {
+  local nombre="${1:-mundo}"
+  echo "Hola, $nombre"
+}
+saludar Ana                       # Hola, Ana
+
+if [[ -z "${1:-}" ]]; then        # vacío
+  echo "sin argumento"
+elif [[ "$1" -gt 5 ]]; then       # comparación numérica
+  echo "mayor que 5"
+fi
+
+for f in src/*; do echo "archivo: $f"; done
+n=0
+while (( n < 3 )); do echo "n=$n"; n=$((n+1)); done
+
+case "${1:-}" in
+  a|b) echo "a o b" ;;
+  *)   echo "otro" ;;
+esac
+
+arr=(uno dos tres)
+echo "${arr[1]} ${#arr[@]}"       # dos 3
+```
+
+Para ejecutarlo: `chmod +x script.sh` y luego `./script.sh`.
+
+<Callout tipo="warning" titulo="((n++)) y set -e">
+
+Con `set -e`, `((n++))` cuando `n` vale 0 devuelve código 1 (porque el resultado de la expresión es 0) y el script termina sin avisar. Usa `n=$((n+1))`.
+
+</Callout>
+
+| Prueba | Verdadero si |
+| --- | --- |
+| `[[ -f x ]]` | `x` es un archivo |
+| `[[ -d x ]]` | `x` es una carpeta |
+| `[[ -e x ]]` | `x` existe |
+| `[[ -z "$v" ]]` | `v` está vacía |
+| `[[ -n "$v" ]]` | `v` no está vacía |
+| `[[ "$a" == "$b" ]]` | Las cadenas son iguales |
+| `[[ "$n" -gt 5 ]]` | Número mayor que 5 (`-lt`, `-ge`, `-le`, `-eq`, `-ne`) |
+
+## Comprimir y espacio en disco
+
+| Comando | Qué hace |
+| --- | --- |
+| `tar -czf copia.tgz carpeta/` | Crea un archivo comprimido |
+| `tar -tzf copia.tgz` | Lista su contenido |
+| `tar -xzf copia.tgz -C destino` | Lo extrae en `destino` (la carpeta debe existir) |
+| `zip -r copia.zip carpeta/` | Crea un zip |
+| `unzip copia.zip` | Lo extrae |
+| `du -sh carpeta` | Tamaño total de una carpeta |
+| `df -h` | Espacio libre por disco |
+
+## Información del sistema
+
+| Comando | Qué hace |
+| --- | --- |
+| `whoami` | Tu usuario |
+| `uname -a` | Sistema y versión del núcleo |
+| `date` | Fecha y hora |
+| `history` | Comandos usados |
+| `man comando` | Manual del comando |
+| `comando --help` | Ayuda breve |
+| `alias ll='ls -la'` | Crea un atajo (para que sea permanente, ponlo en `~/.bashrc`) |
+| `sudo comando` | Ejecuta con permisos de administrador |
+
+## Instalar programas
+
+| Distribución | Comando |
+| --- | --- |
+| Debian, Ubuntu | `sudo apt update` y `sudo apt install paquete` |
+| Fedora | `sudo dnf install paquete` |
+| Arch | `sudo pacman -S paquete` |
+| macOS (Homebrew) | `brew install paquete` |
+
+## Para ir más a fondo
+
+- [Manual de referencia de Bash](https://www.gnu.org/software/bash/manual/bash.html)
+- [Manual de grep (man7.org)](https://man7.org/linux/man-pages/man1/grep.1.html)
+- Hoja de AyudaDev: [Permisos y procesos en Linux](/hojas/permisos-y-procesos-linux/)
+- Biblioteca: [libros y cursos de Linux y terminal](/biblioteca/linux/)

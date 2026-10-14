@@ -1,0 +1,327 @@
+---
+titulo: 'React desde cero'
+descripcion: 'Qué es React, cómo crear un proyecto con Vite y cómo construir una lista de tareas con componentes, estado, efectos y un hook propio, paso a paso.'
+tema: react
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['react-documentacion-oficial-aprende', 'react-tutorial-tres-en-raya', 'react-pensar-en-react', 'react-full-stack-open-parte-1']
+requisitos: ['Saber JavaScript moderno (funciones flecha, map, desestructuración)', 'Tener Node.js instalado y saber usar la terminal']
+etiquetas: ['componentes', 'hooks', 'jsx', 'vite', 'frontend']
+orden: 50
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+React es una librería de JavaScript para construir interfaces de usuario. Describes cómo debe verse la pantalla para un estado dado y React se encarga de actualizarla cuando ese estado cambia. En esta guía creas un proyecto y construyes, pieza por pieza, una lista de tareas con estado, efectos y almacenamiento local.
+
+## Qué es y para qué sirve
+
+Este es el modelo mental que te ahorrará confusión:
+
+- **Interfaz como función del estado.** Tu pantalla es el resultado de una función: le das datos (estado y props) y devuelve lo que debe mostrarse. Cuando los datos cambian, React vuelve a ejecutar esa función y actualiza solo lo que cambió.
+- **Componentes.** Una interfaz se divide en piezas reutilizables. Un componente es una función cuyo nombre empieza con mayúscula y que devuelve JSX.
+- **JSX.** Es una sintaxis que parece HTML dentro de JavaScript. Con llaves insertas expresiones: `{nombre}`. No es HTML: escribes `className` en lugar de `class` y cierras todas las etiquetas.
+- **Props: datos que bajan.** Un componente padre pasa datos a sus hijos con atributos. Los hijos las leen pero no las modifican. Si un hijo necesita avisar al padre, recibe una función por props.
+- **Estado: datos que cambian.** Con `useState` un componente recuerda valores entre renderizados. Cambiar el estado vuelve a ejecutar el componente.
+- **Hooks.** Son funciones que empiezan con `use` (`useState`, `useEffect`, `useRef`...) y solo se llaman en el nivel superior de un componente o de otro hook, nunca dentro de condiciones o bucles.
+- **Efectos.** `useEffect` sincroniza tu componente con algo externo a React: el título del documento, el almacenamiento del navegador, un temporizador, una conexión.
+- **React es solo la capa de interfaz.** El enrutamiento, la obtención de datos y la compilación los resuelves con otras herramientas. Para empezar se usa Vite, y para proyectos completos existen frameworks construidos sobre React.
+
+## Instálalo y corre tu primer archivo
+
+React no se instala solo: se usa dentro de un proyecto con una herramienta de compilación. Aquí usamos Vite, que arranca rápido y es la opción sencilla para aprender.
+
+<Pasos>
+
+1. **Instala Node.js (versión LTS)** desde [nodejs.org](https://nodejs.org/). En **Windows** también sirve `winget install OpenJS.NodeJS.LTS`; en **macOS**, `brew install node`; en **Linux**, [nvm](https://github.com/nvm-sh/nvm) con `nvm install --lts`. Comprueba con `node -v` y `npm -v`.
+2. **Crea el proyecto.** En una terminal ejecuta `npm create vite@latest mi-app -- --template react`. Crea una carpeta `mi-app` con una app de React lista.
+3. **Instala las dependencias.** Entra con `cd mi-app` y ejecuta `npm install`.
+4. **Arranca el servidor de desarrollo** con `npm run dev`. La terminal muestra una dirección local, normalmente `http://localhost:5173`. Ábrela en tu navegador.
+5. **Edita `src/App.jsx`.** Reemplaza todo su contenido por el código del ejemplo 1 y guarda. La página se actualiza sola, sin recargar.
+6. **Para publicar**, `npm run build` genera la carpeta `dist` con los archivos finales.
+
+</Pasos>
+
+Los archivos importantes son `index.html` (la página base), `src/main.jsx` (donde React se monta en la página) y `src/App.jsx` (tu primer componente). Todos los componentes de esta guía van en la carpeta `src`.
+
+## Ejemplos paso a paso
+
+Vas a construir una lista de tareas. Cada ejemplo agrega una pieza. Crea los archivos con los nombres indicados dentro de `src` y mantén `npm run dev` corriendo para ver los cambios al instante.
+
+<Ejemplo numero={1} titulo="Componentes, JSX y props" archivo="src/Saludo.jsx y src/App.jsx" ejecutar="npm run dev" salida="Se ve un título con el texto: Hola, Ana (estudiante)">
+
+Crea `src/Saludo.jsx`:
+
+```jsx
+// Un componente es una función que devuelve JSX
+export default function Saludo({ nombre, rol = 'estudiante' }) {
+  return (
+    <h1>
+      Hola, {nombre} ({rol})
+    </h1>
+  );
+}
+```
+
+Y reemplaza `src/App.jsx` por:
+
+```jsx
+import Saludo from './Saludo.jsx';
+
+export default function App() {
+  return <Saludo nombre="Ana" />;
+}
+```
+
+`Saludo` recibe un objeto de props y lo desestructura en los parámetros. `rol` tiene un valor por defecto, así que si no lo pasas aparece "estudiante". Las llaves dentro del JSX insertan valores. Para usar el componente lo escribes como una etiqueta, con la primera letra en mayúscula para que React lo distinga de una etiqueta HTML. Si pasas `rol="docente"` verás "Hola, Ana (docente)".
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Listas con map, key y funciones por props" archivo="src/ListaTareas.jsx" ejecutar="npm run dev" salida="Se ven dos casillas: Aprender React (tachada y marcada) y Crear mi app (sin marcar)">
+
+Crea `src/ListaTareas.jsx`:
+
+```jsx
+// Renderizar una lista: cada elemento necesita una key estable
+export default function ListaTareas({ tareas, onAlternar }) {
+  if (tareas.length === 0) {
+    return <p>No hay tareas. ¡Agrega la primera!</p>;
+  }
+
+  return (
+    <ul>
+      {tareas.map((tarea) => (
+        <li key={tarea.id}>
+          <label>
+            <input
+              type="checkbox"
+              checked={tarea.hecha}
+              onChange={() => onAlternar(tarea.id)}
+            />
+            {tarea.hecha ? <s>{tarea.texto}</s> : tarea.texto}
+          </label>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Para probarlo, usa temporalmente este `src/App.jsx`:
+
+```jsx
+import ListaTareas from './ListaTareas.jsx';
+
+const tareas = [
+  { id: 1, texto: 'Aprender React', hecha: true },
+  { id: 2, texto: 'Crear mi app', hecha: false },
+];
+
+export default function App() {
+  return <ListaTareas tareas={tareas} onAlternar={() => {}} />;
+}
+```
+
+`map` convierte cada tarea en un `<li>`. La `key` le dice a React qué elemento es cuál cuando la lista cambia, y debe ser un identificador único y estable (no el índice si la lista se reordena o se borra). Fíjate en `onAlternar`: el componente no puede modificar la lista porque las props son de solo lectura, así que recibe una función del padre y la llama cuando el usuario marca una casilla. Es el patrón para que un hijo avise a su padre. Aquí le pasamos una función vacía; todavía no hay estado para cambiar.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Estado con useState" archivo="src/Contador.jsx" ejecutar="npm run dev" salida={'Texto "Clics: 0". Después de pulsar Sumar dos veces: "Clics: 2". Después de Reiniciar: "Clics: 0"'}>
+
+```jsx
+import { useState } from 'react';
+
+export default function Contador() {
+  // [valor, función para cambiarlo] = useState(valorInicial)
+  const [cuenta, setCuenta] = useState(0);
+
+  return (
+    <div>
+      <p>Clics: {cuenta}</p>
+      <button onClick={() => setCuenta(cuenta + 1)}>Sumar</button>
+      <button onClick={() => setCuenta(0)}>Reiniciar</button>
+    </div>
+  );
+}
+```
+
+Para verlo, importa `Contador` desde `App.jsx` y devuélvelo. `useState(0)` devuelve un par: el valor actual y una función para cambiarlo. Llamar a `setCuenta` guarda el nuevo valor y vuelve a ejecutar el componente con él, por eso el texto se actualiza. Una variable normal (`let cuenta = 0`) no funcionaría: React no sabría que cambió y perdería el valor en cada ejecución. Los manejadores de eventos (`onClick`) reciben una función, no el resultado de llamarla.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Formulario controlado y estado compartido" archivo="src/FormularioTarea.jsx y src/App.jsx" ejecutar="npm run dev" salida={'Escribes "Aprender React" y pulsas Agregar: aparece en la lista y el contador dice "Pendientes: 1". El campo queda vacío.'}>
+
+Crea `src/FormularioTarea.jsx`:
+
+```jsx
+import { useState } from 'react';
+
+export default function FormularioTarea({ onAgregar }) {
+  const [texto, setTexto] = useState('');
+
+  function enviar(evento) {
+    evento.preventDefault(); // evita recargar la página
+    const limpio = texto.trim();
+    if (limpio === '') return;
+    onAgregar(limpio);
+    setTexto('');
+  }
+
+  return (
+    <form onSubmit={enviar}>
+      <input
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        placeholder="Nueva tarea"
+      />
+      <button type="submit">Agregar</button>
+    </form>
+  );
+}
+```
+
+Ahora `src/App.jsx` junta todo y guarda la lista en su propio estado:
+
+```jsx
+import { useState } from 'react';
+import FormularioTarea from './FormularioTarea.jsx';
+import ListaTareas from './ListaTareas.jsx';
+
+export default function App() {
+  const [tareas, setTareas] = useState([]);
+
+  const pendientes = tareas.filter((t) => !t.hecha).length;
+
+  function agregar(texto) {
+    setTareas([...tareas, { id: Date.now(), texto, hecha: false }]);
+  }
+
+  function alternar(id) {
+    setTareas(tareas.map((t) => (t.id === id ? { ...t, hecha: !t.hecha } : t)));
+  }
+
+  return (
+    <main>
+      <h1>Mis tareas</h1>
+      <FormularioTarea onAgregar={agregar} />
+      <ListaTareas tareas={tareas} onAlternar={alternar} />
+      <p>Pendientes: {pendientes}</p>
+    </main>
+  );
+}
+```
+
+En un formulario controlado, el valor del campo vive en el estado (`value={texto}`) y cada tecla lo actualiza con `onChange`. El estado de las tareas vive en `App`, el ancestro común, y baja a los hijos por props mientras las funciones `agregar` y `alternar` suben los cambios. Nunca modificamos el arreglo: creamos uno nuevo con el operador de propagación (`...`) o con `map`. `pendientes` no es estado: se calcula en cada render a partir de `tareas`, así nunca queda desincronizado. En una aplicación real usarías un identificador mejor que `Date.now()`, por ejemplo `crypto.randomUUID()`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Efectos con useEffect" archivo="src/App.jsx" ejecutar="npm run dev" salida={'El título de la pestaña del navegador cambia: "Pendientes: 0", luego "Pendientes: 2" al agregar dos tareas y "Pendientes: 1" al marcar una.'}>
+
+Agrega el efecto a `App.jsx` (importa también `useEffect`):
+
+```jsx
+import { useEffect, useState } from 'react';
+// ...mismas importaciones de antes
+
+export default function App() {
+  const [tareas, setTareas] = useState([]);
+  const pendientes = tareas.filter((t) => !t.hecha).length;
+
+  // Efecto: sincroniza el título de la pestaña con el estado
+  useEffect(() => {
+    document.title = `Pendientes: ${pendientes}`;
+  }, [pendientes]);
+
+  // ...agregar, alternar y el JSX quedan igual
+}
+```
+
+El título del documento vive fuera de React, así que lo sincronizamos con un efecto. `useEffect` recibe una función que corre después de pintar la pantalla, y un arreglo de dependencias: el efecto se vuelve a ejecutar solo cuando cambia algo de esa lista. Con `[]` correría una sola vez; sin arreglo, tras cada render. Si tu efecto abre algo que hay que cerrar (un temporizador, una suscripción), devuelve desde la función otra función de limpieza. Antes de escribir un efecto, pregúntate si lo puedes calcular durante el render, como hicimos con `pendientes`; muchas veces no hace falta.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un hook propio para guardar en localStorage" archivo="src/useLocalStorage.js y src/App.jsx" ejecutar="npm run dev" salida={'Agregas dos tareas y marcas la primera. En localStorage (pestaña Aplicación de las herramientas de desarrollo) queda: [{"texto":"Aprender React","hecha":true},{"texto":"Crear mi app","hecha":false}] con un id numérico en cada una. Al recargar la página, las tareas siguen ahí.'}>
+
+Crea `src/useLocalStorage.js`:
+
+```js
+import { useEffect, useState } from 'react';
+
+// Un hook propio: useState que además se guarda en localStorage
+export default function useLocalStorage(clave, inicial) {
+  const [valor, setValor] = useState(() => {
+    const guardado = localStorage.getItem(clave);
+    return guardado ? JSON.parse(guardado) : inicial;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(clave, JSON.stringify(valor));
+  }, [clave, valor]);
+
+  return [valor, setValor];
+}
+```
+
+Y en `App.jsx` cambia la línea del estado:
+
+```jsx
+import useLocalStorage from './useLocalStorage.js';
+
+// Antes: const [tareas, setTareas] = useState([]);
+const [tareas, setTareas] = useLocalStorage('tareas', []);
+```
+
+Un hook propio es una función cuyo nombre empieza con `use` y que usa otros hooks dentro. Sirve para reutilizar lógica con estado. Este usa la forma perezosa de `useState`: pasar una función como valor inicial hace que se ejecute una sola vez, al montar, para leer lo guardado. Cada vez que `valor` cambia, el efecto lo escribe en `localStorage`. En `App` el cambio es de una línea, porque el hook devuelve el mismo par que `useState`. Ya tienes una aplicación pequeña con componentes, estado, efectos y persistencia.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Modificar el estado en lugar de reemplazarlo">
+Si haces `tareas.push(nueva); setTareas(tareas)`, React ve el mismo arreglo y no vuelve a renderizar, así que la pantalla no cambia. Crea siempre un valor nuevo: `setTareas([...tareas, nueva])` para agregar, `filter` para quitar, `map` para cambiar. Lo mismo vale para los objetos: `setUsuario({ ...usuario, edad: 31 })`.
+</Callout>
+
+<Callout tipo="warning" titulo='Warning: Each child in a list should have a unique "key" prop'>
+Es el aviso que ves en la consola cuando haces `map` y no pones `key`. Usa un identificador único y estable de tus datos. Evita el índice del arreglo si la lista se puede reordenar o borrar, porque React puede mezclar el estado de elementos distintos.
+</Callout>
+
+<Callout tipo="warning" titulo="Too many re-renders">
+Si escribes `onClick={setN(1)}`, estás llamando a la función al renderizar, no al hacer clic. Eso cambia el estado, provoca otro render, y se repite hasta que React se detiene con "Too many re-renders. React limits the number of renders to prevent an infinite loop". Pasa una función: `onClick={() => setN(1)}`. Un efecto sin arreglo de dependencias que cambia el estado causa el mismo bucle.
+</Callout>
+
+<Callout tipo="warning" titulo="Sumar dos veces con el mismo valor viejo">
+Dentro de un manejador, `setN(n + 1); setN(n + 1);` solo suma uno, porque ambas llamadas usan el valor de `n` de ese render. Cuando el nuevo valor depende del anterior, pasa una función: `setN((v) => v + 1)` dos veces suma dos. El estado se actualiza en el siguiente render, no al instante.
+</Callout>
+
+<Callout tipo="warning" titulo="Rendered more hooks than during the previous render">
+Los hooks deben ejecutarse siempre en el mismo orden. Si pones un `useState` dentro de un `if`, un bucle o después de un `return` anticipado, React falla con "Rendered more hooks than during the previous render". Llama a todos los hooks en el nivel superior del componente y decide después qué devolver.
+</Callout>
+
+## Buenas prácticas
+
+- Piensa primero en componentes pequeños con una sola responsabilidad. El tutorial oficial [Pensar en React](https://es.react.dev/learn/thinking-in-react) explica cómo dividir una interfaz.
+- Guarda en el estado lo mínimo y calcula lo demás durante el render, como hicimos con `pendientes`.
+- Sube el estado al ancestro común más cercano cuando dos componentes necesiten el mismo dato.
+- No modifiques estado ni props: copia y reemplaza.
+- Usa efectos solo para sincronizar con algo externo a React. Si dudas, lee [Puede que no necesites un efecto](https://es.react.dev/learn/you-might-not-need-an-effect).
+- Pon una `key` única y estable en cada elemento de una lista.
+- Deja el modo estricto (`StrictMode`) activado en `main.jsx`: en desarrollo ejecuta algunas cosas dos veces para ayudarte a encontrar errores.
+- Instala el linter que trae la plantilla y no lo ignores; detecta hooks mal usados.
+
+## Siguiente paso
+
+Ya construiste una aplicación con los cuatro conceptos centrales de React. Lo que sigue:
+
+- **Practica con el tutorial oficial.** El [tres en raya de la documentación](https://es.react.dev/learn/tutorial-tic-tac-toe) refuerza estado, props y listas con otro proyecto.
+- **Refuerza el JavaScript.** Si algo del código te costó, vuelve a [JavaScript desde cero](/guias/javascript/) y a [HTML y CSS desde cero](/guias/html-css/) para los estilos.
+- **Agrega tipos.** [TypeScript desde cero](/guias/typescript/) te ayuda a describir las props de cada componente y a detectar errores antes de ejecutar.
+- **Conecta con un servidor.** Pide datos a una API creada con [Node.js](/guias/nodejs/) para que tus tareas vivan en una base de datos.
+- **Compara enfoques.** [Angular](/guias/angular/), [Qwik](/guias/qwik/) y [Astro](/guias/astro/) resuelven los mismos problemas de otra forma, y ver las diferencias te enseña qué es general y qué es de React.
+- **Explora la biblioteca.** Todos los recursos de [React](/biblioteca/react/) son gratuitos, y varios están en español.
+- **Guarda tu progreso.** Con [Git y GitHub](/guias/git/) puedes subir tu proyecto y mostrarlo en tu portafolio.
+
+<LibrosRecomendados ids={frontmatter.libros} />

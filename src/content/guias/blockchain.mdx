@@ -1,0 +1,287 @@
+---
+titulo: 'Blockchain desde cero'
+descripcion: 'Entiende hashes, bloques, prueba de trabajo, firmas y contratos inteligentes con ejemplos en Node.js y Solidity, sin hablar de inversiones. Educación técnica.'
+tema: blockchain
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['blockchain-ethereum-docs-desarrolladores', 'blockchain-cryptozombies', 'blockchain-mastering-bitcoin', 'blockchain-demo-anders-brownworth']
+requisitos: ['Saber JavaScript básico: funciones, ciclos y objetos', 'Saber usar una terminal básica']
+etiquetas: ['blockchain', 'hash', 'sha-256', 'prueba-de-trabajo', 'solidity', 'ethereum']
+orden: 15
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Una blockchain (cadena de bloques) es un registro de datos que muchas computadoras mantienen a la vez, sin que una sola persona o empresa lo controle. Los datos se agrupan en bloques; cada bloque guarda una huella (un *hash*) del bloque anterior, así que cambiar algo del pasado obliga a rehacer todos los bloques siguientes. Esa idea técnica nació con Bitcoin y hoy se usa también en redes como Ethereum, que además permiten ejecutar programas llamados contratos inteligentes.
+
+<Callout tipo="info" titulo="Esta guía es educación técnica">
+
+Aquí aprendes cómo funcionan los hashes, las firmas, los bloques y los contratos. No hablaremos de comprar, vender ni invertir en criptomonedas, y nada de lo que leas aquí es asesoría financiera. Todo se practica con código y con redes de pruebas, que no tienen valor real.
+
+</Callout>
+
+Lo que necesitas tener claro:
+
+- **Un hash es una huella digital de los datos**: una función como SHA-256 convierte cualquier texto en 64 caracteres hexadecimales. El mismo texto da siempre el mismo hash, y un cambio mínimo da uno totalmente distinto. No se puede volver del hash al texto.
+- **Los bloques se encadenan con hashes**: cada bloque incluye el hash del anterior. Si alteras un dato, el hash cambia y el siguiente bloque deja de coincidir.
+- **El consenso decide qué cadena es la válida**: como nadie manda, la red necesita reglas para ponerse de acuerdo. Bitcoin usa prueba de trabajo, donde minar un bloque exige mucho cómputo. Ethereum usa prueba de participación (*proof of stake*), donde los validadores aportan una garantía.
+- **Las claves y las firmas prueban quién eres**: tu clave privada firma mensajes y cualquiera puede verificar la firma con tu clave pública. Quien tiene la clave privada controla la cuenta, y si la pierdes o la compartes, no hay a quién reclamar.
+- **Una billetera (wallet) guarda tus claves**: no guarda "monedas"; guarda las claves con las que firmas transacciones en la red.
+- **Los contratos inteligentes son programas en la cadena**: en Ethereum se escriben en lenguajes como Solidity. Una vez desplegados, nadie puede cambiar su código y cualquiera puede llamarlos.
+- **Todo es público y casi irreversible**: lo que se escribe en una cadena pública puede leerlo cualquiera y no se borra.
+- **No es la mejor base de datos para todo**: es lenta y cara comparada con una base de datos normal. Sirve cuando varias partes que no confían entre sí necesitan un registro compartido.
+
+## Prepara tu entorno
+
+<Pasos>
+
+1. **Node.js**: descarga la versión LTS desde [nodejs.org](https://nodejs.org/es) e instálala. Funciona igual en Windows, macOS y Linux. Comprueba con `node -v`; debe mostrar una versión.
+2. Crea una carpeta `blockchain-practicas` y guarda dentro los archivos de los ejemplos 1 a 5. Los ejecutas con `node archivo.js`; no necesitas instalar paquetes porque el módulo `crypto` ya viene con Node.
+3. **Remix**: para el ejemplo del contrato abre [remix.ethereum.org](https://remix.ethereum.org/) en tu navegador. Es un editor de Solidity en línea con una cadena simulada integrada, así que no necesitas instalar nada ni usar una billetera para empezar.
+4. **Billetera en una red de pruebas** (opcional): si quieres desplegar en una red pública de pruebas, instala una billetera de navegador. La página [de billeteras de ethereum.org](https://ethereum.org/es/wallets/) lista varias. Crea una cuenta **solo para pruebas**, apunta su frase de recuperación en papel y no la compartas con nadie.
+5. **Una red de pruebas**: en [la página de redes de ethereum.org](https://ethereum.org/es/developers/docs/networks/) verás cuáles están vigentes; ahí se recomienda Sepolia para probar aplicaciones. Esas redes tienen "grifos" (*faucets*) que regalan monedas de prueba sin valor real.
+6. Nunca uses tu cuenta personal con fondos reales para practicar. Usa una cuenta nueva solo para pruebas.
+
+</Pasos>
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hashes con SHA-256" archivo="hash.js" ejecutar="node hash.js" salida="b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79
+e633f4fc79badea1dc5db970cf397c8248bac47cc3acf9915ba60b5d76b0e88f
+b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79
+64">
+
+```js
+const crypto = require('crypto');
+
+// SHA-256 devuelve siempre 64 caracteres hexadecimales (256 bits)
+const sha256 = (texto) => crypto.createHash('sha256').update(texto).digest('hex');
+
+console.log(sha256('hola'));
+console.log(sha256('Hola'));          // una letra distinta cambia todo
+console.log(sha256('hola'));          // mismo texto, mismo hash
+console.log(sha256('hola').length);
+```
+
+`createHash` crea el calculador, `update` le da los datos y `digest('hex')` entrega el resultado en hexadecimal. Fíjate en las líneas 1 y 2: cambiar solo la mayúscula de la primera letra produce un hash que no se parece en nada. La línea 3 repite el texto de la 1 y da exactamente el mismo hash. Esta propiedad (determinista, pero impredecible) es la base de todo lo demás.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Una mini blockchain con prueba de trabajo" archivo="cadena.js" ejecutar="node cadena.js" salida="#0 nonce=4926 hash=000cbfbf0635eda3... anterior=0
+#1 nonce=7215 hash=0000011507d659e7... anterior=000cbfbf
+#2 nonce=866 hash=0004124dc65d1b39... anterior=00000115
+¿Cadena válida? true
+¿Cadena válida tras alterar un dato? false">
+
+```js
+const crypto = require('crypto');
+const sha256 = (t) => crypto.createHash('sha256').update(t).digest('hex');
+const DIFICULTAD = 3;                         // el hash debe empezar con "000"
+const OBJETIVO = '0'.repeat(DIFICULTAD);
+
+function calcularHash(b) {
+  return sha256(b.indice + b.anterior + b.fecha + JSON.stringify(b.datos) + b.nonce);
+}
+
+function minar(bloque) {
+  while (!bloque.hash.startsWith(OBJETIVO)) {  // prueba de trabajo: busca un nonce válido
+    bloque.nonce++;
+    bloque.hash = calcularHash(bloque);
+  }
+  return bloque;
+}
+
+function crearBloque(indice, anterior, datos) {
+  // la fecha es fija para que el resultado sea siempre el mismo
+  const bloque = { indice, anterior, fecha: 1760000000 + indice, datos, nonce: 0, hash: '' };
+  bloque.hash = calcularHash(bloque);
+  return minar(bloque);
+}
+
+function esValida(cadena) {
+  for (let i = 0; i < cadena.length; i++) {
+    const b = cadena[i];
+    if (b.hash !== calcularHash(b)) return false;            // datos alterados
+    if (!b.hash.startsWith(OBJETIVO)) return false;          // sin prueba de trabajo
+    if (i > 0 && b.anterior !== cadena[i - 1].hash) return false; // enlace roto
+  }
+  return true;
+}
+
+const cadena = [crearBloque(0, '0', 'bloque génesis')];
+cadena.push(crearBloque(1, cadena[0].hash, { de: 'Ana', a: 'Luis', cantidad: 5 }));
+cadena.push(crearBloque(2, cadena[1].hash, { de: 'Luis', a: 'Sara', cantidad: 2 }));
+
+for (const b of cadena) {
+  console.log(`#${b.indice} nonce=${b.nonce} hash=${b.hash.slice(0, 16)}... anterior=${b.anterior.slice(0, 8)}`);
+}
+console.log('¿Cadena válida?', esValida(cadena));
+
+cadena[1].datos.cantidad = 500;               // alguien intenta cambiar el pasado
+console.log('¿Cadena válida tras alterar un dato?', esValida(cadena));
+```
+
+Cada bloque tiene un índice, el hash del bloque anterior, una fecha, los datos y un `nonce`, un número que se va probando. Minar es repetir el cálculo del hash con un `nonce` distinto hasta que el resultado empiece con tres ceros. Eso se llama prueba de trabajo: encontrar el `nonce` cuesta muchos intentos, pero verificarlo cuesta uno solo. Al final alteramos una cantidad del bloque 1: su hash ya no coincide, y la validación falla. Para cambiar el pasado tendrías que volver a minar ese bloque y todos los siguientes. Con otra dificultad o con otra fecha los números de `nonce` cambiarán; con los valores de este ejemplo siempre son estos.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Firmar y verificar un mensaje" archivo="firma.js" ejecutar="node firma.js" salida="Firma válida: true
+Mensaje alterado: false">
+
+```js
+const crypto = require('crypto');
+
+// Par de claves en la curva secp256k1, la misma que usan Bitcoin y Ethereum
+const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'secp256k1' });
+
+const mensaje = 'Ana paga 5 a Luis';
+const firma = crypto.sign('sha256', Buffer.from(mensaje), privateKey);
+
+console.log('Firma válida:', crypto.verify('sha256', Buffer.from(mensaje), publicKey, firma));
+console.log('Mensaje alterado:', crypto.verify('sha256', Buffer.from('Ana paga 500 a Luis'), publicKey, firma));
+```
+
+Se genera un par de claves distinto cada vez que corres el programa, pero el resultado siempre es el mismo. La clave privada firma el mensaje y la pública permite a cualquiera comprobar que la firma es auténtica sin conocer la privada. Si alguien cambia aunque sea una letra del mensaje, la verificación falla. Así una red sabe que una transacción la autorizó el dueño de la cuenta. Nunca escribas tu clave privada en un archivo ni la compartas; este ejemplo la usa solo en memoria.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Árbol de Merkle" archivo="merkle.js" ejecutar="node merkle.js" salida="Raíz: d15bb60796cc5ad4...
+Raíz nueva: 668a4f56dac5c296...">
+
+```js
+const crypto = require('crypto');
+const sha256 = (t) => crypto.createHash('sha256').update(t).digest('hex');
+
+// Raíz de Merkle: se juntan los hashes de dos en dos hasta quedar uno solo
+function raizMerkle(transacciones) {
+  let nivel = transacciones.map(sha256);
+  while (nivel.length > 1) {
+    const siguiente = [];
+    for (let i = 0; i < nivel.length; i += 2) {
+      const derecho = nivel[i + 1] ?? nivel[i];   // si sobra uno, se duplica
+      siguiente.push(sha256(nivel[i] + derecho));
+    }
+    nivel = siguiente;
+  }
+  return nivel[0];
+}
+
+const txs = ['Ana->Luis:5', 'Luis->Sara:2', 'Sara->Ana:1', 'Ana->Sara:3'];
+console.log('Raíz:', raizMerkle(txs).slice(0, 16) + '...');
+
+txs[2] = 'Sara->Ana:100';                          // cambia una sola transacción
+console.log('Raíz nueva:', raizMerkle(txs).slice(0, 16) + '...');
+```
+
+Un bloque real puede tener muchas transacciones. En lugar de hacer el hash de todas juntas, se organizan en un árbol: se calcula el hash de cada una, luego el de cada par, y así hasta tener un único hash, la raíz. Esa raíz resume todas las transacciones, y cambiar una sola altera la raíz completa, como muestra la segunda línea. Además permite demostrar que una transacción está en el bloque enviando solo unos pocos hashes. Esta versión es didáctica: las redes reales definen con precisión cómo se codifican los datos antes de hacer el hash.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Calcular con números grandes: BigInt" archivo="bigint.js" ejecutar="node bigint.js" salida="9007199254740992
+9007199254740993n
+1000000000000000000n">
+
+```js
+// Los números normales de JavaScript pierden precisión con enteros muy grandes
+console.log(9007199254740992 + 1);        // el sumando se pierde
+console.log(9007199254740992n + 1n);      // BigInt guarda el valor exacto
+
+// En Ethereum las cantidades se guardan como enteros muy grandes (unidades mínimas),
+// nunca con decimales. Aquí, un millón de millones de millones:
+const unidad = 10n ** 18n;
+console.log(unidad);
+```
+
+Las redes de contratos inteligentes trabajan con enteros enormes y no tienen números con decimales, porque los decimales dan resultados impredecibles. En JavaScript, los números normales solo son exactos hasta cierto tamaño; para cantidades grandes se usa `BigInt`, que se escribe con una `n` al final. En el ejemplo, sumar 1 a un número grande con el tipo normal no cambia nada, mientras que con `BigInt` sí. La consola muestra una `n` al final de los BigInt para distinguirlos. Esto te servirá cuando leas cantidades desde un contrato con librerías como ethers o viem.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un contrato inteligente mínimo en Solidity" archivo="Contador.sol">
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contador {
+    uint256 public valor;          // variable de estado: se guarda en la cadena
+    address public dueno;          // quién creó el contrato
+
+    event ValorCambiado(address indexed quien, uint256 nuevoValor);
+
+    constructor() {
+        dueno = msg.sender;        // se ejecuta una sola vez, al desplegar
+    }
+
+    function incrementar() public {
+        valor += 1;
+        emit ValorCambiado(msg.sender, valor);
+    }
+
+    function reiniciar() public {
+        require(msg.sender == dueno, "Solo el dueno puede reiniciar");
+        valor = 0;
+        emit ValorCambiado(msg.sender, valor);
+    }
+}
+```
+
+Este ejemplo no se ejecuta con Node: se prueba en Remix. Pega el código en un archivo `Contador.sol`, compílalo, y en la pestaña de despliegue elige el entorno simulado de Remix para desplegar y llamar a las funciones sin gastar nada. La primera línea es la licencia y `pragma` fija las versiones del compilador que aceptan el código. `valor` es una variable de estado que vive en la cadena, y al declararla `public` Solidity crea sola una función para leerla. `msg.sender` es la cuenta que llama la función. `require` revierte la transacción con un mensaje si la condición no se cumple. `emit` lanza un evento, un registro que las aplicaciones pueden escuchar. Cada vez que cambias el estado se necesita una transacción firmada, y en una red real esa transacción cuesta comisión; por eso practica en redes simuladas o de pruebas.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Compartir tu clave privada o tu frase de recuperación">
+
+Quien tenga tu clave privada o tu frase de recuperación controla tu cuenta, y las transacciones no se pueden revertir. Ninguna persona o servicio legítimo te la pedirá. No la guardes en capturas de pantalla, en correos ni en repositorios de código. Para practicar usa una cuenta de pruebas distinta de cualquier cuenta con fondos reales.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Confundir la red principal con una red de pruebas">
+
+Tu billetera puede conectarse a varias redes, y las de prueba y la principal se ven parecidas. Antes de firmar una transacción revisa el nombre de la red. En la red principal las transacciones tienen un costo real, y en las de pruebas las monedas no valen nada. Para aprender, quédate en las de pruebas o en el entorno simulado de Remix.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Guardar datos privados en una cadena pública">
+
+Todo lo que se escribe en una cadena pública puede leerlo cualquiera y no se puede borrar, aunque la variable se llame `private` en Solidity: esa palabra solo impide que otros contratos la lean, no que tú o cualquiera lea el almacenamiento. Nunca pongas contraseñas, datos personales ni secretos en un contrato o en una transacción.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Pensar que un hash es cifrado">
+
+Un hash no se puede "descifrar", pero tampoco guarda tu información para recuperarla: es una huella de un solo sentido. Si hasheas algo con pocas posibilidades, como un PIN de cuatro dígitos, un atacante puede probar todas las combinaciones. Para guardar contraseñas se usan funciones diseñadas para ser lentas, no un SHA-256 simple.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Desplegar un contrato sin probarlo">
+
+Un contrato desplegado no se puede editar, y un error de lógica puede dejar fondos o datos atrapados o expuestos. Escribe pruebas, ejecútalas en el entorno simulado y en una red de pruebas, y no uses código que no entiendes. Las bibliotecas auditadas, como las de OpenZeppelin, te evitan reinventar partes delicadas.
+
+</Callout>
+
+## Buenas prácticas
+
+- Practica siempre con el entorno simulado de Remix o con una red de pruebas, y nunca con una cuenta que tenga fondos reales.
+- Mantén tu clave privada y tu frase de recuperación fuera de tu código y de tus repositorios; usa variables de entorno si un programa las necesita.
+- Revisa el nombre de la red antes de firmar cualquier transacción.
+- Usa `BigInt` en JavaScript para cantidades grandes, y enteros en Solidity: no existen los números decimales.
+- Escribe pruebas automáticas para tus contratos con herramientas como Hardhat o Foundry.
+- Usa bibliotecas auditadas en lugar de reescribir funciones delicadas.
+- Lee la documentación oficial de Solidity de la versión del compilador que uses, porque el lenguaje cambia entre versiones.
+- Desconfía de cualquier proyecto que prometa ganancias: aprende la tecnología por su valor técnico.
+
+## Siguiente paso
+
+Ya sabes qué hace un hash, cómo se encadenan los bloques, qué es la prueba de trabajo, cómo se firma y cómo luce un contrato. Para profundizar, completa el curso interactivo de CryptoZombies, despliega tu `Contador` en una red de pruebas y escribe una pequeña página web que lo llame con una biblioteca como ethers o viem. Después estudia estándares de contratos comunes y herramientas como Hardhat o Foundry.
+
+Combínalo con [JavaScript desde cero](/guias/javascript/) para el lado web y con [Git y GitHub desde cero](/guias/git/) para guardar tus prácticas. Todos los recursos están en [la biblioteca de Blockchain](/biblioteca/blockchain/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

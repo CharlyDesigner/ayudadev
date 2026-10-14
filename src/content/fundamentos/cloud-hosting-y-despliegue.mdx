@@ -1,0 +1,141 @@
+---
+titulo: 'Hosting, nube y despliegue: dónde vive tu sitio'
+descripcion: 'Qué es el hosting, qué significa la nube, la diferencia entre sitios estáticos y servidores, qué es desplegar y cómo preparar tu app para publicarla.'
+categoria: herramientas
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [git, docker, nodejs]
+etiquetas: [hosting, nube, despliegue, deploy, ci-cd, servidor]
+orden: 11
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Tu proyecto funciona en tu computadora. Abres `localhost` y se ve perfecto. Pero nadie más puede verlo, porque tu equipo no está pensado para estar encendido todo el día, con una dirección pública y protección contra ataques. Publicar tu proyecto significa ponerlo en una computadora que sí cumple eso. A ese proceso se le llama **desplegar**.
+
+## Qué es
+
+- **Hosting (alojamiento):** rentar espacio en una computadora conectada a internet las 24 horas donde vive tu sitio o tu app.
+- **Servidor:** esa computadora, o el programa que atiende las peticiones.
+- **La nube (cloud):** una forma de rentar recursos de cómputo (servidores, almacenamiento, redes) **bajo demanda**, normalmente por uso, en centros de datos de un proveedor. No es un lugar misterioso: son computadoras reales de otra empresa, que tú controlas por internet.
+- **Despliegue (deploy):** el proceso de llevar tu código desde tu equipo hasta el servidor, y dejarlo funcionando.
+
+La analogía: tu sitio es un negocio. Hacerlo en tu casa funciona para probar. Para recibir clientes, rentas un local. El **hosting** es el local. La **nube** es un centro comercial donde puedes rentar un puesto pequeño o un piso entero, y cambiar de tamaño cuando quieras. El **despliegue** es la mudanza.
+
+## Dos tipos de sitios, dos necesidades
+
+Antes de elegir dónde publicar, identifica qué tipo de proyecto tienes.
+
+### Sitios estáticos
+
+Son archivos que no cambian por visitante: HTML, CSS, JavaScript e imágenes. Un blog generado con una herramienta de sitios estáticos, un portafolio o una página de documentación entran aquí. Para publicarlos solo necesitas **servir archivos**.
+
+Es lo más barato y simple, y suele ser muy rápido porque los archivos se pueden copiar en servidores cercanos a los usuarios (una red de distribución de contenido o **CDN**).
+
+### Aplicaciones con servidor
+
+Si tu app tiene lógica en el servidor (iniciar sesión, guardar datos, hablar con una base de datos), necesitas un **programa corriendo todo el tiempo**: un servidor de Node.js, Python, PHP, etcétera. Además de eso, normalmente hay una base de datos y variables de configuración. Si no tienes claro el reparto de cada parte, lee [Frontend, backend y fullstack](/fundamentos/frontend-backend-y-fullstack/).
+
+## Opciones de hosting
+
+| Opción | Qué te da | Tú te encargas de | Ejemplos de tipo de servicio |
+| --- | --- | --- | --- |
+| Hosting de sitios estáticos | Publicar archivos con un comando o conectando tu repositorio | Solo del contenido | GitHub Pages, Netlify, Cloudflare Pages, Vercel |
+| Plataforma como servicio (PaaS) | Ejecutar tu app sin administrar el servidor | El código y la configuración | Render, Railway, Fly.io, Heroku |
+| Hosting compartido | Espacio en un servidor con muchos sitios, ideal para PHP y WordPress | El sitio, no el servidor | Hosting tradicional de proveedores de dominios |
+| Servidor virtual (VPS) | Una máquina virtual completa con acceso total | Todo: sistema, seguridad, actualizaciones | DigitalOcean, Hetzner, proveedores grandes de nube |
+| Nube de uso general | Cientos de servicios (cómputo, bases, colas, almacenamiento) | Diseñar y configurar la arquitectura | AWS, Google Cloud, Azure |
+
+Esa lista es un mapa de categorías, no un ranking ni una recomendación. Los planes, precios y límites cambian con frecuencia: revisa siempre la página oficial de cada proveedor antes de decidir.
+
+Una regla útil para empezar: **cuanto más administra el proveedor, menos control tienes y menos trabajo hacen falta**. Mientras aprendes, conviene elegir opciones donde casi todo está resuelto.
+
+## El camino del código a producción
+
+Un flujo moderno, sencillo y común:
+
+```text
+Tu equipo --> repositorio (Git) --> construcción automática --> servidor --> usuarios
+  código       historial y copia       build + pruebas            en vivo
+```
+
+1. Guardas tu código en un repositorio con Git ([guía de Git](/guias/git/)).
+2. Cada vez que subes cambios, un sistema automático **construye** el proyecto (instala dependencias, genera los archivos finales) y a veces **ejecuta pruebas** ([pruebas automáticas](/fundamentos/pruebas-automaticas/)).
+3. Si todo pasa, publica la nueva versión. A esto se le llama **integración y despliegue continuos** (CI/CD).
+
+Muchas plataformas ya lo hacen por ti: conectas el repositorio y cada `git push` publica el sitio.
+
+## Preparar tu app para desplegarla
+
+Una app que funciona en tu equipo no siempre funciona en un servidor. Estos puntos evitan los problemas más comunes.
+
+**1. Toma la configuración del entorno.** El puerto, las llaves y las direcciones cambian entre tu equipo y el servidor. No las escribas en el código. Lee de [variables de entorno](/fundamentos/variables-de-entorno/). Ejemplo en Node.js, guardado como `app.mjs`:
+
+```js
+// Una app lista para desplegar: toma el puerto del entorno
+import http from 'node:http';
+
+const puerto = process.env.PORT ?? 3000;
+
+http
+  .createServer((req, res) => {
+    if (req.url === '/salud') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ estado: 'ok' }));
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Hola desde el servidor');
+  })
+  .listen(puerto, () => console.log(`Escuchando en el puerto ${puerto}`));
+```
+
+Muchas plataformas te asignan el puerto mediante la variable `PORT`. La ruta `/salud` es una **comprobación de salud**: una URL sencilla para saber si la app está viva.
+
+**2. Declara cómo se construye y cómo se arranca.** Normalmente en `package.json` (`npm run build` y `npm start`) o en la configuración de la plataforma.
+
+**3. Usa HTTPS.** Las plataformas modernas suelen emitir certificados automáticamente. Si administras tu propio servidor, tendrás que configurarlo.
+
+**4. Conecta tu dominio.** Apuntas tu nombre al servidor con registros [DNS](/fundamentos/dns-y-dominios/).
+
+**5. Piensa en los datos.** Los discos de muchas plataformas son efímeros: si el servidor se reinicia, lo que guardaste en archivos locales puede desaparecer. Los datos importantes van en una base de datos o en un servicio de almacenamiento.
+
+
+<Callout tipo="tip" titulo="Contenedores: tu app empaquetada">
+Docker permite empacar tu app con todo lo que necesita para correr igual en tu equipo y en el servidor. Si el "en mi máquina sí funciona" te persigue, es una buena herramienta para aprender después. Mira la [biblioteca de Docker](/biblioteca/docker/).
+</Callout>
+
+## Pruébalo tú
+
+Verás qué significa servir un sitio y leer configuración del entorno, todo desde tu equipo.
+
+1. **Sirve una carpeta estática.** Crea una carpeta con un `index.html` sencillo, entra en ella y ejecuta un servidor de archivos. Con Python: `python -m http.server 8000`. Abre `http://localhost:8000`. Pide una ruta que no existe y verás un `404`, igual que en un hosting estático.
+2. **Ejecuta la app con puerto.** Guarda `app.mjs` y ejecútalo con el puerto por defecto: `node app.mjs`. Luego, en Linux o macOS, `PORT=4100 node app.mjs`. En PowerShell escribe `$env:PORT = 4100; node app.mjs`. Comprueba la respuesta con `curl http://localhost:4100/salud`, que debe devolver:
+
+```text
+{"estado":"ok"}
+```
+
+3. **Prueba el despliegue de un sitio estático de verdad.** Si tienes un repositorio en GitHub, activa GitHub Pages desde la configuración del repositorio y sigue su documentación oficial. Revisa en su documentación las condiciones y los costos vigentes.
+4. **Revisa qué es público.** Antes de publicar, busca en tu proyecto archivos con contraseñas o llaves. Si los encuentras, sácalos del código y revoca esas llaves.
+
+<Callout tipo="warning" titulo="Cuidado con lo que subes a producción">
+Nunca subas archivos `.env`, llaves de API ni contraseñas a un repositorio, mucho menos a uno público. Los robots rastrean repositorios todo el día buscando llaves. Si una llave se filtró, **revócala y crea una nueva**; borrar el archivo después no basta, porque queda en el historial. Activa límites de gasto o alertas de costo si usas una nube de uso general: un descuido puede generar una factura inesperada.
+</Callout>
+
+## Errores y mitos comunes
+
+- **"La nube siempre es más barata."** Depende del uso. Para un sitio pequeño suele serlo. Para cargas grandes y constantes, puede salir caro si no se vigila.
+- **"Despliego y listo, ya no tengo que hacer nada."** Hay que vigilar errores, renovar dominios, actualizar dependencias y revisar costos.
+- **"Funciona en mi equipo, entonces funcionará en producción."** Cambian versiones, variables, permisos y rutas. Prueba el flujo de construcción localmente.
+- **"Puedo guardar los archivos que suben mis usuarios en el disco del servidor."** En muchas plataformas ese disco no es permanente. Usa un servicio de almacenamiento.
+
+## Qué sigue
+
+- [Variables de entorno](/fundamentos/variables-de-entorno/): configuración y secretos fuera del código.
+- [DNS y dominios](/fundamentos/dns-y-dominios/): conecta tu dominio con tu servidor.
+- [Pruebas automáticas](/fundamentos/pruebas-automaticas/): lo que corre antes de publicar.
+- [Cómo funciona internet](/fundamentos/como-funciona-internet/) para repasar el camino de una visita.
+- [Guía de Git](/guias/git/), la [biblioteca de Docker](/biblioteca/docker/) y la [de Linux](/biblioteca/linux/) para administrar servidores.
+- [Glosario](/glosario/).

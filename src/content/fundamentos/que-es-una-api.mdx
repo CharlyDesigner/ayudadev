@@ -1,0 +1,190 @@
+---
+titulo: 'Qué es una API y cómo se usa'
+descripcion: 'Qué es una API, para qué sirve y cómo llamar a una API pública con fetch en JavaScript: peticiones, respuestas JSON, errores, llaves y buenas costumbres.'
+categoria: internet
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [javascript, nodejs]
+etiquetas: [api, fetch, json, http, javascript]
+orden: 4
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Quieres mostrar el clima en tu app, cobrar con tarjeta o dejar que alguien inicie sesión con su cuenta de otro servicio. No vas a construir todo eso desde cero. Lo que haces es **pedirle ayuda a otro programa**, y la forma de pedir se llama API.
+
+## Qué es
+
+API significa Application Programming Interface: una **interfaz para que un programa hable con otro**. No es una pantalla para personas, es una puerta con reglas para software.
+
+Piensa en un restaurante. Tú (el cliente) no entras a la cocina. Lees el menú, le pides al mesero y él te trae el platillo. El menú dice qué puedes pedir y cómo. La cocina puede cambiar por dentro y a ti no te afecta, mientras el menú siga igual.
+
+| Restaurante | API |
+| --- | --- |
+| El menú | La documentación de la API |
+| El mesero | La API (recibe pedidos y entrega resultados) |
+| La cocina | El servidor y su base de datos |
+| Tu pedido | La petición |
+| El platillo | La respuesta |
+
+La palabra "API" se usa para varias cosas. Por ejemplo, el navegador tiene APIs (como `fetch` o `localStorage`) y las librerías tienen APIs (las funciones que expones). En este artículo hablamos de las **APIs web**: servicios a los que llamas por internet con HTTP y que casi siempre responden con JSON.
+
+## Cómo es una API web
+
+Una API web es una colección de **URLs** (a veces llamadas endpoints, o puntos finales) que representan cosas, y de **métodos HTTP** que dicen qué hacer con ellas. Si no recuerdas qué es un método o un código de estado, repasa [HTTP: cómo hablan el cliente y el servidor](/fundamentos/http-cliente-servidor/).
+
+Ejemplos de endpoints de la API de pruebas que usaremos:
+
+| Petición | Qué hace |
+| --- | --- |
+| `GET /todos` | Lista las tareas |
+| `GET /todos/1` | Trae la tarea con id 1 |
+| `GET /todos?userId=1` | Filtra las tareas de un usuario |
+| `POST /todos` | Crea una tarea |
+
+La respuesta casi siempre es **JSON**, un formato de texto que tu lenguaje convierte fácilmente en objetos. Lo explicamos en [JSON, CSV, XML y YAML](/fundamentos/json-y-formatos-de-datos/).
+
+## Tu primera llamada con fetch
+
+Usaremos JSONPlaceholder, una API pública pensada para practicar. No necesita llave ni registro. Sus datos son de prueba y fijos, así que no los uses como si fueran información real.
+
+Guarda este archivo como `api.mjs` y ejecútalo con `node api.mjs` (Node.js 18 o superior trae `fetch`). También lo puedes pegar en la consola del navegador.
+
+```js
+// Pide tareas de una API pública (sin llave) y las usa en tu código
+const base = 'https://jsonplaceholder.typicode.com';
+
+async function pedir(ruta) {
+  const res = await fetch(`${base}${ruta}`);
+  if (!res.ok) {
+    // fetch no lanza error con un 404 o un 500: hay que revisarlo
+    throw new Error(`La API respondió ${res.status} en ${ruta}`);
+  }
+  return res.json();
+}
+
+try {
+  const tareas = await pedir('/todos?userId=1&_limit=5');
+  for (const t of tareas) {
+    console.log(`${t.completed ? '[x]' : '[ ]'} ${t.title}`);
+  }
+
+  const total = tareas.filter((t) => t.completed).length;
+  console.log(`Completadas: ${total} de ${tareas.length}`);
+
+  await pedir('/todos/99999'); // esta tarea no existe
+} catch (error) {
+  console.log('Error:', error.message);
+}
+```
+
+La salida real es esta. Los títulos son texto de relleno de la API de pruebas:
+
+```text
+[ ] delectus aut autem
+[ ] quis ut nam facilis et officia qui
+[ ] fugiat veniam minus
+[x] et porro tempora
+[ ] laboriosam mollitia et enim quasi adipisci quia provident illum
+Completadas: 1 de 5
+Error: La API respondió 404 en /todos/99999
+```
+
+La forma de cada elemento que devuelve el servidor es esta:
+
+```json
+{
+  "userId": 1,
+  "id": 1,
+  "title": "texto de la tarea",
+  "completed": false
+}
+```
+
+Lo importante del código:
+
+- `await fetch(...)` espera la respuesta. Si no dominas `async` y `await`, mira la [guía de JavaScript](/guias/javascript/) y el artículo de [concurrencia y asincronía](/fundamentos/concurrencia-y-asincronia/).
+- `res.ok` es verdadero cuando el código está entre `200` y `299`.
+- `res.json()` lee el cuerpo y lo convierte en un objeto de JavaScript. También es asíncrono.
+- Todo está dentro de `try/catch`, porque la red puede fallar y la API puede devolver errores.
+
+## Enviar datos con POST
+
+Para crear algo, cambias el método, declaras el tipo del cuerpo y envías un JSON convertido a texto:
+
+```js
+const res = await fetch('https://jsonplaceholder.typicode.com/todos', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ title: 'Leer la documentación', completed: false, userId: 1 }),
+});
+console.log(res.status);
+console.log(await res.json());
+```
+
+Salida de esa prueba (el `id` que asigne el servidor puede ser otro):
+
+```text
+201
+{
+  title: 'Leer la documentación',
+  completed: false,
+  userId: 1,
+  id: 201
+}
+```
+
+Esta API de pruebas **finge** guardar el dato: responde como si lo hubiera creado, pero si luego pides la lista no verás tu tarea. Es normal para un servicio de práctica.
+
+## Llaves, autenticación y límites
+
+La mayoría de las APIs reales piden que te identifiques:
+
+- **Llave de API (API key):** una cadena secreta que te asigna el proveedor. Se envía en un encabezado como `Authorization` o en el parámetro que indique su documentación.
+- **Token (por ejemplo, OAuth):** una credencial temporal que representa a un usuario o una app. Lo vemos en [cookies, sesiones y tokens](/fundamentos/cookies-sesiones-y-tokens/) y en [autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/).
+- **Límites de uso (rate limits):** muchas APIs limitan cuántas peticiones puedes hacer por minuto. Si te pasas, responden `429`. Los números concretos están en la documentación de cada proveedor, y pueden cambiar.
+
+<Callout tipo="warning" titulo="Nunca pongas una llave secreta en el código del navegador">
+Todo lo que se envía al navegador lo puede leer cualquiera con las herramientas de desarrollo. Si tu llave es secreta, haz la llamada desde tu servidor y guárdala en una variable de entorno (mira [variables de entorno](/fundamentos/variables-de-entorno/)). Tampoco subas llaves a un repositorio público.
+</Callout>
+
+## Cómo leer la documentación de una API
+
+Antes de programar, busca en la documentación:
+
+1. **URL base:** el prefijo de todas las rutas.
+2. **Autenticación:** si hay llave, dónde se envía.
+3. **Endpoints:** qué rutas existen y con qué método.
+4. **Parámetros:** cuáles son obligatorios y cuáles opcionales.
+5. **Ejemplo de respuesta:** la forma del JSON que recibirás.
+6. **Errores y límites:** qué códigos devuelve y cuántas peticiones permite.
+
+<Callout tipo="tip" titulo="Prueba primero con curl">
+Antes de escribir código, haz la petición con `curl` o con una herramienta gráfica de peticiones. Cuando ves la respuesta real, escribir el código es mucho más fácil. Y si algo falla, sabes si el error está en la API o en tu programa.
+</Callout>
+
+## Pruébalo tú
+
+1. Ejecuta `node api.mjs` y comprueba que ves las cinco tareas.
+2. Cambia `_limit=5` por `_limit=10` y observa cuántas están completadas.
+3. Cambia `userId=1` por `userId=2`. ¿Los títulos son distintos?
+4. Rompe a propósito la URL base (por ejemplo, quita una letra del dominio). Verás que `fetch` lanza un error de red distinto a un `404`. Escribe un `catch` que explique cada caso.
+5. Reto extra: crea una función `contarCompletadas(userId)` que devuelva solo el número.
+
+## Errores y mitos comunes
+
+- **"fetch lanza error cuando el servidor responde 404."** No. Solo falla ante problemas de red. Revisa `res.ok`.
+- **"Olvidé el await y me llegó Promise pendiente."** Te falta `await` en `fetch` o en `res.json()`.
+- **"Si funciona en curl, funcionará desde mi página."** En el navegador existe una regla extra, CORS: el servidor debe permitir que tu sitio lo llame. Es un error de navegador, no de tu código.
+- **"Una API pública es de uso libre sin límites."** Casi siempre tiene términos de uso y límites. Léelos.
+- **"Guardo la llave en el frontend, total está ofuscada."** Una llave en el frontend es una llave pública. Ofuscarla no la protege.
+- **"API y base de datos son lo mismo."** La API es la puerta. Detrás puede haber una base de datos, otros servicios o cálculos.
+
+## Qué sigue
+
+- [REST y GraphQL](/fundamentos/rest-y-graphql/): estilos para diseñar APIs.
+- [JSON, CSV, XML y YAML](/fundamentos/json-y-formatos-de-datos/): los formatos en los que viajan los datos.
+- [Frontend, backend y fullstack](/fundamentos/frontend-backend-y-fullstack/): quién llama a quién.
+- [Guía de JavaScript](/guias/javascript/) y la [biblioteca de Node.js](/biblioteca/nodejs/) para construir tu propia API.
+- [Retos](/retos/) para practicar y el [glosario](/glosario/) para repasar términos.

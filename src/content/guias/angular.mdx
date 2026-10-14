@@ -1,0 +1,402 @@
+---
+titulo: 'Angular desde cero'
+descripcion: 'Qué es Angular, cómo crear un proyecto con su CLI y cómo construir una lista de tareas con señales, servicios, plantillas, rutas y pruebas.'
+tema: angular
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['angular-documentacion-en-espanol', 'angular-tutorial-learn-angular', 'angular-esenciales', 'angular-curso-gentleman-programming']
+requisitos: ['Saber JavaScript moderno y lo básico de TypeScript', 'Tener Node.js instalado y saber usar la terminal']
+etiquetas: ['angular', 'typescript', 'senales', 'componentes', 'frontend']
+orden: 51
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Angular es un framework completo para construir aplicaciones web, mantenido por Google. Incluye componentes, enrutador, formularios, cliente HTTP, inyección de dependencias y herramientas de pruebas, todo con TypeScript. En esta guía creas un proyecto y construyes una lista de tareas para recorrer sus piezas principales.
+
+## Qué es y para qué sirve
+
+Este es el modelo mental de Angular:
+
+- **Un framework con todo incluido.** A diferencia de una librería como React, Angular trae decisiones tomadas: cómo organizar el proyecto, cómo enrutar, cómo validar formularios y cómo probar. Eso lo hace muy previsible en equipos grandes.
+- **TypeScript por defecto.** Escribes TypeScript y el compilador de Angular también revisa tus plantillas, de modo que muchos errores aparecen al compilar.
+- **Componentes.** Una pantalla se arma con componentes: una clase de TypeScript decorada con `@Component`, una plantilla HTML y estilos opcionales. Los componentes modernos son independientes (standalone): declaran en `imports` lo que usan, sin módulos aparte.
+- **Señales.** Una `signal` es un valor reactivo. Se lee llamándola como función (`cuenta()`), se cambia con `set` o `update`, y Angular actualiza solo las partes de la pantalla que dependen de ella. Con `computed` derivas valores a partir de otras señales.
+- **Plantillas.** Usas `{{ }}` para mostrar valores, corchetes para enlazar propiedades, paréntesis para escuchar eventos, y bloques `@if` y `@for` para condicionales y listas.
+- **Inyección de dependencias.** Los servicios son clases con la lógica y los datos compartidos. Un componente los pide con `inject()` y Angular le entrega la misma instancia a todo quien la solicite.
+- **Enrutador y carga diferida.** Cada ruta apunta a un componente y puedes cargarlo solo cuando se visita, para que la descarga inicial sea ligera.
+- **CLI.** El comando `ng` crea proyectos, genera piezas, sirve la app en desarrollo, compila y ejecuta pruebas.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala Node.js (versión LTS)** desde [nodejs.org](https://nodejs.org/). En **Windows** también sirve `winget install OpenJS.NodeJS.LTS`; en **macOS**, `brew install node`; en **Linux**, [nvm](https://github.com/nvm-sh/nvm) con `nvm install --lts`. Comprueba con `node -v` y `npm -v`.
+2. **Instala la CLI de Angular** con `npm install -g @angular/cli`. También puedes evitar la instalación global y usar `npx @angular/cli` en lugar de `ng` en el siguiente paso.
+3. **Crea el proyecto.** Ejecuta `ng new mi-app --defaults --style=css --ssr=false --skip-git`. Crea la carpeta `mi-app`, usa CSS, no activa renderizado en el servidor ni inicia Git, e instala las dependencias. Si prefieres que te pregunte las opciones, ejecuta solo `ng new mi-app`.
+4. **Entra y arranca.** Ejecuta `cd mi-app` y luego `ng serve`. La terminal indica la dirección local, normalmente `http://localhost:4200`. Ábrela en el navegador.
+5. **Prepara el terreno.** El proyecto trae una página de bienvenida. Borra `src/app/app.html`, `src/app/app.css` y `src/app/app.spec.ts`, porque vas a reemplazar el componente raíz con el del ejemplo 1.
+6. **Compila para producción** con `ng build`. El resultado queda en la carpeta `dist`.
+
+</Pasos>
+
+Los archivos importantes están en `src/app`: `app.ts` (el componente raíz), `app.config.ts` (la configuración global, donde se registra el enrutador) y `app.routes.ts` (la lista de rutas). Los componentes y servicios de esta guía también van ahí. Con `ng generate component nombre` y `ng generate service nombre` la CLI crea los archivos por ti.
+
+## Ejemplos paso a paso
+
+Vas a construir una lista de tareas. Cada ejemplo agrega una pieza. Mantén `ng serve` corriendo para ver los cambios.
+
+<Ejemplo numero={1} titulo="Un componente con señales" archivo="src/app/contador.ts y src/app/app.ts" ejecutar="ng serve" salida={'Se ven "Clics: 0" y "Doble: 0". Después de pulsar Sumar dos veces: "Clics: 2" y "Doble: 4".'}>
+
+Crea `src/app/contador.ts`:
+
+```ts
+import { Component, signal, computed } from '@angular/core';
+
+@Component({
+  selector: 'app-contador',
+  template: `
+    <p>Clics: {{ cuenta() }}</p>
+    <p>Doble: {{ doble() }}</p>
+    <button (click)="sumar()">Sumar</button>
+    <button (click)="reiniciar()">Reiniciar</button>
+  `,
+})
+export class Contador {
+  // signal: un valor reactivo que se lee llamándolo como función
+  cuenta = signal(0);
+  // computed: se recalcula solo cuando cambian sus dependencias
+  doble = computed(() => this.cuenta() * 2);
+
+  sumar() {
+    this.cuenta.update((n) => n + 1);
+  }
+
+  reiniciar() {
+    this.cuenta.set(0);
+  }
+}
+```
+
+Y reemplaza `src/app/app.ts` para mostrarlo:
+
+```ts
+import { Component } from '@angular/core';
+import { Contador } from './contador';
+
+@Component({
+  selector: 'app-root',
+  imports: [Contador],
+  template: `<app-contador />`,
+})
+export class App {}
+```
+
+El decorador `@Component` registra la clase con un `selector`, que es la etiqueta HTML con la que la usas, y una plantilla. Dentro de la plantilla, `{{ cuenta() }}` muestra el valor de la señal (con paréntesis, porque la señal es una función) y `(click)` escucha el evento. `update` calcula el nuevo valor a partir del anterior y `set` lo reemplaza. `doble` es una señal derivada: no la modificas, se recalcula sola. Para usar un componente dentro de otro debes listarlo en `imports`.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Un servicio con el estado de las tareas" archivo="src/app/tareas.ts y src/app/tareas.spec.ts" ejecutar="ng test --watch=false" salida={'Al final del informe: Test Files  1 passed (1) y Tests  3 passed (3)'}>
+
+Crea `src/app/tareas.ts`:
+
+```ts
+import { Service, signal, computed } from '@angular/core';
+
+export interface Tarea {
+  id: number;
+  texto: string;
+  hecha: boolean;
+}
+
+@Service()
+export class Tareas {
+  private siguienteId = 1;
+  readonly lista = signal<Tarea[]>([]);
+  readonly pendientes = computed(() => this.lista().filter((t) => !t.hecha).length);
+
+  agregar(texto: string) {
+    const limpio = texto.trim();
+    if (!limpio) return;
+    this.lista.update((tareas) => [...tareas, { id: this.siguienteId++, texto: limpio, hecha: false }]);
+  }
+
+  alternar(id: number) {
+    this.lista.update((tareas) => tareas.map((t) => (t.id === id ? { ...t, hecha: !t.hecha } : t)));
+  }
+}
+```
+
+Y su prueba, `src/app/tareas.spec.ts`:
+
+```ts
+import { TestBed } from '@angular/core/testing';
+import { Tareas } from './tareas';
+
+describe('Tareas', () => {
+  let servicio: Tareas;
+
+  beforeEach(() => {
+    servicio = TestBed.inject(Tareas);
+  });
+
+  it('agrega tareas y cuenta las pendientes', () => {
+    servicio.agregar('Aprender Angular');
+    servicio.agregar('  Crear mi app  ');
+    expect(servicio.lista().map((t) => t.texto)).toEqual(['Aprender Angular', 'Crear mi app']);
+    expect(servicio.pendientes()).toBe(2);
+  });
+
+  it('ignora textos vacíos', () => {
+    servicio.agregar('   ');
+    expect(servicio.lista()).toHaveLength(0);
+  });
+
+  it('marca una tarea como hecha', () => {
+    servicio.agregar('Una tarea');
+    servicio.alternar(1);
+    expect(servicio.pendientes()).toBe(0);
+  });
+});
+```
+
+Un servicio es una clase con lógica y datos que se comparten entre componentes. El decorador `@Service()` la registra para toda la aplicación con una única instancia (según la documentación oficial, es una forma corta de `@Injectable({ providedIn: 'root' })`, que sigue funcionando y que verás en muchos proyectos). Guardamos la lista en una señal y la modificamos siempre con `update`, creando un arreglo nuevo, no con `push`. `TestBed.inject` te entrega el servicio dentro de una prueba, sin necesidad de ningún componente. Los textos del informe pueden variar de una versión a otra de la CLI, pero deben indicar que las tres pruebas pasan.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Plantilla con @if, @for y un formulario reactivo" archivo="src/app/lista-tareas/lista-tareas.ts y lista-tareas.html" ejecutar="ng serve" salida={'Al inicio: "No hay tareas. Agrega la primera." y "Pendientes: 0". Después de escribir "Aprender Angular" y pulsar Agregar: aparece la tarea con su casilla y "Pendientes: 1". Al marcarla: "Pendientes: 0".'}>
+
+Crea `src/app/lista-tareas/lista-tareas.ts`:
+
+```ts
+import { Component, inject } from '@angular/core';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { Tareas } from '../tareas';
+
+@Component({
+  selector: 'app-lista-tareas',
+  imports: [ReactiveFormsModule],
+  templateUrl: './lista-tareas.html',
+})
+export class ListaTareas {
+  // inject() pide el servicio al sistema de dependencias
+  tareas = inject(Tareas);
+  texto = new FormControl('', { nonNullable: true });
+
+  agregar() {
+    this.tareas.agregar(this.texto.value);
+    this.texto.reset();
+  }
+}
+```
+
+Y su plantilla, `src/app/lista-tareas/lista-tareas.html`:
+
+```html
+<form (submit)="$event.preventDefault(); agregar()">
+  <input [formControl]="texto" placeholder="Nueva tarea" />
+  <button type="submit">Agregar</button>
+</form>
+
+@if (tareas.lista().length === 0) {
+  <p>No hay tareas. Agrega la primera.</p>
+} @else {
+  <ul>
+    @for (tarea of tareas.lista(); track tarea.id) {
+      <li>
+        <label>
+          <input type="checkbox" [checked]="tarea.hecha" (change)="tareas.alternar(tarea.id)" />
+          {{ tarea.texto }}
+        </label>
+      </li>
+    }
+  </ul>
+}
+<p>Pendientes: {{ tareas.pendientes() }}</p>
+```
+
+Para verlo, agrega `ListaTareas` al `imports` de `app.ts` y escribe `<app-lista-tareas />` en su plantilla. `inject(Tareas)` le pide al sistema el servicio del ejemplo anterior. `FormControl` representa un campo del formulario: lo conectas con `[formControl]` y lees su valor con `.value`, y para eso hay que importar `ReactiveFormsModule`. Los bloques `@if` y `@for` son la sintaxis de control de flujo. `@for` exige `track`, que le dice a Angular cómo identificar cada elemento para reutilizar el HTML cuando la lista cambia. Como el servicio guarda señales y la plantilla las lee, la pantalla se actualiza sola.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Componentes hijos con input y output" archivo="src/app/tarea-item/tarea-item.ts" ejecutar="ng serve" salida={'La lista se ve igual que antes. La diferencia es interna: cada tarea ahora es un componente hijo que recibe sus datos y avisa cuando el usuario la marca.'}>
+
+Crea `src/app/tarea-item/tarea-item.ts`:
+
+```ts
+import { Component, input, output } from '@angular/core';
+import { Tarea } from '../tareas';
+
+@Component({
+  selector: 'app-tarea-item',
+  template: `
+    <label>
+      <input type="checkbox" [checked]="tarea().hecha" (change)="alternar.emit(tarea().id)" />
+      {{ tarea().texto }}
+    </label>
+  `,
+})
+export class TareaItem {
+  // input(): datos que llegan del padre (obligatorio)
+  tarea = input.required<Tarea>();
+  // output(): eventos que el hijo avisa al padre
+  alternar = output<number>();
+}
+```
+
+En `lista-tareas.ts` agrega `TareaItem` a `imports` (junto a `ReactiveFormsModule`) y sustituye el `<label>` completo dentro del `<li>` de la plantilla por esto:
+
+```html
+<app-tarea-item [tarea]="tarea" (alternar)="tareas.alternar($event)" />
+```
+
+`input()` declara un dato que el padre le pasa con corchetes, y es una señal de solo lectura: se lee como `tarea()`. `output()` declara un evento que el hijo dispara con `emit` y el padre escucha con paréntesis, donde `$event` es el valor emitido. Los datos bajan por input y los eventos suben por output. Así cada componente tiene una sola responsabilidad y se puede reutilizar y probar por separado.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Rutas con carga diferida y parámetros" archivo="src/app/app.routes.ts, app.config.ts, acerca.ts y app.ts" ejecutar="ng build" salida={'En la tabla "Lazy chunk files" del informe aparece un fragmento aparte llamado acerca, de unos cientos de bytes. En el navegador, /acerca/Ana muestra "Acerca de Ana" y el título de la pestaña es "Acerca".'}>
+
+Crea `src/app/acerca.ts`:
+
+```ts
+import { Component, input } from '@angular/core';
+
+@Component({
+  selector: 'app-acerca',
+  template: `<h2>Acerca de {{ autor() }}</h2>`,
+})
+export class Acerca {
+  // El parámetro de ruta :autor llega como input gracias a withComponentInputBinding
+  autor = input('anónimo');
+}
+```
+
+Reemplaza `src/app/app.routes.ts`:
+
+```ts
+import { Routes } from '@angular/router';
+import { ListaTareas } from './lista-tareas/lista-tareas';
+
+export const routes: Routes = [
+  { path: '', component: ListaTareas, title: 'Mis tareas' },
+  // Carga diferida: este componente se descarga solo cuando se visita la ruta
+  { path: 'acerca/:autor', loadComponent: () => import('./acerca').then((m) => m.Acerca), title: 'Acerca' },
+  { path: '**', redirectTo: '' },
+];
+```
+
+Reemplaza `src/app/app.config.ts`:
+
+```ts
+import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideBrowserGlobalErrorListeners(), provideRouter(routes, withComponentInputBinding())],
+};
+```
+
+Y reemplaza `src/app/app.ts` con navegación y un punto de salida para las rutas:
+
+```ts
+import { Component } from '@angular/core';
+import { RouterOutlet, RouterLink } from '@angular/router';
+import { Contador } from './contador';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet, RouterLink, Contador],
+  template: `
+    <nav>
+      <a routerLink="/">Tareas</a> |
+      <a [routerLink]="['/acerca', 'Ana']">Acerca</a>
+    </nav>
+    <app-contador />
+    <router-outlet />
+  `,
+})
+export class App {}
+```
+
+Cada elemento de `routes` une una ruta con un componente. `:autor` es un parámetro, y como activamos `withComponentInputBinding`, Angular lo entrega al componente como si fuera un `input`. `loadComponent` con `import(...)` parte tu aplicación en pedazos: el componente de `acerca` no se descarga hasta que alguien visita esa ruta. `**` captura cualquier ruta desconocida y redirige al inicio. `routerLink` navega sin recargar la página y `<router-outlet />` es el lugar donde se dibuja el componente de la ruta activa. Verás el contador en todas las páginas porque está fuera del punto de salida.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Probar un componente" archivo="src/app/contador.spec.ts" ejecutar="ng test --watch=false" salida={'Al final del informe: Test Files  2 passed (2) y Tests  4 passed (4)'}>
+
+```ts
+import { TestBed } from '@angular/core/testing';
+import { Contador } from './contador';
+
+describe('Contador', () => {
+  it('muestra el valor y el doble tras hacer clic', async () => {
+    const fixture = TestBed.createComponent(Contador);
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    const sumar = el.querySelector('button') as HTMLButtonElement;
+
+    expect(el.textContent).toContain('Clics: 0');
+    sumar.click();
+    sumar.click();
+    await fixture.whenStable();
+    expect(el.textContent).toContain('Clics: 2');
+    expect(el.textContent).toContain('Doble: 4');
+  });
+});
+```
+
+`TestBed.createComponent` monta el componente en un entorno de prueba. Tu prueba simula clics en el botón, espera con `whenStable()` a que Angular termine de actualizar la pantalla y revisa el texto resultante. El ejecutor de pruebas de los proyectos nuevos es Vitest, y por eso `describe`, `it` y `expect` están disponibles sin importarlos. Con las pruebas del ejemplo 2 suman cuatro. Cada vez que cambies algo, volver a ejecutar `ng test` te dice en segundos si rompiste otra parte.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="NG8001: 'app-contador' is not a known element">
+Usaste un componente en una plantilla pero no lo agregaste a la lista `imports` del componente que lo usa. Es el error más frecuente en Angular moderno. Importa la clase del componente en el arreglo `imports` del decorador. La misma regla vale para directivas, pipes y módulos como `ReactiveFormsModule`.
+</Callout>
+
+<Callout tipo="warning" titulo="NG8002: Can't bind to 'formControl' since it isn't a known property of 'input'">
+Pasa cuando usas `[formControl]` sin importar `ReactiveFormsModule` en el componente. Agrégalo a `imports` y el error desaparece. Si en cambio usas `[(ngModel)]`, necesitas `FormsModule`.
+</Callout>
+
+<Callout tipo="warning" titulo='NG5002: @for loop must have a "track" expression'>
+Todo bloque `@for` necesita una expresión `track`, normalmente el identificador único del elemento: `@for (tarea of lista(); track tarea.id)`. Sirve para que Angular no destruya y recree el HTML de toda la lista en cada cambio. Para valores primitivos puedes usar `track $index`.
+</Callout>
+
+<Callout tipo="warning" titulo="Mostrar una señal sin llamarla">
+Si escribes `{{ cuenta }}` en lugar de `{{ cuenta() }}`, no obtienes el valor: en pantalla aparece algo como `[Signal (cuenta): 0]`. Una señal es una función, así que se lee con paréntesis, tanto en la plantilla como en la clase.
+</Callout>
+
+<Callout tipo="warning" titulo="Modificar el arreglo de una señal con push">
+`lista().push(x)` cambia el arreglo por dentro, pero la señal no se entera: sigue "igual", y la pantalla y los valores derivados no se actualizan. En una prueba, la señal tenía dos elementos y la plantilla seguía mostrando uno. Usa `lista.update((l) => [...l, x])` o `lista.set(nuevoArreglo)`, siempre con un valor nuevo.
+</Callout>
+
+## Buenas prácticas
+
+- Genera piezas con `ng generate` para respetar las convenciones de nombres y de estructura.
+- Lee la [guía de estilo oficial](https://angular.dev/style-guide); fija nombres de archivos, carpetas y organización.
+- Mantén los componentes pequeños y deja la lógica compartida en servicios.
+- Prefiere señales para el estado local y `computed` para valores derivados, en lugar de recalcular en la plantilla.
+- No mutes datos: reemplaza arreglos y objetos con copias.
+- Usa `track` con un identificador estable en cada `@for`.
+- Carga rutas pesadas con `loadComponent` para que la descarga inicial sea ligera.
+- Escribe pruebas junto con cada servicio y componente, y ejecútalas antes de publicar.
+- Mantén tu proyecto actualizado con `ng update`, que aplica migraciones automáticas entre versiones.
+
+## Siguiente paso
+
+Ya conoces los cinco pilares del Angular moderno: componentes, señales, servicios, plantillas y rutas. Lo que sigue:
+
+- **Sigue la documentación oficial.** Empieza con [Angular Essentials](https://angular.dev/essentials) y el [tutorial interactivo](https://angular.dev/tutorials/learn-angular). En español tienes la [traducción de la comunidad](https://docs.angular.lat/).
+- **Aprende a pedir datos.** El cliente HTTP de Angular se conecta con una API como la que construiste en la guía de [Node.js](/guias/nodejs/).
+- **Refuerza TypeScript.** [TypeScript desde cero](/guias/typescript/) te ayuda a sacarle provecho al tipado de Angular.
+- **Compara enfoques.** [React](/guias/react/), [Qwik](/guias/qwik/) y [Astro](/guias/astro/) resuelven los mismos problemas de otra forma.
+- **Explora la biblioteca.** Todos los recursos de [Angular](/biblioteca/angular/) son gratuitos.
+- **Guarda tu progreso.** Con [Git y GitHub](/guias/git/) puedes subir tu proyecto a tu portafolio.
+
+<LibrosRecomendados ids={frontmatter.libros} />

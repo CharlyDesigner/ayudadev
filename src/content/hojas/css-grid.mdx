@@ -1,0 +1,225 @@
+---
+titulo: 'CSS Grid: referencia rápida'
+descripcion: 'Propiedades de CSS Grid en tablas: columnas, filas, fr, repeat, minmax, auto-fit, áreas con nombre, span, alineación y recetas de galerías y layouts de página.'
+tema: html-css
+etiquetas: ['css', 'grid', 'maquetación', 'layout', 'responsive']
+publicado: 2026-10-09
+orden: 15
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Grid coloca elementos en filas y columnas a la vez. Las medidas de esta hoja se comprobaron en Chrome con un contenedor de 600 px.
+
+```css
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);   /* 3 columnas iguales */
+  gap: 10px;                                /* espacio entre filas y columnas */
+}
+```
+
+Los hijos directos se colocan solos, de izquierda a derecha y de arriba abajo, creando filas nuevas cuando hacen falta.
+
+## Propiedades del contenedor
+
+| Propiedad | Ejemplo | Qué hace |
+| --- | --- | --- |
+| `display` | `grid`, `inline-grid` | Activa Grid |
+| `grid-template-columns` | `200px 1fr 2fr` | Define el tamaño de cada columna |
+| `grid-template-rows` | `auto 1fr auto` | Define el tamaño de cada fila |
+| `gap` | `10px`, `1rem 2rem` | Espacio entre filas y columnas (`row-gap`, `column-gap`) |
+| `grid-template-areas` | `"cabecera cabecera" "menu contenido"` | Dibuja el diseño con nombres |
+| `grid-auto-rows` | `minmax(30px, auto)` | Tamaño de las filas creadas automáticamente |
+| `grid-auto-columns` | `100px` | Tamaño de las columnas creadas automáticamente |
+| `grid-auto-flow` | `row` (por defecto), `column`, `dense` | Cómo se llenan las celdas |
+| `justify-items` | `start`, `center`, `end`, `stretch` | Alinea los elementos en horizontal dentro de su celda |
+| `align-items` | `start`, `center`, `end`, `stretch` | Alinea en vertical dentro de su celda |
+| `place-items` | `center` | Atajo de `align-items` y `justify-items` |
+| `justify-content` | `start`, `center`, `space-between`... | Reparte la rejilla entera dentro del contenedor (horizontal) |
+| `align-content` | igual | Lo mismo en vertical (necesita altura sobrante) |
+| `place-content` | `center` | Atajo de ambos |
+
+## Unidades de tamaño
+
+| Valor | Significa | Medida en 600 px con `gap: 10px` |
+| --- | --- | --- |
+| `200px` | Tamaño fijo | 200 |
+| `1fr` | Una fracción del espacio libre | Tres `1fr`: 193 cada una |
+| `200px 1fr 2fr` | Fijo y dos fracciones | 200, 127 y 253 |
+| `auto` | Lo que pida el contenido (o lo que sobre) | Se adapta |
+| `minmax(100px, 300px)` | Entre un mínimo y un máximo | Con `minmax(100px, 300px) 1fr`: 300 y 290 |
+| `min-content`, `max-content` | La palabra más larga, o todo el texto en una línea | |
+| `repeat(4, 1fr)` | Repite una definición | Cuatro columnas iguales |
+| `fit-content(200px)` | Como `auto`, sin pasar de 200 px | |
+
+`fr` reparte solo el espacio que queda después de los tamaños fijos y los `gap`.
+
+## Columnas responsivas sin media queries
+
+```css
+.galeria {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+```
+
+Cada columna mide al menos 150 px y se reparten el ancho; el navegador decide cuántas caben.
+
+| | Qué hace con pocos elementos | Con 2 elementos en 600 px |
+| --- | --- | --- |
+| `auto-fit` | Colapsa las columnas vacías y estira los elementos | 295 px cada uno |
+| `auto-fill` | Conserva las columnas vacías | 193 px cada uno (queda una columna vacía) |
+
+Para evitar desbordes en pantallas más estrechas que 150 px, usa `minmax(min(100%, 150px), 1fr)`.
+
+## Colocar elementos
+
+| Propiedad | Ejemplo | Qué hace |
+| --- | --- | --- |
+| `grid-column` | `2`, `1 / 3`, `1 / -1`, `span 2` | Columnas que ocupa (inicio / fin) |
+| `grid-row` | `1 / 3`, `span 2` | Filas que ocupa |
+| `grid-area` | `cabecera` o `1 / 1 / 3 / 2` | Un área con nombre, o fila-inicio / col-inicio / fila-fin / col-fin |
+| `justify-self` | `center`, `end`, `stretch` | Alineación horizontal solo de este elemento |
+| `align-self` | `center`, `end`, `stretch` | Alineación vertical solo de este elemento |
+| `place-self` | `center` | Atajo de ambos |
+| `order` | `-1` | Cambia el orden visual |
+
+Las líneas se numeran desde 1 en el borde izquierdo (o superior). `-1` es la última línea, de modo que `grid-column: 1 / -1` ocupa todo el ancho.
+
+```css
+.ancho  { grid-column: span 2; }       /* ocupa 2 columnas */
+.todo   { grid-column: 1 / -1; }       /* de borde a borde */
+.alto   { grid-row: 1 / 3; }           /* ocupa las filas 1 y 2 */
+```
+
+En una rejilla de 4 columnas, un elemento con `span 2` mide 295 px y uno con `1 / -1` mide 600 px.
+
+### Líneas con nombre
+
+```css
+.rejilla { grid-template-columns: [inicio] 100px [medio] 1fr [fin]; }
+.x { grid-column: medio / fin; }       /* empieza en la 2.ª columna */
+```
+
+## Áreas con nombre
+
+```css
+.pagina {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-template-areas:
+    "cabecera cabecera"
+    "menu     contenido"
+    "pie      pie";
+  gap: 1rem;
+}
+header { grid-area: cabecera; }
+nav    { grid-area: menu; }
+main   { grid-area: contenido; }
+footer { grid-area: pie; }
+```
+
+Cada fila de texto es una fila de la rejilla. Repetir un nombre une celdas, y un punto (`.`) deja una celda vacía. Las áreas deben ser rectángulos.
+
+Versión móvil, solo cambiando el diseño:
+
+```css
+@media (max-width: 700px) {
+  .pagina {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "cabecera"
+      "menu"
+      "contenido"
+      "pie";
+  }
+}
+```
+
+## Alineación
+
+| Quieres | Usa |
+| --- | --- |
+| Centrar el contenido de cada celda | `place-items: center` en el contenedor |
+| Centrar toda la rejilla en el contenedor | `place-content: center` (con columnas de tamaño fijo) |
+| Una celda al final | `align-self: end` o `justify-self: end` en ese elemento |
+| Separar columnas a los extremos | `justify-content: space-between` |
+| Centrar una sola cosa en la pantalla | `display: grid; place-items: center; min-height: 100vh;` |
+
+## Recetas
+
+### Tarjetas de la misma altura
+
+```css
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+```
+
+Todas las celdas de una fila miden lo mismo por defecto, porque `align-items` vale `stretch`.
+
+### Cuadrados proporcionales
+
+```css
+.cuadro { aspect-ratio: 1; }   /* en una rejilla de 3 columnas: 193 x 193 */
+```
+
+### Filas con altura mínima
+
+```css
+.lista {
+  display: grid;
+  grid-auto-rows: minmax(30px, auto);   /* al menos 30px; crece si el contenido lo pide */
+}
+```
+
+### Llenar huecos
+
+```css
+.mosaico { grid-auto-flow: dense; }     /* los elementos pequeños rellenan huecos anteriores */
+```
+
+`dense` altera el orden visual respecto al HTML; úsalo en galerías, no en contenido que se lee de corrido.
+
+### Flujo por columnas
+
+```css
+.columnas {
+  grid-auto-flow: column;
+  grid-template-rows: repeat(2, 20px);   /* 2 filas; las columnas se crean al llenar */
+}
+```
+
+## Subgrid
+
+`grid-template-columns: subgrid` hace que un elemento que a su vez es una rejilla reutilice las líneas de la rejilla padre. Sirve para alinear el título, el texto y el botón de varias tarjetas entre sí. Ya funciona en los navegadores actuales.
+
+## Grid o Flexbox
+
+<Callout tipo="tip" titulo="Regla corta">
+
+Si piensas en filas Y columnas, usa Grid. Si piensas en una sola línea de cosas que se reparten el espacio, usa Flexbox. Los dos se combinan: la página en Grid y la barra de navegación en Flexbox.
+
+</Callout>
+
+## Solución de problemas
+
+| Síntoma | Causa y arreglo |
+| --- | --- |
+| Los hijos no forman rejilla | Solo los hijos directos participan. El contenedor necesita `display: grid` |
+| Una columna se estira de más | Un hijo con contenido ancho: usa `minmax(0, 1fr)` en lugar de `1fr` |
+| `fr` no reparte lo esperado | Un `1fr` equivale a `minmax(auto, 1fr)`: el contenido mínimo manda |
+| El elemento no ocupa su área | Revisa que el nombre en `grid-area` coincida con el de `grid-template-areas` |
+| Filas de más o de menos | Falta `grid-template-rows` o `grid-auto-rows` |
+
+## Para ir más a fondo
+
+- [Layout con CSS Grid en MDN](https://developer.mozilla.org/es/docs/Web/CSS/CSS_grid_layout)
+- [Conceptos básicos de Grid en MDN](https://developer.mozilla.org/es/docs/Web/CSS/CSS_grid_layout/Basic_concepts_of_grid_layout)
+- Hoja de AyudaDev: [CSS Flexbox, referencia rápida](/hojas/css-flexbox/)
+- Guía de AyudaDev: [HTML y CSS desde cero](/guias/html-css/)
+- Biblioteca: [libros y cursos de HTML y CSS](/biblioteca/html-css/)

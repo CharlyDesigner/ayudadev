@@ -1,0 +1,259 @@
+---
+titulo: 'SQL: joins y agregaciones'
+descripcion: 'INNER, LEFT, RIGHT y FULL JOIN, GROUP BY, HAVING, funciones de agregación, subconsultas, CTE, UNION y funciones de ventana, con resultados comprobados.'
+tema: sql
+etiquetas: ['sql', 'join', 'group by', 'agregaciones', 'ventanas']
+publicado: 2026-10-09
+orden: 8
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cómo combinar tablas y resumir datos. Todas las consultas se ejecutaron en SQLite 3.53; las diferencias con PostgreSQL y MySQL están marcadas.
+
+## Datos de ejemplo
+
+```sql
+CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL, ciudad TEXT, edad INTEGER);
+CREATE TABLE pedidos  (id INTEGER PRIMARY KEY, cliente_id INTEGER REFERENCES clientes(id),
+                       total REAL, fecha TEXT, estado TEXT);
+INSERT INTO clientes (nombre, ciudad, edad) VALUES
+  ('Ana','CDMX',30), ('Luis','Monterrey',25), ('Marta','CDMX',41),
+  ('Pedro',NULL,19), ('Sofía','Puebla',35);
+INSERT INTO pedidos (cliente_id, total, fecha, estado) VALUES
+  (1,100.5,'2026-01-10','pagado'), (1,50,'2026-02-11','pagado'),
+  (2,200,'2026-02-15','pendiente'), (3,75,'2026-03-01','pagado'),
+  (NULL,10,'2026-03-02','cancelado');
+```
+
+Pedro y Sofía no tienen pedidos, y el último pedido no tiene cliente.
+
+## Tipos de JOIN
+
+| JOIN | Devuelve |
+| --- | --- |
+| `INNER JOIN` (o `JOIN`) | Solo las filas que tienen pareja en ambas tablas |
+| `LEFT JOIN` | Todas las de la izquierda; si no hay pareja, columnas derechas en `NULL` |
+| `RIGHT JOIN` | Todas las de la derecha; si no hay pareja, columnas izquierdas en `NULL` |
+| `FULL OUTER JOIN` | Todas las de ambos lados |
+| `CROSS JOIN` | Todas las combinaciones posibles (producto cartesiano) |
+
+`RIGHT` y `FULL JOIN` están en PostgreSQL y en SQLite desde la versión 3.39. MySQL no tiene `FULL OUTER JOIN`: se simula con un `LEFT JOIN` y un `RIGHT JOIN` unidos con `UNION`. En la práctica casi todo se resuelve con `INNER` y `LEFT`.
+
+### INNER JOIN
+
+```sql
+SELECT c.nombre, p.total
+FROM clientes c
+INNER JOIN pedidos p ON p.cliente_id = c.id;
+```
+
+| nombre | total |
+| --- | --- |
+| Ana | 100.5 |
+| Ana | 50 |
+| Luis | 200 |
+| Marta | 75 |
+
+### LEFT JOIN
+
+```sql
+SELECT c.nombre, p.total
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id;
+```
+
+Devuelve las cuatro filas anteriores y además `Pedro` y `Sofía` con `total` nulo.
+
+### Clientes sin pedidos (anti-join)
+
+```sql
+SELECT c.nombre
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id
+WHERE p.id IS NULL;
+-- Pedro, Sofía
+```
+
+### RIGHT y FULL
+
+`RIGHT JOIN` sobre las mismas tablas agrega una fila con `nombre` nulo y `total` 10 (el pedido sin cliente). `FULL OUTER JOIN` trae además a Pedro y Sofía: 7 filas en total.
+
+### Auto-join: una tabla contra sí misma
+
+```sql
+SELECT a.nombre AS a, b.nombre AS b
+FROM clientes a
+JOIN clientes b ON a.ciudad = b.ciudad AND a.id < b.id;
+-- Ana, Marta (las dos de CDMX)
+```
+
+La condición `a.id < b.id` evita que cada pareja salga dos veces y que alguien se empareje consigo.
+
+<Callout tipo="warning" titulo="Condición en ON o en WHERE">
+
+En un `LEFT JOIN`, un filtro sobre la tabla derecha puesto en `WHERE` (por ejemplo `WHERE p.estado = 'pagado'`) elimina las filas sin pareja y lo convierte en un `INNER JOIN`. Si quieres conservar a todos los clientes, ponlo en el `ON`: `LEFT JOIN pedidos p ON p.cliente_id = c.id AND p.estado = 'pagado'`.
+
+</Callout>
+
+## Funciones de agregación
+
+| Función | Qué calcula |
+| --- | --- |
+| `COUNT(*)` | Número de filas |
+| `COUNT(columna)` | Filas donde la columna no es nula |
+| `COUNT(DISTINCT columna)` | Valores distintos no nulos |
+| `SUM(columna)` | Suma |
+| `AVG(columna)` | Promedio |
+| `MIN(columna)`, `MAX(columna)` | Mínimo y máximo |
+| `GROUP_CONCAT(col, ', ')` | Une valores en un texto (SQLite). En MySQL es `GROUP_CONCAT(col SEPARATOR ', ')`; en PostgreSQL, `STRING_AGG(col, ', ')` |
+
+```sql
+SELECT COUNT(*), COUNT(ciudad), SUM(edad), AVG(edad), MIN(edad), MAX(edad) FROM clientes;
+-- 5, 4, 150, 30, 19, 41
+```
+
+`COUNT(*)` cuenta 5 clientes, pero `COUNT(ciudad)` cuenta 4 porque Pedro tiene la ciudad nula. Las agregaciones ignoran los nulos.
+
+## GROUP BY y HAVING
+
+```sql
+SELECT ciudad, COUNT(*) AS n
+FROM clientes
+GROUP BY ciudad;
+-- (nulo) 1, CDMX 2, Monterrey 1, Puebla 1
+
+SELECT ciudad, COUNT(*) AS n
+FROM clientes
+GROUP BY ciudad
+HAVING COUNT(*) > 1;
+-- CDMX 2
+```
+
+| Cláusula | Filtra |
+| --- | --- |
+| `WHERE` | Filas, antes de agrupar. No puede usar agregaciones |
+| `HAVING` | Grupos, después de agrupar. Sí puede usar `COUNT`, `SUM`... |
+
+Regla: toda columna del `SELECT` que no esté dentro de una agregación debe aparecer en el `GROUP BY`. PostgreSQL te lo exige y da error si no.
+
+### Resumen por cliente (JOIN y GROUP BY)
+
+```sql
+SELECT c.nombre,
+       COUNT(p.id)                AS pedidos,
+       COALESCE(SUM(p.total), 0)  AS gastado
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id
+GROUP BY c.id, c.nombre
+ORDER BY gastado DESC;
+```
+
+| nombre | pedidos | gastado |
+| --- | --- | --- |
+| Luis | 1 | 200 |
+| Ana | 2 | 150.5 |
+| Marta | 1 | 75 |
+| Pedro | 0 | 0 |
+| Sofía | 0 | 0 |
+
+Se usa `COUNT(p.id)` y no `COUNT(*)` para que quienes no tienen pedidos cuenten 0 y no 1. `COALESCE` cambia el `NULL` de la suma por 0.
+
+### Por mes
+
+```sql
+SELECT strftime('%Y-%m', fecha) AS mes, SUM(total) AS total
+FROM pedidos
+GROUP BY mes;
+-- 2026-01 100.5, 2026-02 250, 2026-03 85
+```
+
+En PostgreSQL: `TO_CHAR(fecha, 'YYYY-MM')` o `DATE_TRUNC('month', fecha)`. En MySQL: `DATE_FORMAT(fecha, '%Y-%m')`.
+
+## Subconsultas
+
+| Forma | Ejemplo |
+| --- | --- |
+| En `WHERE` con `IN` | `WHERE id IN (SELECT cliente_id FROM pedidos WHERE total > 90)` devuelve Ana y Luis |
+| Con valor único | `WHERE total > (SELECT AVG(total) FROM pedidos)` devuelve 100.5 y 200 |
+| Con `EXISTS` | `WHERE EXISTS (SELECT 1 FROM pedidos p WHERE p.cliente_id = c.id AND p.estado = 'pendiente')` devuelve Luis |
+| En `FROM` | `FROM (SELECT estado, SUM(total) AS s FROM pedidos GROUP BY estado) WHERE s > 100` |
+
+Cuidado con `NOT IN` si la subconsulta puede devolver `NULL`: no devuelve nada. Prefiere `NOT EXISTS`.
+
+## CTE: consultas con nombre
+
+```sql
+WITH gasto AS (
+  SELECT cliente_id, SUM(total) AS s
+  FROM pedidos
+  GROUP BY cliente_id
+)
+SELECT c.nombre, gasto.s
+FROM clientes c
+JOIN gasto ON gasto.cliente_id = c.id
+WHERE gasto.s > 100;
+-- Ana 150.5, Luis 200
+```
+
+Una CTE (`WITH`) deja una consulta compleja en pasos legibles. Disponible en PostgreSQL, SQLite y MySQL 8 o posterior.
+
+## Combinar resultados
+
+| Operador | Resultado | Ejemplo con ciudades |
+| --- | --- | --- |
+| `UNION` | Une y quita repetidos | Nombres de CDMX más los menores de 26: Ana, Luis, Marta, Pedro |
+| `UNION ALL` | Une sin quitar repetidos (más rápido) | Todas las ciudades más una más de `id = 1` |
+| `INTERSECT` | Solo lo común | `CDMX` |
+| `EXCEPT` | Lo del primero que no está en el segundo | Nulo, Monterrey, Puebla |
+
+Ambas consultas deben devolver el mismo número de columnas, con tipos compatibles. En Oracle, `EXCEPT` se llama `MINUS`.
+
+## Funciones de ventana
+
+Calculan sobre un conjunto de filas relacionadas sin colapsarlas, a diferencia de `GROUP BY`.
+
+```sql
+SELECT nombre, edad,
+       RANK()       OVER (ORDER BY edad DESC)                  AS puesto,
+       ROW_NUMBER() OVER (PARTITION BY ciudad ORDER BY edad)   AS n_en_ciudad
+FROM clientes;
+-- Marta 41 puesto 1, n 2 | Sofía 35 puesto 2, n 1 | Ana 30 puesto 3, n 1 ...
+
+SELECT fecha, total, SUM(total) OVER (ORDER BY fecha) AS acumulado
+FROM pedidos;
+-- 100.5, 150.5, 350.5, 425.5, 435.5
+
+SELECT nombre, LAG(edad) OVER (ORDER BY id) AS anterior FROM clientes;
+-- Ana nulo, Luis 30, Marta 25, Pedro 41, Sofía 19
+```
+
+| Función | Qué hace |
+| --- | --- |
+| `ROW_NUMBER()` | Numera 1, 2, 3... sin empates |
+| `RANK()` | Puesto con empates (1, 2, 2, 4) |
+| `DENSE_RANK()` | Puesto con empates sin saltos (1, 2, 2, 3) |
+| `LAG(col)` / `LEAD(col)` | Valor de la fila anterior / siguiente |
+| `SUM(col) OVER (...)` | Suma móvil o acumulada |
+| `PARTITION BY` | Reinicia el cálculo por grupo |
+
+Las ventanas están en PostgreSQL, SQLite 3.25 o posterior y MySQL 8 o posterior.
+
+## Errores frecuentes
+
+| Error | Solución |
+| --- | --- |
+| Unir sin `ON` | Se produce un producto cartesiano; siempre escribe la condición |
+| Sumar tras un `JOIN` uno a muchos | La suma se repite por cada fila hija; agrega antes en una CTE |
+| `COUNT(*)` tras un `LEFT JOIN` | Cuenta la fila vacía como 1; usa `COUNT(tabla_derecha.id)` |
+| Columna ambigua | Prefija con el alias: `c.id`, `p.id` |
+| Filtrar agregaciones en `WHERE` | Muévelo a `HAVING` |
+| `ORDER BY` omitido al paginar | Añade un orden determinista |
+
+## Para ir más a fondo
+
+- [JOIN en la documentación de PostgreSQL](https://www.postgresql.org/docs/current/queries-table-expressions.html)
+- [SQLite: SELECT](https://www.sqlite.org/lang_select.html)
+- Hoja de AyudaDev: [SQL, consultas básicas](/hojas/sql-consultas-basicas/)
+- Guía de AyudaDev: [SQL desde cero](/guias/sql/)
+- Biblioteca: [libros y cursos de SQL](/biblioteca/sql/)

@@ -1,0 +1,167 @@
+---
+titulo: 'Seguridad web: las vulnerabilidades más comunes'
+descripcion: 'XSS, inyección SQL, CSRF y secretos filtrados en repositorios: qué son, cómo ocurren y cómo defenderte con ejemplos pequeños que puedes probar en tu propia máquina.'
+categoria: seguridad
+nivel: intermedio
+tiempoLectura: 13
+publicado: 2026-10-09
+temas: [javascript, sql, python]
+etiquetas: [seguridad, owasp, xss, sql-injection, csrf, secretos]
+orden: 30
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Construyes un formulario de comentarios, lo publicas y a la semana alguien escribe código en lugar de texto. Tu sitio ejecuta ese código en el navegador de todos los visitantes. No hacía falta ser un genio para atacarte: tú dejaste la puerta abierta sin saberlo. Esta regla resume casi toda la seguridad web: **nunca confíes en lo que llega desde afuera**.
+
+## Qué es
+
+La **seguridad web** es el conjunto de prácticas para que tu aplicación haga solo lo que debe hacer, aun cuando alguien intente hacerla fallar. Casi todos los ataques frecuentes no usan técnicas sofisticadas: aprovechan errores comunes de programación.
+
+[OWASP](https://owasp.org/) es una fundación sin fines de lucro que publica guías gratuitas de seguridad, entre ellas el famoso listado OWASP Top 10 de los riesgos más comunes en aplicaciones web. Es el mejor punto de partida para aprender. En este artículo vemos cuatro problemas clásicos y cómo evitarlos. Todos los ejemplos se prueban en tu propia máquina, con datos tuyos.
+
+Una analogía: tu aplicación es un edificio con recepción. Las vulnerabilidades son puertas sin llave, visitantes que no se identifican o llaves maestras pegadas con cinta en la entrada.
+
+## 1. XSS: cuando el sitio ejecuta código ajeno
+
+**XSS** (Cross-Site Scripting) ocurre cuando tu página muestra texto que escribió un usuario como si fuera HTML. Si ese texto contiene una etiqueta de script, el navegador de quien visite la página la ejecuta, y podría robar sesiones, redirigir o modificar la página.
+
+La defensa tiene dos reglas:
+
+1. **Trata todo texto externo como texto, nunca como HTML.**
+2. **Escapa** los caracteres especiales (`<`, `>`, `&`, comillas) cuando insertes datos en HTML.
+
+En el navegador, la diferencia está entre dos propiedades:
+
+```js
+const comentario = obtenerComentarioDelUsuario();
+
+// MAL: interpreta el texto como HTML
+// contenedor.innerHTML = comentario;
+
+// BIEN: lo inserta como texto plano
+contenedor.textContent = comentario;
+```
+
+En el servidor, los motores de plantillas modernos (y frameworks como React, Astro o Django) escapan por defecto. El peligro aparece cuando los desactivas a propósito, con cosas como `dangerouslySetInnerHTML`, `set:html` o `|safe`. Si algún día necesitas permitir HTML de usuarios, límpialo con una biblioteca de sanitización mantenida, no con expresiones regulares caseras.
+
+Así se ve el escapado en Python:
+
+```python
+import html
+
+comentario = '<script>alert("hola")</script>'
+print(html.escape(comentario))
+# &lt;script&gt;alert(&quot;hola&quot;)&lt;/script&gt;
+```
+
+El resultado ya no es código ejecutable: el navegador lo mostrará como texto. Como segunda capa, puedes enviar la cabecera `Content-Security-Policy: default-src 'self'`, que le dice al navegador que solo cargue recursos de tu propio dominio.
+
+## 2. Inyección SQL: cuando el texto se vuelve consulta
+
+Ocurre cuando construyes una consulta SQL pegando texto del usuario. Si el usuario escribe algo con comillas y palabras de SQL, cambia el significado de tu consulta.
+
+Probémoslo en una base de datos de juguete, local y en memoria, donde nadie sale perjudicado:
+
+<Ejemplo numero={1} titulo="Consulta insegura contra consulta parametrizada" archivo="inyeccion.py" ejecutar="uv run inyeccion.py" salida={"inseguro normal:    [('ana',)]\ninseguro malicioso: [('ana',), ('luis',)]\nseguro malicioso:   []"}>
+
+```python
+import sqlite3
+
+db = sqlite3.connect(":memory:")
+db.execute("CREATE TABLE usuarios (nombre TEXT, clave_hash TEXT)")
+db.execute("INSERT INTO usuarios VALUES ('ana', 'hash1'), ('luis', 'hash2')")
+
+def buscar_inseguro(nombre):
+    # MAL: pega el texto directamente dentro del SQL
+    consulta = f"SELECT nombre FROM usuarios WHERE nombre = '{nombre}'"
+    return db.execute(consulta).fetchall()
+
+def buscar_seguro(nombre):
+    # BIEN: el valor viaja aparte, nunca se interpreta como SQL
+    return db.execute(
+        "SELECT nombre FROM usuarios WHERE nombre = ?", (nombre,)
+    ).fetchall()
+
+entrada_normal = "ana"
+entrada_rara = "x' OR '1'='1"
+print("inseguro normal:   ", buscar_inseguro(entrada_normal))
+print("inseguro malicioso:", buscar_inseguro(entrada_rara))
+print("seguro malicioso:  ", buscar_seguro(entrada_rara))
+```
+
+Con la entrada rara, la versión insegura devuelve **todos** los usuarios, porque las comillas cerraron el texto y `OR '1'='1'` hizo la condición siempre verdadera. La versión parametrizada trata la entrada como un nombre a buscar, y como nadie se llama así, no devuelve nada.
+
+</Ejemplo>
+
+La solución es siempre la misma: **consultas parametrizadas** (también llamadas sentencias preparadas), que todos los lenguajes y bibliotecas de bases de datos ofrecen. Nunca concatenes ni uses f-strings para armar SQL con datos externos. Los ORM también te protegen, siempre que no les pases texto crudo. Aprende más en la [guía de SQL](/guias/sql/).
+
+<Callout tipo="tip" titulo="Da el mínimo de permisos">
+El usuario de base de datos que usa tu aplicación no debería poder borrar tablas ni leer lo que no necesita. Si algún día alguien logra colar una consulta, el daño queda limitado. Es el principio del **mínimo privilegio**, y aplica a todo: archivos, cuentas, tokens.
+</Callout>
+
+## 3. CSRF: cuando otro sitio actúa en tu nombre
+
+**CSRF** (Cross-Site Request Forgery) aprovecha que el navegador envía automáticamente tus cookies a un sitio, sin importar desde dónde venga la petición. Si estás conectado a tu banco y visitas una página maliciosa, esa página podría hacer que tu navegador mande una petición al banco con tu sesión activa.
+
+Es como si alguien te pidiera firmar un cheque en blanco y lo cobrara sin que lo notes. La defensa es exigir algo que el atacante no pueda adivinar ni enviar:
+
+- **Cookies con `SameSite`:** `Set-Cookie: sesion=...; HttpOnly; Secure; SameSite=Lax`. El navegador no las envía en peticiones que vienen de otros sitios (con `Lax`, solo en navegación simple). `HttpOnly` impide que JavaScript lea la cookie, y `Secure` la limita a conexiones HTTPS.
+- **Token anti-CSRF:** el servidor incluye un valor aleatorio único en cada formulario y verifica que vuelva en la petición. Un sitio ajeno no puede conocerlo.
+- **No uses GET para acciones que cambian cosas.** Borrar o pagar debe requerir POST, PUT o DELETE.
+
+La mayoría de los frameworks (Django, Laravel, Rails) traen protección CSRF integrada. Revisa que esté activada. Si construyes una API que se consume solo con tokens en cabeceras, el riesgo cambia, pero entenderlo bien requiere repasar [HTTP, cliente y servidor](/fundamentos/http-cliente-servidor/).
+
+## 4. Secretos en repositorios
+
+Es el error más fácil de cometer y uno de los más costosos. Subes por accidente un archivo con una contraseña, una clave de API o un token a un repositorio público. En minutos pueden aparecer programas automáticos que rastrean GitHub buscando justo eso.
+
+La prevención va en capas:
+
+```text
+# .gitignore  (antes de tu primer commit)
+.env
+.env.local
+*.pem
+```
+
+1. **Guarda los secretos en variables de entorno**, no en el código. Mira [Variables de entorno](/fundamentos/variables-de-entorno/).
+2. **Agrega los archivos secretos a `.gitignore` desde el principio.** Sube un `.env.example` con nombres de variables y valores falsos.
+3. **Revisa lo que vas a subir** con `git status` y `git diff` antes de cada commit.
+4. **Si se filtró un secreto, considéralo comprometido.** Revócalo y genera uno nuevo de inmediato. Borrar el archivo en un commit posterior no sirve: queda en el historial.
+
+<Callout tipo="warning" titulo="Esto es defensa, no ataque">
+Todos los ejemplos de este artículo se prueban únicamente en tu propia computadora, con tu propia base de datos de práctica. Probar estas técnicas contra sitios o personas que no te dieron permiso por escrito es ilegal y puede tener consecuencias graves. Para practicar con permiso, usa laboratorios hechos para eso, como los de OWASP o sitios de práctica de seguridad.
+</Callout>
+
+## Otras reglas que valen oro
+
+- **Valida en el servidor.** La validación del navegador mejora la experiencia, pero cualquiera puede saltársela. Nunca es una barrera de seguridad.
+- **Actualiza dependencias.** Muchas vulnerabilidades están en bibliotecas viejas. Herramientas como `npm audit` o Dependabot avisan.
+- **Usa HTTPS siempre.** Cifra los datos en tránsito.
+- **No muestres errores internos al usuario.** Un mensaje con la consulta SQL o la ruta del servidor es información valiosa para un atacante.
+- **Registra eventos importantes**, como inicios de sesión fallidos, para detectar abusos.
+- **Revisa el control de acceso.** No basta con ocultar un botón: el servidor debe verificar que la persona tenga permiso. Lo vemos en [Autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/).
+
+## Pruébalo tú
+
+1. Corre el ejemplo de inyección SQL en tu máquina. Cambia la entrada a otro texto con comillas y observa qué devuelve cada versión.
+2. En una página HTML de práctica con un campo de texto, muestra lo que escribas primero con `innerHTML` y luego con `textContent`. Escribe `<b>negrita</b>` y compara.
+3. Crea un repositorio de práctica, agrega un archivo `.env` con un valor falso y comprueba con `git status` que no aparece una vez que lo agregaste a `.gitignore`.
+4. Revisa las cabeceras de tu propio sitio en las herramientas de desarrollo del navegador (pestaña Red) y busca si envía `Content-Security-Policy`.
+
+## Errores y mitos comunes
+
+- **"Mi sitio es chico, nadie me atacaría."** Los ataques automáticos no distinguen tamaños: recorren internet buscando fallos conocidos.
+- **"Si el formulario valida, estoy seguro."** La validación del navegador se salta con facilidad.
+- **"Escapar a mano con reemplazos basta."** Usa las funciones de tu framework o biblioteca; las caseras dejan huecos.
+- **"Borré la contraseña del repositorio, listo."** El historial de Git la conserva. Hay que cambiarla.
+- **"La seguridad se agrega al final."** Es mucho más barata si la piensas desde el diseño.
+
+## Qué sigue
+
+- Aprende a identificar a tus usuarios y controlar su acceso: [Autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/).
+- Entiende la base de las conexiones web: [HTTP, cliente y servidor](/fundamentos/http-cliente-servidor/).
+- Revisa los recursos de la [biblioteca de Linux y terminal](/biblioteca/linux/) y de [SQL](/biblioteca/sql/) para consolidar lo básico.
+- Consulta el [glosario](/glosario/) y practica con los [retos](/retos/).

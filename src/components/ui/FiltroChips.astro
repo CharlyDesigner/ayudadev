@@ -1,0 +1,22 @@
+---
+/**
+ * Grupo de chips para filtrar un listado (ver src/scripts/chipfilter.ts).
+ * Siempre incluye la opción "Todos".
+ */
+interface Props {
+  grupo: string;
+  etiqueta: string;
+  opciones: { valor: string; etiqueta: string; conteo?: number }[];
+}
+const { grupo, etiqueta, opciones } = Astro.props;
+---
+
+<div role="group" aria-label={etiqueta} class="flex flex-wrap items-center gap-2">
+  <span class="mr-1 text-xs font-semibold uppercase tracking-wider text-muted">{etiqueta}</span>
+  <button type="button" class="chip" data-chip-grupo={grupo} data-chip-valor="" aria-pressed="true">Todos</button>
+  {opciones.map((o) => (
+    <button type="button" class="chip" data-chip-grupo={grupo} data-chip-valor={o.valor} aria-pressed="false">
+      {o.etiqueta}{o.conteo !== undefined && <span class="text-[0.7rem] opacity-70">{o.conteo}</span>}
+    </button>
+  ))}
+</div>

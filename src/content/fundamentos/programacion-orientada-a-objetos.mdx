@@ -1,0 +1,198 @@
+---
+titulo: 'Programación orientada a objetos sin misterio'
+descripcion: 'Clases, objetos, encapsulación, herencia, polimorfismo y composición explicados con ejemplos cortos en Python y JavaScript, y cuándo conviene usarlos.'
+categoria: programacion
+nivel: intermedio
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [python, javascript]
+etiquetas: [poo, clases, herencia, polimorfismo, composicion]
+orden: 22
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Tu programa guarda datos de usuarios en diccionarios sueltos y tiene quince funciones que reciben esos diccionarios. Un día cambias el nombre de un campo y rompes siete funciones sin darte cuenta. La programación orientada a objetos (POO) propone otra forma de organizar: juntar los datos y las funciones que trabajan con ellos en una sola pieza.
+
+## Qué es
+
+La **POO** es un estilo de programar donde el programa se arma con **objetos**: piezas que combinan **datos** (llamados atributos) y **comportamiento** (llamado métodos).
+
+Una **clase** es el molde y un **objeto** es lo que sale del molde. La clase `Perro` describe qué tiene y qué hace cualquier perro. Los objetos `Firulais` y `Rex` son perros concretos, cada uno con su propio nombre.
+
+```text
+Clase CuentaBancaria          Objetos (instancias)
++-------------------+         +--------------------+
+| atributos:        |  --->   | titular: "Ana"     |
+|   titular, saldo  |         | saldo: 150         |
+| métodos:          |         +--------------------+
+|   depositar()     |  --->   | titular: "Luis"    |
+|   retirar()       |         | saldo: 20          |
++-------------------+         +--------------------+
+```
+
+No es mágico ni obligatorio. Es una herramienta para organizar código cuando tienes cosas con estado que cambia y reglas que deben cumplirse.
+
+## Los cuatro pilares, uno por uno
+
+### Encapsulación: proteger el estado
+
+Una cuenta bancaria no debería permitir que cualquiera ponga el saldo en un millón directamente. Por eso el saldo se guarda "adentro" y solo se modifica por métodos que revisan las reglas.
+
+<Ejemplo numero={1} titulo="Una clase con reglas" archivo="cuenta.py" ejecutar="uv run cuenta.py" salida={"Ana 150\nError: Fondos insuficientes"}>
+
+```python
+class CuentaBancaria:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo      # el guion bajo avisa: es interno
+
+    def depositar(self, monto):
+        if monto <= 0:
+            raise ValueError("El monto debe ser positivo")
+        self._saldo += monto
+
+    def retirar(self, monto):
+        if monto > self._saldo:
+            raise ValueError("Fondos insuficientes")
+        self._saldo -= monto
+
+    @property
+    def saldo(self):             # lectura permitida, escritura no
+        return self._saldo
+
+cuenta = CuentaBancaria("Ana", 100)
+cuenta.depositar(50)
+print(cuenta.titular, cuenta.saldo)
+try:
+    cuenta.retirar(500)
+except ValueError as e:
+    print("Error:", e)
+```
+
+`__init__` es el constructor: se ejecuta al crear el objeto. `self` es el objeto actual. El guion bajo en `_saldo` es una convención de Python que dice "no lo toques desde afuera". Python no lo impide a la fuerza, confía en que sigues la convención. Así, todas las reglas del saldo viven en un solo lugar.
+
+</Ejemplo>
+
+JavaScript sí ofrece privacidad real con el prefijo `#`:
+
+```js
+class Contador {
+  #valor = 0;                    // campo privado de verdad
+  incrementar() { this.#valor++; return this; }
+  get valor() { return this.#valor; }
+}
+const c = new Contador();
+c.incrementar().incrementar();
+console.log(c.valor);   // 2
+// c.#valor desde afuera es un error de sintaxis
+```
+
+### Herencia: reutilizar y especializar
+
+Una clase puede **heredar** de otra: recibe sus atributos y métodos, y puede cambiarlos. Sirve para modelar relaciones del tipo "es un": un perro es un animal.
+
+### Polimorfismo: misma llamada, distinto resultado
+
+Si varias clases tienen el mismo método, puedes llamarlo sin saber qué objeto exacto tienes. Cada uno responde a su manera.
+
+<Ejemplo numero={2} titulo="Herencia y polimorfismo" archivo="animales.py" ejecutar="uv run animales.py" salida={"Firulais dice guau\nMichi dice miau\nAlgo dice ..."}>
+
+```python
+class Animal:
+    def __init__(self, nombre):
+        self.nombre = nombre
+    def hablar(self):
+        return "..."
+    def presentarse(self):
+        return f"{self.nombre} dice {self.hablar()}"
+
+class Perro(Animal):
+    def hablar(self):         # sobrescribe el método
+        return "guau"
+
+class Gato(Animal):
+    def hablar(self):
+        return "miau"
+
+for a in [Perro("Firulais"), Gato("Michi"), Animal("Algo")]:
+    print(a.presentarse())
+```
+
+El bucle no pregunta "¿eres perro o gato?". Solo llama a `presentarse()`, y cada objeto usa su propio `hablar()`. Si mañana agregas la clase `Vaca`, el bucle sigue funcionando sin cambios. Ese es el valor real del polimorfismo: agregas casos nuevos sin tocar el código que ya funciona.
+
+</Ejemplo>
+
+### Abstracción
+
+Es esconder los detalles y mostrar solo lo necesario. Cuando usas `cuenta.retirar(50)` no te importa cómo se guarda el saldo. Te importa que retirar funcione. Una buena clase tiene pocos métodos públicos, claros, y oculta lo demás.
+
+<Callout tipo="tip" titulo="Cómo saber si necesitas una clase">
+Pregúntate: ¿tengo datos que viajan juntos y funciones que siempre los usan? ¿Hay reglas que deben cumplirse siempre (saldo no negativo, correo válido)? Si la respuesta es sí, una clase ayuda. Si solo necesitas transformar datos de entrada en datos de salida, una función es suficiente.
+</Callout>
+
+## Composición: la alternativa a la herencia
+
+La herencia modela "es un". La **composición** modela "tiene un": un coche **tiene** un motor. En lugar de heredar, guardas otro objeto adentro y le delegas el trabajo.
+
+<Ejemplo numero={3} titulo="Un coche tiene un motor" archivo="coche.py" ejecutar="uv run coche.py" salida="motor encendido">
+
+```python
+class Motor:
+    def encender(self):
+        return "motor encendido"
+
+class Coche:
+    def __init__(self):
+        self.motor = Motor()     # composición
+    def arrancar(self):
+        return self.motor.encender()
+
+print(Coche().arrancar())
+```
+
+Si mañana quieres un motor eléctrico, cambias qué objeto guardas, sin romper una cadena de herencia.
+
+</Ejemplo>
+
+Una regla muy repetida entre programadores es **"prefiere composición sobre herencia"**. La herencia crea una relación fuerte: si cambias la clase padre, todos los hijos pueden romperse. La composición es más flexible. Esto conecta con los [Patrones de diseño que sí vas a usar](/fundamentos/patrones-de-diseno/).
+
+<Callout tipo="warning" titulo="Herencia profunda y clases gigantes">
+Una cadena de cinco niveles de herencia es difícil de entender: para saber qué hace un método tienes que recorrer cinco archivos. Igual de malo es la "clase Dios" que lo sabe y lo hace todo. Mantén las jerarquías cortas y las clases pequeñas, con una sola responsabilidad.
+</Callout>
+
+## Cuándo sí y cuándo no
+
+La POO no es la única forma de programar, y no es la mejor para todo.
+
+| Situación | Buena opción |
+| --- | --- |
+| Entidades con estado y reglas (usuarios, pedidos, cuentas) | Clases |
+| Transformar datos paso a paso | Funciones simples |
+| Mismo contrato con varias implementaciones | Clases con polimorfismo |
+| Scripts cortos de una sola vez | Funciones, sin clases |
+
+Muchos proyectos reales mezclan estilos. Python y JavaScript te permiten usar clases y funciones juntas. Compara con el enfoque contrario en [Programación funcional: la idea central](/fundamentos/programacion-funcional/).
+
+## Pruébalo tú
+
+1. Crea una clase `Producto` con nombre y precio. Agrega un método `aplicar_descuento(porcentaje)` que rechace porcentajes menores que 0 o mayores que 100.
+2. Crea una clase `Carrito` que **contenga** una lista de productos (composición) y tenga un método `total()`.
+3. Agrega una clase `Figura` con método `area()` y dos hijas, `Cuadrado` y `Circulo`, que lo sobrescriban. Recorre una lista mixta y suma las áreas.
+4. Reescribe la clase `Contador` de JavaScript de este artículo en Python, usando una propiedad de solo lectura.
+
+## Errores y mitos comunes
+
+- **"POO es sinónimo de programar bien."** Puedes escribir código horrible con clases y código excelente con funciones.
+- **"Todo debe ser una clase."** Python y JavaScript no obligan. Crear una clase con un solo método suele ser exceso.
+- **"Herencia es la mejor forma de reutilizar código."** Muchas veces la composición o una simple función compartida es más clara.
+- **"`_saldo` es realmente privado en Python."** Es una convención. Quien quiera, puede acceder. La confianza es parte del diseño.
+- **"Un objeto y una clase son lo mismo."** La clase es el molde; el objeto es una instancia concreta.
+
+## Qué sigue
+
+- Revisa cómo se organizan las funciones antes de agruparlas: [Funciones y recursión](/fundamentos/funciones-y-recursion/).
+- Aprende a escribir código que se lea bien: [Código limpio y refactorización](/fundamentos/codigo-limpio-y-refactorizacion/).
+- Mira soluciones conocidas a problemas de diseño: [Patrones de diseño que sí vas a usar](/fundamentos/patrones-de-diseno/).
+- Sigue practicando con la [guía de Python](/guias/python/), la [guía de Java](/guias/java/), el [glosario](/glosario/) y los [retos](/retos/).

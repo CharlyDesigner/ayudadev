@@ -1,0 +1,225 @@
+---
+titulo: 'Markdown: sintaxis completa'
+descripcion: 'Encabezados, énfasis, listas, enlaces, imágenes, código, citas, tablas, listas de tareas y extensiones de GitHub en Markdown, con la forma exacta de escribir cada una.'
+tema: generales
+etiquetas: ['markdown', 'github', 'documentación', 'readme']
+publicado: 2026-10-09
+orden: 17
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Markdown es texto plano con marcas sencillas que se convierte en HTML. La base es CommonMark; GitHub añade extensiones (GFM) como tablas y listas de tareas. Los ejemplos se convirtieron con un procesador Markdown para comprobar el resultado.
+
+## Encabezados
+
+| Escribes | Resultado |
+| --- | --- |
+| `# Título` | `<h1>` |
+| `## Sección` | `<h2>` |
+| `### Subsección` | `<h3>` |
+| `###### Mínimo` | `<h6>` (el último nivel) |
+| `Título` y debajo `=====` | `<h1>` (estilo antiguo) |
+| `Sección` y debajo `-----` | `<h2>` (estilo antiguo) |
+
+Deja un espacio después de las almohadillas: `#Título` no es un encabezado. Usa un solo `#` por documento y no saltes niveles.
+
+## Énfasis
+
+| Escribes | Resultado |
+| --- | --- |
+| `**negrita**` o `__negrita__` | **negrita** |
+| `*cursiva*` o `_cursiva_` | *cursiva* |
+| `***ambas***` | ***negrita y cursiva*** |
+| `~~tachado~~` | ~~tachado~~ (extensión GFM) |
+| `` `código en línea` `` | `código en línea` |
+
+Si el código en línea debe contener un acento grave, rodéalo con dos acentos graves a cada lado y un espacio de separación.
+
+## Párrafos y saltos de línea
+
+| Escribes | Resultado |
+| --- | --- |
+| Una línea en blanco entre bloques | Párrafo nuevo |
+| Salto simple de línea | Se une al párrafo anterior (no corta la línea) |
+| Dos espacios al final de la línea | Salto de línea (`<br>`) |
+| Una barra invertida `\` al final de la línea | Salto de línea (`<br>`) |
+| `---`, `***` o `___` en su propia línea | Línea horizontal |
+
+Dos espacios al final son invisibles y muchos editores los borran. La barra invertida es más segura.
+
+## Listas
+
+```markdown
+- Elemento
+- Otro elemento
+  - Sublista (2 o 4 espacios de sangría)
+  - Otra más
+
+1. Primero
+2. Segundo
+3. Tercero
+
+1. La numeración real
+1. no importa:
+1. se renumera sola
+
+10. Empieza en 10
+11. Sigue en 11
+```
+
+Puedes usar `-`, `*` o `+` para listas sin orden; elige uno y mantenlo. En listas ordenadas, solo importa el primer número.
+
+### Listas de tareas (GFM)
+
+```markdown
+- [x] Tarea hecha
+- [ ] Tarea pendiente
+```
+
+## Enlaces
+
+| Escribes | Resultado |
+| --- | --- |
+| `[texto](https://ejemplo.com)` | Enlace con texto |
+| `[texto](https://ejemplo.com "Título")` | Con tooltip |
+| `<https://ejemplo.com>` | Enlace con la URL visible |
+| `https://ejemplo.com` | GFM lo convierte en enlace solo |
+| `[texto](#mi-seccion)` | Salto a un encabezado del mismo documento |
+| `[texto](./otra.md)` | Enlace relativo a otro archivo |
+| `[texto][ref]` y luego `[ref]: https://ejemplo.com` | Enlace por referencia (la definición va en cualquier parte) |
+
+El ancla de un encabezado en GitHub es su texto en minúsculas, con guiones en lugar de espacios: `## Mi sección` se enlaza con `#mi-sección`.
+
+## Imágenes
+
+```markdown
+![Texto alternativo](imagen.png)
+![Texto alternativo](imagen.png "Título opcional")
+[![Insignia](https://ejemplo.com/badge.svg)](https://ejemplo.com)
+```
+
+Es un enlace con un `!` delante. El texto alternativo describe la imagen para quien no la ve. La tercera línea es una imagen que además es un enlace (típico de las insignias de un README).
+
+## Citas
+
+```markdown
+> Esto es una cita.
+> Continúa en la siguiente línea.
+>
+> > Cita anidada.
+```
+
+## Bloques de código
+
+Con tres acentos graves y el nombre del lenguaje (activa el resaltado de sintaxis):
+
+````markdown
+```js
+const saludo = "hola";
+console.log(saludo);
+```
+````
+
+| Opción | Detalle |
+| --- | --- |
+| Cercado con acentos graves | Tres `` ` `` arriba y abajo, con el lenguaje (`js`, `python`, `bash`, `json`...) |
+| Cercado con tildes | `~~~` también vale |
+| Sangría | Cuatro espacios al inicio de cada línea (estilo antiguo) |
+| Código dentro de un bloque con código | Usa cuatro acentos graves por fuera |
+
+## Tablas (GFM)
+
+```markdown
+| Producto | Cantidad | Precio |
+| :------- | :------: | -----: |
+| Lápiz    |    10    |   $5.0 |
+| Cuaderno |     3    |  $40.0 |
+```
+
+| Línea separadora | Alineación |
+| --- | --- |
+| `:---` | Izquierda |
+| `:---:` | Centro |
+| `---:` | Derecha |
+
+Los espacios para alinear las columnas son opcionales. Para escribir una barra vertical dentro de una celda, usa `\|`. La tabla necesita su fila de encabezado.
+
+## Escapar caracteres
+
+Una barra invertida delante muestra el carácter tal cual:
+
+```markdown
+\*no es cursiva\*   \# no es encabezado   1\. no es lista   \[no enlace\]
+```
+
+Se pueden escapar estos caracteres: barra invertida, acento grave, asterisco, guion bajo, llaves, corchetes, paréntesis, almohadilla, más, menos, punto, signo de exclamación y barra vertical.
+
+## HTML dentro de Markdown
+
+La mayoría de los procesadores aceptan HTML en línea y en bloque:
+
+```markdown
+Pulsa <kbd>Ctrl</kbd> + <kbd>C</kbd>.
+
+<details>
+<summary>Ver respuesta</summary>
+
+Contenido en **Markdown**, con una línea en blanco tras la etiqueta.
+
+</details>
+
+H<sub>2</sub>O y x<sup>2</sup>
+```
+
+GitHub elimina por seguridad algunas etiquetas (como `<script>` y `<style>`).
+
+## Extensiones de GitHub
+
+| Función | Sintaxis |
+| --- | --- |
+| Mención de una persona | `@usuario` |
+| Referencia a incidencia o pull request | `#42` o `usuario/repo#42` |
+| Emoji | `:tada:` |
+| Notas al pie | `Texto[^1]` y luego `[^1]: la nota` |
+| Diagramas | Bloque de código con el lenguaje `mermaid` |
+| Fórmulas | `$x^2$` en línea; `$$ ... $$` en bloque |
+| Alertas | Cita que empieza con `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]` o `> [!CAUTION]` |
+
+```markdown
+> [!NOTE]
+> Información que conviene saber.
+```
+
+Estas extensiones funcionan en GitHub. Otros editores y sitios pueden no reconocerlas.
+
+## Estructura recomendada para un README
+
+```markdown
+# Nombre del proyecto
+
+Una frase que diga qué hace.
+
+## Instalación
+
+    npm install
+
+## Uso
+
+## Contribuir
+
+## Licencia
+```
+
+<Callout tipo="tip" titulo="Compatibilidad">
+
+Si tu Markdown se va a publicar en distintos sitios, quédate con lo básico: encabezados, énfasis, listas, enlaces, imágenes, código y citas. Las tablas y listas de tareas funcionan en la mayoría; el resto depende del procesador.
+
+</Callout>
+
+## Para ir más a fondo
+
+- [Especificación CommonMark](https://spec.commonmark.org/)
+- [Sintaxis básica de escritura y formato en GitHub](https://docs.github.com/es/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)
+- Hoja de AyudaDev: [Expresiones regulares](/hojas/expresiones-regulares/)
+- Biblioteca: [libros y cursos de temas generales](/biblioteca/generales/)

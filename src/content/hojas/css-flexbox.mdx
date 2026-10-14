@@ -1,0 +1,171 @@
+---
+titulo: 'CSS Flexbox: referencia rápida'
+descripcion: 'Propiedades de Flexbox en tablas: direction, justify-content, align-items, wrap, gap, grow, shrink y basis, con recetas de centrado y barras de navegación.'
+tema: html-css
+etiquetas: ['css', 'flexbox', 'maquetación', 'layout']
+publicado: 2026-10-09
+orden: 14
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Flexbox alinea y distribuye elementos en una sola dimensión: una fila o una columna. Para filas y columnas a la vez, usa Grid.
+
+```css
+.contenedor {
+  display: flex;          /* los hijos directos pasan a ser elementos flex */
+}
+```
+
+Dos conceptos: el **eje principal** (la dirección del `flex-direction`) y el **eje transversal** (el perpendicular). `justify-*` trabaja en el principal; `align-*` en el transversal.
+
+## Propiedades del contenedor
+
+| Propiedad | Valores | Qué hace |
+| --- | --- | --- |
+| `display` | `flex`, `inline-flex` | Activa Flexbox (en bloque o en línea) |
+| `flex-direction` | `row` (por defecto), `row-reverse`, `column`, `column-reverse` | Dirección del eje principal |
+| `flex-wrap` | `nowrap` (por defecto), `wrap`, `wrap-reverse` | Si los elementos pueden pasar a otra línea |
+| `flex-flow` | `column wrap` | Atajo de `flex-direction` y `flex-wrap` |
+| `justify-content` | `flex-start`, `flex-end`, `center`, `space-between`, `space-around`, `space-evenly` | Alinea en el eje principal |
+| `align-items` | `stretch` (por defecto), `flex-start`, `flex-end`, `center`, `baseline` | Alinea en el eje transversal |
+| `align-content` | igual que `justify-content` | Reparte las líneas cuando hay varias (necesita `flex-wrap: wrap`) |
+| `gap` | `10px`, `1rem 2rem` | Espacio entre elementos (`row-gap` y `column-gap`) |
+
+### justify-content en un contenedor de 600 px con tres cajas de 100 px
+
+| Valor | Posición de las cajas (eje X) |
+| --- | --- |
+| `flex-start` | 0, 100, 200 |
+| `center` | 150, 250, 350 |
+| `space-between` | 0, 250, 500 (la primera y la última pegadas a los bordes) |
+| `space-around` | Espacio igual alrededor de cada caja (los bordes llevan la mitad) |
+| `space-evenly` | Espacio idéntico entre todas y en los bordes |
+
+## Propiedades de los elementos
+
+| Propiedad | Valores | Qué hace |
+| --- | --- | --- |
+| `flex-grow` | número, `0` por defecto | Cuánto del espacio libre se queda este elemento (proporción) |
+| `flex-shrink` | número, `1` por defecto | Cuánto se encoge si no cabe. `0` impide que se encoja |
+| `flex-basis` | `auto`, `200px`, `30%` | Tamaño inicial antes de repartir espacio |
+| `flex` | `1`, `0 0 100px`, `auto`, `none` | Atajo de grow, shrink y basis |
+| `align-self` | como `align-items` | Alineación transversal solo para este elemento |
+| `order` | número entero, `0` por defecto | Orden visual (no cambia el orden del HTML ni el del teclado) |
+| `margin: auto` | | Absorbe el espacio libre; empuja el elemento al lado contrario |
+
+### Atajos de flex
+
+| Escribes | Equivale a | Efecto |
+| --- | --- | --- |
+| `flex: 1` | `1 1 0` | Reparte el espacio libre por igual |
+| `flex: auto` | `1 1 auto` | Crece y encoge a partir de su tamaño natural |
+| `flex: none` | `0 0 auto` | Tamaño fijo, ni crece ni encoge |
+| `flex: 0 0 100px` | | Exactamente 100 px |
+| `flex: 2` | `2 1 0` | Toma el doble que un `flex: 1` |
+
+Medido en un contenedor de 600 px con `gap: 10px` y tres hijos: con `flex: 1` cada uno mide 193 px. Si el primero tiene `flex: 2 1 0` y los otros `flex: 1 1 0`, miden 290, 145 y 145. Con `flex: 0 0 100px` en uno y `flex: 1` en otro, miden 100 y 490.
+
+## Recetas
+
+### Centrar al centro exacto
+
+```css
+.centro {
+  display: flex;
+  justify-content: center;   /* horizontal */
+  align-items: center;       /* vertical */
+  min-height: 100vh;
+}
+```
+
+### Barra de navegación con el logo a la izquierda y enlaces a la derecha
+
+```css
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.barra .logo { margin-right: auto; }   /* empuja lo demás hacia la derecha */
+```
+
+```html
+<nav class="barra">
+  <a class="logo" href="/">Mi sitio</a>
+  <a href="/blog">Blog</a>
+  <a href="/contacto">Contacto</a>
+</nav>
+```
+
+### Tarjetas que saltan de línea
+
+```css
+.tarjetas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.tarjetas > * {
+  flex: 1 1 250px;   /* crece, encoge y pide 250px de base: pasa a otra línea si no caben */
+}
+```
+
+### Pie de página pegado abajo
+
+```css
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+main { flex: 1; }     /* ocupa todo el espacio libre */
+```
+
+### Columna con el botón al fondo
+
+```css
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+}
+.tarjeta .boton { margin-top: auto; }
+```
+
+### Fila que se vuelve columna en móvil
+
+```css
+.fila {
+  display: flex;
+  gap: 1rem;
+}
+@media (max-width: 600px) {
+  .fila { flex-direction: column; }
+}
+```
+
+## Solución de problemas
+
+| Síntoma | Causa y arreglo |
+| --- | --- |
+| Los hijos no se alinean | Solo los hijos directos son elementos flex. El contenedor necesita `display: flex` |
+| Un elemento se encoge y no respeta su `width` | `flex-shrink` es 1. Pon `flex-shrink: 0` o usa `flex: none` |
+| Un hijo con texto largo desborda | Añade `min-width: 0` al hijo: por defecto no puede ser más pequeño que su contenido |
+| `justify-content` no hace nada | No hay espacio libre en el eje principal (por ejemplo, los hijos ya lo llenan con `flex: 1`) |
+| `align-items` no centra | El contenedor no tiene más altura que su contenido. Ponle `height` o `min-height` |
+| `align-content` no funciona | Solo actúa con varias líneas: necesita `flex-wrap: wrap` |
+| Se invierte el orden con la tecla Tab | `order` y `*-reverse` cambian lo visual, no el foco. Evítalos si importa el orden de lectura |
+| Quieres rejilla de filas y columnas | Usa Grid |
+
+<Callout tipo="info" titulo="Flexbox o Grid">
+
+Flexbox parte del contenido: los elementos deciden su tamaño y se acomodan en una línea. Grid parte de la rejilla: defines las columnas y filas y los elementos las ocupan. Para una barra, un grupo de botones o una tarjeta, Flexbox. Para la estructura de una página o una galería, Grid.
+
+</Callout>
+
+## Para ir más a fondo
+
+- [Conceptos básicos de Flexbox en MDN](https://developer.mozilla.org/es/docs/Web/CSS/CSS_flexible_box_layout/Basic_concepts_of_flexbox)
+- Hoja de AyudaDev: [CSS Grid, referencia rápida](/hojas/css-grid/)
+- Guía de AyudaDev: [HTML y CSS desde cero](/guias/html-css/)
+- Biblioteca: [libros y cursos de HTML y CSS](/biblioteca/html-css/)

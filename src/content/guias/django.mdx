@@ -1,0 +1,353 @@
+---
+titulo: 'Django desde cero'
+descripcion: 'Qué es Django, cómo crear un proyecto y cómo construir una biblioteca con modelos, ORM, panel de administración, vistas, formularios y pruebas.'
+tema: django
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['django-tutorial-oficial-primera-aplicacion', 'django-girls-tutorial', 'django-mdn-framework-web', 'django-curso-andros-fenollosa']
+requisitos: ['Saber lo básico de Python (funciones, clases, diccionarios)', 'Saber usar la terminal']
+etiquetas: ['django', 'python', 'orm', 'admin', 'backend']
+orden: 54
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Django es un framework web de Python que viene con casi todo lo necesario: base de datos con ORM, panel de administración, formularios, autenticación, plantillas y protección contra los ataques más comunes. En esta guía creas una pequeña biblioteca de libros: un modelo, un panel para administrarla, páginas para verla, un formulario para agregar libros y pruebas.
+
+## Qué es y para qué sirve
+
+Este es el modelo mental de Django:
+
+- **Baterías incluidas.** Django resuelve de serie tareas que en otros ecosistemas armas con piezas sueltas: usuarios, sesiones, formularios, administración, seguridad. Eso lo hace muy productivo para sitios con datos.
+- **Proyecto y aplicaciones.** Un proyecto es el sitio completo, con su configuración. Dentro viven aplicaciones: módulos pequeños y reutilizables, como `biblioteca` o `blog`, que debes registrar en `INSTALLED_APPS`.
+- **Patrón MTV.** El modelo (Model) define los datos, la plantilla (Template) define cómo se ven, y la vista (View) conecta ambos y responde a cada petición. Las URL deciden qué vista atiende cada dirección.
+- **ORM.** Describes tus tablas como clases de Python (modelos) y consultas con métodos como `filter` y `get`, sin escribir SQL. Django traduce a SQL para SQLite, PostgreSQL, MySQL u otras bases de datos.
+- **Migraciones.** Cuando cambias un modelo, Django genera un archivo de migración que describe el cambio y lo aplica a la base de datos. Así el esquema queda versionado junto con tu código.
+- **Panel de administración.** Con registrar un modelo obtienes una interfaz para crear, editar, buscar y borrar datos, con usuarios y permisos.
+- **Seguridad por defecto.** Las plantillas escapan el HTML, los formularios exigen un token CSRF y el ORM usa consultas parametrizadas contra la inyección de SQL.
+- **Sin magia oculta.** Todo es Python normal en archivos con nombres convencionales: `models.py`, `views.py`, `urls.py`, `admin.py`.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala Python 3.** Descárgalo desde [python.org](https://www.python.org/downloads/). En **Windows** también sirve `winget install Python.Python.3.13`; en **macOS**, `brew install python`; en **Linux** suele venir instalado y, si no, lo obtienes con el gestor de paquetes de tu distribución. La documentación de Django indica qué versiones de Python soporta cada versión del framework. Comprueba con `python --version` (en macOS y Linux puede ser `python3 --version`).
+2. **Crea una carpeta y un entorno virtual.** Ejecuta `mkdir mi-sitio`, `cd mi-sitio` y `python -m venv .venv`. El entorno virtual mantiene las dependencias de este proyecto separadas de las de tu sistema.
+3. **Actívalo.** En **Windows (PowerShell)**: `.venv\Scripts\Activate.ps1`. En **macOS y Linux**: `source .venv/bin/activate`. Verás `(.venv)` al inicio de tu terminal.
+4. **Instala Django** con `python -m pip install django` y comprueba con `python -m django --version`.
+5. **Crea el proyecto.** Ejecuta `django-admin startproject config .` (el punto final es importante: crea los archivos en la carpeta actual). Después, `python manage.py startapp biblioteca` crea la aplicación.
+6. **Configura el proyecto.** Abre `config/settings.py`, agrega `'biblioteca'` a la lista `INSTALLED_APPS`, y cambia `LANGUAGE_CODE` a `'es-mx'` y `TIME_ZONE` a `'America/Mexico_City'`.
+7. **Comprueba y arranca.** Ejecuta `python manage.py check`; debe decir "System check identified no issues (0 silenced)." Luego `python manage.py runserver` y abre `http://127.0.0.1:8000/`. Verás la página de bienvenida de Django. Detén el servidor con Ctrl + C.
+
+</Pasos>
+
+Archivos que vas a tocar: `biblioteca/models.py`, `admin.py`, `views.py`, `forms.py` y `tests.py`, más `biblioteca/urls.py` y `config/urls.py` para las direcciones, y las plantillas en `biblioteca/templates/biblioteca/`. Algunos de estos archivos no existen todavía, y los creas tú.
+
+## Ejemplos paso a paso
+
+Cada ejemplo agrega una pieza a la biblioteca. Ejecuta los comandos con el entorno virtual activado.
+
+<Ejemplo numero={1} titulo="Un modelo y su migración" archivo="biblioteca/models.py" ejecutar="python manage.py makemigrations biblioteca" salida={"Migrations for 'biblioteca':\n  biblioteca/migrations/0001_initial.py\n    + Create model Libro"}>
+
+```python
+from django.db import models
+
+
+class Libro(models.Model):
+    titulo = models.CharField(max_length=200)
+    autor = models.CharField(max_length=100)
+    anio = models.PositiveSmallIntegerField("año")
+    leido = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["titulo"]
+
+    def __str__(self):
+        return f"{self.titulo} ({self.autor})"
+```
+
+Cada clase que hereda de `models.Model` se convierte en una tabla, y cada atributo en una columna con su tipo. `ordering` define el orden por defecto de las consultas y `__str__` decide cómo se muestra cada libro, por ejemplo en el panel. `makemigrations` compara tus modelos con las migraciones existentes y escribe el archivo `0001_initial.py`. En Windows la ruta aparece con barra invertida. Ese archivo todavía no toca la base de datos: ejecuta `python manage.py migrate` para aplicarlo (y las migraciones de las aplicaciones integradas, como usuarios y sesiones). Verás líneas del tipo "Applying biblioteca.0001_initial... OK". Con SQLite, el valor por defecto, se crea el archivo `db.sqlite3`.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Consultas con el ORM en la consola" archivo="python manage.py shell" ejecutar="python manage.py shell" salida={"3\n[<Libro: El principito (Antoine de Saint-Exupéry)>, <Libro: Rayuela (Julio Cortázar)>]\n<QuerySet ['Pedro Páramo', 'Rayuela']>\nJulio Cortázar\n2"}>
+
+Abre la consola interactiva de Django con `python manage.py shell`. Los modelos de tus aplicaciones ya vienen importados; si tu versión no lo hace, escribe `from biblioteca.models import Libro`. Escribe estas líneas, una por una:
+
+```python
+Libro.objects.create(titulo="El principito", autor="Antoine de Saint-Exupéry", anio=1943)
+Libro.objects.create(titulo="Pedro Páramo", autor="Juan Rulfo", anio=1955, leido=True)
+Libro.objects.create(titulo="Rayuela", autor="Julio Cortázar", anio=1963)
+
+Libro.objects.count()
+list(Libro.objects.filter(leido=False))
+Libro.objects.filter(anio__gt=1950).values_list("titulo", flat=True)
+Libro.objects.get(titulo="Rayuela").autor
+
+libro = Libro.objects.get(titulo="Rayuela")
+libro.leido = True
+libro.save()
+Libro.objects.filter(leido=True).count()
+```
+
+La salida de arriba corresponde a las cinco expresiones que muestran un resultado, en orden: el total, los libros sin leer, los títulos posteriores a 1950, el autor de "Rayuela" y la cantidad de libros leídos después de marcar uno. Los `create` imprimen cada libro creado. `objects` es el administrador del modelo: `create` guarda, `filter` devuelve un conjunto de resultados (`QuerySet`) que puedes encadenar, y `get` devuelve exactamente un objeto. El doble guion bajo de `anio__gt` significa "mayor que" (`gt`); hay muchos más, como `contains`, `lt` o `in`. Los `QuerySet` son perezosos: la consulta SQL se ejecuta cuando necesitas los datos. Para salir de la consola escribe `exit()`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="El panel de administración" archivo="biblioteca/admin.py" ejecutar="python manage.py createsuperuser" salida={'Tras crear tu usuario y abrir /admin/ en el servidor, verás la sección "Biblioteca" con "Libros". Al entrar, una tabla con las columnas título, autor, año y leído, un filtro por leído y una caja de búsqueda por título o autor.'}>
+
+```python
+from django.contrib import admin
+
+from .models import Libro
+
+
+@admin.register(Libro)
+class LibroAdmin(admin.ModelAdmin):
+    list_display = ("titulo", "autor", "anio", "leido")
+    list_filter = ("leido",)
+    search_fields = ("titulo", "autor")
+```
+
+Ejecuta `python manage.py createsuperuser`: te pide nombre de usuario, correo y contraseña. Elige una contraseña tuya y no la compartas ni la subas a ningún repositorio. Luego ejecuta `python manage.py runserver` y entra a `http://127.0.0.1:8000/admin/`. El decorador `@admin.register` conecta el modelo con su configuración. `list_display` define las columnas de la tabla, `list_filter` agrega un panel de filtros y `search_fields` habilita la búsqueda. Con esas tres líneas tienes una interfaz para crear, editar y borrar libros, ya traducida porque configuraste `LANGUAGE_CODE`.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="URL, vista y plantilla" archivo="config/urls.py, biblioteca/urls.py, biblioteca/views.py y plantillas" ejecutar="python manage.py runserver" salida={'En http://127.0.0.1:8000/ aparece "Mis libros" con una lista de tres enlaces (El principito, Pedro Páramo y Rayuela), y los leídos llevan "(leído)". Al abrir /libros/2/ se ve "Pedro Páramo" y debajo "Juan Rulfo, 1955". Con /libros/999/ responde 404.'}>
+
+Primero las direcciones. En `config/urls.py`:
+
+```python
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("", include("biblioteca.urls")),
+]
+```
+
+Crea `biblioteca/urls.py`:
+
+```python
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path("", views.lista, name="lista"),
+    path("libros/nuevo/", views.nuevo, name="nuevo"),
+    path("libros/<int:pk>/", views.detalle, name="detalle"),
+]
+```
+
+Las vistas, en `biblioteca/views.py`:
+
+```python
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .forms import LibroForm
+from .models import Libro
+
+
+def lista(request):
+    libros = Libro.objects.all()
+    return render(request, "biblioteca/lista.html", {"libros": libros})
+
+
+def detalle(request, pk):
+    libro = get_object_or_404(Libro, pk=pk)
+    return render(request, "biblioteca/detalle.html", {"libro": libro})
+
+
+def nuevo(request):
+    if request.method == "POST":
+        form = LibroForm(request.POST)
+        if form.is_valid():
+            libro = form.save()
+            return redirect("detalle", pk=libro.pk)
+    else:
+        form = LibroForm()
+    return render(request, "biblioteca/nuevo.html", {"form": form})
+```
+
+Y las plantillas, en `biblioteca/templates/biblioteca/`. La base, `base.html`:
+
+```html
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block titulo %}Mi biblioteca{% endblock %}</title>
+  </head>
+  <body>
+    <nav><a href="{% url 'lista' %}">Inicio</a> | <a href="{% url 'nuevo' %}">Agregar libro</a></nav>
+    {% block contenido %}{% endblock %}
+  </body>
+</html>
+```
+
+`lista.html`:
+
+```html
+{% extends "biblioteca/base.html" %}
+{% block contenido %}
+  <h1>Mis libros</h1>
+  <ul>
+    {% for libro in libros %}
+      <li>
+        <a href="{% url 'detalle' libro.pk %}">{{ libro.titulo }}</a>
+        {% if libro.leido %}(leído){% endif %}
+      </li>
+    {% empty %}
+      <li>Aún no hay libros.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+```
+
+Y `detalle.html`:
+
+```html
+{% extends "biblioteca/base.html" %}
+{% block titulo %}{{ libro.titulo }}{% endblock %}
+{% block contenido %}
+  <h1>{{ libro.titulo }}</h1>
+  <p>{{ libro.autor }}, {{ libro.anio }}</p>
+{% endblock %}
+```
+
+El recorrido de una petición es: la URL coincide con un `path`, que llama a una vista; la vista consulta el modelo y llama a `render` con una plantilla y un diccionario de datos. `<int:pk>` captura un número de la URL y se lo pasa a la vista como argumento. `get_object_or_404` devuelve el libro o una página 404 si no existe. En las plantillas, `{{ }}` muestra valores (escapando el HTML) y `{% %}` ejecuta lógica como `for`, `if` o `url`. Dar nombre a las URL con `name` permite escribir `{% url 'detalle' libro.pk %}` en vez de armar direcciones a mano. Además, `extends` y `block` evitan repetir la estructura de la página. Falta crear `forms.py`, que usa la vista `nuevo`: es el siguiente ejemplo.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Un formulario ligado al modelo" archivo="biblioteca/forms.py y biblioteca/templates/biblioteca/nuevo.html" ejecutar="python manage.py runserver" salida={'En /libros/nuevo/ aparece un formulario con título, autor y año. Si lo envías vacío, cada campo obligatorio muestra "Este campo es obligatorio." Si escribes un año de 3000, aparece "Escribe un año real." Si todo es válido, te redirige a la página del libro nuevo.'}>
+
+Crea `biblioteca/forms.py`:
+
+```python
+from django import forms
+
+from .models import Libro
+
+
+class LibroForm(forms.ModelForm):
+    class Meta:
+        model = Libro
+        fields = ["titulo", "autor", "anio"]
+
+    def clean_anio(self):
+        anio = self.cleaned_data["anio"]
+        if anio > 2100:
+            raise forms.ValidationError("Escribe un año real.")
+        return anio
+```
+
+Y la plantilla `biblioteca/templates/biblioteca/nuevo.html`:
+
+```html
+{% extends "biblioteca/base.html" %}
+{% block contenido %}
+  <h1>Agregar libro</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar</button>
+  </form>
+{% endblock %}
+```
+
+Un `ModelForm` genera los campos del formulario a partir del modelo, con sus tipos y validaciones. Los métodos `clean_<campo>` agregan reglas propias: aquí rechazamos años absurdos. En la vista `nuevo`, `is_valid()` ejecuta todas las validaciones; si pasan, `form.save()` crea el libro, y `redirect` lleva al usuario a otra página. Ese patrón (redirigir tras un POST correcto) evita que, al recargar, el formulario se envíe dos veces. Si hay errores, la vista vuelve a mostrar el formulario con los mensajes. `{% csrf_token %}` es obligatorio en todo formulario POST: protege contra envíos falsificados desde otros sitios.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Pruebas automáticas" archivo="biblioteca/tests.py" ejecutar="python manage.py test" salida={"Found 4 test(s).\nCreating test database for alias 'default'...\nSystem check identified no issues (0 silenced).\n....\n----------------------------------------------------------------------\nRan 4 tests in 0.041s\n\nOK\nDestroying test database for alias 'default'..."}>
+
+```python
+from django.test import TestCase
+from django.urls import reverse
+
+from .models import Libro
+
+
+class BibliotecaTests(TestCase):
+    def setUp(self):
+        self.libro = Libro.objects.create(titulo="Rayuela", autor="Julio Cortázar", anio=1963)
+
+    def test_lista_muestra_los_libros(self):
+        respuesta = self.client.get(reverse("lista"))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Rayuela")
+
+    def test_detalle_inexistente_da_404(self):
+        respuesta = self.client.get(reverse("detalle", args=[999]))
+        self.assertEqual(respuesta.status_code, 404)
+
+    def test_crear_libro_redirige_al_detalle(self):
+        datos = {"titulo": "Pedro Páramo", "autor": "Juan Rulfo", "anio": 1955}
+        respuesta = self.client.post(reverse("nuevo"), datos)
+        nuevo = Libro.objects.get(titulo="Pedro Páramo")
+        self.assertRedirects(respuesta, reverse("detalle", args=[nuevo.pk]))
+
+    def test_anio_invalido_muestra_error(self):
+        datos = {"titulo": "Libro raro", "autor": "Alguien", "anio": 3000}
+        respuesta = self.client.post(reverse("nuevo"), datos)
+        self.assertContains(respuesta, "Escribe un año real.")
+        self.assertEqual(Libro.objects.count(), 1)
+```
+
+Django crea una base de datos temporal para las pruebas, así que no toca tus datos reales ni los libros que agregaste en la consola. `self.client` simula un navegador: hace peticiones a tus URL sin levantar el servidor. `reverse` calcula la dirección a partir del nombre que le diste, por lo que las pruebas no se rompen si cambias la ruta. Los milisegundos de tu salida serán distintos. Ejecuta las pruebas cada vez que cambies algo: es la forma más rápida de saber si rompiste una parte que ya funcionaba.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="OperationalError: no such table: biblioteca_libro">
+Definiste el modelo pero la base de datos todavía no tiene la tabla. Ejecuta `python manage.py makemigrations` y luego `python manage.py migrate`. Si ya lo hiciste y el error persiste, revisa que la aplicación esté en `INSTALLED_APPS` y que estés usando la misma base de datos.
+</Callout>
+
+<Callout tipo="warning" titulo="Your models have changes that are not yet reflected in a migration">
+Cambiaste un modelo (por ejemplo, agregaste un campo) y ejecutaste `migrate` sin crear antes la migración. Django lo avisa con ese mensaje y no aplica nada. Ejecuta `python manage.py makemigrations` para generar el archivo y después `migrate`. Cada cambio de modelo necesita ambos pasos.
+</Callout>
+
+<Callout tipo="warning" titulo="TemplateDoesNotExist">
+Django no encuentra la plantilla. Revisa que la aplicación esté en `INSTALLED_APPS`, que la carpeta se llame `templates` y que el nombre dentro de ella coincida con el que usas en `render` (aquí `biblioteca/lista.html`, o sea `templates/biblioteca/lista.html`). Repetir el nombre de la app dentro de `templates` evita choques entre aplicaciones.
+</Callout>
+
+<Callout tipo="warning" titulo="403 Forbidden: la verificación CSRF ha fallado">
+Tu formulario POST no incluye `{% csrf_token %}`. Agrégalo justo dentro de la etiqueta `form`. No desactives la protección CSRF para que "funcione": existe para evitar que otros sitios envíen formularios en nombre de tus usuarios. Si envías datos con JavaScript, debes mandar el token en una cabecera.
+</Callout>
+
+<Callout tipo="warning" titulo="Invalid HTTP_HOST header ... You may need to add it to ALLOWED_HOSTS">
+Con `DEBUG = False`, Django solo responde a los dominios que aparecen en `ALLOWED_HOSTS` y devuelve un error 400 con ese mensaje a cualquier otro. Cuando publiques, agrega tu dominio a esa lista. Y recuerda: nunca publiques con `DEBUG = True`, porque las páginas de error muestran tu configuración y tu código. Tampoco subas tu `SECRET_KEY` real a un repositorio público.
+</Callout>
+
+## Buenas prácticas
+
+- Trabaja siempre dentro de un entorno virtual y guarda tus dependencias en un archivo `requirements.txt`, que genera `python -m pip freeze`.
+- Una aplicación, una responsabilidad. Si tu sitio crece, divide en aplicaciones en lugar de llenar una sola.
+- Usa el ORM y sus consultas parametrizadas; no armes SQL concatenando textos de usuarios.
+- Usa `get_object_or_404` en vez de `get` cuando el objeto venga de la URL.
+- Pon `{% csrf_token %}` en cada formulario POST y redirige después de procesarlo.
+- Escribe pruebas junto con cada vista y cada formulario, y ejecútalas con `python manage.py test`.
+- Saca los secretos (`SECRET_KEY`, contraseñas) de `settings.py` y léelos de variables de entorno. Antes de publicar, repasa la [lista de verificación para el despliegue](https://docs.djangoproject.com/es/stable/howto/deployment/checklist/) y usa `python manage.py check --deploy`.
+- Sube tus migraciones a Git, pero no tu `db.sqlite3` ni tu entorno virtual: agrégalos a `.gitignore`.
+
+## Siguiente paso
+
+Ya recorriste el ciclo completo de Django: modelo, migración, panel, vista, plantilla, formulario y pruebas. Lo que sigue:
+
+- **Haz el tutorial oficial.** [Escribiendo tu primera aplicación en Django](https://docs.djangoproject.com/es/stable/intro/tutorial01/) profundiza en cada pieza con una app de encuestas.
+- **Aprende más del ORM.** La guía de [consultas del ORM](https://docs.djangoproject.com/es/stable/topics/db/queries/) cubre relaciones, agregaciones y consultas complejas.
+- **Agrega usuarios.** Django incluye autenticación; el módulo de MDN sobre Django la explica con un proyecto completo.
+- **Crea una API.** Un curso corto de [Django REST Framework](https://andros.dev/cursos/34b809b2/django-rest-framework/1/introduccion/) te lleva de las vistas a una API JSON. Después puedes consumirla desde [React](/guias/react/) o [Angular](/guias/angular/).
+- **Refuerza Python.** Si algo del código te costó, repasa [Python desde cero](/guias/python/).
+- **Domina SQL.** Entender las consultas que genera el ORM te vuelve mejor desarrollador: empieza con [SQL desde cero](/guias/sql/).
+- **Explora la biblioteca.** Todos los recursos de [Django](/biblioteca/django/) son gratuitos, y varios están en español.
+- **Guarda tu progreso.** Con [Git y GitHub](/guias/git/) puedes subir tu proyecto a tu portafolio.
+
+<LibrosRecomendados ids={frontmatter.libros} />

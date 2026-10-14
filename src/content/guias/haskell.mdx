@@ -1,0 +1,235 @@
+---
+titulo: 'Haskell desde cero'
+descripcion: 'Qué es Haskell, cómo instalarlo con GHCup y tus primeros programas funcionales con ejemplos que puedes copiar y ejecutar con runghc.'
+tema: haskell
+nivel: principiante
+tiempoLectura: 32
+publicado: 2026-10-09
+libros: ['haskell-programacion-funcional-con-haskell', 'haskell-learn-you-a-haskell', 'haskell-exercitium', 'haskell-mooc-helsinki']
+requisitos: ['Saber usar una terminal básica', 'Haber programado algo en cualquier lenguaje ayuda mucho']
+etiquetas: ['funcional', 'tipos', 'ghc', 'ghci', 'inmutabilidad']
+orden: 17
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Haskell es un lenguaje funcional puro con un sistema de tipos muy estricto. Se usa en compiladores, análisis de código, finanzas, sistemas distribuidos y mucha investigación. Pero su mayor valor al aprender es que cambia tu forma de pensar: después de Haskell, cualquier otro lenguaje se ve distinto.
+
+- **Funcional puro**: una función con los mismos argumentos siempre devuelve el mismo resultado y no cambia nada fuera de ella. Los efectos (leer un archivo, imprimir) se marcan en el tipo con `IO`.
+- **Inmutable**: no hay variables que cambien. Defines valores y construyes valores nuevos a partir de ellos.
+- **Tipado estático y fuerte con inferencia**: el compilador descubre casi todos los tipos, pero no hace conversiones implícitas. Escribir la firma de cada función es la costumbre.
+- **Perezoso**: una expresión se evalúa solo cuando su resultado hace falta. Por eso puedes trabajar con listas infinitas.
+- **Tipos de datos algebraicos**: modelas el problema con `data` y `case`, y el compilador te avisa si olvidas un caso.
+- **Clases de tipos**: son como interfaces que se definen aparte del tipo. `Show`, `Eq` y `Ord` son las primeras que conocerás.
+- **Sin null**: la ausencia de valor es `Maybe`, y los errores recuperables se representan con `Either`.
+- **Compilado con GHC**: el compilador genera binarios nativos, y `ghci` te da un intérprete interactivo ideal para experimentar.
+
+## Instálalo y corre tu primer archivo
+
+La forma recomendada es GHCup, un instalador que administra GHC (el compilador), cabal y Stack (gestores de proyectos) y el servidor de lenguaje para tu editor.
+
+<Pasos>
+
+1. Entra a [haskell.org/ghcup](https://www.haskell.org/ghcup/) y copia el comando de instalación que corresponde a tu sistema (Windows, macOS o Linux). Ejecútalo en una terminal y responde las preguntas del instalador.
+2. Cierra y vuelve a abrir la terminal. Comprueba con `ghc --version` y `cabal --version`.
+3. Escribe `ghci` para abrir el intérprete interactivo. Prueba `1 + 2`, luego `:t "hola"` para ver el tipo de una expresión, y sal con `:q`.
+4. Crea un archivo `hola.hs` con el código del primer ejemplo y córrelo con `runghc hola.hs`.
+5. Para un programa compilado, usa `ghc hola.hs`: genera el ejecutable en la misma carpeta.
+6. Para un proyecto con dependencias, crea uno con `cabal init` y corre con `cabal run`.
+
+</Pasos>
+
+Cada ejemplo de esta guía vive en un archivo `.hs` y se ejecuta con `runghc`. En el editor, Visual Studio Code con la extensión de Haskell te muestra tipos y errores mientras escribes. En `ghci` también puedes cargar un archivo con `:load hola.hs` y recargarlo con `:r`.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.hs" ejecutar="runghc hola.hs" salida="Hola, mundo">
+
+```haskell
+-- Todo programa ejecutable empieza en main, que es una acción de tipo IO
+main :: IO ()
+main = putStrLn "Hola, mundo"
+```
+
+La línea `main :: IO ()` es la firma de tipo: `main` es una acción de entrada y salida que no devuelve ningún valor útil (el `()` es la tupla vacía). `putStrLn` imprime una cadena con salto de línea.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Funciones, recursión y listas" archivo="funciones.hs" ejecutar="runghc funciones.hs" salida={"49\n2432902008176640000\n55\n[1,4,9,16]\n[2,4,6,8,10]"}>
+
+```haskell
+-- La firma dice: recibe un Int y devuelve un Int
+cuadrado :: Int -> Int
+cuadrado n = n * n
+
+-- Integer no tiene límite de tamaño
+-- Se define por casos: el primero que coincida, gana
+factorial :: Integer -> Integer
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
+
+-- (x : xs) separa el primer elemento del resto de la lista
+suma :: [Int] -> Int
+suma [] = 0
+suma (x : xs) = x + suma xs
+
+main :: IO ()
+main = do
+  print (cuadrado 7)
+  print (factorial 20)
+  print (suma [1 .. 10])
+  print (map cuadrado [1, 2, 3, 4])
+  print (filter even [1 .. 10])
+```
+
+No hay bucles `for`: se usa recursión y funciones de orden superior como `map` (aplica una función a cada elemento) y `filter` (se queda con los que cumplen una condición). Se aplican funciones separando los argumentos con espacios, sin paréntesis: `cuadrado 7`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Tipos de datos propios y pattern matching" archivo="figuras.hs" ejecutar="runghc figuras.hs" salida={"Circulo 1.0\nRectangulo 2.0 3.5\n3.141592653589793\n7.0"}>
+
+```haskell
+-- Un tipo suma: una Figura es un Circulo o un Rectangulo
+-- deriving (Show) permite imprimir valores con print
+data Figura
+  = Circulo Double
+  | Rectangulo Double Double
+  deriving (Show)
+
+-- Un caso por cada constructor
+area :: Figura -> Double
+area (Circulo r) = pi * r * r
+area (Rectangulo ancho alto) = ancho * alto
+
+main :: IO ()
+main = do
+  let figuras = [Circulo 1.0, Rectangulo 2.0 3.5]
+  mapM_ print figuras
+  mapM_ (print . area) figuras
+```
+
+`data` te deja modelar tu problema con tipos propios. Si agregas una figura nueva y olvidas definir su `area`, GHC lo detecta con la opción `-Wall`. `mapM_` ejecuta una acción por cada elemento de la lista, y el punto `.` compone dos funciones: primero `area`, luego `print`.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Maybe: sin null y sin sorpresas" archivo="dividir.hs" ejecutar="runghc dividir.hs" salida={"Just 2.5\nNothing\nResultado: 3.0"}>
+
+```haskell
+-- Maybe Double es Just un número, o Nothing si no hay resultado
+dividir :: Double -> Double -> Maybe Double
+dividir _ 0 = Nothing
+dividir a b = Just (a / b)
+
+main :: IO ()
+main = do
+  print (dividir 10 4)
+  print (dividir 1 0)
+  -- case obliga a manejar los dos casos
+  case dividir 9 3 of
+    Just r -> putStrLn ("Resultado: " ++ show r)
+    Nothing -> putStrLn "No se puede dividir entre cero"
+```
+
+La función avisa en su tipo que puede fallar, y quien la llama debe decidir qué hacer. Es el mismo concepto que `Option` en Rust o Scala. `show` convierte un valor a texto y `++` concatena listas (una cadena es una lista de caracteres).
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Tus propias clases de tipos" archivo="animales.hs" ejecutar="runghc animales.hs" salida={"Guau\nMiau"}>
+
+```haskell
+-- Una clase de tipos define un comportamiento que varios tipos pueden tener
+class Describible a where
+  describir :: a -> String
+
+data Perro = Perro
+
+data Gato = Gato
+
+-- Cada tipo da su propia implementación
+instance Describible Perro where
+  describir _ = "Guau"
+
+instance Describible Gato where
+  describir _ = "Miau"
+
+main :: IO ()
+main = do
+  putStrLn (describir Perro)
+  putStrLn (describir Gato)
+```
+
+Una clase de tipos es parecida a una interfaz, pero se separa de la definición del tipo: puedes darle instancias a tipos que ya existían. Casi toda la biblioteca estándar se apoya en ellas, como `Eq` para comparar, `Ord` para ordenar y `Show` para imprimir.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Listas por comprensión y evaluación perezosa" archivo="perezosa.hs" ejecutar="runghc perezosa.hs" salida={"[1,9,25,49,81]\n[2,4,6,8,10]\n[(1,'a'),(2,'b'),(3,'c')]"}>
+
+```haskell
+main :: IO ()
+main = do
+  -- Cuadrados de los números impares del 1 al 10
+  print [x * x | x <- [1 .. 10], odd x]
+
+  -- [1 ..] es una lista infinita, pero solo se calcula lo que pedimos con take
+  print (take 5 (filter even [1 ..]))
+
+  -- zip junta dos listas en pares
+  print (zip [1 :: Int ..] "abc")
+```
+
+Gracias a la evaluación perezosa, `[1 ..]` no se queda calculando para siempre: `take 5` hace que solo se generen los números necesarios. Las listas por comprensión se leen casi como notación de conjuntos matemáticos.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Sangría incorrecta en un bloque do">
+Haskell usa la sangría para saber dónde empieza y termina cada bloque. Las líneas de un `do` deben alinearse con la misma columna, y se usan espacios, no tabuladores. Un mensaje como "parse error on input" suele indicar una línea mal alineada, no un problema de lógica.
+</Callout>
+
+<Callout tipo="warning" titulo="Mezclar Int y Double">
+`length xs / 2` no compila: `length` devuelve un `Int` y `/` pide un tipo fraccionario. Convierte de forma explícita con `fromIntegral (length xs) / 2`. Haskell nunca convierte números por ti, y a cambio evita errores silenciosos.
+</Callout>
+
+<Callout tipo="warning" titulo="print contra putStrLn con texto">
+`print "hola"` muestra las comillas porque imprime la representación del valor. Para texto limpio usa `putStrLn "hola"`. Y si quieres imprimir un número junto a un texto, conviértelo con `show`: `putStrLn ("Edad: " ++ show 30)`.
+</Callout>
+
+<Callout tipo="warning" titulo="Usar head en listas vacías">
+`head []` provoca un error en tiempo de ejecución, porque `head` es una función parcial. Es mejor hacer pattern matching con `(x : _)` y `[]`, o devolver un `Maybe`. Activa `-Wall` y el compilador te señalará los casos olvidados.
+</Callout>
+
+<Callout tipo="warning" titulo="Querer sacar un valor del IO dentro de una función pura">
+Una función de tipo `Int -> Int` no puede leer un archivo ni imprimir, porque su tipo promete no tener efectos. Los efectos viven en `IO`, y dentro de un `do` obtienes sus resultados con `<-`. La solución de diseño es dejar la lógica en funciones puras y poner la entrada y salida en `main`.
+</Callout>
+
+## Buenas prácticas
+
+- Escribe la firma de tipo de toda función de nivel superior. Es documentación que el compilador verifica.
+- Compila con `-Wall` (por ejemplo `ghc -Wall archivo.hs`) para detectar casos sin cubrir y variables sin usar.
+- Experimenta en `ghci` con `:t` para ver tipos y `:i` para ver información de un nombre.
+- Lee los errores de tipo de abajo hacia arriba: el último párrafo suele decir qué esperaba GHC y qué recibió.
+- Prefiere funciones totales que cubran todos los casos, y evita `head`, `tail` y `fromJust` en código real.
+- Mantén la lógica en funciones puras y deja `IO` en los bordes del programa.
+- Usa `hlint` para recibir sugerencias de estilo y `ormolu` o `fourmolu` para formatear, y elige uno solo.
+- Para proyectos con más de un archivo, usa `cabal init`, así las dependencias quedan declaradas.
+
+## Siguiente paso
+
+Ya conoces funciones, tipos propios, `Maybe` y clases de tipos. Para seguir:
+
+- **Functor, Applicative y Monad**: son las clases de tipos que más cuesta entender y las que más valen la pena. El libro Learn You a Haskell las explica con paciencia y buen humor.
+- **Práctica constante**: los ejercicios de Exercitium y del curso de la Universidad de Sevilla vienen con soluciones para comparar.
+- **Pruebas de propiedades**: con QuickCheck defines una regla ("invertir dos veces una lista da la lista original") y Haskell genera casos de prueba al azar.
+- **Un proyecto real**: una herramienta de línea de comandos o un parser pequeño con `cabal`.
+- **Otros lenguajes con ideas parecidas**: [Rust](/guias/rust/) tiene `Option`, `Result` y enums con datos. [Python](/guias/python/) sirve para comparar el mismo problema con otro estilo.
+- **Control de versiones**: guarda tu progreso con la [guía de Git](/guias/git/).
+
+Explora más libros y cursos gratis en la [biblioteca de Haskell](/biblioteca/haskell/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

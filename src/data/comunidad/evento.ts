@@ -1,0 +1,17 @@
+import type { ComunidadInput } from '../comunidad';
+
+const items: ComunidadInput[] = [
+  { id: 'nerdearla', nombre: 'Nerdearla', tipo: 'evento', descripcion: 'Evento de tecnología de Hispanoamérica, con charlas y talleres sobre programación, que se transmite también por internet.', url: 'https://nerdearla.com/', temas: ['generales'], idioma: 'es', destacado: true, verificado: '2026-10-09' },
+  { id: 'pycon-chile', nombre: 'PyCon Chile', tipo: 'evento', descripcion: 'Conferencia de la comunidad Python en Chile, en español, con charlas, talleres y espacio para conocer a otras personas.', url: 'https://pycon.cl/', temas: ['python'], idioma: 'es', destacado: false, verificado: '2026-10-09' },
+  { id: 'pycon-espana', nombre: 'PyConES', tipo: 'evento', descripcion: 'Congreso nacional de Python en España, con charlas, talleres y sprints. Cada año cambia de ciudad.', url: 'https://es.pycon.org/', temas: ['python'], idioma: 'es', destacado: false, verificado: '2026-10-09' },
+  { id: 'jsconf-mexico', nombre: 'JSConf México', tipo: 'evento', descripcion: 'Conferencia comunitaria de JavaScript en México, con charlas en español y algunas en inglés.', url: 'https://www.jsconf.mx/', temas: ['javascript'], idioma: 'es', destacado: false, verificado: '2026-10-09' },
+  { id: 'pycon-colombia', nombre: 'PyCon Colombia', tipo: 'evento', descripcion: 'La conferencia de Python más grande de Colombia, con charlas, talleres y comunidad. Su sitio está en inglés.', url: 'https://pycon.co/', temas: ['python'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'google-io', nombre: 'Google I/O', tipo: 'evento', descripcion: 'Evento anual de Google para desarrolladores con novedades de Android, web e IA. Las sesiones se pueden ver después en línea.', url: 'https://io.google/', temas: ['android', 'inteligencia-artificial'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'github-universe', nombre: 'GitHub Universe', tipo: 'evento', descripcion: 'Conferencia anual de GitHub sobre desarrollo de software, herramientas para programar y trabajo en equipo.', url: 'https://githubuniverse.com/', temas: ['git'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'pycon-us', nombre: 'PyCon US', tipo: 'evento', descripcion: 'La gran conferencia anual de Python en Estados Unidos, organizada por la Python Software Foundation. Sus charlas se publican en YouTube.', url: 'https://us.pycon.org/', temas: ['python'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'europython', nombre: 'EuroPython', tipo: 'evento', descripcion: 'Conferencia europea de Python, itinerante, con charlas, talleres y sprints para toda la comunidad.', url: 'https://europython.eu/', temas: ['python'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'fosdem', nombre: 'FOSDEM', tipo: 'evento', descripcion: 'Encuentro anual en Bruselas sobre software libre y de código abierto, con cientos de charlas de proyectos y comunidades.', url: 'https://fosdem.org/', temas: ['linux'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'hacktoberfest', nombre: 'Hacktoberfest', tipo: 'evento', descripcion: 'Evento gratuito de octubre para participar en el código abierto, con actividades en línea y encuentros presenciales en muchas ciudades.', url: 'https://hacktoberfest.com/', temas: ['git'], idioma: 'en', destacado: true, verificado: '2026-10-09' },
+];
+
+export default items;

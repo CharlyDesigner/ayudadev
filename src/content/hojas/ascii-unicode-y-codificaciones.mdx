@@ -1,0 +1,246 @@
+---
+titulo: 'ASCII, Unicode y codificaciones de texto'
+descripcion: 'Tabla ASCII, qué son los puntos de código Unicode, cómo UTF-8 y UTF-16 guardan el texto, por qué aparece Ã© en lugar de é y cómo manejarlo en JavaScript y Python.'
+tema: generales
+etiquetas: ['ascii', 'unicode', 'utf-8', 'codificación', 'texto']
+publicado: 2026-10-09
+orden: 23
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Una computadora solo guarda números. Una **codificación** es el acuerdo para convertir números en letras y al revés. Los valores de esta hoja se calcularon con Node 24 y Python 3.14.
+
+## Conceptos
+
+| Término | Qué es |
+| --- | --- |
+| Carácter | Una unidad de texto que ves: `A`, `é`, `中`, `😀` |
+| Punto de código (code point) | El número único que Unicode asigna a un carácter, escrito `U+0041` |
+| Codificación | Cómo se guarda ese número en bytes (UTF-8, UTF-16, Latin-1...) |
+| Byte | 8 bits: un valor de 0 a 255 |
+| ASCII | Tabla de 128 caracteres (0 a 127) de 1963. Es la base de todo |
+| Unicode | Catálogo universal: más de 150 000 caracteres de casi todos los idiomas, más emoji |
+| UTF-8 | La codificación de Unicode que domina la web y los archivos modernos |
+
+Regla de oro: **Unicode es la lista de caracteres; UTF-8 es una forma de guardarlos en bytes.** Y los bytes, sin saber su codificación, no son texto.
+
+## Tabla ASCII imprimible (32 a 126)
+
+Se lee fila (primer dígito hexadecimal) y columna (segundo). Ejemplo: `A` está en la fila `4x` y la columna `x1`, o sea `0x41`, que es el 65 decimal.
+
+| Hex | x0 | x1 | x2 | x3 | x4 | x5 | x6 | x7 | x8 | x9 | xA | xB | xC | xD | xE | xF |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2x | (espacio) | `!` | `"` | `#` | `$` | `%` | `&` | `'` | `(` | `)` | `*` | `+` | `,` | `-` | `.` | `/` |
+| 3x | `0` | `1` | `2` | `3` | `4` | `5` | `6` | `7` | `8` | `9` | `:` | `;` | `<` | `=` | `>` | `?` |
+| 4x | `@` | `A` | `B` | `C` | `D` | `E` | `F` | `G` | `H` | `I` | `J` | `K` | `L` | `M` | `N` | `O` |
+| 5x | `P` | `Q` | `R` | `S` | `T` | `U` | `V` | `W` | `X` | `Y` | `Z` | `[` | `\` | `]` | `^` | `_` |
+| 6x | `` ` `` | `a` | `b` | `c` | `d` | `e` | `f` | `g` | `h` | `i` | `j` | `k` | `l` | `m` | `n` | `o` |
+| 7x | `p` | `q` | `r` | `s` | `t` | `u` | `v` | `w` | `x` | `y` | `z` | `{` | `\|` | `}` | `~` | DEL |
+
+## Valores de ASCII que conviene recordar
+
+| Carácter | Decimal | Hex | Detalle |
+| --- | --- | --- | --- |
+| `0` a `9` | 48 a 57 | `30` a `39` | El dígito `n` vale `48 + n` |
+| `A` a `Z` | 65 a 90 | `41` a `5A` | Mayúsculas |
+| `a` a `z` | 97 a 122 | `61` a `7A` | Minúsculas: 32 más que su mayúscula |
+| espacio | 32 | `20` | |
+| `\n` (LF) | 10 | `0A` | Salto de línea en Linux y macOS |
+| `\r` (CR) | 13 | `0D` | Retorno de carro. Windows usa `\r\n` |
+| `\t` | 9 | `09` | Tabulador |
+| NUL | 0 | `00` | Fin de cadena en C |
+| ESC | 27 | `1B` | Inicia las secuencias de color de la terminal |
+| DEL | 127 | `7F` | Borrar |
+
+Del 0 al 31 y el 127 son caracteres de control (no imprimibles). La diferencia entre mayúscula y minúscula es el bit de valor 32: `'a' - 'A'` vale 32.
+
+## Unicode: puntos de código
+
+| Carácter | Punto de código | Decimal |
+| --- | --- | --- |
+| `A` | `U+0041` | 65 |
+| `é` | `U+00E9` | 233 |
+| `ñ` | `U+00F1` | 241 |
+| `€` | `U+20AC` | 8364 |
+| `中` | `U+4E2D` | 20013 |
+| `😀` | `U+1F600` | 128512 |
+
+Los primeros 128 puntos de código son idénticos a ASCII. Los siguientes 128 (`U+0080` a `U+00FF`) coinciden con Latin-1. El rango completo llega hasta `U+10FFFF`.
+
+## UTF-8: cómo se guarda
+
+UTF-8 usa de 1 a 4 bytes según el punto de código:
+
+| Rango de puntos de código | Bytes | Patrón de bits |
+| --- | --- | --- |
+| `U+0000` a `U+007F` | 1 | `0xxxxxxx` |
+| `U+0080` a `U+07FF` | 2 | `110xxxxx 10xxxxxx` |
+| `U+0800` a `U+FFFF` | 3 | `1110xxxx 10xxxxxx 10xxxxxx` |
+| `U+10000` a `U+10FFFF` | 4 | `11110xxx 10xxxxxx 10xxxxxx 10xxxxxx` |
+
+Así quedan algunos caracteres:
+
+| Carácter | Bytes en UTF-8 (hex) | Cantidad |
+| --- | --- | --- |
+| `A` | `41` | 1 |
+| `é` | `c3 a9` | 2 |
+| `ñ` | `c3 b1` | 2 |
+| `€` | `e2 82 ac` | 3 |
+| `中` | `e4 b8 ad` | 3 |
+| `😀` | `f0 9f 98 80` | 4 |
+
+Por qué domina: el texto ASCII es idéntico en UTF-8 (compatible hacia atrás), no depende del orden de bytes y se resincroniza solo si se corrompe un byte.
+
+## Otras codificaciones
+
+| Nombre | Descripción |
+| --- | --- |
+| ASCII | 7 bits, 128 caracteres. Sin acentos |
+| Latin-1 (ISO-8859-1) | 1 byte por carácter, cubre Europa occidental (`é` es `e9`) |
+| Windows-1252 | Parecida a Latin-1, con más símbolos (como `€`). Muy común en archivos antiguos |
+| UTF-8 | 1 a 4 bytes. El estándar actual |
+| UTF-16 | 2 o 4 bytes. La usan JavaScript, Java y Windows internamente |
+| UTF-32 | 4 bytes fijos. Poco usada |
+
+## UTF-16 y el emoji que mide 2
+
+JavaScript guarda las cadenas en UTF-16. Los caracteres fuera de `U+FFFF` ocupan dos unidades llamadas par sustituto (surrogate pair).
+
+| Carácter | UTF-16 | `length` en JavaScript |
+| --- | --- | --- |
+| `é` | `00e9` | 1 |
+| `😀` | `d83d de00` | 2 |
+| `👨‍👩‍👧` (familia: tres emoji unidos) | varios puntos de código | 8 |
+
+## Por qué ves Ã© en vez de é (mojibake)
+
+Los bytes de un archivo UTF-8 se leyeron como si fueran Latin-1 o Windows-1252:
+
+| Escrito en UTF-8 | Leído como Latin-1 | Resultado |
+| --- | --- | --- |
+| `é` = `c3 a9` | `c3` = `Ã`, `a9` = `©` | `Ã©` |
+| `ñ` = `c3 b1` | `c3` = `Ã`, `b1` = `±` | `Ã±` |
+
+Al revés, un archivo Latin-1 leído como UTF-8: el byte `e9` solo no es una secuencia válida y se muestra como `�` (carácter de reemplazo `U+FFFD`).
+
+| Síntoma | Causa y arreglo |
+| --- | --- |
+| `Ã©`, `Ã±` en vez de `é`, `ñ` | UTF-8 leído como Latin-1. Indica la codificación UTF-8 al abrir |
+| `�` en lugar de letras | Bytes inválidos para UTF-8. El archivo no era UTF-8 |
+| Acentos rotos en una página web | Falta `<meta charset="utf-8">` o el encabezado `Content-Type: text/html; charset=utf-8` |
+| Un CSV de Excel se ve mal | Guárdalo como "CSV UTF-8" o ábrelo importando con la codificación indicada |
+| `UnicodeDecodeError` en Python | Abre el archivo con `encoding="utf-8"` (o con la codificación real) |
+
+## En JavaScript
+
+```js
+"A".codePointAt(0);              // 65
+"😀".codePointAt(0);             // 128512
+"😀".codePointAt(0).toString(16) // '1f600'
+String.fromCodePoint(0x1F600);   // '😀'
+"é";                        // 'é'
+"\u{1F600}";                     // '😀'
+"a".charCodeAt(0);               // 97 (unidad UTF-16, no sirve bien para emoji)
+
+"😀".length;                     // 2  (unidades UTF-16)
+[..."😀"].length;                // 1  (puntos de código)
+"é".length;                      // 1
+"é".length                // 2  (e + acento combinante)
+
+new TextEncoder().encode("é")                       // Uint8Array [195, 169]
+new TextDecoder().decode(new Uint8Array([195, 169])) // 'é'
+new TextDecoder("latin1").decode(new Uint8Array([195, 169])) // 'Ã©'
+Buffer.byteLength("é")          // 2 (Node)
+```
+
+Para contar lo que una persona ve como "un carácter" (emoji compuestos, letras con acento separado) usa `Intl.Segmenter`: `[...new Intl.Segmenter().segment("👨‍👩‍👧")].length` da `1`, aunque `.length` da 8.
+
+### Normalización
+
+El mismo `é` puede escribirse como un carácter (`U+00E9`) o como `e` más un acento combinante (`U+0065 U+0301`). Se ven igual, pero no son iguales:
+
+```js
+"é" === "é";                              // false
+"é".normalize("NFC") === "é";             // true
+"é".normalize("NFD").length                    // 2
+```
+
+Normaliza (normalmente a `NFC`) antes de comparar o buscar texto escrito por personas. Para quitar acentos: `s.normalize("NFD").replace(/[̀-ͯ]/g, "")`.
+
+### Base64, hexadecimal y URL
+
+```js
+btoa("hola")                       // 'aG9sYQ=='
+atob("aG9sYQ==")                   // 'hola'
+Buffer.from("hola").toString("hex")    // '686f6c61'
+encodeURIComponent("á b&c")        // '%C3%A1%20b%26c'
+decodeURIComponent("%C3%A1")       // 'á'
+```
+
+`btoa` solo acepta caracteres de hasta 255. Para texto con emoji o letras fuera de Latin-1, codifica primero a bytes con `TextEncoder`.
+
+## En Python
+
+```python
+ord("A")                       # 65
+chr(233)                       # 'é'
+hex(ord("€"))                  # '0x20ac'
+"é".encode("utf-8")            # b'\xc3\xa9'
+b"\xc3\xa9".decode("utf-8")    # 'é'
+b"\xc3\xa9".decode("latin-1")  # 'Ã©'  (mojibake)
+"é".encode("latin-1")          # b'\xe9'
+len("é".encode("utf-8"))       # 2
+len("😀")                      # 1  (Python cuenta puntos de código)
+len("😀".encode("utf-8"))      # 4
+f"{ord('A'):08b}"              # '01000001'
+
+"ñ".encode("ascii", errors="replace")   # b'?'
+"ñ".encode("ascii", errors="ignore")    # b''
+b"\xe9".decode("utf-8", errors="replace")  # '�'
+
+import unicodedata
+unicodedata.name("é")                       # 'LATIN SMALL LETTER E WITH ACUTE'
+unicodedata.normalize("NFC", "é")     # 'é'
+```
+
+| Error | Cuándo |
+| --- | --- |
+| `UnicodeDecodeError` | Los bytes no son válidos en la codificación indicada |
+| `UnicodeEncodeError` | El texto tiene caracteres que esa codificación no puede representar (`"ñ".encode("ascii")`) |
+
+En Python 3, `str` es texto (puntos de código) y `bytes` son bytes. Todo lo que entra o sale a un archivo o a la red pasa por una codificación; indica siempre `encoding="utf-8"`.
+
+## Mayúsculas, minúsculas y orden
+
+| Expresión | Resultado | Lección |
+| --- | --- | --- |
+| `"ß".toUpperCase()` | `'SS'` | Una letra puede dar dos al cambiar de caso |
+| `"a" < "B"` | `false` | Se compara por punto de código: `B` (66) va antes que `a` (97) |
+| `["b","B","a","A"].sort()` | `['A','B','a','b']` | El orden por defecto no es alfabético |
+| `"a".localeCompare("B")` | `-1` | Para orden humano usa `localeCompare` o `Intl.Collator` |
+
+## Otros formatos que codifican texto
+
+| Formato | Para qué | Ejemplo |
+| --- | --- | --- |
+| Base64 | Representar bytes con 64 caracteres seguros | `hola` es `aG9sYQ==` |
+| Hexadecimal | Mostrar bytes legibles | `hola` es `68 6f 6c 61` |
+| Porcentaje (URL) | Caracteres especiales en una URL | `á` es `%C3%A1` |
+| Entidades HTML | Caracteres reservados en HTML | `&lt;` es `<` |
+| Secuencias de escape | Caracteres en el código | `\n`, `\t`, `é` |
+
+<Callout tipo="tip" titulo="Reglas para no sufrir con el texto">
+
+Guarda y lee todo en UTF-8. Declara la codificación en cada frontera: archivos, bases de datos, cabeceras HTTP y HTML. No cuentes longitud ni cortes cadenas por bytes si tienen acentos o emoji. Normaliza antes de comparar.
+
+</Callout>
+
+## Para ir más a fondo
+
+- [UTF-8 en MDN](https://developer.mozilla.org/es/docs/Glossary/UTF-8)
+- [RFC 3629: especificación de UTF-8](https://www.rfc-editor.org/rfc/rfc3629)
+- [Tablas de caracteres de Unicode](https://www.unicode.org/charts/)
+- [RFC 20: el conjunto ASCII](https://www.rfc-editor.org/rfc/rfc20)
+- Hoja de AyudaDev: [Números, binario, hexadecimal y lógica booleana](/hojas/numeros-binario-hexadecimal-y-logica-booleana/)
+- Biblioteca: [libros y cursos de temas generales](/biblioteca/generales/)

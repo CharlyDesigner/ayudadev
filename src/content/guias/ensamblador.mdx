@@ -1,0 +1,354 @@
+---
+titulo: 'Ensamblador desde cero'
+descripcion: 'Qué es el ensamblador, cómo instalar NASM y tus primeros programas x86-64 en Linux: registros, syscalls, bucles, funciones y la pila, con ejemplos que corren.'
+tema: ensamblador
+nivel: intermedio
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['ensamblador-lmu-nasm-tutorial', 'ensamblador-nasm-manual', 'ensamblador-programming-from-the-ground-up', 'ensamblador-arquitectura-qtarmsim-arduino']
+requisitos: ['Saber usar una terminal básica', 'Conocer variables y ciclos en algún lenguaje, de preferencia C']
+etiquetas: ['nasm', 'x86-64', 'linux', 'registros', 'syscalls', 'arm']
+orden: 26
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+El ensamblador es el lenguaje más cercano al procesador. Cada línea de tu programa se convierte casi una a una en una instrucción de máquina: mover un dato, sumar, comparar, saltar. No hay variables con nombre ni ciclos `for`; hay registros, memoria y saltos. Por eso sirve para entender cómo funciona de verdad una computadora, para depurar programas en C, para analizar software y para programar microcontroladores. Rara vez escribirás aplicaciones completas con él, pero te cambia la forma de pensar.
+
+Esta guía usa **x86-64** (procesadores Intel y AMD de 64 bits) con el ensamblador **NASM** en **Linux**. Lo que necesitas tener claro:
+
+- **Cada arquitectura tiene su propio ensamblador**: lo que escribes para x86-64 no corre en un procesador ARM. Cambian los registros, las instrucciones y las llamadas al sistema.
+- **Los registros son las variables del procesador**: en x86-64 hay 16 de propósito general de 64 bits: `rax`, `rbx`, `rcx`, `rdx`, `rsi`, `rdi`, `rbp`, `rsp` y de `r8` a `r15`. Los nombres `eax`, `ax` y `al` son partes más pequeñas de `rax`.
+- **Sintaxis Intel con NASM**: se escribe `mov destino, origen`, es decir, el destino va primero. La otra familia, la sintaxis AT&T que usa el ensamblador GNU por defecto, pone el origen primero.
+- **La memoria se organiza en secciones**: `.text` guarda el código, `.data` los datos iniciales, `.rodata` las constantes y `.bss` el espacio sin inicializar.
+- **La pila crece hacia abajo**: `push` resta 8 a `rsp` y guarda un valor, `pop` lo recupera. `call` guarda en la pila la dirección de regreso y `ret` la usa.
+- **Las banderas guardan el resultado de comparar**: `cmp` y `test` actualizan banderas, y los saltos como `je`, `jg` o `jz` las leen para decidir si saltan.
+- **El sistema operativo te presta servicios con syscalls**: en Linux x86-64 pones el número del servicio en `rax`, los argumentos en `rdi`, `rsi` y `rdx`, y ejecutas `syscall`. Así se escribe en pantalla y se termina un programa sin usar ninguna biblioteca.
+- **La convención de llamadas es un contrato**: para funciones, los primeros argumentos van en `rdi`, `rsi`, `rdx`, `rcx`, `r8` y `r9`, y el resultado vuelve en `rax`. Los registros `rbx`, `rbp` y `r12` a `r15` deben conservarse.
+
+<Callout tipo="info" titulo="¿Y ARM?">
+
+Los procesadores ARM (la mayoría de celulares, la Raspberry Pi y las Mac con chip Apple) usan otro conjunto de instrucciones. En ARM de 64 bits los registros se llaman `x0` a `x30`, los argumentos de una función van en `x0` a `x7` y las llamadas al sistema se hacen con la instrucción `svc`. Las ideas de esta guía (registros, pila, saltos, syscalls) se aplican igual; solo cambian los nombres y los detalles. Para practicar ARM, los libros de la Universitat Jaume I y de la Universidad de Málaga de la biblioteca usan un simulador y una Raspberry Pi.
+
+</Callout>
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Linux**: en Debian o Ubuntu escribe `sudo apt install nasm binutils gdb gcc`; en Fedora `sudo dnf install nasm binutils gdb gcc`. Es el entorno más sencillo para esta guía.
+2. **Windows**: lo más simple es WSL. Abre PowerShell como administrador, escribe `wsl --install`, reinicia y abre Ubuntu; luego sigue los pasos de Linux. Los ejemplos usan llamadas al sistema de Linux, así que no corren directo en Windows.
+3. **macOS**: los ejemplos de esta guía son para Linux x86-64. Si tienes un Mac con chip Apple, usa una máquina virtual con Linux o un servicio en línea. Las llamadas al sistema de macOS tienen números y reglas distintos.
+4. Comprueba con `nasm -v`, `ld --version` y `gcc --version`. Cada comando debe mostrar su versión.
+5. Crea una carpeta `asm-practicas` y dentro un archivo `hola.asm` con el ejemplo 1.
+6. Ensambla, enlaza y ejecuta: `nasm -f elf64 hola.asm -o hola.o && ld hola.o -o hola && ./hola`. NASM convierte el texto en un archivo objeto (`.o`) y `ld`, el enlazador, produce el ejecutable.
+
+</Pasos>
+
+Para depurar agrega `-g -F dwarf` a NASM y abre el programa con `gdb ./hola`. Dentro de gdb, `layout regs` muestra los registros, `stepi` ejecuta una instrucción y `info registers` los lista. Puedes ver el código máquina real con `objdump -d -M intel hola`.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, ensamblador" archivo="hola.asm" ejecutar="nasm -f elf64 hola.asm -o hola.o && ld hola.o -o hola && ./hola" salida="Hola, ensamblador">
+
+```nasm
+global _start
+
+section .rodata
+mensaje: db "Hola, ensamblador", 10     ; 10 es el salto de línea
+largo:   equ $ - mensaje                ; longitud calculada por NASM
+
+section .text
+_start:
+    mov  eax, 1             ; número de syscall: write
+    mov  edi, 1             ; descriptor 1 = salida estándar
+    lea  rsi, [rel mensaje] ; dirección del texto
+    mov  edx, largo         ; cuántos bytes escribir
+    syscall
+
+    mov  eax, 60            ; número de syscall: exit
+    xor  edi, edi           ; código de salida 0
+    syscall
+```
+
+Sin biblioteca de C, el programa empieza en la etiqueta `_start`, que se exporta con `global`. `db` define bytes de datos y `equ $ - mensaje` calcula cuántos hay: `$` es la dirección actual. `write` necesita tres cosas: dónde escribir (`edi`), qué dirección leer (`rsi`) y cuántos bytes (`edx`). `lea` calcula una dirección sin leer la memoria. La última syscall termina el programa; si la olvidas, el procesador sigue ejecutando lo que haya después y falla. `xor edi, edi` es la forma corta de poner un registro en cero.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Registros, aritmética y código de salida" archivo="salida.asm" ejecutar="nasm -f elf64 salida.asm -o salida.o && ld salida.o -o salida && ./salida; echo $?" salida="42">
+
+```nasm
+global _start
+
+section .text
+_start:
+    mov  rax, 6             ; rax = 6
+    mov  rbx, 7             ; rbx = 7
+    imul rax, rbx           ; rax = rax * rbx = 42
+    mov  rdi, rax           ; el código de salida va en rdi
+    mov  eax, 60            ; syscall exit
+    syscall
+```
+
+Este programa no imprime nada: calcula 6 por 7 con registros y entrega el resultado como código de salida del proceso. El shell lo guarda en `$?` y por eso `echo $?` muestra `42`. El código de salida solo admite valores de 0 a 255, pero es perfecto para probar cálculos cuando todavía no sabes imprimir números. `mov` copia, `imul` multiplica con signo y `add` y `sub` suman y restan. En casi todas las instrucciones el destino es también el primer operando.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Un bucle con saltos" archivo="bucle.asm" ejecutar="nasm -f elf64 bucle.asm -o bucle.o && ld bucle.o -o bucle && ./bucle" salida="1
+2
+3
+4
+5">
+
+```nasm
+global _start
+
+section .bss
+digito: resb 2              ; espacio para un dígito y un salto de línea
+
+section .text
+_start:
+    mov  r12, 1             ; contador; r12 sobrevive a syscall (rcx y r11 no)
+.ciclo:
+    cmp  r12, 5
+    jg   .fin               ; si r12 > 5, salimos
+
+    mov  rax, r12
+    add  al, '0'            ; convierte el número en el carácter ASCII
+    mov  [digito], al
+    mov  byte [digito + 1], 10
+
+    mov  eax, 1             ; write
+    mov  edi, 1
+    lea  rsi, [rel digito]
+    mov  edx, 2
+    syscall
+
+    inc  r12
+    jmp  .ciclo
+
+.fin:
+    mov  eax, 60
+    xor  edi, edi
+    syscall
+```
+
+No hay `for`: un ciclo es una etiqueta, una comparación y un salto. `cmp r12, 5` compara y `jg` salta si fue mayor. Las etiquetas que empiezan con punto, como `.ciclo`, son locales a la etiqueta anterior, así puedes repetir nombres. Para imprimir un dígito sumamos el código del carácter `'0'`; el texto en memoria son bytes, no números. Usamos `r12` como contador porque la instrucción `syscall` destruye `rcx` y `r11`.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Una función y la convención de llamadas" archivo="funcion.asm" ejecutar="nasm -f elf64 funcion.asm -o funcion.o && ld funcion.o -o funcion && ./funcion" salida="suma = 5050">
+
+```nasm
+global _start
+
+section .rodata
+texto: db "suma = "
+largo: equ $ - texto
+
+section .text
+
+; long suma_hasta(long n): devuelve 1 + 2 + ... + n
+; entrada: rdi = n    salida: rax = resultado
+suma_hasta:
+    xor  eax, eax           ; acumulador en 0
+.sumar:
+    test rdi, rdi
+    jz   .listo
+    add  rax, rdi
+    dec  rdi
+    jmp  .sumar
+.listo:
+    ret
+
+; void imprimir_numero(long n): escribe n y un salto de línea
+; entrada: rdi = n (sin signo)
+imprimir_numero:
+    sub  rsp, 32            ; espacio local en la pila
+    lea  rsi, [rsp + 31]    ; escribimos los dígitos de derecha a izquierda
+    mov  byte [rsi], 10
+    mov  rax, rdi
+    mov  rcx, 10
+.dividir:
+    xor  edx, edx           ; rdx:rax / rcx
+    div  rcx                ; rax = cociente, rdx = residuo
+    add  dl, '0'
+    dec  rsi
+    mov  [rsi], dl
+    test rax, rax
+    jnz  .dividir
+    lea  rdx, [rsp + 32]
+    sub  rdx, rsi           ; longitud = fin - inicio
+    mov  eax, 1             ; write
+    mov  edi, 1
+    syscall                 ; rsi ya apunta al primer dígito
+    add  rsp, 32
+    ret
+
+_start:
+    mov  eax, 1
+    mov  edi, 1
+    lea  rsi, [rel texto]
+    mov  edx, largo
+    syscall
+
+    mov  rdi, 100
+    call suma_hasta         ; resultado en rax
+    mov  rdi, rax
+    call imprimir_numero
+
+    mov  eax, 60
+    xor  edi, edi
+    syscall
+```
+
+Las funciones siguen la convención de llamadas: el argumento entra por `rdi` y el resultado sale por `rax`, igual que lo haría una función en C. `call` guarda la dirección de regreso en la pila y `ret` la recupera. `imprimir_numero` reserva 32 bytes de pila con `sub rsp, 32`, convierte el número a texto dividiendo entre 10 una y otra vez, y los libera al final. `div rcx` divide `rdx:rax` entre `rcx`, por eso antes ponemos `rdx` en cero. Esta rutina destruye varios registros, algo permitido porque `rax`, `rcx`, `rdx`, `rsi` y `rdi` no tienen que conservarse.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="La pila: argc, push y pop" archivo="pila.asm" ejecutar="nasm -f elf64 pila.asm -o pila.o && ld pila.o -o pila && ./pila" salida="1
+30
+20
+10">
+
+```nasm
+global _start
+
+section .text
+
+; void imprimir_numero(long n): escribe n y un salto de línea (rdi = n)
+imprimir_numero:
+    sub  rsp, 32
+    lea  rsi, [rsp + 31]
+    mov  byte [rsi], 10
+    mov  rax, rdi
+    mov  rcx, 10
+.dividir:
+    xor  edx, edx
+    div  rcx
+    add  dl, '0'
+    dec  rsi
+    mov  [rsi], dl
+    test rax, rax
+    jnz  .dividir
+    lea  rdx, [rsp + 32]
+    sub  rdx, rsi
+    mov  eax, 1
+    mov  edi, 1
+    syscall
+    add  rsp, 32
+    ret
+
+_start:
+    ; Al arrancar, [rsp] guarda argc (cuántos argumentos recibió el programa)
+    mov  rdi, [rsp]
+    call imprimir_numero
+
+    ; push mete valores en la pila; pop los saca en orden inverso
+    push 10
+    push 20
+    push 30
+
+    pop  rdi                ; 30
+    call imprimir_numero
+    pop  rdi                ; 20
+    call imprimir_numero
+    pop  rdi                ; 10
+    call imprimir_numero
+
+    mov  eax, 60
+    xor  edi, edi
+    syscall
+```
+
+Cuando Linux inicia un programa, deja en la cima de la pila el número de argumentos (`argc`), y justo arriba las direcciones de cada argumento. Si ejecutas `./pila` sin argumentos, `argc` vale 1 porque cuenta el propio nombre del programa. Corre `./pila a b` y verás otro número. La pila funciona como un montón de platos: el último en entrar es el primero en salir. Por eso `pop` devuelve 30, 20 y 10. Cada `push` debe tener su `pop`, o `ret` terminará saltando a una dirección equivocada.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un arreglo, comparaciones y banderas" archivo="maximo.asm" ejecutar="nasm -f elf64 maximo.asm -o maximo.o && ld maximo.o -o maximo && ./maximo; echo $?" salida="9">
+
+```nasm
+global _start
+
+section .data
+numeros: dq 3, 8, 1, 9, 4, 6        ; seis números de 8 bytes cada uno
+cuantos: equ 6
+
+section .text
+_start:
+    lea  rsi, [rel numeros] ; rsi apunta al primer elemento
+    mov  rax, [rsi]         ; rax = máximo hasta ahora (el primero)
+    mov  rcx, 1             ; índice del siguiente elemento
+.revisar:
+    cmp  rcx, cuantos       ; ¿ya revisamos todos?
+    jge  .fin               ; si rcx >= cuantos, terminamos (comparación con signo)
+    mov  rdx, [rsi + rcx*8] ; rdx = numeros[rcx]
+    cmp  rdx, rax           ; compara el elemento con el máximo
+    cmovg rax, rdx          ; si es mayor, se vuelve el nuevo máximo
+    inc  rcx
+    jmp  .revisar
+.fin:
+    mov  rdi, rax           ; el máximo será el código de salida
+    mov  eax, 60
+    syscall
+```
+
+`dq` define números de 8 bytes (quad word). El corchete `[rsi + rcx*8]` calcula la dirección del elemento número `rcx`: base más índice por tamaño. Los corchetes significan "el contenido de la memoria en esa dirección". `cmp` resta sin guardar el resultado y deja las banderas; `jge` y `cmovg` las leen. `cmovg` es un movimiento condicional que evita un salto. Existen versiones con signo (`jg`, `jl`) y sin signo (`ja`, `jb`); elige según el tipo de dato.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Olvidar la syscall de salida">
+
+Si el programa no termina con `exit`, el procesador sigue ejecutando los bytes que haya después de tu código y el sistema responde con `Segmentation fault`. Todo programa sin biblioteca de C debe acabar con `mov eax, 60` y `syscall`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Usar rcx o r11 como contador alrededor de una syscall">
+
+La instrucción `syscall` modifica `rcx` y `r11`, además de devolver el resultado en `rax`. Si guardas el contador de un ciclo en `rcx` y haces un `write` dentro, el ciclo se comportará de forma extraña. Usa registros que se conservan, como `rbx` o de `r12` a `r15`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Confundir la dirección con el contenido">
+
+En NASM, `mov rsi, mensaje` carga la dirección de `mensaje`, y `mov rsi, [mensaje]` carga los 8 bytes que hay ahí. Con `write` quieres la dirección. Además, cuando el tamaño no se deduce de los registros, NASM exige indicarlo: `mov [digito], 5` da `operation size not specified`, y se corrige con `mov byte [digito], 5`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Dividir sin limpiar rdx">
+
+`div rcx` divide el número de 128 bits formado por `rdx:rax`. Si `rdx` trae basura de antes, el cociente no cabe en `rax` y el programa se detiene con `Floating point exception`. Pon `xor edx, edx` antes de una división sin signo, o usa `cqo` antes de `idiv` si el número tiene signo.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Desbalancear la pila o desalinearla">
+
+Cada `push` necesita su `pop` y cada `sub rsp, n` su `add rsp, n`, porque `ret` toma la dirección de regreso de la cima de la pila. Si no está donde debe, el programa salta a un lugar cualquiera. Cuando llames funciones de la biblioteca de C, como `printf`, la pila debe estar alineada a 16 bytes justo antes de `call`; si no, fallan de formas misteriosas.
+
+</Callout>
+
+## Buenas prácticas
+
+- Comenta la intención de cada bloque, no solo la instrucción: `; convierte el número en carácter`, no `; suma 48`.
+- Documenta cada función con su entrada, su salida y qué registros destruye.
+- Respeta la convención de llamadas: argumentos en `rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`; resultado en `rax`; conserva `rbx`, `rbp` y de `r12` a `r15`.
+- Usa etiquetas locales (`.ciclo`) para no inventar nombres únicos en cada función.
+- Usa `lea` para calcular direcciones y `xor eax, eax` para poner a cero un registro.
+- Compila con `-g -F dwarf` y practica `gdb` desde el principio: ver los registros mientras avanzas es la mejor forma de aprender.
+- Escribe primero el programa en C y mira lo que genera el compilador con `gcc -S -masm=intel -O1 archivo.c` para aprender los patrones reales.
+- Automatiza con un `Makefile` para no escribir los dos comandos cada vez.
+
+## Siguiente paso
+
+Con registros, saltos, la pila y funciones ya puedes escribir rutinas útiles: calcular la longitud de una cadena, invertirla, convertir un texto a número o hacer una calculadora RPN. Después aprende a llamar funciones de C como `printf` desde NASM enlazando con `gcc`, y a llamar tus rutinas desde un programa en C. Si te interesa más, estudia las instrucciones vectoriales (SSE y AVX), el formato ELF con `readelf` y la ingeniería inversa con `objdump` y `gdb`.
+
+Para seguir con ARM, usa los libros de la biblioteca, que enseñan ensamblador ARM con un simulador y con una Raspberry Pi. Combínalo con [C desde cero](/guias/c/): el mejor ejercicio es compilar un programa en C y entender el ensamblador que produce. Revisa también la biblioteca de [Sistemas operativos](/biblioteca/sistemas-operativos/). Todos los recursos están en [la biblioteca de Ensamblador](/biblioteca/ensamblador/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

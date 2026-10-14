@@ -1,0 +1,243 @@
+---
+titulo: 'Scala 3 desde cero'
+descripcion: 'Qué es Scala, cómo instalar Scala CLI y tus primeros programas en Scala 3 con ejemplos que puedes copiar y ejecutar con scala-cli run.'
+tema: scala
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['scala-tour-de-scala', 'scala-libro-scala-3', 'scala-toolkit', 'scala-cli']
+requisitos: ['Saber usar una terminal básica', 'Haber programado algo en cualquier lenguaje ayuda, sobre todo Java o Python']
+etiquetas: ['jvm', 'funcional', 'scala-3', 'pattern-matching', 'scala-cli']
+orden: 31
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Scala combina programación orientada a objetos y funcional sobre la máquina virtual de Java (JVM). Se usa en procesamiento de datos a gran escala, backends, sistemas concurrentes y herramientas de infraestructura. Puedes usar cualquier biblioteca de Java desde Scala.
+
+- **Compilado a la JVM**: el código se convierte a bytecode y corre donde corre Java. Existen también variantes que apuntan a JavaScript y a código nativo.
+- **Tipado estático con inferencia**: el compilador deduce la mayoría de los tipos. Los escribes en las firmas de funciones y en los lugares donde ayudan a leer.
+- **Todo es un objeto, y también hay funciones**: las funciones son valores que puedes pasar, devolver y guardar en variables.
+- **Inmutable por defecto**: `val` crea una referencia que no cambia, y las colecciones estándar (`List`, `Map`, `Set`) son inmutables. `var` existe, pero se usa poco.
+- **Case classes y enums**: modelas datos con una línea, y el compilador genera igualdad, `toString` y `copy`.
+- **Pattern matching**: un `match` desarma datos y revisa que cubras todos los casos de un `enum`.
+- **Sin null en la práctica**: se usan `Option` para valores que pueden faltar y `Either` o `Try` para errores.
+- **Scala 3**: la versión moderna del lenguaje. Tiene sintaxis por indentación (sin llaves), `enum`, `given` y `using`. Mucho material en internet es de Scala 2, así que fíjate en qué versión usa cada tutorial.
+
+## Instálalo y corre tu primer archivo
+
+La forma más corta es Scala CLI. Según su documentación, administra por ti las versiones de Scala, las dependencias y la JVM, así que no tienes que instalar Java antes.
+
+<Pasos>
+
+1. Abre la página de [Scala CLI](https://scala-cli.virtuslab.org/) y sigue las instrucciones para tu sistema. En Windows usa `winget install virtuslab.scalacli`. En macOS puedes usar Homebrew con `brew install Virtuslab/scala-cli/scala-cli`. En Linux y macOS también hay un instalador con `curl` en esa misma página.
+2. Cierra y abre la terminal. Comprueba con `scala-cli version`.
+3. Crea un archivo `hola.scala` con el código del primer ejemplo.
+4. Ejecútalo con `scala-cli run hola.scala`. La primera vez descarga lo necesario y tarda más; las siguientes veces arranca rápido.
+5. Para explorar sin archivos, `scala-cli repl` abre una consola interactiva.
+6. Para proyectos grandes con varios módulos, la herramienta habitual es sbt, que verás más adelante.
+
+</Pasos>
+
+Cada ejemplo de esta guía va en su propio archivo `.scala` y se ejecuta con `scala-cli run`. Como editor, Visual Studio Code con la extensión Metals te da autocompletado y errores en vivo.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.scala" ejecutar="scala-cli run hola.scala" salida="Hola, mundo">
+
+```scala
+//> using scala 3
+
+// @main marca el punto de entrada del programa
+@main def hola(): Unit =
+  println("Hola, mundo")
+```
+
+La línea `//> using scala 3` es una directiva de Scala CLI: pide que el archivo se compile con Scala 3. El cuerpo de la función va con sangría, sin llaves. `Unit` es el tipo de "no devuelve nada útil", parecido a `void`.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="val, var e interpolación" archivo="variables.scala" ejecutar="scala-cli run variables.scala" salida={"Ana tiene 30 años y mide 1.68 m\nMayor de edad: true"}>
+
+```scala
+//> using scala 3
+
+@main def variables(): Unit =
+  // val no se puede reasignar; var sí
+  val nombre = "Ana"
+  var edad = 29
+  edad += 1
+
+  // Scala infiere los tipos, pero puedes anotarlos
+  val altura: Double = 1.68
+
+  // s"..." interpola variables con $ y expresiones con ${...}
+  println(s"$nombre tiene $edad años y mide $altura m")
+  println(s"Mayor de edad: ${edad >= 18}")
+```
+
+Intenta reasignar `nombre` y el compilador se negará, porque es un `val`. Esa es la costumbre en Scala: empieza con `val` y usa `var` solo cuando de verdad lo necesites.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Funciones, if y match" archivo="funciones.scala" ejecutar="scala-cli run funciones.scala" salida={"-3 es negativo\n0 es cero\n7 es positivo\nDía 3: miércoles"}>
+
+```scala
+//> using scala 3
+
+// if es una expresión: devuelve un valor
+def clasificar(n: Int): String =
+  if n < 0 then "negativo"
+  else if n == 0 then "cero"
+  else "positivo"
+
+@main def funciones(): Unit =
+  for n <- List(-3, 0, 7) do
+    println(s"$n es ${clasificar(n)}")
+
+  // match es como un switch mucho más potente
+  val dia = 3
+  val nombre = dia match
+    case 1 => "lunes"
+    case 2 => "martes"
+    case 3 => "miércoles"
+    case _ => "otro día"
+  println(s"Día $dia: $nombre")
+```
+
+La última expresión de una función es su resultado, no hace falta escribir `return`. En el `match`, el guion bajo `_` captura cualquier caso restante.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Colecciones inmutables y funciones de orden superior" archivo="colecciones.scala" ejecutar="scala-cli run colecciones.scala" salida={"List(2, 4, 6)\nList(1, 4, 9, 16, 25, 36)\n21\n21\nSome(29)\nNone"}>
+
+```scala
+//> using scala 3
+
+@main def colecciones(): Unit =
+  val numeros = List(1, 2, 3, 4, 5, 6)
+
+  // _ es un atajo para el parámetro de una función corta
+  val pares = numeros.filter(_ % 2 == 0)
+  val cuadrados = numeros.map(n => n * n)
+  println(pares)
+  println(cuadrados)
+  println(numeros.sum)
+  println(numeros.foldLeft(0)((acc, n) => acc + n))
+
+  // get devuelve un Option: Some(valor) o None, nunca null
+  val edades = Map("Ana" -> 29, "Luis" -> 34)
+  println(edades.get("Ana"))
+  println(edades.get("Pedro"))
+```
+
+`filter` y `map` no modifican la lista original: devuelven listas nuevas. `foldLeft` recorre la lista acumulando un resultado, empezando con el valor inicial 0. Un `Map` tampoco devuelve `null` cuando falta una clave, sino `None`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="enum, case class y pattern matching" archivo="figuras.scala" ejecutar="scala-cli run figuras.scala" salida={"Circulo(1.0) tiene área 3.141592653589793\nRectangulo(2.0,3.5) tiene área 7.0\nPersona(Ana,29)\nPersona(Ana,30)"}>
+
+```scala
+//> using scala 3
+
+// Un enum con datos en cada caso
+enum Figura:
+  case Circulo(radio: Double)
+  case Rectangulo(ancho: Double, alto: Double)
+
+def area(f: Figura): Double = f match
+  case Figura.Circulo(r)       => math.Pi * r * r
+  case Figura.Rectangulo(a, h) => a * h
+
+// case class genera toString, igualdad y copy
+case class Persona(nombre: String, edad: Int)
+
+@main def figuras(): Unit =
+  val lista = List(Figura.Circulo(1.0), Figura.Rectangulo(2.0, 3.5))
+  for f <- lista do println(s"$f tiene área ${area(f)}")
+
+  val ana = Persona("Ana", 29)
+  println(ana)
+  // copy crea una persona nueva cambiando solo lo indicado
+  println(ana.copy(edad = 30))
+```
+
+El `match` desarma cada figura y extrae sus datos. Como `Figura` es un `enum`, si agregas un caso nuevo y olvidas cubrirlo, el compilador te lo advierte. Los datos no se modifican: `copy` produce otro valor.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Either: errores como valores" archivo="errores.scala" ejecutar="scala-cli run errores.scala" salida={"Right(2.5)\nLeft(no se puede dividir entre cero)\nResultado: 3.0"}>
+
+```scala
+//> using scala 3
+
+// Either[Error, Resultado]: Left es el error, Right es el éxito
+def dividir(a: Double, b: Double): Either[String, Double] =
+  if b == 0 then Left("no se puede dividir entre cero")
+  else Right(a / b)
+
+@main def errores(): Unit =
+  println(dividir(10, 4))
+  println(dividir(1, 0))
+
+  dividir(9, 3) match
+    case Right(r) => println(s"Resultado: $r")
+    case Left(e)  => println(s"Error: $e")
+```
+
+En lugar de lanzar una excepción, la función devuelve un valor que describe el fallo, y quien la llama debe tratarlo. Es el mismo enfoque de `Result` en Rust y `Maybe` en Haskell. Para casos donde sí hay excepciones de Java, `Try` las convierte en valores.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Mezclar tabuladores y espacios en la sintaxis por indentación">
+En Scala 3 la sangría define los bloques. Si mezclas tabuladores y espacios, o cambias de nivel sin querer, aparecen errores confusos. Configura tu editor para insertar espacios y mantén el mismo ancho en todo el archivo.
+</Callout>
+
+<Callout tipo="warning" titulo="Seguir un tutorial de Scala 2 con código de Scala 3">
+Mucho contenido en línea usa Scala 2: `implicit`, `object Main extends App`, llaves en todos lados. Casi todo sigue funcionando, pero hay diferencias, por ejemplo `given` y `using` reemplazan a `implicit`. Revisa a qué versión se refiere cada recurso. Parte del Tour de Scala en español sigue el estilo de Scala 2, así que combínalo con el libro de Scala 3.
+</Callout>
+
+<Callout tipo="warning" titulo="Usar null en vez de Option">
+`null` existe por compatibilidad con Java, pero en código Scala provoca los mismos errores que en Java. Usa `Option` para valores que pueden faltar y apóyate en `map`, `getOrElse` y `match` para trabajar con ellos. Si recibes un `null` de una biblioteca de Java, envuélvelo enseguida con `Option(valor)`.
+</Callout>
+
+<Callout tipo="warning" titulo="Abusar de var y de colecciones mutables">
+Es tentador escribir `var total = 0` y un bucle, como harías en otros lenguajes. En Scala suele haber una forma más corta y segura con `sum`, `map`, `filter` o `foldLeft`. Reserva `var` y las colecciones de `scala.collection.mutable` para casos donde lo necesites por rendimiento.
+</Callout>
+
+<Callout tipo="warning" titulo="Escribir return por costumbre">
+En Scala, la última expresión es el valor de la función y `return` rara vez hace falta. Además, usarlo dentro de una función anónima puede cambiar su significado de formas inesperadas. Deja que la última línea devuelva el valor.
+</Callout>
+
+## Buenas prácticas
+
+- Empieza con `val` y colecciones inmutables. Pasa a `var` solo con una buena razón.
+- Modela tus datos con `case class` y `enum`, y trabájalos con `match`.
+- Anota los tipos de retorno en las funciones públicas. Ayudan a leer y aceleran el compilador.
+- Representa lo que puede faltar con `Option` y lo que puede fallar con `Either`, no con `null` ni excepciones por todo.
+- Mantén el código con sintaxis consistente: o indentación, o llaves, no mezclas dentro del mismo archivo.
+- Usa `scala-cli test` o un marco de pruebas como MUnit para verificar tus funciones.
+- Formatea con scalafmt para que todo el equipo tenga el mismo estilo.
+- Cuando el proyecto crezca a varios módulos, migra a sbt y organiza el código en paquetes.
+
+## Siguiente paso
+
+Ya conoces `val`, funciones, colecciones, `enum`, `case class` y `Either`. Para seguir:
+
+- **Traits y clases**: son la forma de compartir comportamiento. El Tour de Scala los explica con ejemplos.
+- **Scala Toolkit**: son tutoriales para tareas reales, como leer archivos, trabajar con JSON, hacer peticiones HTTP y escribir pruebas.
+- **Programación funcional a fondo**: el libro Scala with Cats enseña type classes y mónadas con la biblioteca Cats.
+- **Concurrencia**: `Future` está en la biblioteca estándar. Para sistemas grandes se usan Cats Effect o ZIO.
+- **Si vienes de Java**: la [guía de Java](/guias/java/) y el libro de Scala 3 tienen una sección pensada para ti.
+- **Control de versiones**: guarda tu progreso con la [guía de Git](/guias/git/).
+
+Explora más libros y cursos gratis en la [biblioteca de Scala](/biblioteca/scala/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

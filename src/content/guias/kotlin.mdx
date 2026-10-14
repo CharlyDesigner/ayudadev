@@ -1,0 +1,327 @@
+---
+titulo: 'Kotlin desde cero'
+descripcion: 'Qué es Kotlin, cómo instalarlo y tus primeros programas: variables, nulos, funciones, colecciones y clases, con ejemplos que puedes copiar y ejecutar.'
+tema: kotlin
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['kotlin-aprende-kotlin-android-developers', 'kotlin-tour-oficial', 'kotlin-ya-tutorial', 'kotlin-curso-programacion-mouredev']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['kotlin', 'jvm', 'null-safety', 'android', 'data-class']
+orden: 19
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Kotlin es un lenguaje moderno creado por JetBrains. Se parece a Java, pero necesitas escribir mucho menos código y el compilador te protege de errores muy comunes. Es el lenguaje preferido para apps Android, y también sirve para servidores (Ktor, Spring), herramientas de línea de comandos y aplicaciones multiplataforma.
+
+Lo que necesitas tener claro:
+
+- **Compila a varios destinos**: lo más común es la JVM (bytecode que corre en cualquier sistema con Java), pero también puede generar JavaScript, WebAssembly y código nativo. Aquí usaremos la JVM.
+- **Tipado estático con inferencia**: cada valor tiene un tipo conocido al compilar, pero casi nunca tienes que escribirlo. `val edad = 20` ya sabe que es un `Int`.
+- **Seguridad ante nulos en el tipo**: `String` nunca vale `null`; `String?` sí puede. El compilador te obliga a decidir qué hacer en cada caso.
+- **`val` y `var`**: `val` no se puede reasignar (como una constante local) y `var` sí. Empieza siempre con `val` y cambia a `var` solo si hace falta.
+- **Casi todo es una expresión**: `if` y `when` devuelven un valor, así que puedes asignarlos directo a una variable.
+- **Funciones como ciudadanas de primera**: lambdas, funciones de extensión y colecciones con `map`, `filter` y `sum` sin escribir ciclos a mano.
+- **Interoperable con Java**: puedes usar cualquier biblioteca de Java y mezclar archivos de ambos lenguajes en el mismo proyecto.
+- **Corrutinas**: una forma ligera de hacer tareas asíncronas. No las necesitas para empezar, pero son clave en Android y servidores.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **La forma más rápida, sin instalar nada**: abre el [Kotlin Playground](https://play.kotlinlang.org/), pega el código de un ejemplo y pulsa el botón de ejecutar. Sirve para probar todos los ejemplos de esta guía.
+2. **Con un IDE (recomendado para aprender)**: instala IntelliJ IDEA desde [jetbrains.com/idea](https://www.jetbrains.com/idea/). Trae soporte de Kotlin incluido y puede descargar el JDK por ti. Crea un proyecto nuevo, elige Kotlin como lenguaje y ejecuta con el botón verde junto a `fun main`.
+3. **Con la terminal**: necesitas un JDK instalado y el compilador de Kotlin. En macOS usa `brew install kotlin`; en Linux y macOS también puedes usar SDKMAN con `sdk install kotlin`; en Windows descarga el compilador desde la página de lanzamientos de Kotlin en GitHub y agrega su carpeta `bin` al `PATH`.
+4. Cierra y vuelve a abrir la terminal. Comprueba con `kotlinc -version`.
+5. Crea una carpeta `kotlin-practicas` y dentro un archivo `Hola.kt` con el contenido del ejemplo 1.
+6. Compílalo con `kotlinc Hola.kt -include-runtime -d hola.jar` y córrelo con `java -jar hola.jar`. La opción `-include-runtime` mete la biblioteca de Kotlin dentro del `.jar` para que se ejecute solo.
+
+</Pasos>
+
+Para proyectos de varios archivos usarás Gradle, que IntelliJ crea por ti. Para Android, la herramienta es Android Studio, y la guía de [Android con Jetpack Compose](/guias/android/) parte justo de aquí.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="Hola.kt" ejecutar="kotlinc Hola.kt -include-runtime -d hola.jar && java -jar hola.jar" salida="Hola, mundo">
+
+```kotlin
+fun main() {
+    println("Hola, mundo")
+}
+```
+
+Es todo el programa. No hace falta una clase, ni `static`, ni punto y coma al final de las líneas. `fun main()` es el punto de entrada y `println` imprime una línea.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables, tipos y plantillas de texto" archivo="Variables.kt" ejecutar="kotlinc Variables.kt -include-runtime -d variables.jar && java -jar variables.jar" salida="Ana tiene 21 años
+Inicial: A, activa: true
+Precio con IVA: 23.19
+7 / 2 = 3
+7 % 2 = 1
+7 / 2.0 = 3.5">
+
+```kotlin
+import kotlin.math.round
+
+fun main() {
+    val nombre = "Ana"        // val: no se reasigna
+    var edad = 20             // var: se puede cambiar
+    edad += 1
+    val inicial = 'A'         // Char, comillas simples
+    val activa = true         // Boolean
+    val precio = 19.99        // Double
+
+    // Plantillas: $variable o ${expresion} dentro del texto
+    println("$nombre tiene $edad años")
+    println("Inicial: $inicial, activa: $activa")
+
+    // Redondeo a dos decimales sin depender del idioma del sistema
+    val conIva = round(precio * 1.16 * 100) / 100
+    println("Precio con IVA: $conIva")
+
+    println("7 / 2 = ${7 / 2}")        // división entera
+    println("7 % 2 = ${7 % 2}")        // residuo
+    println("7 / 2.0 = ${7 / 2.0}")    // división decimal
+}
+```
+
+Kotlin infiere el tipo de cada variable, así que casi nunca lo escribes. Dentro de un texto, `$nombre` inserta el valor y `${7 / 2}` inserta el resultado de una expresión. Igual que en otros lenguajes, dividir dos enteros da un entero; basta con que uno sea decimal para obtener `3.5`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Condiciones, when y ciclos" archivo="Control.kt" ejecutar="kotlinc Control.kt -include-runtime -d control.jar && java -jar control.jar" salida="0 es cero
+1 es impar
+2 es par
+3 es impar
+4 es par
+5 es impar
+Cuenta regresiva: 3
+Cuenta regresiva: 2
+Cuenta regresiva: 1
+Despegue
+[10, 7, 4, 1]">
+
+```kotlin
+// when funciona como un switch que devuelve un valor
+fun clasificar(n: Int): String = when {
+    n == 0 -> "cero"
+    n % 2 == 0 -> "par"
+    else -> "impar"
+}
+
+fun main() {
+    // 0..5 es un rango que incluye el 5
+    for (i in 0..5) {
+        println("$i es ${clasificar(i)}")
+    }
+
+    var cuenta = 3
+    while (cuenta > 0) {
+        println("Cuenta regresiva: $cuenta")
+        cuenta--
+    }
+    println("Despegue")
+
+    // Rango descendente con paso de 3
+    println((10 downTo 1 step 3).toList())
+}
+```
+
+`when` evalúa las condiciones en orden y usa la primera que se cumple; el `else` cubre el resto. Como `clasificar` es una sola expresión, se escribe con `=` en lugar de llaves y `return`. Los rangos (`0..5`, `10 downTo 1`) hacen que no necesites el clásico `for` con contador.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Seguridad ante nulos" archivo="Nulos.kt" ejecutar="kotlinc Nulos.kt -include-runtime -d nulos.jar && java -jar nulos.jar" salida="6
+0
+null
+KOTLIN
+sin valor
+6">
+
+```kotlin
+// El signo ? en el tipo indica que el valor puede ser null
+fun largo(texto: String?): Int = texto?.length ?: 0
+
+fun main() {
+    val a: String? = "Kotlin"
+    val b: String? = null
+
+    println(largo(a))                   // 6
+    println(largo(b))                   // 0
+    println(b?.uppercase())             // null, no truena
+    println(a?.uppercase() ?: "vacío")  // KOTLIN
+
+    val c = b ?: "sin valor"            // valor por defecto
+    println(c)
+
+    if (a != null) {
+        println(a.length)               // aquí Kotlin ya sabe que no es null
+    }
+}
+```
+
+`?.` llama al método solo si el valor existe y, si es `null`, el resultado completo es `null`. `?:` (el operador Elvis) da un valor alternativo. Después de comprobar `a != null`, Kotlin trata a `a` como un `String` normal: eso se llama *smart cast*. Así el error más famoso de Java, `NullPointerException`, casi desaparece.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Funciones, extensiones y colecciones" archivo="Funciones.kt" ejecutar="kotlinc Funciones.kt -include-runtime -d funciones.jar && java -jar funciones.jar" salida="Hola, Ana
+Buenas, Luis
+true
+false
+Promedio: 8.5
+Mayor: 10
+[80, 90, 100]">
+
+```kotlin
+// Parámetro con valor por defecto
+fun saludar(nombre: String, saludo: String = "Hola") = "$saludo, $nombre"
+
+// Función de extensión: agrega un método a String sin heredar de ella
+fun String.esPalindromo(): Boolean {
+    val limpio = this.lowercase().filter { it.isLetter() }
+    return limpio == limpio.reversed()
+}
+
+fun main() {
+    println(saludar("Ana"))
+    println(saludar(saludo = "Buenas", nombre = "Luis"))  // argumentos con nombre
+    println("Anita lava la tina".esPalindromo())
+    println("Kotlin".esPalindromo())
+
+    val notas = listOf(8, 9, 7, 10)
+    println("Promedio: ${notas.average()}")
+    println("Mayor: ${notas.max()}")
+
+    // filter y map reciben lambdas; it es el elemento actual
+    val resultado = notas.filter { it >= 8 }.map { it * 10 }
+    println(resultado)
+}
+```
+
+Los valores por defecto y los argumentos con nombre reemplazan a las sobrecargas de otros lenguajes. Una función de extensión se escribe como `String.nombre()` y dentro puedes usar `this`. Las colecciones traen operaciones listas: `average`, `max`, `filter`, `map`. `listOf` crea una lista de solo lectura; para una que puedas modificar usa `mutableListOf`.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Clases, data class y sealed interface" archivo="Clases.kt" ejecutar="kotlinc Clases.kt -include-runtime -d clases.jar && java -jar clases.jar" salida="Ana: 150.0
+Retiro de 500: false
+Retiro de 30: true
+Ana: 120.0
+Persona(nombre=Luis, edad=25)
+Persona(nombre=Luis, edad=26)
+true
+Área del rectángulo: 12.0
+Área del triángulo: 15.0">
+
+```kotlin
+class Cuenta(val titular: String, saldoInicial: Double) {
+    var saldo = saldoInicial
+        private set                    // se lee desde fuera, solo la clase lo modifica
+
+    fun depositar(monto: Double) {
+        require(monto > 0) { "El monto debe ser positivo" }
+        saldo += monto
+    }
+
+    fun retirar(monto: Double): Boolean {
+        if (monto > saldo) return false
+        saldo -= monto
+        return true
+    }
+
+    override fun toString() = "$titular: $saldo"
+}
+
+// data class: genera toString, equals, hashCode y copy
+data class Persona(val nombre: String, val edad: Int)
+
+// sealed interface: un conjunto cerrado de variantes
+sealed interface Forma {
+    data class Rectangulo(val ancho: Double, val alto: Double) : Forma
+    data class Triangulo(val base: Double, val altura: Double) : Forma
+}
+
+// when sobre un sealed no necesita else: el compilador sabe que están todas
+fun area(f: Forma): Double = when (f) {
+    is Forma.Rectangulo -> f.ancho * f.alto
+    is Forma.Triangulo -> f.base * f.altura / 2
+}
+
+fun main() {
+    val cuenta = Cuenta("Ana", 100.0)
+    cuenta.depositar(50.0)
+    println(cuenta)
+    println("Retiro de 500: ${cuenta.retirar(500.0)}")
+    println("Retiro de 30: ${cuenta.retirar(30.0)}")
+    println(cuenta)
+
+    val p = Persona("Luis", 25)
+    println(p)
+    println(p.copy(edad = 26))               // copia cambiando un campo
+    println(p == Persona("Luis", 25))        // == compara el contenido
+
+    println("Área del rectángulo: ${area(Forma.Rectangulo(3.0, 4.0))}")
+    println("Área del triángulo: ${area(Forma.Triangulo(6.0, 5.0))}")
+}
+```
+
+El constructor va en la misma línea que el nombre de la clase, y `val` o `var` ahí mismo crea la propiedad. `private set` hace que nadie pueda poner un saldo arbitrario desde fuera. Una `data class` es ideal para datos: copia, compara e imprime sola. Con `sealed interface` más `when`, si agregas una forma nueva el compilador te avisa en cada lugar donde falte manejarla.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Usar !! para callar al compilador">
+
+`valor!!` le dice a Kotlin que confíes en que no es `null`; si te equivocas, el programa truena con `NullPointerException`. Es justo lo que el lenguaje quería evitar. Prefiere `?.`, `?:`, `if (x != null)` o `requireNotNull(x)` con un mensaje claro.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Reasignar un val">
+
+Si escribes `val edad = 20` y luego `edad = 21`, el compilador marca `Val cannot be reassigned`. No es un fallo: usa `var` solo para lo que de verdad cambia. Una variable que no cambia es más fácil de entender y de depurar.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Mezclar Int, Long y Double sin convertir">
+
+Kotlin no convierte tipos numéricos de forma automática: `val x: Double = 5` da error porque `5` es un `Int`. Escribe `5.0` o usa `5.toDouble()`. Lo mismo al pasar un `Int` donde se pide un `Long`. Es más estricto que Java, pero evita sorpresas con el redondeo.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Intentar agregar a una lista de solo lectura">
+
+`listOf(1, 2, 3)` devuelve una `List` que no tiene `add`. Si necesitas agregar o quitar elementos, crea una `mutableListOf` o una `ArrayList`. Y recuerda que `List` solo oculta los métodos de cambio: si otra parte del código tiene la lista mutable original, el contenido puede cambiar.
+
+</Callout>
+
+<Callout tipo="warning" titulo="El .jar no corre solo">
+
+Si compilas con `kotlinc Hola.kt -d hola.jar` sin `-include-runtime`, al ejecutar con `java -jar` falta la biblioteca de Kotlin y ves un error de clase no encontrada. Agrega `-include-runtime` al compilar. Y si tu archivo se llama `Hola.kt`, la clase generada se llama `HolaKt`; en proyectos de IDE esto lo maneja Gradle por ti.
+
+</Callout>
+
+## Buenas prácticas
+
+- Usa `val` por defecto y `var` solo cuando algo cambie.
+- Nombres en `camelCase` para variables y funciones, `PascalCase` para clases y `MAYUSCULAS` para constantes.
+- Aprovecha los tipos que no aceptan `null`; usa `String?` solo cuando de verdad pueda faltar el dato.
+- Usa `data class` para datos y `sealed interface` para conjuntos cerrados de variantes.
+- Prefiere `map`, `filter` y `sum` sobre ciclos con contador, pero sin encadenar tantas operaciones que nadie las entienda.
+- Valida argumentos con `require` y estados con `check`, con mensajes claros.
+- Mantén el formato con las convenciones oficiales de Kotlin; IntelliJ puede formatear con un atajo.
+- Escribe pruebas con `kotlin.test` o JUnit desde que el proyecto tenga más de un archivo.
+
+## Siguiente paso
+
+Ya conoces la sintaxis, los nulos, las colecciones y las clases. Sigue con herencia e interfaces, excepciones con `try` y `catch`, y lectura de archivos. Después aprende corrutinas con la [guía oficial](https://kotlinlang.org/docs/coroutines-guide.html), que es el siguiente gran tema del lenguaje.
+
+Si tu meta es hacer apps, sigue con [Android con Kotlin y Jetpack Compose](/guias/android/). Si ya conoces Java, compara con [Java desde cero](/guias/java/), porque ambos corren sobre la JVM. Guarda cada ejercicio en un repositorio con [Git y GitHub desde cero](/guias/git/). Todos los recursos están en [la biblioteca de Kotlin](/biblioteca/kotlin/) y, para móviles, en [la de Android](/biblioteca/android/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

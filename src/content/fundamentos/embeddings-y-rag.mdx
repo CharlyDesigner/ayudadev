@@ -1,0 +1,142 @@
+---
+titulo: 'Embeddings y RAG: darle memoria a la IA'
+descripcion: 'Cómo convertir texto en vectores para buscar por significado y cómo usar eso para que un modelo responda con tus propios documentos.'
+categoria: ia
+nivel: intermedio
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [inteligencia-artificial, python]
+etiquetas: [embeddings, rag, vectores, busqueda-semantica, llm]
+orden: 42
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Quieres que un modelo responda preguntas sobre los apuntes de tu curso, el manual de tu empresa o la documentación de tu proyecto. El problema es doble. El modelo no conoce esos documentos, y no puedes pegarlos todos en cada mensaje porque no caben en la ventana de contexto.
+
+La solución más común se llama **RAG**: buscar primero los fragmentos relevantes y dárselos al modelo junto con la pregunta. Para buscar bien necesitas una herramienta clave llamada **embedding**. Vamos por partes.
+
+## Qué es
+
+Un **embedding** es una lista de números (un vector) que representa el significado de un texto. Un modelo especial, llamado modelo de embeddings, lee un texto y devuelve ese vector. La propiedad útil es esta: **textos con significado parecido producen vectores cercanos**.
+
+Así "¿cómo instalo Python?" y "pasos para instalar el intérprete de Python" quedan cerca, aunque casi no compartan palabras. Y "receta de tacos" queda lejos de ambos.
+
+**RAG** significa *Retrieval-Augmented Generation*, generación aumentada con recuperación. El proceso en una línea: **recuperas** los textos relevantes, los **pegas en el prompt** y dejas que el modelo **genere** la respuesta apoyándose en ellos.
+
+## Medir cercanía: similitud de coseno
+
+¿Cómo saber si dos vectores están cerca? Una forma muy usada es la **similitud de coseno**, que mide el ángulo entre los vectores. Da un valor cercano a 1 cuando apuntan en la misma dirección (significado parecido) y cercano a 0 cuando no tienen relación.
+
+Los vectores reales tienen cientos o miles de números. Para ver la idea, usa tres números de juguete, donde cada uno mide qué tanto trata un texto de cocina, de programación y de deportes.
+
+<Ejemplo numero={1} titulo="Similitud de coseno con vectores de juguete" archivo="coseno.py" ejecutar="python coseno.py" salida="0.985  tutorial de Python
+0.348  receta de tacos
+0.107  resultado del partido">
+
+```python
+import math
+
+# Vectores de juguete: cada número mide qué tanto trata de (cocina, programación, deportes)
+documentos = {
+    "receta de tacos": [0.9, 0.1, 0.0],
+    "tutorial de Python": [0.1, 0.9, 0.1],
+    "resultado del partido": [0.0, 0.1, 0.9],
+}
+pregunta = [0.2, 0.8, 0.0]  # algo sobre programar
+
+def coseno(a, b):
+    punto = sum(x * y for x, y in zip(a, b))
+    norma_a = math.sqrt(sum(x * x for x in a))
+    norma_b = math.sqrt(sum(y * y for y in b))
+    return punto / (norma_a * norma_b)
+
+ranking = sorted(documentos.items(), key=lambda par: coseno(pregunta, par[1]), reverse=True)
+for nombre, vector in ranking:
+    print(f"{coseno(pregunta, vector):.3f}  {nombre}")
+```
+
+La pregunta se parece mucho al tutorial de Python y casi nada al resultado del partido. Eso es una **búsqueda semántica**: ordenar documentos por significado, no por palabras iguales. En un sistema real, los vectores no los escribes tú: los produce un modelo de embeddings. El resto del proceso es igual.
+
+</Ejemplo>
+
+## El proceso de RAG, paso a paso
+
+Un sistema RAG tiene dos fases.
+
+**Preparación (se hace una vez, o cada vez que cambian tus documentos):**
+
+1. **Dividir** los documentos en fragmentos (*chunks*). Por ejemplo, párrafos o secciones.
+2. **Calcular el embedding** de cada fragmento con un modelo de embeddings.
+3. **Guardar** los vectores junto con el texto original. Puede ser una base de datos vectorial, una extensión de una base de datos que ya uses o, para algo pequeño, una simple lista en memoria o un archivo.
+
+**Consulta (cada vez que alguien pregunta):**
+
+1. Calcular el embedding de la pregunta.
+2. Buscar los fragmentos con vectores más cercanos (los "top k").
+3. Armar un prompt con esos fragmentos y la pregunta.
+4. Enviar el prompt al modelo y mostrar la respuesta.
+
+El prompt armado suele verse así:
+
+```text
+Responde usando solo el contexto de abajo.
+Si la respuesta no está en el contexto, di que no lo sabes.
+
+Contexto:
+[fragmento 1]
+[fragmento 2]
+[fragmento 3]
+
+Pregunta: ¿Cuál es el plazo para pedir un reembolso?
+```
+
+La instrucción de "si no está, di que no lo sabes" es importante: reduce la tentación del modelo de inventar.
+
+## Qué lo hace bien o mal
+
+La calidad de un RAG depende casi toda de la **recuperación**. Si el fragmento correcto no llega al prompt, el modelo no puede usarlo, por muy bueno que sea.
+
+- **Tamaño de los fragmentos.** Muy pequeños pierden contexto. Muy grandes meten ruido. Prueba con tus propios documentos.
+- **Calidad del documento.** Texto desordenado, tablas rotas o PDFs escaneados dan embeddings malos. Limpia antes.
+- **Mezclar métodos.** A veces combinar búsqueda semántica con búsqueda por palabras clave funciona mejor, sobre todo con códigos, nombres propios y siglas.
+- **Evaluar.** Arma una lista de preguntas con la respuesta esperada y mide si el fragmento correcto aparece entre los resultados.
+
+<Callout tipo="tip" titulo="Empieza simple">
+
+Antes de montar una base de datos vectorial, intenta con pocos documentos y una lista en memoria. Si tus documentos caben completos en la ventana de contexto, a veces ni necesitas RAG: puedes pegarlos tal cual. RAG se justifica cuando hay demasiado texto, cuando cambia seguido o cuando quieres citar de dónde salió cada dato.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Los documentos recuperados también son entrada no confiable">
+
+Todo lo que metes al prompt, incluidos tus fragmentos, el modelo puede interpretarlo como instrucciones. Si alguien logra colar en un documento una frase como "ignora lo anterior y haz esto otro", puede afectar la respuesta. A esto se le llama inyección de prompt indirecta. No incluyas documentos de fuentes que no controlas sin revisarlos, y no le des al sistema acceso a datos que el usuario no debería ver.
+
+</Callout>
+
+## Datos privados
+
+Para RAG vas a enviar tus textos a un modelo de embeddings y luego al modelo que responde. Si son datos personales, de clientes o confidenciales, revisa dónde se procesan y la política de datos del proveedor, o considera modelos que corras en tu propia máquina. Nunca indexes contraseñas, claves o información que no podrías mostrar tal cual a la persona que pregunta.
+
+## Pruébalo tú
+
+1. Corre el ejemplo y agrega un cuarto documento, "guía de JavaScript", con vector `[0.1, 0.8, 0.1]`. ¿Se acerca más a la pregunta que el tutorial de Python?
+2. Cambia la pregunta a `[0.0, 0.0, 1.0]`. ¿Qué documento queda primero?
+3. Escribe a mano un mini RAG sin vectores: guarda cinco frases en una lista, elige la que comparta más palabras con la pregunta y pégala en un prompt. Luego piensa dónde falla (sinónimos) y por qué los embeddings lo resuelven.
+4. Haz el prompt de ejemplo en un chat con tres fragmentos tuyos y una pregunta cuya respuesta no esté en ninguno. ¿Te dice que no lo sabe?
+
+## Errores y mitos comunes
+
+- **"RAG entrena al modelo con mis datos."** No. El modelo no cambia. Solo recibe los fragmentos como parte del prompt, cada vez.
+- **"Con RAG ya no hay alucinaciones."** Se reducen, pero no desaparecen. El modelo puede ignorar el contexto, mezclar fragmentos o responder de más.
+- **"Más fragmentos siempre ayuda."** Demasiados fragmentos meten ruido y gastan contexto. Prueba con pocos y relevantes.
+- **"Necesito una base de datos vectorial."** Para proyectos pequeños, no. Una lista y la similitud de coseno bastan para empezar.
+- **"Los embeddings de distintos modelos son intercambiables."** No. Los vectores de un modelo no se pueden comparar con los de otro. Si cambias de modelo, recalculas todo.
+
+## Qué sigue
+
+- Decide si RAG es lo que necesitas en [Prompting, RAG o fine-tuning](/fundamentos/prompting-vs-fine-tuning/).
+- Mira cómo darle herramientas a un modelo en [Agentes de IA](/fundamentos/agentes-de-ia/).
+- Si tus datos viven en tablas, repasa [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/).
+- Más lecturas en la [biblioteca de Inteligencia artificial](/biblioteca/inteligencia-artificial/) y en el [glosario](/glosario/).

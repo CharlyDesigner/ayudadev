@@ -1,0 +1,336 @@
+---
+titulo: 'Node.js desde cero'
+descripcion: 'Qué es Node.js, cómo instalarlo y cómo crear scripts, un servidor HTTP, una API REST y pruebas con ejemplos que puedes copiar y ejecutar.'
+tema: nodejs
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['nodejs-aprende-node-midudev', 'nodejs-full-stack-open-parte-3', 'nodejs-curso-nodejs-express-freecodecamp', 'nodejs-learn-oficial']
+requisitos: ['Saber lo básico de JavaScript (variables, funciones, async/await)', 'Saber abrir una terminal y moverte entre carpetas']
+etiquetas: ['node', 'servidor', 'api', 'npm', 'backend']
+orden: 41
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Node.js te deja ejecutar JavaScript fuera del navegador. Con él puedes crear scripts para automatizar tareas, herramientas de línea de comandos, servidores web y APIs. En esta guía construyes, paso a paso, un servidor, una API de tareas y sus pruebas, usando solo lo que Node trae incluido.
+
+## Qué es y para qué sirve
+
+Antes de escribir código, este es el modelo mental que necesitas:
+
+- **Es un entorno de ejecución, no un lenguaje.** El lenguaje sigue siendo JavaScript. Node usa el motor V8 (el mismo de Chrome) y le añade APIs para archivos, red, procesos y el sistema operativo.
+- **Un hilo para tu código, entrada y salida sin bloquear.** Tu JavaScript corre en un solo hilo. Cuando pides algo lento (leer un archivo, esperar una respuesta de red), Node lo delega al sistema y sigue atendiendo otras cosas. Por eso casi todo lo que haces con archivos y red es asíncrono.
+- **Eso lo hace muy bueno para tareas de espera, no para cálculo pesado.** Un servidor que atiende muchas peticiones pequeñas encaja perfecto. Un cálculo largo en tu código bloquea a todos los demás.
+- **Módulos.** Tu código se divide en archivos con `import` y `export` (módulos ES). Node también conserva el formato antiguo `require` (CommonJS), que verás en proyectos viejos.
+- **Módulos integrados con el prefijo `node:`.** `node:fs` (archivos), `node:http` (servidores), `node:path`, `node:os`, `node:test` (pruebas) y más. No necesitas instalar nada para usarlos.
+- **npm.** Es el gestor de paquetes que viene con Node. Instala librerías de terceros en `node_modules` y las anota en `package.json`.
+- **Herramientas modernas ya incluidas.** Node trae `fetch`, un ejecutor de pruebas, lectura de archivos `.env` con `--env-file` y un modo `--watch` que reinicia tu programa al guardar.
+- **Versiones LTS.** Para aprender y para producción usa la versión LTS (soporte a largo plazo). Los ejemplos de esta guía se probaron con Node 24.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala Node.js (versión LTS).** En **Windows** descarga el instalador desde [nodejs.org](https://nodejs.org/) o ejecuta `winget install OpenJS.NodeJS.LTS` en PowerShell. En **macOS** usa el instalador de nodejs.org o `brew install node` si tienes Homebrew. En **Linux** lo más cómodo es [nvm](https://github.com/nvm-sh/nvm): tras instalarlo ejecuta `nvm install --lts`.
+2. **Comprueba la instalación.** Abre una terminal nueva y escribe `node -v` y `npm -v`. Cada comando debe mostrar un número de versión.
+3. **Crea una carpeta de trabajo.** Por ejemplo `mkdir aprendo-node`, y entra con `cd aprendo-node`.
+4. **Crea el proyecto.** Ejecuta `npm init -y` para generar un `package.json` y luego `npm pkg set type=module` para usar módulos ES con `import`.
+5. **Escribe `hola.js`** con tu editor (recomendamos [VS Code](https://code.visualstudio.com/)) y pega el código del ejemplo 1.
+6. **Ejecútalo** con `node hola.js Ana Luis`. Si ves los dos saludos, ya tienes todo listo.
+
+</Pasos>
+
+Dos atajos útiles para más adelante: `node --watch archivo.js` reinicia el programa cada vez que guardas, y `node` a secas abre una consola interactiva (REPL) para probar líneas sueltas.
+
+## Ejemplos paso a paso
+
+Todos los ejemplos van en la misma carpeta, con el `package.json` del paso 4. Cada uno es un archivo completo: guárdalo con el nombre indicado y ejecútalo con el comando que aparece debajo.
+
+<Ejemplo numero={1} titulo="Argumentos de la terminal" archivo="hola.js" ejecutar="node hola.js Ana Luis" salida={'Hola, Ana\nHola, Luis'}>
+
+```js
+// Tu primer programa en Node.js: lee los argumentos de la terminal
+const nombres = process.argv.slice(2);
+
+if (nombres.length === 0) {
+  console.log('Hola, mundo. Prueba: node hola.js Ana Luis');
+} else {
+  for (const nombre of nombres) {
+    console.log(`Hola, ${nombre}`);
+  }
+}
+```
+
+`process` es un objeto global que describe el programa en ejecución. `process.argv` es un arreglo: las dos primeras posiciones son la ruta de Node y la de tu archivo, por eso usamos `slice(2)` para quedarnos con lo que escribiste después. Si ejecutas `node hola.js` sin nombres, verás el mensaje de ayuda.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Leer y escribir archivos" archivo="archivos.js" ejecutar="node archivos.js" salida={"Guardé 2 tareas\nPendientes: [ 'Crear una API' ]\nError controlado: ENOENT"}>
+
+```js
+// Leer y escribir archivos con promesas
+import { readFile, writeFile } from 'node:fs/promises';
+
+const tareas = [
+  { id: 1, texto: 'Aprender Node', hecha: true },
+  { id: 2, texto: 'Crear una API', hecha: false },
+];
+
+await writeFile('tareas.json', JSON.stringify(tareas, null, 2));
+
+const contenido = await readFile('tareas.json', 'utf8');
+const lista = JSON.parse(contenido);
+const pendientes = lista.filter((t) => !t.hecha);
+
+console.log(`Guardé ${lista.length} tareas`);
+console.log('Pendientes:', pendientes.map((t) => t.texto));
+
+try {
+  await readFile('no-existe.json', 'utf8');
+} catch (error) {
+  console.log('Error controlado:', error.code);
+}
+```
+
+`node:fs/promises` ofrece las funciones de archivos en versión asíncrona con `await`. En un módulo ES puedes usar `await` directamente en el nivel superior, sin envolverlo en una función. Los errores de archivos traen un `code` (como `ENOENT`, que significa que el archivo no existe) y es mejor revisarlo que comparar mensajes de texto. Después de correrlo verás el archivo `tareas.json` en tu carpeta.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Un servidor HTTP sin instalar nada" archivo="servidor.js" ejecutar="node servidor.js" salida={"Servidor en http://localhost:3000\n200 { mensaje: 'Hola, Ana' }\n404 { error: 'No encontrado' }"}>
+
+```js
+// Un servidor HTTP con el módulo integrado, sin instalar nada
+import { createServer } from 'node:http';
+
+const servidor = createServer((req, res) => {
+  const url = new URL(req.url, 'http://localhost');
+
+  if (url.pathname === '/saludo') {
+    const nombre = url.searchParams.get('nombre') ?? 'mundo';
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ mensaje: `Hola, ${nombre}` }));
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({ error: 'No encontrado' }));
+});
+
+servidor.listen(3000, async () => {
+  console.log('Servidor en http://localhost:3000');
+
+  // Nos llamamos a nosotros mismos para ver las respuestas
+  const ok = await fetch('http://localhost:3000/saludo?nombre=Ana');
+  console.log(ok.status, await ok.json());
+
+  const falla = await fetch('http://localhost:3000/otra-ruta');
+  console.log(falla.status, await falla.json());
+
+  servidor.close();
+});
+```
+
+`createServer` recibe una función que se ejecuta por cada petición: `req` describe lo que llegó y `res` es la respuesta que armas. Aquí decidimos la respuesta según la ruta y siempre devolvemos JSON con su código de estado. Para que el ejemplo termine solo, el servidor se llama a sí mismo con `fetch` (incluido en Node) y se cierra con `servidor.close()`. Si quitas esas líneas, el servidor queda activo hasta que lo detengas con Ctrl + C, y puedes abrir `http://localhost:3000/saludo?nombre=Ana` en el navegador.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Una API REST de tareas en memoria" archivo="api.js y probar-api.js" ejecutar="node probar-api.js" salida={"201 { id: 2, texto: 'Escribir pruebas', hecha: false }\n400 { error: 'El texto es obligatorio' }\n200 [\n  { id: 1, texto: 'Aprender Node', hecha: false },\n  { id: 2, texto: 'Escribir pruebas', hecha: false }\n]"}>
+
+Primero el archivo `api.js`, que define la API y exporta el servidor:
+
+```js
+// Mini API REST de tareas en memoria, solo con módulos integrados
+import { createServer } from 'node:http';
+
+const tareas = [{ id: 1, texto: 'Aprender Node', hecha: false }];
+let siguienteId = 2;
+
+function responder(res, estado, datos) {
+  res.writeHead(estado, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify(datos));
+}
+
+async function leerJSON(req) {
+  let texto = '';
+  for await (const trozo of req) texto += trozo;
+  return JSON.parse(texto);
+}
+
+export const servidor = createServer(async (req, res) => {
+  const { pathname } = new URL(req.url, 'http://localhost');
+
+  if (req.method === 'GET' && pathname === '/tareas') {
+    return responder(res, 200, tareas);
+  }
+
+  if (req.method === 'POST' && pathname === '/tareas') {
+    try {
+      const { texto } = await leerJSON(req);
+      if (typeof texto !== 'string' || texto.trim() === '') {
+        return responder(res, 400, { error: 'El texto es obligatorio' });
+      }
+      const nueva = { id: siguienteId++, texto: texto.trim(), hecha: false };
+      tareas.push(nueva);
+      return responder(res, 201, nueva);
+    } catch {
+      return responder(res, 400, { error: 'JSON inválido' });
+    }
+  }
+
+  responder(res, 404, { error: 'Ruta no encontrada' });
+});
+
+// Solo arranca si ejecutas este archivo directamente
+if (process.argv[1] === import.meta.filename) {
+  servidor.listen(3000, () => console.log('API en http://localhost:3000/tareas'));
+}
+```
+
+Ahora `probar-api.js`, que arranca la API en un puerto libre y la usa como lo haría un cliente:
+
+```js
+import { servidor } from './api.js';
+
+// El puerto 0 le pide al sistema operativo un puerto libre
+servidor.listen(0, async () => {
+  const base = `http://localhost:${servidor.address().port}`;
+  const json = { 'Content-Type': 'application/json' };
+
+  const creada = await fetch(`${base}/tareas`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({ texto: 'Escribir pruebas' }),
+  });
+  console.log(creada.status, await creada.json());
+
+  const invalida = await fetch(`${base}/tareas`, {
+    method: 'POST',
+    headers: json,
+    body: JSON.stringify({ texto: '   ' }),
+  });
+  console.log(invalida.status, await invalida.json());
+
+  const lista = await fetch(`${base}/tareas`);
+  console.log(lista.status, await lista.json());
+
+  servidor.close();
+});
+```
+
+Esta es la forma de una API REST: el método (`GET`, `POST`) y la ruta indican qué quieres hacer, y el código de estado dice cómo salió (201 creado, 400 petición inválida, 200 correcto). El cuerpo de una petición llega como un flujo de trozos, por eso lo leemos con `for await`. Validamos el dato antes de guardarlo y protegemos `JSON.parse` con `try/catch`, porque un cliente puede mandar basura. Para probarla a mano ejecuta `node api.js` y, desde otra terminal, usa `curl http://localhost:3000/tareas`. Los datos viven en memoria: se pierden al reiniciar. Para guardarlos de verdad, el siguiente paso es una base de datos.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Pruebas con el ejecutor integrado" archivo="api.test.js" ejecutar="node --test" salida={"✔ GET /tareas devuelve la lista inicial (36.7843ms)\n✔ POST /tareas rechaza un texto vacío (6.1499ms)\n✔ una ruta desconocida responde 404 (1.863ms)\nℹ tests 3\nℹ suites 0\nℹ pass 3\nℹ fail 0"}>
+
+```js
+import { test, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { servidor } from './api.js';
+
+servidor.listen(0);
+const base = () => `http://localhost:${servidor.address().port}`;
+
+// Al terminar todas las pruebas, cierra el servidor
+after(() => servidor.close());
+
+test('GET /tareas devuelve la lista inicial', async () => {
+  const res = await fetch(`${base()}/tareas`);
+  assert.equal(res.status, 200);
+  const datos = await res.json();
+  assert.equal(datos[0].texto, 'Aprender Node');
+});
+
+test('POST /tareas rechaza un texto vacío', async () => {
+  const res = await fetch(`${base()}/tareas`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ texto: '' }),
+  });
+  assert.equal(res.status, 400);
+});
+
+test('una ruta desconocida responde 404', async () => {
+  const res = await fetch(`${base()}/nada`);
+  assert.equal(res.status, 404);
+});
+```
+
+`node --test` busca archivos que terminan en `.test.js` y ejecuta cada `test`. `node:assert/strict` compara con igualdad estricta. Los milisegundos de tu salida serán distintos, y el resumen final puede traer más líneas. Gracias a que `api.js` solo arranca el servidor cuando se ejecuta directamente, aquí lo importamos sin ocupar el puerto 3000. Si una aserción falla, Node te muestra el valor esperado y el recibido, y el comando termina con un código distinto de cero.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Configuración con argumentos y variables de entorno" archivo="config.js" ejecutar="node config.js -p 8080 -v" salida={"{ puerto: 8080, entorno: 'desarrollo', verboso: true }"}>
+
+```js
+// Configuración desde argumentos y variables de entorno
+import { parseArgs } from 'node:util';
+
+const { values } = parseArgs({
+  options: {
+    puerto: { type: 'string', short: 'p', default: '3000' },
+    verboso: { type: 'boolean', short: 'v', default: false },
+  },
+});
+
+const puerto = Number(process.env.PUERTO ?? values.puerto);
+const entorno = process.env.APP_ENV ?? 'desarrollo';
+
+console.log({ puerto, entorno, verboso: values.verboso });
+```
+
+`parseArgs` convierte los argumentos de la terminal en un objeto, sin instalar librerías. Si ejecutas `node config.js` a secas, verás `{ puerto: 3000, entorno: 'desarrollo', verboso: false }`. Las variables de entorno sirven para lo que cambia según el lugar donde corre tu app (puertos, claves, modo). Crea un archivo `.env` con las líneas `APP_ENV=produccion` y `PUERTO=9000`, y ejecuta `node --env-file=.env config.js`: la salida será `{ puerto: 9000, entorno: 'produccion', verboso: false }`. Nunca subas ese archivo a Git.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Cannot use import statement outside a module">
+Si Node te muestra `SyntaxError: Cannot use import statement outside a module`, tu archivo se está tratando como CommonJS. Agrega `"type": "module"` en tu `package.json` (con `npm pkg set type=module`) o renombra el archivo a `.mjs`. Lo contrario también pasa: si tu proyecto usa `require`, no puedes mezclarlo libremente con `import` en el mismo archivo.
+</Callout>
+
+<Callout tipo="warning" titulo="__dirname is not defined in ES module scope">
+En módulos ES no existen `__dirname` ni `__filename`. Usa `import.meta.dirname` y `import.meta.filename`, o `import.meta.url` si necesitas una URL. Para armar rutas usa `path.join` de `node:path` en lugar de concatenar textos con barras, así funciona en Windows, macOS y Linux.
+</Callout>
+
+<Callout tipo="warning" titulo="EADDRINUSE: el puerto ya está ocupado">
+Significa que otro proceso (a menudo tu propio servidor anterior que no cerraste) ya usa ese puerto. Detén el proceso con Ctrl + C en su terminal o cambia de puerto. Una buena costumbre es leer el puerto de una variable de entorno y dejar uno por defecto.
+</Callout>
+
+<Callout tipo="warning" titulo="Promesas sin await ni catch">
+En Node actual, una promesa rechazada que nadie atiende termina el proceso con el error. Y si llamas a una función `async` sin `await`, el código siguiente se ejecuta sin esperarla: puede imprimir un mensaje de éxito justo antes de que el proceso caiga. Usa `await` dentro de `try/catch`, o encadena `.catch()`, y revisa siempre que cada promesa tenga quien la espere.
+</Callout>
+
+<Callout tipo="warning" titulo="Subir secretos o node_modules a Git">
+Tu archivo `.env` puede contener claves y contraseñas, y `node_modules` pesa mucho y se regenera con `npm install`. Crea un `.gitignore` con las líneas `node_modules` y `.env` desde el primer commit. Si ya subiste una clave por error, considérala comprometida y cámbiala.
+</Callout>
+
+## Buenas prácticas
+
+- Usa la versión LTS de Node y fija la que usa tu proyecto con el campo `engines` de `package.json` o un archivo `.nvmrc`.
+- Prefiere los módulos integrados con el prefijo `node:` antes de instalar un paquete. Menos dependencias significa menos riesgo y menos mantenimiento.
+- Todo lo que toca archivos o red es asíncrono: usa `async/await` con `try/catch` y no uses las versiones `Sync` (como `readFileSync`) dentro de un servidor.
+- Valida siempre lo que llega de fuera (cuerpo, parámetros, cabeceras) y responde con el código de estado correcto.
+- Configura con variables de entorno, nunca con valores escritos en el código, y no subas `.env` a Git.
+- Separa la creación de tu servidor de su arranque, como hicimos con `api.js`, para poder probarlo sin ocupar un puerto.
+- Escribe pruebas desde el principio con `node --test` y agrégalas a tu script `test` de `package.json`.
+- Antes de instalar un paquete, revisa que esté mantenido y cuántas personas lo usan. Ejecuta `npm audit` de vez en cuando.
+
+## Siguiente paso
+
+Ya sabes ejecutar scripts, servir peticiones y probar tu código. Lo que sigue:
+
+- **Usa un framework.** [Express](https://expressjs.com/es/) simplifica rutas y middleware sobre lo que acabas de aprender. Los cursos de la [biblioteca de Node.js](/biblioteca/nodejs/) lo explican con proyectos completos.
+- **Guarda datos de verdad.** Conecta tu API a una base de datos. Si prefieres SQL, empieza con nuestra guía de [SQL desde cero](/guias/sql/).
+- **Agrega tipos.** [TypeScript desde cero](/guias/typescript/) te ayuda a detectar errores antes de ejecutar, algo muy útil en una API que crece.
+- **Conecta con una interfaz.** Con [React](/guias/react/) o [Angular](/guias/angular/) puedes crear la pantalla que consuma la API de tareas.
+- **Publica tu servidor.** Aprende a empaquetarlo con [Docker](/biblioteca/docker/) y guarda tu progreso con [Git y GitHub](/guias/git/).
+- **Practica con talleres.** [NodeSchool](https://nodeschool.io/es/) ofrece ejercicios autoguiados que corren en tu terminal.
+
+Si necesitas repasar el lenguaje, vuelve a [JavaScript desde cero](/guias/javascript/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

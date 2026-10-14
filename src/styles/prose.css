@@ -1,3 +1,4 @@
+@layer components {
 /* Tipografía para artículos (guías, IA, noticias) */
 .prose { font-size: 1.0625rem; line-height: 1.75; color: var(--ad-fg); max-width: 72ch; }
 .prose > * + * { margin-top: 1.1em; }
@@ -41,3 +42,4 @@
 }
 .code-wrap .copy-btn:hover, .code-wrap .copy-btn:focus-visible { opacity: 1; color: var(--ad-fg); }
 .code-wrap .copy-btn[data-copied='true'] { color: var(--ad-accent-ink); border-color: var(--ad-accent-ink); }
+}

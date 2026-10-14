@@ -1,0 +1,186 @@
+---
+titulo: 'Inglés técnico para programar'
+descripcion: 'Cómo leer documentación en inglés, vocabulario esencial, cómo escribir commits y pull requests, y una rutina de práctica diaria que sí puedes sostener.'
+tiempoLectura: 10
+publicado: 2026-10-09
+etiquetas: ['inglés', 'documentación', 'vocabulario', 'commits']
+orden: 8
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Casi toda la documentación oficial, los mensajes de error y los foros de programación están en inglés. No necesitas hablarlo perfecto para empezar, pero sí perderle el miedo. El inglés técnico es más pequeño y repetitivo que el inglés general, y se aprende con práctica constante.
+
+## Primero lo que más te sirve: leer
+
+La habilidad más útil al principio es leer, no hablar. Con leer bien ya puedes consultar documentación, entender errores y aprender de fuentes originales.
+
+Una forma práctica de leer documentación sin ahogarte:
+
+1. **Lee primero los títulos y subtítulos** para ubicar el tema.
+2. **Mira los ejemplos de código.** Muchas veces explican más que el texto.
+3. **Lee el párrafo y busca solo las palabras clave** que no conoces. No traduzcas todo.
+4. **Intenta resumir en español** en una línea lo que entendiste.
+5. **Prueba el ejemplo** en tu computadora. Entender y ejecutar fija mejor.
+6. **Anota las palabras nuevas** en una lista propia.
+
+Los traductores automáticos ayudan, pero úsalos después de intentar leer. Si traduces todo desde el inicio, no ganas el hábito.
+
+## Leer mensajes de error
+
+Los errores suelen tener una estructura. Aprende a separar las partes:
+
+```text
+TypeError: Cannot read properties of undefined (reading 'name')
+    at showUser (app.js:12:20)
+```
+
+- **TypeError**: el tipo de error.
+- **Cannot read properties of undefined**: no se puede leer propiedades de algo que no existe.
+- **(reading 'name')**: intentaste leer la propiedad name.
+- **at showUser (app.js:12:20)**: dónde ocurrió, en qué archivo, línea y columna.
+
+Si no entiendes el mensaje, copia la parte principal y búscala tal cual. Casi seguro alguien más ya preguntó. Stack Overflow es un sitio donde suelen aparecer esas preguntas.
+
+## Vocabulario esencial
+
+Aprende por grupos. Estas listas son un punto de partida.
+
+**Verbos que verás todo el tiempo**
+
+- to fix: arreglar
+- to add: agregar
+- to remove: quitar
+- to update: actualizar
+- to create: crear
+- to delete: borrar
+- to handle: manejar
+- to return: devolver
+- to throw: lanzar (un error)
+- to deploy: desplegar o publicar
+- to merge: unir
+- to review: revisar
+
+**Sustantivos frecuentes**
+
+- bug: error en el programa
+- issue: reporte o tarea en un repositorio
+- feature: función nueva
+- branch: rama
+- commit: confirmación de cambios
+- pull request: solicitud para unir cambios
+- release: versión publicada
+- dependency: dependencia
+- requirement: requisito
+- environment: entorno
+- warning: advertencia
+- deprecated: obsoleto, se dejará de usar
+
+**Frases de la documentación**
+
+- "Getting started": primeros pasos
+- "Prerequisites": requisitos previos
+- "Usage": uso
+- "Note": nota
+- "Breaking change": cambio que puede romper tu código
+- "Out of scope": fuera del alcance
+- "Work in progress": trabajo en curso
+
+Para dudas de términos en español, el [Glosario](/glosario/) también te ayuda.
+
+## Cómo escribir commits en inglés
+
+Aunque trabajes en español, muchos equipos y proyectos usan inglés. Practica con mensajes cortos y claros. Una convención común es usar un verbo en imperativo:
+
+```text
+Add login form validation
+Fix typo in README
+Update dependencies
+Remove unused imports
+Refactor user service
+```
+
+Reglas fáciles:
+
+- Empieza con un verbo en forma base: Add, Fix, Update, Remove.
+- Describe el qué, de forma breve.
+- Una idea por commit.
+- Evita mensajes como "changes", "stuff" o "fix".
+
+## Cómo escribir un pull request
+
+Un PR bien escrito ahorra tiempo a quien lo revisa. Plantilla breve:
+
+```text
+Title: Fix crash when the user has no profile picture
+
+What does this change?
+- Adds a default avatar when the image is missing.
+- Adds a test for the empty case.
+
+Why?
+The page crashed for new users without a photo.
+
+How to test
+1. Create a user without a picture.
+2. Open the profile page.
+3. The default avatar should appear.
+
+Notes
+I did not change the layout of the header.
+```
+
+Aunque tu inglés no sea perfecto, un texto sencillo y claro vale más que uno complicado. Usa frases cortas. Revisa con un corrector, pero conserva tus palabras.
+
+## Escribir a otras personas en inglés
+
+Para correos, mensajes y comentarios, un par de moldes ayudan:
+
+```text
+Thanks for the feedback. I will update the PR today.
+Could you clarify what you mean by "legacy code"?
+I am not sure I understand. Do you mean...?
+I found the issue. The variable was undefined.
+Sorry for the delay. I was blocked by...
+```
+
+Aprender expresiones cortas para pedir aclaraciones es muy útil. Nadie se ofende por un "could you clarify?".
+
+## Rutina de práctica diaria
+
+Veinte minutos diarios son mejores que dos horas una vez por semana. Un ejemplo:
+
+- **5 minutos**: lee un fragmento de documentación de algo que ya usas.
+- **5 minutos**: repasa tu lista de palabras nuevas (en tarjetas o en una app de repetición espaciada).
+- **5 minutos**: escribe tus commits o notas del día en inglés.
+- **5 minutos**: escucha o lee algo técnico en inglés con subtítulos o transcripción.
+
+Ideas para variar:
+
+- Cambia el idioma de tu editor y de tus herramientas al inglés.
+- Lee los README de proyectos que te interesan.
+- Mira charlas técnicas con subtítulos en inglés.
+- Responde preguntas sencillas en foros, aunque sea una vez por semana.
+- Busca a alguien para practicar conversación técnica.
+
+## Checklist
+
+- Leo documentación en inglés antes de buscar tutoriales en español.
+- Tengo una lista personal de vocabulario técnico que reviso a diario.
+- Escribo mis commits en inglés, aunque sean simples.
+- Sé separar las partes de un mensaje de error.
+- Puedo escribir un PR corto en inglés.
+- Practico mínimo cinco días por semana, aunque sea poco.
+- No traduzco palabra por palabra: busco la idea general.
+
+<Callout tipo="tip" titulo="Tu inglés técnico crece usando, no estudiando aparte">
+Convierte el inglés en parte de lo que ya haces: documentación, commits, errores. Así avanzas aprendiendo programación al mismo tiempo, sin añadir horas extras.
+</Callout>
+
+<Callout tipo="warning" titulo="No dependas del traductor para todo">
+Pegar texto en un traductor sirve para destrabar una duda, pero si lo haces para todo no desarrollas el oído para las frases técnicas. En una entrevista o en una reunión no podrás usarlo. Intenta leer primero y usa la traducción para confirmar.
+</Callout>
+
+## Tu siguiente paso
+
+Escoge hoy una página de documentación de una herramienta que uses y léela en inglés con la técnica de este artículo. Anota diez palabras nuevas. Después revisa la [Biblioteca](/biblioteca/) para encontrar material de estudio, y sigue con [Trabajo remoto y colaboración en equipo](/carrera/trabajo-remoto-y-colaboracion/), donde pondrás en práctica la comunicación escrita.

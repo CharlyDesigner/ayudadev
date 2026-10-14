@@ -1,0 +1,231 @@
+---
+titulo: 'SQL: consultas básicas'
+descripcion: 'SELECT, WHERE, ORDER BY, LIMIT, INSERT, UPDATE, DELETE, CREATE TABLE, restricciones, índices y funciones comunes de SQL, con notas de PostgreSQL, MySQL y SQLite.'
+tema: sql
+etiquetas: ['sql', 'select', 'where', 'insert', 'create table']
+publicado: 2026-10-09
+orden: 7
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Lo esencial para leer y escribir datos en una base relacional. Los ejemplos se ejecutaron en SQLite 3.53; las diferencias con PostgreSQL y MySQL se señalan.
+
+Las tablas de ejemplo:
+
+```sql
+CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL, ciudad TEXT, edad INTEGER);
+INSERT INTO clientes (nombre, ciudad, edad) VALUES
+  ('Ana','CDMX',30), ('Luis','Monterrey',25), ('Marta','CDMX',41),
+  ('Pedro',NULL,19), ('Sofía','Puebla',35);
+```
+
+## Orden de una consulta
+
+| Cláusula | Para qué sirve |
+| --- | --- |
+| `SELECT` | Qué columnas devolver |
+| `FROM` | De qué tabla |
+| `WHERE` | Qué filas conservar (antes de agrupar) |
+| `GROUP BY` | Agrupar filas |
+| `HAVING` | Qué grupos conservar (después de agrupar) |
+| `ORDER BY` | Ordenar el resultado |
+| `LIMIT` | Cuántas filas devolver |
+
+Se escriben en ese orden, pero el motor las evalúa así: `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `SELECT`, `ORDER BY`, `LIMIT`. Por eso no puedes usar en `WHERE` un alias definido en `SELECT`.
+
+## SELECT
+
+| Sintaxis | Qué hace |
+| --- | --- |
+| `SELECT * FROM clientes;` | Todas las columnas (en código real, nombra las que necesitas) |
+| `SELECT nombre, edad FROM clientes;` | Columnas concretas |
+| `SELECT DISTINCT ciudad FROM clientes;` | Valores sin repetir |
+| `SELECT nombre AS n, edad * 2 AS doble FROM clientes;` | Alias y expresiones |
+| `SELECT COUNT(*) FROM clientes;` | Cuántas filas hay |
+
+## WHERE: filtrar filas
+
+| Sintaxis | Significa |
+| --- | --- |
+| `edad >= 30` | Comparaciones: `=`, `<>` (o `!=`), `<`, `>`, `<=`, `>=` |
+| `edad BETWEEN 30 AND 40` | Entre dos valores, ambos incluidos |
+| `ciudad IN ('CDMX','Puebla')` | Coincide con alguno de la lista |
+| `nombre LIKE 'M%'` | Empieza con M (`%` = cualquier texto, `_` = un carácter) |
+| `ciudad IS NULL` | Es nulo |
+| `ciudad IS NOT NULL` | No es nulo |
+| `a AND b`, `a OR b`, `NOT a` | Lógicos. Usa paréntesis si mezclas `AND` y `OR` |
+
+```sql
+SELECT nombre, edad FROM clientes WHERE edad >= 30 ORDER BY edad DESC;
+-- Marta 41, Sofía 35, Ana 30
+
+SELECT nombre FROM clientes
+WHERE ciudad IN ('CDMX','Puebla') AND edad BETWEEN 30 AND 40;
+-- Ana, Sofía
+```
+
+<Callout tipo="warning" titulo="NULL no se compara con =">
+
+`ciudad = NULL` nunca es verdadero y devuelve cero filas; usa `IS NULL`. Además, `ciudad != 'CDMX'` deja fuera a las filas con `ciudad` nula (Pedro no aparece). Si las quieres, añade `OR ciudad IS NULL`.
+
+</Callout>
+
+## Ordenar y paginar
+
+| Sintaxis | Qué hace |
+| --- | --- |
+| `ORDER BY edad` | Ascendente (por defecto) |
+| `ORDER BY edad DESC` | Descendente |
+| `ORDER BY ciudad, edad DESC` | Por ciudad y, dentro de cada una, por edad descendente |
+| `LIMIT 10` | Las primeras 10 filas |
+| `LIMIT 10 OFFSET 20` | Salta 20 filas y devuelve 10 (paginación) |
+
+Sin `ORDER BY`, el orden de las filas no está garantizado. Si paginas, ordena siempre.
+
+## Expresiones y funciones
+
+| Función | Resultado |
+| --- | --- |
+| `COALESCE(ciudad, 'sin ciudad')` | Primer valor no nulo |
+| `NULLIF(a, 0)` | `NULL` si `a` es 0 (evita dividir entre cero) |
+| `UPPER(nombre)`, `LOWER(nombre)` | Mayúsculas, minúsculas |
+| `LENGTH(nombre)` | Longitud del texto |
+| `SUBSTR(nombre, 1, 2)` | Subcadena: desde la posición 1, 2 caracteres (`An`) |
+| `TRIM('  hi ')` | Quita espacios de los extremos |
+| `REPLACE('a-b', '-', '+')` | `a+b` |
+| `nombre \|\| '!'` | Concatenar: `Ana!` (PostgreSQL y SQLite; en MySQL usa `CONCAT(nombre, '!')`) |
+| `ROUND(2.567, 1)` | `2.6` |
+| `ABS(-3)` | `3` |
+| `CAST('12' AS INTEGER)` | Convierte tipos (en MySQL, `SIGNED` en lugar de `INTEGER`) |
+
+```sql
+SELECT nombre,
+       CASE WHEN edad < 21 THEN 'menor'
+            WHEN edad < 40 THEN 'adulto'
+            ELSE 'mayor' END AS grupo
+FROM clientes;
+-- Ana adulto, Luis adulto, Marta mayor, Pedro menor, Sofía adulto
+```
+
+<Callout tipo="info" titulo="División entera">
+
+En SQLite y PostgreSQL, `7/2` entre enteros da `3`. Para decimales, convierte uno de los lados: `7.0/2` da `3.5`. MySQL devuelve `3.5000` con el operador `/` y usa `DIV` para la división entera.
+
+</Callout>
+
+## Fechas
+
+| SQLite | Resultado |
+| --- | --- |
+| `DATE('2026-10-09', '+1 month')` | `2026-11-09` |
+| `strftime('%d/%m/%Y', '2026-10-09')` | `09/10/2026` |
+| `DATE('now')` | Fecha de hoy |
+
+En PostgreSQL se usa `CURRENT_DATE`, `NOW()` y `TO_CHAR(fecha, 'DD/MM/YYYY')`. En MySQL, `CURDATE()` y `DATE_FORMAT(fecha, '%d/%m/%Y')`.
+
+## Insertar, actualizar y borrar
+
+```sql
+INSERT INTO clientes (nombre, ciudad, edad) VALUES ('Eva', 'Oaxaca', 28);
+
+-- varias filas a la vez
+INSERT INTO clientes (nombre, edad) VALUES ('Ivo', 22), ('Rosa', 50);
+
+UPDATE clientes SET edad = edad + 1 WHERE id = 1;
+
+DELETE FROM clientes WHERE id = 5;
+```
+
+<Callout tipo="warning" titulo="UPDATE y DELETE sin WHERE">
+
+Sin `WHERE`, afectan a todas las filas de la tabla. Escribe primero el `SELECT` con ese mismo `WHERE` para ver qué tocarás.
+
+</Callout>
+
+| Sintaxis | Qué hace |
+| --- | --- |
+| `INSERT ... RETURNING id` | Devuelve lo insertado (PostgreSQL y SQLite 3.35 o posterior) |
+| `INSERT ... ON CONFLICT (email) DO UPDATE SET nombre = excluded.nombre` | Inserta o, si ya existe, actualiza (PostgreSQL y SQLite) |
+| `INSERT ... ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)` | Lo mismo en MySQL |
+| `TRUNCATE TABLE t` | Vacía la tabla rápido (PostgreSQL y MySQL; SQLite usa `DELETE FROM t`) |
+
+## Crear tablas y restricciones
+
+```sql
+CREATE TABLE usuarios (
+  id     INTEGER PRIMARY KEY,                      -- identificador único
+  email  TEXT NOT NULL UNIQUE,                     -- obligatorio y sin repetir
+  nombre TEXT NOT NULL,
+  rol    TEXT DEFAULT 'user' CHECK (rol IN ('user','admin')),
+  creado TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE posts (
+  id         INTEGER PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  titulo     TEXT
+);
+```
+
+| Restricción | Qué garantiza |
+| --- | --- |
+| `PRIMARY KEY` | Identifica cada fila; único y no nulo |
+| `NOT NULL` | No acepta valores nulos |
+| `UNIQUE` | No acepta repetidos |
+| `DEFAULT valor` | Valor si no lo indicas al insertar |
+| `CHECK (condición)` | La fila debe cumplir la condición |
+| `REFERENCES tabla(col)` | Llave foránea: el valor debe existir en la otra tabla |
+| `ON DELETE CASCADE` | Si borras la fila padre, se borran las hijas |
+
+Lo que ocurre al romper una regla (probado): `UNIQUE constraint failed: usuarios.email`, `CHECK constraint failed`, `FOREIGN KEY constraint failed`. En SQLite las llaves foráneas solo se aplican tras `PRAGMA foreign_keys = ON;`.
+
+| Dialecto | Id autoincremental |
+| --- | --- |
+| SQLite | `id INTEGER PRIMARY KEY` |
+| PostgreSQL | `id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY` |
+| MySQL | `id INT AUTO_INCREMENT PRIMARY KEY` |
+
+## Modificar y borrar estructuras
+
+| Sentencia | Qué hace |
+| --- | --- |
+| `ALTER TABLE usuarios ADD COLUMN edad INTEGER;` | Añade una columna |
+| `ALTER TABLE usuarios RENAME COLUMN edad TO anios;` | Renombra una columna |
+| `DROP TABLE posts;` | Elimina la tabla y sus datos |
+| `CREATE INDEX idx_posts_usuario ON posts (usuario_id);` | Crea un índice |
+| `CREATE UNIQUE INDEX idx_nombre ON usuarios (nombre);` | Índice que además impide repetidos |
+| `DROP INDEX idx_nombre;` | Elimina el índice |
+
+Un índice acelera `WHERE`, `JOIN` y `ORDER BY` sobre esas columnas, pero hace más lentas las escrituras. Ponlos en las columnas que filtras y unes con frecuencia. Para ver si se usa: `EXPLAIN SELECT ...` (PostgreSQL y MySQL) o `EXPLAIN QUERY PLAN SELECT ...` (SQLite).
+
+## Transacciones
+
+```sql
+BEGIN;
+UPDATE cuentas SET saldo = saldo - 100 WHERE id = 1;
+UPDATE cuentas SET saldo = saldo + 100 WHERE id = 2;
+COMMIT;      -- confirma ambos cambios
+-- ROLLBACK; -- o los descarta todos
+```
+
+Una transacción hace que varias operaciones ocurran todas o ninguna. En MySQL puedes escribir `START TRANSACTION`.
+
+## Seguridad
+
+Nunca armes una consulta pegando texto del usuario. Usa parámetros:
+
+```js
+// Node (node:sqlite): el ? se sustituye de forma segura
+db.prepare("SELECT * FROM clientes WHERE nombre = ?").all(nombreDelUsuario);
+```
+
+Con la concatenación de cadenas, alguien puede inyectar SQL propio. Con parámetros, el valor siempre se trata como dato.
+
+## Para ir más a fondo
+
+- [SQLite: lenguaje SQL](https://www.sqlite.org/lang.html)
+- [SQL en la documentación de PostgreSQL](https://www.postgresql.org/docs/current/sql.html)
+- Hoja de AyudaDev: [SQL, joins y agregaciones](/hojas/sql-joins-y-agregaciones/)
+- Guía de AyudaDev: [SQL desde cero](/guias/sql/)
+- Biblioteca: [libros y cursos de SQL](/biblioteca/sql/)

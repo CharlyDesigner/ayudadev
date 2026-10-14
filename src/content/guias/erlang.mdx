@@ -1,0 +1,279 @@
+---
+titulo: 'Erlang desde cero'
+descripcion: 'Qué es Erlang, cómo instalarlo y tus primeros programas con procesos, mensajes y OTP, con ejemplos que puedes copiar y ejecutar con erlc y erl.'
+tema: erlang
+nivel: principiante
+tiempoLectura: 32
+publicado: 2026-10-09
+libros: ['erlang-learn-you-some-erlang', 'erlang-programacion-en-erlang-wikibooks', 'erlang-documentacion-oficial-otp', 'erlang-principios-de-diseno-otp']
+requisitos: ['Saber usar una terminal básica', 'Haber programado algo en cualquier lenguaje ayuda mucho']
+etiquetas: ['concurrencia', 'otp', 'procesos', 'beam', 'tolerancia-a-fallos']
+orden: 27
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Erlang es un lenguaje diseñado en Ericsson para sistemas de telecomunicaciones que deben atender a muchísimos usuarios a la vez y no pueden caerse. Hoy se usa en mensajería, bases de datos distribuidas, brokers y servidores de alta disponibilidad. Corre sobre la máquina virtual BEAM, que también ejecuta Elixir y otros lenguajes.
+
+- **Procesos ligeros**: un proceso de Erlang no es un hilo del sistema operativo. Son baratos, y un programa puede tener muchísimos a la vez.
+- **Sin memoria compartida**: los procesos se comunican enviándose mensajes con `!` y recibiéndolos con `receive`. Cada uno tiene su propio buzón.
+- **Dejar que falle (let it crash)**: en vez de defenderte de cada error, dejas que el proceso falle y un supervisor lo reinicia en un estado limpio.
+- **Funcional y de datos inmutables**: una variable se asigna una sola vez. No hay bucles `for`; usas recursión y funciones como `lists:map`.
+- **Tipado dinámico**: los tipos se revisan al ejecutar. Puedes documentar los tipos con `-spec` y revisarlos con Dialyzer.
+- **Pattern matching en todas partes**: el signo `=` compara y asigna a la vez, y las funciones se definen por casos.
+- **OTP**: es la biblioteca estándar de patrones de diseño, con `gen_server`, supervisores y aplicaciones. Es lo que hace a Erlang industrial.
+- **Actualización de código en caliente**: se puede cargar una versión nueva de un módulo sin detener el sistema.
+
+## Instálalo y corre tu primer archivo
+
+Necesitas el sistema Erlang/OTP, que incluye el compilador `erlc` y la consola `erl`.
+
+<Pasos>
+
+1. **Windows**: entra a [erlang.org/downloads](https://www.erlang.org/downloads) y descarga el instalador para Windows. Ejecútalo y acepta las opciones por defecto.
+2. **macOS**: con Homebrew, `brew install erlang`.
+3. **Linux**: instala el paquete de tu distribución, por ejemplo `sudo apt install erlang` en Debian o Ubuntu. En la página de descargas hay otras opciones si necesitas una versión más reciente.
+4. Abre una terminal y escribe `erl`. Entrarás a la consola interactiva con el símbolo `1>`. Prueba `2 + 3.` (el punto final es obligatorio) y sal con `q().`
+5. Crea un archivo `hola.erl` con el código del primer ejemplo. Compílalo con `erlc hola.erl`: se genera `hola.beam`.
+6. Ejecútalo con `erl -noshell -s hola main -s init stop`. Esa línea arranca Erlang sin consola, llama a `hola:main()` y se detiene al terminar.
+7. Otra forma es desde la consola: `c(hola).` compila y carga el módulo, y `hola:main().` lo ejecuta. Aquí verás un `ok` extra: es el valor que devuelve la función.
+
+</Pasos>
+
+Cada ejemplo de esta guía es un módulo (un archivo cuyo nombre coincide con el del módulo) y se compila y ejecuta igual que `hola.erl`. En el `ejecutar` de cada ejemplo, el símbolo `&&` encadena los dos comandos. En PowerShell 5 sepáralos con punto y coma. Para proyectos con varios archivos, la herramienta estándar de la comunidad es rebar3.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.erl" ejecutar="erlc hola.erl && erl -noshell -s hola main -s init stop" salida="Hola, mundo">
+
+```erlang
+% El nombre del módulo debe coincidir con el del archivo
+-module(hola).
+% Exporta main sin argumentos: main/0
+-export([main/0]).
+
+main() ->
+    % ~n es el salto de línea
+    io:format("Hola, mundo~n").
+```
+
+Las funciones se identifican por su nombre y su cantidad de argumentos, por eso se escribe `main/0`. Cada instrucción termina con coma, y la función termina con punto. Cuando haya varias cláusulas, se separan con punto y coma.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables, átomos, tuplas y listas" archivo="datos.erl" ejecutar="erlc datos.erl && erl -noshell -s datos main -s init stop" salida={'{persona,"Ana",30}\n[2,4,6,8,10]\nAna tiene 30 de edad\n[1,9,25]'}>
+
+```erlang
+-module(datos).
+-export([main/0]).
+
+main() ->
+    % Las variables empiezan con mayúscula y se asignan una sola vez
+    Nombre = "Ana",
+    Edad = 30,
+    % Una tupla agrupa valores; persona es un átomo (una constante con nombre)
+    Persona = {persona, Nombre, Edad},
+    Lista = [1, 2, 3, 4, 5],
+
+    io:format("~p~n", [Persona]),
+    io:format("~p~n", [lists:map(fun(X) -> X * 2 end, Lista)]),
+    io:format("~s tiene ~w de edad~n", [Nombre, Edad]),
+
+    % Lista por comprensión: cuadrados de los impares
+    io:format("~p~n", [[X * X || X <- Lista, X rem 2 =:= 1]]).
+```
+
+`~p` imprime cualquier valor de forma legible, `~s` imprime una cadena y `~w` un valor tal cual. Una cadena en Erlang es una lista de números, y la consola la muestra como texto cuando todos son caracteres imprimibles. Los átomos como `persona` empiezan con minúscula.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Recursión y pattern matching" archivo="recursion.erl" ejecutar="erlc recursion.erl && erl -noshell -s recursion main -s init stop" salida={"2432902008176640000\n55\n[2,4,6,8,10]"}>
+
+```erlang
+-module(recursion).
+-export([main/0]).
+
+% Cada cláusula se separa con ; y se elige la primera que coincida
+% when agrega una condición (guarda)
+factorial(0) -> 1;
+factorial(N) when N > 0 -> N * factorial(N - 1).
+
+% [H | T] separa la cabeza de la lista del resto
+suma([]) -> 0;
+suma([H | T]) -> H + suma(T).
+
+main() ->
+    io:format("~p~n", [factorial(20)]),
+    io:format("~p~n", [suma([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])]),
+    io:format("~p~n", [lists:filter(fun(X) -> X rem 2 =:= 0 end, lists:seq(1, 10))]).
+```
+
+No hay bucles: se recorre una lista con recursión. Los enteros de Erlang no tienen un límite fijo, por eso 20 factorial cabe sin problema. `fun(X) -> ... end` crea una función anónima, y `lists:seq(1, 10)` genera la lista del 1 al 10.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Procesos y mensajes" archivo="procesos.erl" ejecutar="erlc procesos.erl && erl -noshell -s procesos main -s init stop" salida={"Recibi: hola\nRecibi: mundo\nListo"}>
+
+```erlang
+-module(procesos).
+-export([main/0]).
+
+% Un proceso que repite lo que recibe y espera más mensajes
+eco() ->
+    receive
+        {From, Mensaje} ->
+            From ! {eco, Mensaje},
+            eco();
+        parar ->
+            ok
+    end.
+
+main() ->
+    % spawn crea un proceso nuevo que ejecuta eco/0
+    Pid = spawn(fun eco/0),
+
+    % self() es el identificador de este proceso; ! envía un mensaje
+    Pid ! {self(), hola},
+    receive
+        {eco, Resp} -> io:format("Recibi: ~p~n", [Resp])
+    after 1000 ->
+        io:format("Sin respuesta~n")
+    end,
+
+    Pid ! {self(), mundo},
+    receive
+        {eco, Resp2} -> io:format("Recibi: ~p~n", [Resp2])
+    after 1000 ->
+        io:format("Sin respuesta~n")
+    end,
+
+    Pid ! parar,
+    io:format("Listo~n").
+```
+
+Aquí está la esencia de Erlang: dos procesos que no comparten nada y se hablan con mensajes. El bloque `after 1000` es un tiempo de espera de mil milisegundos, para que `receive` no se quede esperando para siempre. Ponlo siempre que no tengas la certeza de que llegará un mensaje.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Errores como valores y try/catch" archivo="errores.erl" ejecutar="erlc errores.erl && erl -noshell -s errores main -s init stop" salida={"{ok,2.5}\n{error,division_entre_cero}\nResultado: 3.0\ncapturado"}>
+
+```erlang
+-module(errores).
+-export([main/0]).
+
+% Convención de Erlang: {ok, Valor} o {error, Motivo}
+dividir(_, 0) -> {error, division_entre_cero};
+dividir(A, B) -> {ok, A / B}.
+
+invertir(X) -> 1 / X.
+
+main() ->
+    io:format("~p~n", [dividir(10, 4)]),
+    io:format("~p~n", [dividir(1, 0)]),
+
+    case dividir(9, 3) of
+        {ok, R} -> io:format("Resultado: ~p~n", [R]);
+        {error, Motivo} -> io:format("Error: ~p~n", [Motivo])
+    end,
+
+    % try/catch atrapa una excepción de tipo error con la razón badarith
+    Resultado = try invertir(0) catch error:badarith -> capturado end,
+    io:format("~p~n", [Resultado]).
+```
+
+Los errores esperados se devuelven como tuplas, y los inesperados son excepciones. Fíjate que `/` siempre devuelve un número decimal, incluso con enteros. En código de OTP verás más `{ok, ...}` y `{error, ...}` que `try`, porque la filosofía es dejar que lo imprevisto haga fallar al proceso.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un servidor con gen_server (OTP)" archivo="contador.erl" ejecutar="erlc contador.erl && erl -noshell -s contador main -s init stop" salida="Valor: 3">
+
+```erlang
+-module(contador).
+-behaviour(gen_server).
+
+% API pública y callbacks que exige gen_server
+-export([main/0, start_link/0, incrementar/0, valor/0]).
+-export([init/1, handle_call/3, handle_cast/2]).
+
+%% API: funciones que usa el resto del programa
+start_link() ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, 0, []).
+
+% cast es asíncrono: envía y no espera respuesta
+incrementar() -> gen_server:cast(?MODULE, incrementar).
+
+% call es síncrono: envía y espera la respuesta
+valor() -> gen_server:call(?MODULE, valor).
+
+%% Callbacks: el estado es el número que cuenta
+init(Inicial) -> {ok, Inicial}.
+
+handle_call(valor, _From, N) -> {reply, N, N}.
+
+handle_cast(incrementar, N) -> {noreply, N + 1}.
+
+main() ->
+    {ok, _Pid} = start_link(),
+    incrementar(),
+    incrementar(),
+    incrementar(),
+    io:format("Valor: ~p~n", [valor()]).
+```
+
+`gen_server` es el comportamiento más usado de OTP: un proceso que guarda un estado y responde a peticiones. Tú escribes solo la lógica (`handle_call` y `handle_cast`) y OTP se encarga del bucle, del buzón y del manejo de errores. En un programa real, un supervisor arrancaría y reiniciaría este servidor.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Confundir coma, punto y punto y coma">
+En Erlang la puntuación es sintaxis: la coma separa instrucciones, el punto y coma separa cláusulas de una función o ramas de un `case`, y el punto final cierra la función. El mensaje "syntax error before" casi siempre apunta a un separador equivocado en la línea anterior o a una coma de más antes de `end`.
+</Callout>
+
+<Callout tipo="warning" titulo="Reasignar una variable y obtener badmatch">
+Las variables se asignan una sola vez. Si escribes `X = 1, X = 2`, la segunda línea falla con `no match of right hand side value`, porque `=` es una comparación: 1 no es igual a 2. Usa un nombre nuevo, como `X1`, o reorganiza el código con funciones.
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar el -export">
+Si llamas a una función que no exportaste, el error es `undefined function modulo:funcion/0` o `undef`. Revisa que aparezca en `-export([...])` con la cantidad correcta de argumentos. Para depurar rápido en la consola, `-compile(export_all).` exporta todo, pero no lo dejes en código final.
+</Callout>
+
+<Callout tipo="warning" titulo="Tratar una cadena como si fuera un tipo aparte">
+Una cadena es una lista de enteros, así que a veces `~p` imprime `[72,111,108,97]` en vez de `"Hola"`. Esto no es un error, es la misma lista vista de otra forma. Para texto de verdad, usa `~s` al imprimir, o el tipo `binary` (`<<"Hola">>`), que es lo que se usa en programas reales con mucho texto.
+</Callout>
+
+<Callout tipo="warning" titulo="Un receive sin tiempo de espera">
+Un `receive` sin cláusula `after` espera para siempre si nadie envía el mensaje, y tu programa parece colgado. Agrega un `after` con un tiempo razonable. Además, un mensaje que no coincide con ningún patrón se queda en el buzón del proceso, así que conviene tener una cláusula que atrape los inesperados.
+</Callout>
+
+## Buenas prácticas
+
+- Declara los tipos de tus funciones con `-spec` y revísalos con Dialyzer.
+- No te defiendas de cada error: deja que el proceso falle y que un supervisor lo reinicie.
+- Usa los comportamientos de OTP (`gen_server`, `supervisor`) en vez de escribir tus propios bucles de `receive`.
+- Mantén las funciones cortas y con una responsabilidad. El pattern matching ayuda a lograrlo.
+- Devuelve `{ok, Valor}` o `{error, Motivo}` en las funciones que pueden fallar de forma previsible.
+- Organiza tu proyecto con rebar3: dependencias, pruebas, releases y formato de carpetas estándar.
+- Escribe pruebas con EUnit, que viene con Erlang, y corre `rebar3 eunit`.
+- Usa la herramienta `observer` para ver procesos y mensajes de tu sistema en ejecución.
+
+## Siguiente paso
+
+Ya entiendes procesos, mensajes, pattern matching y `gen_server`. Para seguir:
+
+- **Supervisores y aplicaciones OTP**: la guía de principios de diseño de OTP explica cómo armar un árbol de supervisión. Es la parte que da a Erlang su fama de fiable.
+- **Un proyecto con rebar3**: crea una aplicación con `rebar3 new app`, agrégale un servidor y un supervisor.
+- **Pruebas y análisis**: aprende EUnit, Common Test y Dialyzer.
+- **Distribución**: Erlang puede conectar varios nodos entre sí y enviar mensajes entre máquinas con la misma sintaxis.
+- **Otros lenguajes de BEAM**: Elixir comparte la máquina virtual y OTP, y lo que aprendiste aquí te sirve directo.
+- **Para comparar enfoques de concurrencia**: la [guía de Go](/guias/go/) usa goroutines y canales.
+- **Control de versiones**: guarda tu progreso con la [guía de Git](/guias/git/).
+
+Explora más libros y cursos gratis en la [biblioteca de Erlang](/biblioteca/erlang/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

@@ -1,0 +1,301 @@
+---
+titulo: 'NoSQL con MongoDB y Redis desde cero'
+descripcion: 'Qué son las bases NoSQL, cuándo usarlas, y cómo hacer CRUD y agregaciones en MongoDB con mongosh y una caché con Redis, con código real.'
+tema: nosql
+nivel: intermedio
+tiempoLectura: 40
+publicado: 2026-10-09
+libros: ['nosql-sistemas-nosql-aitor-medrano', 'nosql-mongodb-aitor-medrano', 'nosql-redis-aitor-medrano', 'nosql-mongodb-manual']
+requisitos: ['Saber qué es una base de datos y una tabla', 'Saber leer JavaScript básico', 'Docker instalado, o ganas de usar un servicio en la nube']
+etiquetas: ['nosql', 'mongodb', 'redis', 'mongosh', 'cache', 'modelado']
+orden: 81
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+"NoSQL" agrupa a las bases de datos que no usan el modelo de tablas y filas de SQL. Se suele leer como "Not only SQL". No reemplazan a las bases relacionales: resuelven otros problemas, como datos con forma cambiante, lecturas muy rápidas o grandes volúmenes distribuidos en varios servidores.
+
+El modelo mental que necesitas:
+
+- **Cuatro familias**: documentos (MongoDB), clave-valor (Redis), columnas anchas (Cassandra) y grafos (Neo4j). Esta guía practica las dos primeras.
+- **Documentos**: en MongoDB guardas objetos parecidos a JSON, agrupados en **colecciones** (el equivalente a una tabla). Cada documento puede traer campos distintos. Internamente se almacenan en formato BSON.
+- **Esquema flexible, no inexistente**: la base no te obliga a una estructura, pero tu aplicación sí tiene una. Puedes agregar validación si quieres reglas.
+- **Modelar según las consultas**: en SQL normalizas y unes tablas. En MongoDB suele convenir **incrustar** los datos que se leen juntos (por ejemplo, las líneas de un pedido dentro del pedido) y **referenciar** los que crecen sin límite o se comparten.
+- **Clave-valor en memoria**: Redis guarda sus datos en memoria y responde en muy poco tiempo. Además de cadenas ofrece hashes, listas, conjuntos y conjuntos ordenados. Se usa para cachés, contadores, sesiones y rankings.
+- **Escalar horizontalmente**: muchas bases NoSQL reparten los datos entre servidores (fragmentación) y los copian (replicación) para escalar y tolerar fallos.
+- **Compromisos (CAP y BASE)**: en sistemas distribuidos tienes que elegir entre consistencia y disponibilidad cuando hay fallas de red. Muchas bases NoSQL aceptan consistencia eventual a cambio de disponibilidad.
+- **Elige por el problema**: si tus datos son muy relacionales y necesitas transacciones y uniones complejas, SQL suele ser la opción natural. Si no estás seguro, empieza con una base relacional.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala Docker** para levantar los servidores en tu máquina sin instalarlos a mano (revisa la guía de [Docker desde cero](/guias/docker/)). Si prefieres no usar Docker, MongoDB Atlas ofrece un clúster en la nube que puedes probar gratis; consulta sus condiciones en el sitio oficial.
+2. **Levanta MongoDB**: `docker run --name mongo -d -p 27017:27017 mongo:8`.
+3. **Instala mongosh**, la consola oficial de MongoDB, siguiendo la [guía de instalación](https://www.mongodb.com/docs/mongodb-shell/install/). Comprueba con `mongosh --version`.
+4. **Levanta Redis**: `docker run --name redis -d -p 6379:6379 redis:8-alpine`. Pruébalo con `docker exec redis redis-cli ping`: debe responder `PONG`.
+5. **Prueba la conexión a MongoDB**: `mongosh "mongodb://localhost:27017/tienda" --eval "db.runCommand({ ping: 1 })"`. Debe mostrar `{ ok: 1 }`.
+6. Para el último ejemplo necesitas Node.js y, en una carpeta nueva, `npm init -y`, `npm pkg set type=module` y `npm install redis`.
+
+</Pasos>
+
+Los ejemplos de MongoDB son archivos `.js` que corres con `mongosh "mongodb://localhost:27017/tienda" archivo.js`. Dentro del archivo, `db` ya apunta a la base `tienda`, que se crea sola cuando guardas el primer documento. Usan datos de ejemplo inventados y se siguen en orden.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Insertar documentos" archivo="01-insertar.js" ejecutar={"mongosh \"mongodb://localhost:27017/tienda\" 01-insertar.js"} salida="4 productos guardados">
+
+```js
+// Empieza de cero para que puedas correr el archivo varias veces
+db.productos.drop();
+
+// insertMany guarda varios documentos de una vez.
+// Ponemos _id a mano para que los ejemplos sean repetibles;
+// si no lo pones, MongoDB crea un ObjectId único.
+db.productos.insertMany([
+  { _id: 1, nombre: 'Cuaderno', categoria: 'papeleria', precio: 45, stock: 100, etiquetas: ['escuela', 'oficina'] },
+  { _id: 2, nombre: 'Pluma', categoria: 'papeleria', precio: 12, stock: 300, etiquetas: ['escritura'] },
+  { _id: 3, nombre: 'Mochila', categoria: 'accesorios', precio: 350, stock: 25, etiquetas: ['escuela'] },
+  { _id: 4, nombre: 'Lampara', categoria: 'accesorios', precio: 180, stock: 0, etiquetas: ['oficina'] },
+]);
+
+console.log(`${db.productos.countDocuments()} productos guardados`);
+```
+
+Fíjate en que `etiquetas` es un arreglo dentro del documento: en SQL sería otra tabla relacionada, aquí viaja junto con el producto. La colección `productos` no existía y se creó sola. Para guardar uno solo usa `insertOne`. En la consola interactiva, `insertMany` muestra un resultado con `acknowledged: true` y los `_id` insertados.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Consultar con filtros, proyección y orden" archivo="02-consultar.js" ejecutar={"mongosh \"mongodb://localhost:27017/tienda\" 02-consultar.js"} salida={"Pluma: $12\nCuaderno: $45\n---\nCuaderno: $45\nMochila: $350\n---\nCuaderno\nLampara"}>
+
+```js
+// Productos de papelería, del más barato al más caro (1 = ascendente)
+db.productos
+  .find({ categoria: 'papeleria' })
+  .sort({ precio: 1 })
+  .forEach((p) => console.log(`${p.nombre}: $${p.precio}`));
+
+console.log('---');
+
+// Operadores de comparación: precio mayor o igual a 40 y con existencias
+db.productos
+  .find({ precio: { $gte: 40 }, stock: { $gt: 0 } })
+  .sort({ precio: 1 })
+  .forEach((p) => console.log(`${p.nombre}: $${p.precio}`));
+
+console.log('---');
+
+// Búsqueda dentro de un arreglo, con proyección: solo el campo nombre, sin _id
+db.productos
+  .find({ etiquetas: 'oficina' }, { _id: 0, nombre: 1 })
+  .sort({ nombre: 1 })
+  .forEach((p) => console.log(p.nombre));
+```
+
+`find` recibe primero el filtro y después, opcionalmente, la proyección. Todas las condiciones de un mismo filtro se combinan con "y". Los operadores empiezan con `$`: `$gt`, `$gte`, `$lt`, `$in`, `$or` y muchos más. Buscar `etiquetas: 'oficina'` encuentra los documentos cuyo arreglo contiene ese valor. `find` devuelve un cursor; con `forEach` o `toArray()` lo recorres.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Actualizar y borrar" archivo="03-actualizar.js" ejecutar={"mongosh \"mongodb://localhost:27017/tienda\" 03-actualizar.js"} salida={"coinciden 1, modificados 1\nstock 250, oferta true\nmarcados como agotados: 1\nborrados: 1"}>
+
+```js
+// updateOne cambia el primer documento que coincida con el filtro.
+// $inc suma (o resta con negativos) y $set asigna campos
+const a = db.productos.updateOne(
+  { _id: 2 },
+  { $inc: { stock: -50 }, $set: { oferta: true } }
+);
+console.log(`coinciden ${a.matchedCount}, modificados ${a.modifiedCount}`);
+
+const pluma = db.productos.findOne({ _id: 2 });
+console.log(`stock ${pluma.stock}, oferta ${pluma.oferta}`);
+
+// updateMany cambia todos los que coincidan
+const b = db.productos.updateMany({ stock: 0 }, { $set: { agotado: true } });
+console.log(`marcados como agotados: ${b.modifiedCount}`);
+
+// deleteOne borra un documento
+const c = db.productos.deleteOne({ _id: 4 });
+console.log(`borrados: ${c.deletedCount}`);
+```
+
+Siempre usa operadores como `$set` o `$inc` al actualizar; así solo cambias esos campos y el resto del documento queda igual. Sin filtro preciso, `updateMany` y `deleteMany` afectan muchos documentos, así que prueba el filtro primero con `find`. Si necesitas "actualizar o insertar si no existe", agrega `{ upsert: true }` como tercer argumento.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Agregaciones, relaciones con $lookup e índices" archivo="04-agregar.js" ejecutar={"mongosh \"mongodb://localhost:27017/tienda\" 04-agregar.js"} salida={"accesorios: 1 productos, inventario $8750\npapeleria: 2 productos, inventario $7500\n---\nCuaderno x2 = $90\nMochila x1 = $350\n---\nindice creado: categoria_1"}>
+
+```js
+// Un pipeline de agregación es una serie de etapas que transforman los datos.
+// $group agrupa por categoría; $sum cuenta y $multiply calcula el valor del inventario
+db.productos
+  .aggregate([
+    {
+      $group: {
+        _id: '$categoria',
+        productos: { $sum: 1 },
+        valorInventario: { $sum: { $multiply: ['$precio', '$stock'] } },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ])
+  .forEach((g) => console.log(`${g._id}: ${g.productos} productos, inventario $${g.valorInventario}`));
+
+console.log('---');
+
+// Un pedido con sus líneas incrustadas, que guardan solo el id del producto
+db.pedidos.drop();
+db.pedidos.insertOne({
+  _id: 100,
+  cliente: { nombre: 'Ana', ciudad: 'Guadalajara' },
+  items: [
+    { producto_id: 1, cantidad: 2 },
+    { producto_id: 3, cantidad: 1 },
+  ],
+});
+
+// $unwind separa cada línea; $lookup trae el producto referenciado
+db.pedidos
+  .aggregate([
+    { $unwind: '$items' },
+    { $lookup: { from: 'productos', localField: 'items.producto_id', foreignField: '_id', as: 'producto' } },
+    { $unwind: '$producto' },
+    {
+      $project: {
+        _id: 0,
+        nombre: '$producto.nombre',
+        cantidad: '$items.cantidad',
+        subtotal: { $multiply: ['$producto.precio', '$items.cantidad'] },
+      },
+    },
+  ])
+  .forEach((l) => console.log(`${l.nombre} x${l.cantidad} = $${l.subtotal}`));
+
+console.log('---');
+
+// Un índice acelera las consultas por ese campo
+const nombre = db.productos.createIndex({ categoria: 1 });
+console.log(`indice creado: ${nombre}`);
+```
+
+Este ejemplo usa el estado en que quedó la colección después del ejemplo anterior. Aquí ves las dos formas de modelar: el cliente y las líneas viajan **incrustados** dentro del pedido (se leen juntos), y el producto está **referenciado** por su `_id` porque se comparte entre muchos pedidos y su precio puede cambiar. `$lookup` hace la unión cuando la necesitas, pero si lo usas en todas las consultas, quizá te conviene otro modelo. Sin índice, MongoDB revisa todos los documentos de la colección; con él va directo. El nombre `categoria_1` lo asigna MongoDB a partir del campo.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Redis: strings, expiración, contadores y estructuras" archivo="redis-cli" ejecutar="docker exec -it redis redis-cli" salida={"127.0.0.1:6379> SET saludo \"hola\"\nOK\n127.0.0.1:6379> GET saludo\n\"hola\"\n127.0.0.1:6379> SET codigo 123 EX 30\nOK\n127.0.0.1:6379> TTL codigo\n(integer) 30\n127.0.0.1:6379> INCR visitas\n(integer) 1\n127.0.0.1:6379> INCR visitas\n(integer) 2\n127.0.0.1:6379> HSET usuario:1 nombre Ana ciudad Guadalajara\n(integer) 2\n127.0.0.1:6379> HGETALL usuario:1\n1) \"nombre\"\n2) \"Ana\"\n3) \"ciudad\"\n4) \"Guadalajara\"\n127.0.0.1:6379> ZADD ranking 100 ana 80 luis\n(integer) 2\n127.0.0.1:6379> ZRANGE ranking 0 -1 WITHSCORES\n1) \"luis\"\n2) \"80\"\n3) \"ana\"\n4) \"100\""}>
+
+```text
+SET saludo "hola"
+GET saludo
+SET codigo 123 EX 30
+TTL codigo
+INCR visitas
+INCR visitas
+HSET usuario:1 nombre Ana ciudad Guadalajara
+HGETALL usuario:1
+ZADD ranking 100 ana 80 luis
+ZRANGE ranking 0 -1 WITHSCORES
+```
+
+Escribe uno por uno los comandos en `redis-cli` (sin copiar la línea `127.0.0.1:6379>`, que es el indicador). Una **cadena** guarda un valor simple. `EX 30` hace que la clave se borre sola a los 30 segundos y `TTL` te dice cuántos faltan; si tardas en teclear, verás un número menor a 30. `INCR` suma 1 de forma atómica: sirve para contadores aunque muchas personas lo usen a la vez. Un **hash** guarda varios campos bajo una clave, como un mini objeto, y un **conjunto ordenado** mantiene los elementos ordenados por su puntuación, ideal para rankings. Usa nombres de clave con dos puntos (`usuario:1`) para ordenarlas. Para limpiar todo al terminar, `FLUSHALL` borra todas las claves de Redis, así que úsalo solo en tu práctica local.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Patrón de caché con Redis en Node.js" archivo="cache.mjs" ejecutar="node cache.mjs" salida={"Consultando la fuente lenta...\n{ valor: 17.5, origen: 'fuente' }\n{ valor: 17.5, origen: 'cache' }"}>
+
+```js
+import { createClient } from 'redis';
+
+// Se conecta a localhost:6379 por defecto
+const redis = createClient();
+redis.on('error', (error) => console.error('Error de Redis:', error.message));
+await redis.connect();
+
+// Simula una fuente lenta (una API externa o una consulta pesada)
+async function consultarFuenteLenta() {
+  console.log('Consultando la fuente lenta...');
+  await new Promise((resolver) => setTimeout(resolver, 1000));
+  return 17.5; // dato de ejemplo inventado
+}
+
+// Patrón cache-aside: primero la caché, si falla, la fuente, y se guarda el resultado
+async function obtenerValor() {
+  const guardado = await redis.get('valor:ejemplo');
+  if (guardado !== null) {
+    return { valor: Number(guardado), origen: 'cache' };
+  }
+  const valor = await consultarFuenteLenta();
+  // La clave expira en 30 segundos para que el dato no se quede viejo
+  await redis.set('valor:ejemplo', String(valor), { expiration: { type: 'EX', value: 30 } });
+  return { valor, origen: 'fuente' };
+}
+
+// Empezamos sin caché para que el resultado sea repetible
+await redis.del('valor:ejemplo');
+
+console.log(await obtenerValor());
+console.log(await obtenerValor());
+
+await redis.quit();
+```
+
+La primera llamada no encuentra nada en Redis, va a la fuente lenta y guarda el resultado con una expiración. La segunda responde desde Redis sin tocar la fuente. Este es el patrón más común de Redis en aplicaciones web. Lo difícil es decidir **cuándo invalidar** la caché: el tiempo de vida (`EX`) es la opción más simple, y otra es borrar la clave cuando el dato cambia. Si tu versión del cliente `redis` es anterior a la 5, la opción de expiración también se puede escribir como `{ EX: 30 }`.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Modelar MongoDB como si fuera SQL">
+
+Si normalizas todo en colecciones pequeñas y lo unes con `$lookup` en cada consulta, pierdes la ventaja de los documentos. Primero piensa qué preguntas hará tu aplicación y diseña los documentos para respondérselas con una sola lectura. Incrusta lo que se lee junto y referencia lo que se comparte o crece sin límite.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Documentos que crecen sin parar">
+
+Un arreglo que sigue creciendo (comentarios, eventos, mensajes) dentro de un solo documento termina siendo lento y puede chocar con el límite de tamaño por documento, que en MongoDB es de 16 MB. Cuando una lista no tiene tope, guárdala como documentos separados que apunten al documento principal.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar los índices">
+
+Sin un índice adecuado, cada consulta revisa toda la colección. Con pocos datos no lo notas, y con muchos tu aplicación se vuelve lenta. Crea índices en los campos que usas para filtrar y ordenar, y revisa el plan con `explain()`. Tampoco crees índices por todo: cada uno ocupa espacio y vuelve más lentas las escrituras.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Usar Redis sin expiración como si fuera la base principal">
+
+Redis guarda todo en memoria. Si llenas la caché de claves sin `EX` ni política de expulsión, la memoria crece sin control. Además, aunque Redis ofrece persistencia, normalmente se usa para datos que puedes reconstruir. Para información que no puedes perder, usa una base de datos pensada para eso y deja a Redis como apoyo.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Exponer MongoDB o Redis a internet sin autenticación">
+
+Los contenedores de esta guía están pensados para practicar en tu máquina y no tienen usuario ni contraseña. Si abres sus puertos a una red pública, cualquiera puede leer o borrar tus datos. En producción activa la autenticación, restringe el acceso por red y cifra las conexiones. No repitas estos comandos tal cual en un servidor.
+
+</Callout>
+
+## Buenas prácticas
+
+- Diseña tus documentos a partir de las consultas que vas a hacer, no de las tablas que tendrías en SQL.
+- Incrusta los datos que se leen juntos y referencia los que se comparten o crecen sin límite.
+- Crea índices para tus filtros y ordenamientos más comunes, y revísalos con `explain()`.
+- Usa validación de esquema cuando quieras garantizar la forma de los documentos.
+- Pon nombres de clave ordenados en Redis (`usuario:1`, `sesion:abc`) y siempre un tiempo de expiración en las cachés.
+- Usa operadores (`$set`, `$inc`) en las actualizaciones; evita reemplazar documentos completos sin necesidad.
+- Prueba tus filtros con `find` antes de usar `updateMany` o `deleteMany`.
+- Activa autenticación y respaldos antes de llevar nada a producción.
+- Elige la base según el problema: documentos, clave-valor o relacional, y no por moda.
+
+## Siguiente paso
+
+Ya conectaste con MongoDB, guardaste, consultaste, actualizaste y agregaste documentos, modelaste una relación y usaste Redis como caché. Lo que sigue es practicar con un proyecto real: una API de productos con Node.js, MongoDB como base principal y Redis para cachear las consultas más pedidas. Lee también el manual de modelado de datos de MongoDB y repasa el libro de Aitor Medrano de la biblioteca para ver los otros tipos de bases NoSQL.
+
+Si vienes de SQL, la guía de [SQL desde cero](/guias/sql/) te ayuda a comparar enfoques. Para levantar tus servicios con un solo comando usa [Docker desde cero](/guias/docker/), y si tu API usa JavaScript, repasa [JavaScript desde cero](/guias/javascript/). Todos los recursos están en [la biblioteca de NoSQL](/biblioteca/nosql/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

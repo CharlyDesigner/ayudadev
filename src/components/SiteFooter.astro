@@ -1,53 +1,72 @@
 ---
 import Logo from '@components/Logo.astro';
 import Icon from '@components/ui/Icon.astro';
-import { NAV, FOOTER_LINKS, SITE } from '@data/site';
+import { FOOTER_LINKS, SITE } from '@data/site';
 
 const anio = new Date().getFullYear();
+const columnas = [
+  {
+    titulo: 'Aprende',
+    enlaces: [
+      ['Empieza aquí', '/empieza-aqui/'],
+      ['Rutas de estudio', '/rutas/'],
+      ['Guías con ejemplos', '/guias/'],
+      ['Biblioteca gratis', '/biblioteca/'],
+      ['Fundamentos', '/fundamentos/'],
+    ],
+  },
+  {
+    titulo: 'Practica',
+    enlaces: [
+      ['Retos', '/retos/'],
+      ['Proyectos', '/proyectos/'],
+      ['Hojas de referencia', '/hojas/'],
+      ['Glosario', '/glosario/'],
+      ['Mi progreso', '/progreso/'],
+    ],
+  },
+  {
+    titulo: 'IA y carrera',
+    enlaces: [
+      ['Herramientas de IA', '/ia/'],
+      ['Prompts', '/ia/prompts/'],
+      ['Aprende con IA', '/ia/aprende/'],
+      ['Carrera', '/carrera/'],
+      ['Herramientas', '/herramientas/'],
+      ['Comunidad', '/comunidad/'],
+    ],
+  },
+];
 ---
 
 <footer class="mt-24 border-t border-line">
-  <div class="container-site grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+  <div class="container-site grid gap-10 py-14 md:grid-cols-[1.5fr_repeat(3,1fr)_1fr]">
     <div class="max-w-sm">
       <Logo />
       <p class="mt-4 text-sm leading-relaxed text-muted">{SITE.lema} Recursos curados, guías con ejemplos y un apartado de IA para la comunidad hispanohablante.</p>
-      <div class="mt-5 flex gap-2">
-        {SITE.redes.map((r) => (
-          <a href={r.url} rel="noopener" target="_blank" class="chip">{r.nombre}</a>
-        ))}
+      <div class="mt-5 flex flex-wrap gap-2">
+        {SITE.redes.map((r) => <a href={r.url} rel="noopener" target="_blank" class="chip">{r.nombre}</a>)}
       </div>
     </div>
 
-    <div>
-      <h2 class="text-sm font-semibold">Explora</h2>
-      <ul class="mt-3 space-y-2 text-sm text-muted">
-        {NAV.map((n) => (
-          <li><a href={n.href} class="hover:text-fg">{n.label}</a></li>
-        ))}
-      </ul>
-    </div>
+    {columnas.map((c) => (
+      <nav aria-label={c.titulo}>
+        <h2 class="text-sm font-semibold">{c.titulo}</h2>
+        <ul class="mt-3 space-y-2 text-sm text-muted">
+          {c.enlaces.map(([l, h]) => <li><a href={h} class="hover:text-fg">{l}</a></li>)}
+        </ul>
+      </nav>
+    ))}
 
-    <div>
+    <nav aria-label="Proyecto">
       <h2 class="text-sm font-semibold">Proyecto</h2>
       <ul class="mt-3 space-y-2 text-sm text-muted">
-        {FOOTER_LINKS.map((n) => (
-          <li><a href={n.href} class="hover:text-fg">{n.label}</a></li>
-        ))}
+        {FOOTER_LINKS.map((n) => <li><a href={n.href} class="hover:text-fg">{n.label}</a></li>)}
         <li>
-          <a href={SITE.repo} rel="noopener" target="_blank" class="inline-flex items-center gap-1 hover:text-fg">
-            Código en GitHub <Icon name="arrow-up-right" class="h-3.5 w-3.5" />
-          </a>
+          <a href={SITE.repo} rel="noopener" target="_blank" class="inline-flex items-center gap-1 hover:text-fg">Código en GitHub <Icon name="arrow-up-right" class="h-3.5 w-3.5" /></a>
         </li>
       </ul>
-    </div>
-
-    <div>
-      <h2 class="text-sm font-semibold">Apoya</h2>
-      <p class="mt-3 text-sm text-muted">Este sitio es gratis y sin anuncios. Si te sirve, puedes invitar un café o compartirlo.</p>
-      <a href="/apoya/" class="btn btn-primary btn-sm mt-4">
-        <Icon name="heart" class="h-4 w-4" /> Apoyar el proyecto
-      </a>
-    </div>
+    </nav>
   </div>
 
   <div class="border-t border-line">
@@ -58,7 +77,7 @@ const anio = new Date().getFullYear();
         <a href={SITE.organizacion.url} class="hover:text-fg" rel="noopener" target="_blank">{SITE.organizacion.nombre}</a>.
       </p>
       <p>
-        Inspirado en <a href={SITE.inspiracion.url} class="hover:text-fg" rel="noopener" target="_blank">{SITE.inspiracion.nombre}</a>. Cada recurso enlaza a su fuente original.
+        Inspirado en <a href={SITE.inspiracion.url} class="hover:text-fg" rel="noopener" target="_blank">{SITE.inspiracion.nombre}</a>. Los logos pertenecen a sus respectivos dueños y se usan solo para identificar cada tecnología.
       </p>
     </div>
   </div>

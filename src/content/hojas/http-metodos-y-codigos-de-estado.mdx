@@ -1,0 +1,224 @@
+---
+titulo: 'HTTP: métodos, códigos de estado y encabezados'
+descripcion: 'Métodos HTTP (GET, POST, PUT, PATCH, DELETE), códigos de estado 2xx a 5xx, encabezados comunes, CORS, caché y cookies, con la estructura de una petición y respuesta.'
+tema: generales
+etiquetas: ['http', 'api', 'rest', 'códigos de estado', 'encabezados']
+publicado: 2026-10-09
+orden: 18
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+HTTP es el protocolo con el que hablan navegadores, apps y APIs. Una petición pide algo; una respuesta dice cómo salió. Las especificaciones actuales están en la RFC 9110.
+
+## Anatomía
+
+Petición:
+
+```http
+POST /api/usuarios HTTP/1.1
+Host: ejemplo.com
+Content-Type: application/json
+Authorization: Bearer TOKEN
+
+{"nombre":"Ana"}
+```
+
+Respuesta:
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+Location: /api/usuarios/7
+
+{"id":7,"nombre":"Ana"}
+```
+
+| Parte | Qué contiene |
+| --- | --- |
+| Línea de petición | Método, ruta y versión: `POST /api/usuarios HTTP/1.1` |
+| Línea de estado | Versión, código y texto: `HTTP/1.1 201 Created` |
+| Encabezados | Pares `Nombre: valor` con metadatos |
+| Línea en blanco | Separa encabezados del cuerpo |
+| Cuerpo | Los datos (JSON, HTML, un archivo...). Opcional |
+
+## Métodos
+
+| Método | Para qué | Seguro | Idempotente | Cuerpo en la petición |
+| --- | --- | --- | --- | --- |
+| `GET` | Leer un recurso | Sí | Sí | No |
+| `HEAD` | Como `GET` pero sin cuerpo en la respuesta (solo encabezados) | Sí | Sí | No |
+| `POST` | Crear o ejecutar una acción | No | No | Sí |
+| `PUT` | Reemplazar un recurso completo | No | Sí | Sí |
+| `PATCH` | Modificar parte de un recurso | No | No necesariamente | Sí |
+| `DELETE` | Borrar un recurso | No | Sí | Normalmente no |
+| `OPTIONS` | Preguntar qué métodos admite (usado en CORS) | Sí | Sí | No |
+
+Seguro: no cambia nada en el servidor. Idempotente: repetir la petición deja el servidor en el mismo estado (borrar dos veces el mismo recurso termina igual que borrarlo una).
+
+## Diseño de una API REST
+
+| Acción | Petición | Respuesta típica |
+| --- | --- | --- |
+| Listar | `GET /usuarios` | `200` con una lista |
+| Ver uno | `GET /usuarios/7` | `200`, o `404` si no existe |
+| Crear | `POST /usuarios` | `201` con `Location` del nuevo recurso |
+| Reemplazar | `PUT /usuarios/7` | `200` o `204` |
+| Modificar | `PATCH /usuarios/7` | `200` con el recurso actualizado |
+| Borrar | `DELETE /usuarios/7` | `204` sin cuerpo |
+| Filtrar y paginar | `GET /usuarios?rol=admin&pagina=2` | `200` |
+
+Usa sustantivos en plural en la ruta, y el método indica la acción: `DELETE /usuarios/7`, no `GET /borrarUsuario?id=7`.
+
+## Códigos de estado
+
+El primer dígito indica la familia:
+
+| Familia | Significado |
+| --- | --- |
+| `1xx` | Informativa |
+| `2xx` | Éxito |
+| `3xx` | Redirección |
+| `4xx` | Error del cliente: la petición está mal |
+| `5xx` | Error del servidor: la petición era válida pero falló |
+
+### 2xx: éxito
+
+| Código | Nombre | Cuándo |
+| --- | --- | --- |
+| `200` | OK | Todo bien, con cuerpo |
+| `201` | Created | Se creó un recurso (`POST`) |
+| `202` | Accepted | Recibido; se procesará después |
+| `204` | No Content | Todo bien, sin cuerpo (típico de `DELETE`) |
+| `206` | Partial Content | Parte de un archivo (descargas por rangos, video) |
+
+### 3xx: redirecciones
+
+| Código | Nombre | Cuándo |
+| --- | --- | --- |
+| `301` | Moved Permanently | El recurso cambió de URL para siempre. Los buscadores actualizan |
+| `302` | Found | Redirección temporal |
+| `303` | See Other | Tras un `POST`, ve a otra URL con `GET` |
+| `304` | Not Modified | Tu copia en caché sigue vigente |
+| `307` | Temporary Redirect | Temporal, conservando el método |
+| `308` | Permanent Redirect | Permanente, conservando el método |
+
+### 4xx: error del cliente
+
+| Código | Nombre | Cuándo |
+| --- | --- | --- |
+| `400` | Bad Request | Petición mal formada (JSON inválido, parámetros erróneos) |
+| `401` | Unauthorized | Falta autenticación o es inválida (quién eres) |
+| `403` | Forbidden | Estás identificado pero no tienes permiso |
+| `404` | Not Found | No existe ese recurso |
+| `405` | Method Not Allowed | El método no se permite en esa ruta |
+| `406` | Not Acceptable | No hay un formato que acepte tu `Accept` |
+| `408` | Request Timeout | Tardaste demasiado en enviar la petición |
+| `409` | Conflict | Choca con el estado actual (por ejemplo, un correo duplicado) |
+| `410` | Gone | Existió y se eliminó a propósito |
+| `413` | Content Too Large | El cuerpo excede el límite |
+| `415` | Unsupported Media Type | Formato de cuerpo no admitido |
+| `422` | Unprocessable Content | Sintaxis correcta, pero los datos no son válidos |
+| `429` | Too Many Requests | Superaste el límite de peticiones (mira `Retry-After`) |
+
+### 5xx: error del servidor
+
+| Código | Nombre | Cuándo |
+| --- | --- | --- |
+| `500` | Internal Server Error | Fallo inesperado del servidor |
+| `501` | Not Implemented | El servidor no soporta esa función |
+| `502` | Bad Gateway | Un proxy recibió una respuesta inválida del servidor de origen |
+| `503` | Service Unavailable | Saturado o en mantenimiento (mira `Retry-After`) |
+| `504` | Gateway Timeout | Un proxy esperó demasiado al servidor de origen |
+
+<Callout tipo="tip" titulo="401 frente a 403">
+
+`401` significa "no sé quién eres" (falta iniciar sesión o el token es inválido). `403` significa "sé quién eres y no puedes hacerlo". Es el error más habitual al elegir códigos.
+
+</Callout>
+
+Curiosidad: el `418 I'm a teapot` nació como broma en 1998 (RFC 2324). No lo uses en serio.
+
+## Encabezados de petición
+
+| Encabezado | Para qué |
+| --- | --- |
+| `Host` | Dominio al que va la petición (obligatorio en HTTP/1.1) |
+| `Accept` | Formatos que aceptas: `Accept: application/json` |
+| `Content-Type` | Formato del cuerpo que envías |
+| `Content-Length` | Tamaño del cuerpo en bytes |
+| `Authorization` | Credenciales: `Bearer TOKEN` o `Basic base64` |
+| `User-Agent` | Quién hace la petición (navegador, curl...) |
+| `Cookie` | Cookies guardadas para ese sitio |
+| `Origin` | Sitio desde el que se hace la petición (CORS) |
+| `Accept-Language` | Idiomas preferidos: `es-MX, es;q=0.9` |
+| `If-None-Match` | Valor del `ETag` que tienes, para pedir solo si cambió |
+
+## Encabezados de respuesta
+
+| Encabezado | Para qué |
+| --- | --- |
+| `Content-Type` | Formato del cuerpo: `application/json; charset=utf-8` |
+| `Location` | URL del recurso creado o destino de la redirección |
+| `Set-Cookie` | Pide al navegador guardar una cookie |
+| `Cache-Control` | Reglas de caché: `max-age=3600`, `no-store`, `no-cache` |
+| `ETag` | Identificador de la versión del recurso |
+| `Retry-After` | Cuántos segundos esperar antes de reintentar |
+| `Access-Control-Allow-Origin` | Orígenes permitidos por CORS |
+| `Strict-Transport-Security` | Obliga a usar HTTPS en ese dominio |
+| `Content-Security-Policy` | Qué recursos puede cargar la página |
+
+## Tipos de contenido comunes
+
+| `Content-Type` | Es |
+| --- | --- |
+| `application/json` | JSON |
+| `application/x-www-form-urlencoded` | Formulario clásico: `a=1&b=2` |
+| `multipart/form-data` | Formulario con archivos |
+| `text/html`, `text/plain`, `text/css` | HTML, texto, CSS |
+| `application/octet-stream` | Bytes sin tipo concreto |
+| `image/png`, `image/webp` | Imágenes |
+
+## Cookies
+
+```http
+Set-Cookie: sid=abc123; Max-Age=3600; Path=/; Secure; HttpOnly; SameSite=Lax
+```
+
+| Atributo | Efecto |
+| --- | --- |
+| `Secure` | Solo se envía por HTTPS |
+| `HttpOnly` | JavaScript no puede leerla (protege contra robo por XSS) |
+| `SameSite=Lax` o `Strict` | Limita el envío en peticiones desde otros sitios (protege contra CSRF) |
+| `Max-Age` o `Expires` | Duración. Sin ellos, vive hasta cerrar el navegador |
+| `Path`, `Domain` | A qué rutas y dominios se envía |
+
+## CORS en breve
+
+El navegador bloquea que una página de `a.com` lea respuestas de `b.com`, salvo que `b.com` lo autorice. En peticiones "no simples" (por ejemplo con `Content-Type: application/json` o métodos como `PUT`), el navegador envía antes una petición `OPTIONS` de comprobación (preflight).
+
+```http
+Access-Control-Allow-Origin: https://a.com
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE
+Access-Control-Allow-Headers: Content-Type, Authorization
+```
+
+CORS protege al navegador del usuario, no a tu servidor: no sustituye a la autenticación.
+
+## Probar con curl
+
+```bash
+curl -i https://ejemplo.com/api            # muestra encabezados y cuerpo
+curl -s -o /dev/null -w "%{http_code}\n" URL   # solo el código de estado
+curl -X POST URL -H "Content-Type: application/json" -d '{"a":1}'
+```
+
+Más ejemplos en la hoja de curl y ssh.
+
+## Para ir más a fondo
+
+- [Códigos de estado HTTP en MDN](https://developer.mozilla.org/es/docs/Web/HTTP/Status)
+- [Métodos de petición HTTP en MDN](https://developer.mozilla.org/es/docs/Web/HTTP/Methods)
+- [RFC 9110: semántica de HTTP](https://www.rfc-editor.org/rfc/rfc9110)
+- Hoja de AyudaDev: [curl y ssh](/hojas/curl-y-ssh/)
+- Biblioteca: [libros y cursos de temas generales](/biblioteca/generales/)

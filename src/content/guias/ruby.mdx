@@ -1,0 +1,367 @@
+---
+titulo: 'Ruby desde cero'
+descripcion: 'Qué es Ruby, cómo instalarlo y tus primeros programas: variables, nil, métodos, bloques, hashes, clases y archivos, con ejemplos que puedes copiar y ejecutar.'
+tema: ruby
+nivel: principiante
+tiempoLectura: 25
+publicado: 2026-10-09
+libros: ['ruby-en-veinte-minutos', 'ruby-tutorial-andres-suarez', 'ruby-curso-openbootcamp', 'ruby-guias-rails-es']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['ruby', 'irb', 'bloques', 'hash', 'rails']
+orden: 13
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Ruby es un lenguaje creado para que programar sea agradable. Su sintaxis se lee casi como inglés y necesitas poco código para hacer mucho. Es el lenguaje detrás de Ruby on Rails, uno de los marcos web más conocidos, y también se usa para scripts, automatización y herramientas de terminal.
+
+Lo que necesitas tener claro:
+
+- **Interpretado**: escribes un archivo `.rb` y lo ejecutas con `ruby archivo.rb`. No hay paso de compilación.
+- **Tipado dinámico y fuerte**: no declaras tipos; cada valor sabe qué es. Pero Ruby no mezcla en silencio un número con un texto: `"5" + 5` da error.
+- **Todo es un objeto**: hasta los números y `nil`. Por eso puedes escribir `5.times` o `"hola".upcase`.
+- **Bloques**: pequeños trozos de código que le pasas a un método, como `each` o `map`. Casi no verás ciclos `for`.
+- **Memoria automática**: hay recolector de basura; no liberas memoria a mano.
+- **Orientado a objetos con módulos**: clases con herencia simple y módulos que se mezclan (`include`) para compartir comportamiento.
+- **`nil` y `false` son los únicos valores falsos**: todo lo demás cuenta como verdadero, incluso el `0`.
+- **Gemas**: las bibliotecas se instalan con `gem install` y se manejan en proyectos con Bundler. No las necesitas para empezar.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Sin instalar nada**: prueba el lenguaje en [TryRuby](https://try.ruby-lang.org/), que ejecuta código dentro del navegador.
+2. **Windows**: descarga RubyInstaller desde [rubyinstaller.org](https://rubyinstaller.org/) y elige la versión con Devkit. Al terminar, deja marcada la opción que ejecuta `ridk install` y elige la instalación por defecto.
+3. **macOS**: con Homebrew, `brew install ruby`, y agrega a tu `PATH` la línea que Homebrew te indique al terminar. La versión que trae el sistema no es la adecuada para aprender.
+4. **Linux**: en Debian o Ubuntu escribe `sudo apt install ruby-full`; en Fedora `sudo dnf install ruby`.
+5. Cierra y vuelve a abrir la terminal. Comprueba con `ruby -v`; los ejemplos de esta guía están pensados para Ruby 3.2 o superior.
+6. Crea una carpeta `ruby-practicas` y dentro un archivo `hola.rb` con el contenido del ejemplo 1. Córrelo con `ruby hola.rb`.
+
+</Pasos>
+
+Para probar una línea suelta sin crear un archivo, escribe `irb` en la terminal: abre una consola interactiva donde cada línea se evalúa al instante. Cuando tus proyectos crezcan usarás Bundler y un archivo `Gemfile`. Si quieres tener varias versiones de Ruby, existen administradores como rbenv.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo, variables y tipos" archivo="hola.rb" ejecutar="ruby hola.rb" salida="Hola, mundo
+Ana tiene 21 años
+Activa: true
+Precio con IVA: 23.19
+7 / 2 = 3
+7 % 2 = 1
+7 / 2.0 = 3.5
+Tipos: String, Integer, Float, TrueClass">
+
+```ruby
+puts "Hola, mundo"
+
+nombre = "Ana"       # no declaras el tipo
+edad = 20
+edad += 1
+precio = 19.99
+activa = true
+
+# Dentro de comillas dobles, #{...} inserta el resultado de una expresión
+puts "#{nombre} tiene #{edad} años"
+puts "Activa: #{activa}"
+
+con_iva = (precio * 1.16).round(2)   # round(2) deja dos decimales
+puts "Precio con IVA: #{con_iva}"
+
+puts "7 / 2 = #{7 / 2}"       # división entera
+puts "7 % 2 = #{7 % 2}"       # residuo
+puts "7 / 2.0 = #{7 / 2.0}"   # división decimal
+
+puts "Tipos: #{[nombre, edad, precio, activa].map(&:class).join(', ')}"
+```
+
+`puts` imprime una línea. No hay llaves ni punto y coma: cada línea es una instrucción. Los nombres de variables usan `snake_case`. Con dos enteros, `/` da un entero; basta con que uno sea decimal para obtener `3.5`. En la última línea, `map(&:class)` le pregunta a cada valor de qué clase es.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Condiciones, ciclos y case" archivo="control.rb" ejecutar="ruby control.rb" salida="0 es cero
+1 es impar
+2 es par
+3 es impar
+4 es par
+5 es impar
+Cuenta regresiva: 3
+Cuenta regresiva: 2
+Cuenta regresiva: 1
+Despegue
+[10, 7, 4, 1]
+Bien">
+
+```ruby
+# El valor de la última línea de un método es lo que devuelve
+def clasificar(n)
+  if n == 0
+    "cero"
+  elsif n.even?
+    "par"
+  else
+    "impar"
+  end
+end
+
+# (0..5) es un rango; each ejecuta el bloque por cada elemento
+(0..5).each { |i| puts "#{i} es #{clasificar(i)}" }
+
+cuenta = 3
+while cuenta > 0
+  puts "Cuenta regresiva: #{cuenta}"
+  cuenta -= 1
+end
+puts "Despegue"
+
+p 10.step(1, -3).to_a   # de 10 a 1, restando 3
+
+nota = 8
+mensaje = case nota
+          when 9..10 then "Excelente"
+          when 7...9 then "Bien"
+          else "A repasar"
+          end
+puts mensaje
+```
+
+Cada `if`, `while` o método termina con `end`. Los métodos que terminan en `?`, como `even?`, devuelven verdadero o falso por convención. `p` imprime el valor tal como se vería en el código, con corchetes y comillas. En `case`, `9..10` incluye el 10 y `7...9` no incluye el 9, por eso el 8 cae en "Bien".
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="nil y valores que faltan" archivo="nil.rb" ejecutar="ruby nil.rb" salida="4
+0
+nil
+nil
+sin correo
+Ana
+Error: key not found: :edad">
+
+```ruby
+# &. llama al método solo si el valor no es nil; || da un valor alternativo
+def largo(texto)
+  texto&.length || 0
+end
+
+usuario = { nombre: "Ana", correo: nil }
+
+puts largo("Ruby")         # 4
+puts largo(nil)            # 0
+p usuario[:correo]         # nil
+p usuario[:correo]&.upcase # nil, no truena
+
+usuario[:correo] ||= "sin correo"   # asigna solo si estaba en nil o false
+puts usuario[:correo]
+
+puts usuario.fetch(:nombre)   # fetch falla con claridad si la clave no existe
+begin
+  usuario.fetch(:edad)
+rescue KeyError => e
+  puts "Error: #{e.message}"
+end
+```
+
+`nil` es el valor "nada" y es el origen de casi todos los errores al empezar. Un hash devuelve `nil` si pides una clave que no existe; `fetch` en cambio lanza un error que te dice qué clave falta. `begin` y `rescue` atrapan errores, y `e.message` trae el texto del problema.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Métodos, bloques y colecciones" archivo="colecciones.rb" ejecutar="ruby colecciones.rb" salida="Hola, Ana
+Buenas, Luis
+true
+false
+Promedio: 8.5
+Mayor: 10
+[80, 90, 100]
+pan: 12 pesos
+leche: 25 pesos">
+
+```ruby
+# Argumento con nombre y valor por defecto
+def saludar(nombre, saludo: "Hola")
+  "#{saludo}, #{nombre}"
+end
+
+# Las clases de Ruby están abiertas: aquí agregamos un método a String
+class String
+  def palindromo?
+    limpio = downcase.gsub(/[^a-záéíóúñ]/, "")
+    limpio == limpio.reverse
+  end
+end
+
+puts saludar("Ana")
+puts saludar("Luis", saludo: "Buenas")
+puts "Anita lava la tina".palindromo?
+puts "Ruby".palindromo?
+
+notas = [8, 9, 7, 10]
+puts "Promedio: #{notas.sum / notas.size.to_f}"
+puts "Mayor: #{notas.max}"
+p notas.select { |n| n >= 8 }.map { |n| n * 10 }
+
+# Hash: pares clave => valor
+precios = { "pan" => 12, "leche" => 25 }
+precios.each { |producto, precio| puts "#{producto}: #{precio} pesos" }
+```
+
+Las llamadas a métodos llevan paréntesis opcionales; úsalos cuando ayuden a leer. `select` filtra y `map` transforma, y ambos reciben un bloque con la variable entre barras verticales. `notas.size.to_f` convierte el tamaño a decimal para que la división no sea entera. Agregar métodos a clases existentes es muy poderoso, pero úsalo con medida: otros programadores no esperan encontrarlos.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Clases, módulos y Struct" archivo="clases.rb" ejecutar="ruby clases.rb" salida='Ana: 150.0
+Retiro de 500: false
+Retiro de 30: true
+Ana: 120.0
+Cuenta: Ana: 120.0
+#<struct Persona nombre="Luis", edad=25>
+Luis cumple 26 el próximo año'>
+
+```ruby
+# Un módulo agrupa métodos que se pueden mezclar en varias clases
+module Descriptible
+  def describir
+    "#{self.class.name}: #{self}"
+  end
+end
+
+class Cuenta
+  include Descriptible
+  attr_reader :titular, :saldo   # crea métodos de lectura
+
+  def initialize(titular, saldo_inicial)
+    @titular = titular           # @ marca una variable de instancia
+    @saldo = saldo_inicial
+  end
+
+  def depositar(monto)
+    raise ArgumentError, "El monto debe ser positivo" unless monto.positive?
+    @saldo += monto
+  end
+
+  def retirar(monto)
+    return false if monto > @saldo
+    @saldo -= monto
+    true
+  end
+
+  def to_s
+    "#{titular}: #{saldo}"
+  end
+end
+
+cuenta = Cuenta.new("Ana", 100.0)
+cuenta.depositar(50)
+puts cuenta
+puts "Retiro de 500: #{cuenta.retirar(500)}"
+puts "Retiro de 30: #{cuenta.retirar(30)}"
+puts cuenta
+puts cuenta.describir
+
+# Struct crea una clase de datos en una línea
+Persona = Struct.new(:nombre, :edad)
+luis = Persona.new("Luis", 25)
+p luis
+puts "#{luis.nombre} cumple #{luis.edad + 1} el próximo año"
+```
+
+`initialize` es el constructor y `Cuenta.new` lo llama. Las variables que empiezan con `@` pertenecen al objeto, y `attr_reader` crea los métodos para leerlas. `puts cuenta` usa el método `to_s` que definimos. `raise` lanza un error y `unless` es el contrario de `if`. El módulo `Descriptible` se mezcla con `include`, así que `Cuenta` tiene el método `describir` sin heredar de nadie.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Errores y archivos" archivo="archivos.rb" ejecutar="ruby archivos.rb" salida="Listo
+5
+Error: divided by 0
+Listo
+nil
+Ana: 8
+Luis: 9
+Beto: 7
+Promedio: 8.0">
+
+```ruby
+def dividir(a, b)
+  a / b
+rescue ZeroDivisionError => e   # atrapa solo este tipo de error
+  puts "Error: #{e.message}"
+  nil
+ensure
+  puts "Listo"                   # se ejecuta siempre
+end
+
+p dividir(10, 2)
+p dividir(1, 0)
+
+# Escribir un archivo y leerlo línea por línea
+File.write("notas.txt", "Ana,8\nLuis,9\nBeto,7\n")
+
+notas = {}
+File.foreach("notas.txt", chomp: true) do |linea|
+  nombre, nota = linea.split(",")
+  notas[nombre] = nota.to_i
+end
+
+notas.each { |nombre, nota| puts "#{nombre}: #{nota}" }
+puts "Promedio: #{notas.values.sum / notas.size.to_f}"
+
+File.delete("notas.txt")   # limpia el archivo de prueba
+```
+
+Un método puede tener su propio `rescue` y `ensure` sin envolverlo en `begin`. Fíjate en el orden: `ensure` se ejecuta antes de que `p` imprima el valor devuelto, por eso "Listo" sale antes que el `5`. `File.foreach` lee el archivo línea por línea sin cargarlo completo, y `chomp: true` quita el salto de línea. `nombre, nota = linea.split(",")` asigna cada parte a una variable.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="NoMethodError sobre nil">
+
+`undefined method 'upcase' for nil` significa que llamaste un método sobre `nil`: una variable sin asignar o una clave de hash que no existe. Revisa de dónde viene el valor. Usa `&.` para llamar solo si existe, `fetch` para que falle con claridad, o `||` para dar un valor por defecto.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar un end">
+
+Cada `def`, `if`, `while`, `class` o bloque `do` necesita su `end`. Si falta uno, Ruby reporta `syntax error, unexpected end-of-input` al final del archivo, lejos del problema real. Sangra bien tu código para ver qué bloque quedó abierto, y deja que tu editor lo señale.
+
+</Callout>
+
+<Callout tipo="warning" titulo="División entera sin querer">
+
+`17 / 4` da `4`, no `4.25`, porque ambos son enteros. Convierte uno a decimal con `17 / 4.0` o `17.to_f / 4`. Y recuerda que `0.1 + 0.2` no da exactamente `0.3`: para dinero usa `BigDecimal` o guarda centavos como enteros.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Pensar que 0 es falso">
+
+En Ruby solo `nil` y `false` son falsos. Un `if 0` entra, y también un texto vacío o una lista vacía. Si quieres saber si algo está vacío, pregunta directo: `lista.empty?`, `numero.zero?`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Cadenas congeladas">
+
+Si el archivo empieza con el comentario mágico `# frozen_string_literal: true`, los textos literales no se pueden modificar y verás `FrozenError: can't modify frozen String`. Crea una copia con `dup` o `+"texto"` si necesitas cambiarla. Es una buena práctica que muchos proyectos activan.
+
+</Callout>
+
+## Buenas prácticas
+
+- Nombres en `snake_case` para variables y métodos, `PascalCase` para clases y módulos, `MAYUSCULAS` para constantes.
+- Dos espacios de sangría. Es la convención de toda la comunidad.
+- Los métodos que responden sí o no terminan en `?`, y los que modifican el objeto en el lugar terminan en `!`.
+- Prefiere `each`, `map`, `select` y `sum` sobre ciclos con contador.
+- Usa símbolos (`:nombre`) como claves de hash cuando sean fijas.
+- Atrapa errores específicos (`rescue KeyError`) y no uses `rescue Exception`.
+- Pon `# frozen_string_literal: true` al inicio de tus archivos para evitar mutaciones accidentales.
+- Usa RuboCop para revisar el estilo y Minitest o RSpec para tus pruebas cuando el proyecto crezca.
+
+## Siguiente paso
+
+Ya conoces los valores, los bloques, los hashes, las clases y los archivos. Sigue con herencia, módulos como `Comparable` y `Enumerable`, y expresiones regulares. Después aprende a manejar gemas con Bundler y escribe pruebas con Minitest.
+
+El camino natural es Ruby on Rails: las [Guías de Ruby on Rails en español](https://railsguides.es/) te llevan desde la primera aplicación hasta bases de datos y rutas. Para guardar datos, combina Ruby con [SQL desde cero](/guias/sql/), y guarda cada ejercicio en un repositorio con [Git y GitHub desde cero](/guias/git/). Si vienes de otro lenguaje, compara con [Python desde cero](/guias/python/). Todos los recursos están en [la biblioteca de Ruby](/biblioteca/ruby/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

@@ -74,6 +74,7 @@
   }
 }
 
+@layer base {
 /* ── Base ── */
 html {
   scroll-behavior: smooth;
@@ -99,6 +100,7 @@ body {
 }
 .text-balance { text-wrap: balance; }
 .text-pretty { text-wrap: pretty; }
+}
 
 /* Fondo con resplandor sutil del acento en el hero. */
 .bg-glow {

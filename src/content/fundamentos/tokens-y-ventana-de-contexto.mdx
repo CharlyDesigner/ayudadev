@@ -1,0 +1,128 @@
+---
+titulo: 'Tokens y ventana de contexto'
+descripcion: 'Qué es un token, qué significa la ventana de contexto y por qué una conversación larga hace que la IA olvide cosas o se ponga más cara.'
+categoria: ia
+nivel: principiante
+tiempoLectura: 9
+publicado: 2026-10-09
+temas: [inteligencia-artificial, python]
+etiquetas: [tokens, contexto, llm, ia, prompts]
+orden: 41
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Estás en una conversación larga con una IA. Al principio le explicaste tu proyecto con detalle. Cuarenta mensajes después te propone algo que contradice lo que dijiste al inicio. O recibes un error que dice que tu mensaje es demasiado largo. ¿Qué pasó?
+
+Pasó algo muy concreto: se llenó la **ventana de contexto**. Para entenderlo necesitas dos ideas, tokens y contexto, y las dos caben en esta lectura.
+
+## Qué es
+
+Un **token** es la pieza de texto con la que trabaja un modelo de lenguaje. No es exactamente una palabra ni una letra. Es un trozo intermedio: a veces una palabra completa, a veces un pedazo de palabra, a veces un signo de puntuación o un espacio.
+
+Antes de que el modelo lea tu mensaje, un componente llamado **tokenizador** lo parte en tokens y convierte cada uno en un número. El modelo trabaja con esos números, y al final convierte los números que genera de vuelta a texto.
+
+La **ventana de contexto** es la cantidad máxima de tokens que el modelo puede considerar a la vez en una sola petición. Dentro de esa ventana va todo: las instrucciones del sistema, el historial de la conversación, los archivos que adjuntaste, tu pregunta nueva y también la respuesta que el modelo está generando.
+
+Piensa en una mesa de trabajo de tamaño fijo. Todo lo que el modelo necesita ver debe estar sobre la mesa. Si pones demasiado, algo se cae o no cabe.
+
+## Cómo se parten los textos
+
+Cada familia de modelos tiene su propio tokenizador, así que el mismo texto puede dar números de tokens distintos según el modelo. Estas reglas generales ayudan a razonar:
+
+| Texto | Cómo suele tokenizarse |
+|---|---|
+| Palabras comunes y cortas | Un solo token |
+| Palabras largas o poco comunes | Varios tokens, en pedazos |
+| Código | Muchos tokens por símbolos, sangrías y nombres largos |
+| Español y otros idiomas distintos del inglés | Suelen necesitar más tokens por palabra que el inglés |
+| Números largos | Varios tokens, en tramos |
+
+Esto último explica algo práctico: el mismo contenido en español puede "costar" más contexto que en inglés. No necesitas obsesionarte, pero sí saberlo cuando trabajes cerca del límite.
+
+Para cifras exactas, no adivines: las herramientas y la documentación de cada proveedor tienen contadores de tokens. Consulta la documentación oficial del modelo que uses para saber su tamaño de ventana y cómo contar.
+
+## Por qué el modelo "olvida"
+
+El modelo no tiene memoria entre peticiones. Cuando conversas, la aplicación **vuelve a enviar todo el historial** con cada mensaje nuevo. Eso significa dos cosas:
+
+1. Cada turno agrega tokens al historial, así que la conversación crece.
+2. Cuando el historial ya no cabe, la aplicación tiene que decidir qué recortar: normalmente lo más viejo, o lo resume.
+
+Así se ve la idea en pequeño, con una ventana de juguete donde cada palabra cuenta como un token:
+
+<Ejemplo numero={1} titulo="Una ventana de contexto de juguete" archivo="contexto.py" ejecutar="python contexto.py" salida="Se pierde: hola me llamo Ana
+Se pierde: vivo en Puebla
+Lo que el modelo ve: ['cuál es mi nombre']">
+
+```python
+# Una ventana de contexto de juguete: solo caben 5 "tokens" (aquí, palabras)
+LIMITE = 5
+
+def cabe(mensajes):
+    return sum(len(m.split()) for m in mensajes) <= LIMITE
+
+historial = ["hola me llamo Ana", "vivo en Puebla", "cuál es mi nombre"]
+while not cabe(historial):
+    olvidado = historial.pop(0)   # lo más viejo se cae primero
+    print("Se pierde:", olvidado)
+
+print("Lo que el modelo ve:", historial)
+```
+
+Mira lo que pasó: preguntaste "cuál es mi nombre", pero el mensaje donde lo dijiste ya se cayó de la ventana. El modelo no puede responder porque, para él, esa información nunca existió. Las aplicaciones reales son más cuidadosas, pero el principio es el mismo.
+
+</Ejemplo>
+
+## Contexto largo no significa atención perfecta
+
+Aunque la ventana sea muy grande, meter más cosas no siempre ayuda:
+
+- **Más ruido.** Si pegas cien archivos y solo uno importa, el modelo tiene que pescarlo entre todo lo demás.
+- **Más lento y más caro.** Los proveedores suelen cobrar según los tokens de entrada y de salida. Consulta la página oficial de precios del servicio que uses; aquí no ponemos cifras porque cambian.
+- **Información en medio.** En contextos muy largos, los modelos pueden aprovechar peor lo que está en medio que lo que está al principio o al final. Es una tendencia, no una regla fija, y varía por modelo.
+
+Por eso a veces conviene **empezar una conversación nueva** con un resumen de lo importante, en lugar de seguir arrastrando cuarenta mensajes.
+
+<Callout tipo="tip" titulo="Trucos para cuidar tu contexto">
+
+Pon lo más importante al inicio y repítelo al final si la tarea es larga. Pega solo el fragmento de código relevante, no el archivo completo. Cuando una conversación se enrede, pide un resumen de decisiones y llévalo a una conversación nueva. Un buen resumen vale más que cien mensajes viejos.
+
+</Callout>
+
+<Callout tipo="warning" titulo="El límite incluye la respuesta">
+
+La ventana se reparte entre lo que envías y lo que el modelo responde. Si llenas casi toda la ventana con tu entrada, la respuesta se corta o no cabe. Si ves respuestas truncadas a la mitad, revisa cuántos tokens estás consumiendo antes de culpar al modelo.
+
+</Callout>
+
+## Tokens y programación
+
+Si vas a usar un modelo desde código (con una API), los tokens aparecen en tres lugares:
+
+- **Límite de entrada y de salida.** Normalmente puedes fijar un máximo de tokens para la respuesta.
+- **Costo.** La mayoría de los servicios facturan por tokens. Un bucle que envía el historial completo cada vez crece más rápido de lo que imaginas.
+- **Diseño de prompts.** Un prompt de sistema muy largo se paga y se carga en cada petición. Hazlo breve y concreto. Algunos proveedores ofrecen mecanismos para reutilizar partes repetidas del prompt; consulta su documentación.
+
+## Pruébalo tú
+
+1. Corre el ejemplo y cambia `LIMITE` a 8 y a 12. ¿Qué mensajes sobreviven en cada caso?
+2. Cambia la función para que, en lugar de borrar lo más viejo, borre el mensaje más largo. ¿Qué información pierdes primero?
+3. Pega un mismo párrafo en español y su traducción al inglés en el contador de tokens de la documentación oficial del servicio que uses. Compara los números.
+4. Pide en un chat: "Resume esta conversación en 8 viñetas para empezar una nueva sin perder decisiones." Evalúa qué tan fiel fue el resumen.
+
+## Errores y mitos comunes
+
+- **"Un token es una palabra."** No. Es un pedazo de texto; a veces coincide con una palabra y a veces no.
+- **"Si cabe en la ventana, el modelo lo usará bien."** Cabe no es lo mismo que se aprovecha. Un contexto limpio rinde más que uno enorme.
+- **"El modelo recuerda lo que le dije ayer."** Solo si la aplicación guarda y reenvía esa información. El modelo en sí, no.
+- **"Contar caracteres sirve para calcular tokens."** Solo da una idea burda. Usa el contador del proveedor.
+- **"Un prompt corto siempre es mejor."** Corto y claro es mejor. Corto y ambiguo, no.
+
+## Qué sigue
+
+- Ya sabes qué ve el modelo en cada petición. Mira cómo se le puede dar información propia en [Embeddings y RAG](/fundamentos/embeddings-y-rag/).
+- Si quieres entender de dónde sale el comportamiento del modelo, lee [Cómo funcionan los modelos de lenguaje](/fundamentos/como-funcionan-los-llm/).
+- Practica a pedir bien las cosas en [Pedir ejercicios a tu nivel](/ia/aprende/pedir-ejercicios-a-tu-nivel/).
+- Consulta términos como "prompt" y "contexto" en el [glosario](/glosario/).

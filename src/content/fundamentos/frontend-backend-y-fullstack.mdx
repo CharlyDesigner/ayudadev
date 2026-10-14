@@ -1,0 +1,179 @@
+---
+titulo: 'Frontend, backend y fullstack'
+descripcion: 'Qué hace cada parte de una aplicación web, cómo se comunican y qué significa ser fullstack. Incluye un servidor mínimo en Node.js que puedes correr y modificar.'
+categoria: internet
+nivel: principiante
+tiempoLectura: 9
+publicado: 2026-10-09
+temas: [javascript, nodejs, html-css]
+etiquetas: [frontend, backend, fullstack, cliente, servidor]
+orden: 7
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cuando empiezas a aprender desarrollo web, todo el mundo te pregunta lo mismo: "¿Quieres ser frontend o backend?". Esas palabras suenan a dos mundos distintos, pero son dos mitades de la misma aplicación. Entenderlas te ayuda a elegir qué aprender primero y a saber dónde buscar cuando algo falla.
+
+## Qué es
+
+Casi toda aplicación web se divide en dos lados que se hablan por internet:
+
+- **Frontend:** lo que corre en el dispositivo de la persona usuaria, normalmente en el navegador. Es lo que ves y tocas.
+- **Backend:** lo que corre en un servidor. Es lo que guarda los datos, aplica las reglas y decide qué puedes hacer.
+
+La analogía clásica es un restaurante:
+
+| Restaurante | Aplicación web |
+| --- | --- |
+| El comedor: mesas, menú, decoración, el mesero | Frontend |
+| La cocina: ingredientes, recetas, la despensa | Backend |
+| Los pedidos que viajan entre ambos | Peticiones HTTP |
+| La bodega donde se guardan los ingredientes | Base de datos |
+
+Tú, como cliente, solo ves el comedor. Pero un comedor hermoso sin cocina no sirve comida, y una cocina excelente sin comedor no tiene a quién atender.
+
+```text
+ Navegador (frontend)                 Servidor (backend)            Base de datos
+ +-------------------+   petición    +------------------+  consulta  +-----------+
+ | HTML, CSS, JS     | ------------> | reglas, lógica   | ---------> | datos     |
+ | lo que ves        | <------------ | autenticación    | <--------- | guardados |
+ +-------------------+   respuesta   +------------------+  resultado +-----------+
+```
+
+## El frontend
+
+El frontend se construye con tres tecnologías que el navegador entiende de forma nativa:
+
+- **HTML:** la estructura (títulos, párrafos, botones, formularios).
+- **CSS:** la presentación (colores, tamaños, posición, adaptación a pantallas).
+- **JavaScript:** el comportamiento (reaccionar a clics, actualizar la página, pedir datos).
+
+Sobre esa base existen librerías y frameworks como React, Vue, Svelte o Angular, y herramientas que compilan y optimizan el código antes de publicarlo. Pero por debajo siempre termina en HTML, CSS y JavaScript.
+
+Responsabilidades del frontend:
+
+- Mostrar la interfaz y que sea **accesible** y usable en celular y escritorio.
+- Reaccionar a lo que hace la persona.
+- Validar datos para dar respuestas rápidas (por ejemplo, "falta el correo").
+- Pedir datos al backend y mostrarlos.
+
+Si quieres empezar por aquí, tienes la [guía de HTML y CSS](/guias/html-css/) y la [guía de JavaScript](/guias/javascript/).
+
+## El backend
+
+El backend corre en un servidor que tú o tu empresa controlan. Puedes escribirlo en casi cualquier lenguaje: JavaScript con Node.js, Python, PHP, Java, Go, C#, Ruby y más. Sus responsabilidades:
+
+- **Guardar y consultar datos** en una base de datos (ver [bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/) y [NoSQL](/fundamentos/bases-de-datos-nosql/)).
+- **Aplicar reglas de negocio:** quién puede ver qué, cuánto cuesta algo, qué se puede cancelar.
+- **Autenticar y autorizar:** comprobar quién eres y qué permisos tienes ([autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/)).
+- **Exponer una API** para que el frontend (y otras apps) la usen. Mira [Qué es una API](/fundamentos/que-es-una-api/).
+- **Hablar con otros servicios:** pagos, correo, almacenamiento de archivos.
+
+Una regla de oro: **nunca confíes en el frontend para la seguridad**. Todo lo que corre en el navegador puede ser modificado por quien lo usa. Que el botón de borrar esté oculto no impide que alguien haga la petición a mano. El backend debe validar todo otra vez.
+
+## Un mini ejemplo completo
+
+Este archivo une las dos mitades en menos de 40 líneas, solo con Node.js y sin instalar nada. Guárdalo como `servidor.mjs`:
+
+```js
+// Un mini "fullstack" en un archivo: backend (API) + frontend (HTML)
+import http from 'node:http';
+
+const pagina = `<!doctype html>
+<meta charset="utf-8">
+<title>Mini app</title>
+<h1>Hola desde el frontend</h1>
+<p id="saludo">Cargando...</p>
+<script>
+  // Esto corre en el navegador (frontend) y pide datos al backend
+  fetch('/api/saludo')
+    .then((res) => res.json())
+    .then((datos) => {
+      document.getElementById('saludo').textContent = datos.mensaje;
+    });
+</script>`;
+
+const servidor = http.createServer((req, res) => {
+  if (req.url === '/api/saludo') {
+    // Esto corre en el servidor (backend)
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ mensaje: 'Este texto lo calculó el servidor' }));
+  } else if (req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(pagina);
+  } else {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('No encontrado');
+  }
+});
+
+servidor.listen(3000, () => console.log('Abre http://localhost:3000'));
+```
+
+Ejecútalo con `node servidor.mjs` y abre `http://localhost:3000` en el navegador. Verás primero "Cargando..." y enseguida el mensaje del servidor. En otra terminal, puedes hablar solo con el backend:
+
+```bash
+curl -i http://localhost:3000/api/saludo
+```
+
+```text
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{"mensaje":"Este texto lo calculó el servidor"}
+```
+
+Lo que pasó fue esto: el navegador pidió `/` y el servidor devolvió el HTML (frontend). El JavaScript de esa página pidió `/api/saludo` y el servidor devolvió JSON (backend). El script volvió a escribir ese texto en la página. Para detener el servidor, presiona `Ctrl + C`.
+
+<Callout tipo="tip" titulo="Abre las herramientas de desarrollo">
+Con la página abierta, presiona F12 y entra a la pestaña **Red** (Network). Recarga y verás las dos peticiones: la del HTML y la de `/api/saludo`. Esa pestaña es tu mejor amiga para saber si un problema es del frontend (la página pide mal) o del backend (el servidor responde mal).
+</Callout>
+
+## Fullstack
+
+Una persona **fullstack** trabaja en las dos mitades. No significa saber de todo a fondo, sino poder construir una funcionalidad completa de punta a punta: pantalla, API y base de datos.
+
+Hay dos formas comunes de verlo:
+
+- **Fullstack por perfil:** alguien que programa tanto el frontend como el backend en su trabajo.
+- **Frameworks fullstack:** herramientas que permiten escribir ambas mitades en un mismo proyecto, a menudo en un solo lenguaje como JavaScript o TypeScript.
+
+Ser fullstack tiene ventajas: ves el panorama completo, puedes sacar productos solo y comunicas mejor con equipos especializados. También tiene un riesgo: abarcar demasiado y quedarte superficial en todo.
+
+<Callout tipo="warning" titulo="No necesitas escoger bando desde el día uno">
+Un camino sano es aprender primero lo básico de la web (HTML, CSS y JavaScript), construir algo pequeño con datos reales y luego profundizar en lo que más disfrutes. Si saltas a un framework sin entender HTTP y el navegador, te pierdes cuando algo falla.
+</Callout>
+
+## Otras piezas del rompecabezas
+
+Una app real casi nunca son solo dos cajas:
+
+- **Base de datos:** donde viven los datos de forma permanente.
+- **Servicios de terceros:** pagos, correo, mapas, inicio de sesión con otra cuenta.
+- **Hosting y despliegue:** dónde se publica todo ([hosting y despliegue](/fundamentos/cloud-hosting-y-despliegue/)).
+- **DevOps y herramientas:** control de versiones, pruebas automáticas y publicación continua.
+- **Móvil:** una app de celular es otro frontend que habla con el mismo backend.
+
+## Pruébalo tú
+
+1. Ejecuta `servidor.mjs` y abre la pestaña Red del navegador. Identifica las dos peticiones.
+2. Cambia el texto de `mensaje` en el backend, reinicia el servidor con `Ctrl + C` y `node servidor.mjs`, y recarga la página. Verás el cambio.
+3. Agrega una ruta nueva, `/api/hora`, que responda `{ hora: new Date().toISOString() }`. Muestra esa hora en la página desde el frontend.
+4. Visita `http://localhost:3000/nada` y comprueba que ves el `404`.
+
+## Errores y mitos comunes
+
+- **"El frontend es solo diseño."** Hoy incluye mucha lógica: estado, rutas, rendimiento, accesibilidad y manejo de errores.
+- **"El backend es más difícil que el frontend."** Son difíciles de maneras distintas. Uno exige cuidar la experiencia en miles de pantallas, el otro exige cuidar datos, seguridad y escalabilidad.
+- **"Valido en el frontend y listo."** La validación del frontend es comodidad. La del backend es obligatoria.
+- **"Fullstack significa saberlo todo."** Significa poder completar el ciclo de una funcionalidad. Nadie domina todo.
+- **"JavaScript es solo frontend."** Con Node.js también sirve para el backend, como acabas de ver.
+- **"Debo escoger una sola para siempre."** Mucha gente cambia o combina durante su carrera.
+
+## Qué sigue
+
+- [Cómo funciona un navegador](/fundamentos/como-funciona-un-navegador/): qué hace el frontend con el HTML que recibe.
+- [Hosting, nube y despliegue](/fundamentos/cloud-hosting-y-despliegue/): cómo publicar las dos mitades.
+- [Cookies, sesiones y tokens](/fundamentos/cookies-sesiones-y-tokens/): cómo el backend recuerda quién eres.
+- [Guía de JavaScript](/guias/javascript/), [guía de HTML y CSS](/guias/html-css/) y [biblioteca de Node.js](/biblioteca/nodejs/).
+- [Retos](/retos/) para practicar.

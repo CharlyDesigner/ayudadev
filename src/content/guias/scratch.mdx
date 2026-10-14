@@ -1,0 +1,307 @@
+---
+titulo: 'Scratch desde cero'
+descripcion: 'Aprende a programar con bloques en Scratch 3: un gato que se mueve, un contador de clics, un quiz, un juego de atrapar y un dibujo con el lápiz, paso a paso.'
+tema: scratch
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['scratch-ideas-tutoriales-oficiales', 'scratch-guia-referencia-scratch-3-eduteka', 'scratch-guia-computacion-creativa', 'scratch-curso-scratch-3-cosas-de-informatica']
+requisitos: ['Una computadora con navegador moderno e internet, o el editor sin conexión de Scratch']
+etiquetas: ['scratch', 'bloques', 'pensamiento-computacional', 'juegos', 'lapiz']
+orden: 6
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Scratch es un lenguaje de programación visual: en lugar de escribir código, arrastras bloques de colores y los encajas como piezas de rompecabezas. Lo creó el MIT Media Lab y hoy lo mantiene la Scratch Foundation. Sirve para animar personajes, contar historias, hacer juegos y, sobre todo, para aprender a pensar como programador sin pelearte con la sintaxis.
+
+Lo que necesitas tener claro:
+
+- **Los bloques son las instrucciones**: cada bloque hace una cosa pequeña, como mover, decir, esperar o repetir. Un programa es una pila de bloques que se ejecuta de arriba hacia abajo.
+- **Objetos y escenario**: los personajes se llaman *objetos* (sprites) y el fondo es el *escenario*. Cada objeto tiene sus propios programas, llamados *scripts*.
+- **Todo empieza con un evento**: un script arranca con un bloque de sombrero, como "al presionar la bandera verde" o "al presionar tecla espacio". Sin él, el script no se ejecuta por sí solo.
+- **Control del flujo**: `repetir`, `por siempre` y `si ... entonces` hacen lo mismo que los ciclos y condiciones de cualquier lenguaje.
+- **Variables**: guardan datos, como un puntaje o el número de vidas. Se muestran en el escenario con un pequeño letrero.
+- **Mensajes**: un objeto puede avisar a otros con `enviar` y `al recibir`, para coordinar lo que pasa.
+- **No necesitas instalar nada**: funciona en el navegador, y también hay una versión que se instala para trabajar sin conexión.
+- **Es un primer paso real**: los conceptos que aprendes aquí (secuencias, bucles, condiciones, variables) son los mismos que usarás después en Python o JavaScript.
+
+### Las categorías de bloques
+
+Los bloques están agrupados por color en la paleta de la izquierda:
+
+| Categoría | Color | Para qué sirve | Ejemplos |
+|---|---|---|---|
+| Movimiento | Azul | Mover y girar el objeto | `mover (10) pasos`, `girar ↻ (15) grados`, `ir a x: (0) y: (0)` |
+| Apariencia | Morado | Cambiar cómo se ve | `decir (¡Hola!) durante (2) segundos`, `siguiente disfraz`, `fijar tamaño a (100) %` |
+| Sonido | Magenta | Reproducir sonidos | `iniciar sonido (...)`, `tocar sonido (...) hasta que termine` |
+| Eventos | Amarillo | Iniciar scripts | `al presionar (bandera verde)`, `al presionar tecla (espacio)`, `enviar (mensaje)` |
+| Control | Naranja | Esperar, repetir y decidir | `esperar (1) segundos`, `repetir (10)`, `por siempre`, `si <> entonces` |
+| Sensores | Azul claro | Detectar el entorno | `¿tocando (el borde)?`, `¿tecla (espacio) presionada?`, `preguntar (...) y esperar` |
+| Operadores | Verde | Calcular y comparar | `elegir número al azar entre (1) y (10)`, `(a) = (b)`, `unir (hola) (mundo)` |
+| Variables | Naranja rojizo | Guardar datos | `fijar (variable) a (0)`, `cambiar (variable) en (1)` |
+
+Y la forma de cada bloque te dice dónde encaja. Los bloques con una muesca arriba y un saliente abajo se apilan unos sobre otros. Los de sombrero son redondeados arriba y van siempre al inicio. Los hexagonales son condiciones (verdadero o falso) y solo entran en los huecos con esa forma. Los redondos devuelven un número o texto y entran en los huecos redondos. Los bloques en forma de C, como `repetir` o `si`, envuelven a otros bloques.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. Abre [scratch.mit.edu](https://scratch.mit.edu/) en tu navegador y pulsa **Crear**. Se abre el editor sin necesidad de registrarte. En el menú con el icono de globo, elige el idioma Español.
+2. Reconoce las zonas del editor: a la izquierda la paleta de bloques con sus categorías, al centro el área de código donde armas los scripts, y a la derecha el escenario con la lista de objetos debajo. Arriba del área de código hay tres pestañas: **Código**, **Disfraces** y **Sonidos**.
+3. Arrastra desde **Eventos** el bloque `al presionar (bandera verde)` al área de código. Debajo, desde **Movimiento**, acopla `mover (10) pasos`.
+4. Pulsa la bandera verde sobre el escenario. El gato avanza un poco: tu primer programa ya corre. También puedes hacer clic directo en cualquier pila de bloques para ejecutarla una sola vez.
+5. Para guardar sin cuenta, usa el menú **Archivo > Guardar en tu computadora**. Se descarga un archivo con extensión `.sb3`. Para abrirlo después, usa **Archivo > Cargar desde tu computadora**. Los nombres de los menús pueden variar un poco según la versión.
+6. Si prefieres trabajar sin conexión, la página oficial de Scratch ofrece una aplicación que se instala. Úsala siguiendo las instrucciones de [scratch.mit.edu/download](https://scratch.mit.edu/download).
+
+</Pasos>
+
+Si quieres guardar tus proyectos en línea, necesitas una cuenta de Scratch; si eres menor de edad, créala con ayuda de un adulto. Esta guía no lo requiere: todos los proyectos se pueden hacer y guardar en tu computadora.
+
+## Ejemplos paso a paso
+
+En cada proyecto se describe qué objetos usar y los bloques en el orden en que van. La sangría indica qué bloques quedan dentro de otro (por ejemplo, dentro de un `por siempre`). Los textos entre paréntesis son valores que escribes o huecos donde encajas otro bloque.
+
+<Ejemplo numero={1} titulo="Un gato que se mueve" archivo="gato-que-se-mueve.sb3" ejecutar="Pulsa la bandera verde y usa las flechas del teclado" salida="El gato aparece en el centro, saluda durante dos segundos y después se mueve hacia donde presiones las flechas. Cada paso cambia de disfraz, así que parece que camina">
+
+Usa el objeto del gato que viene por defecto. Vas a crear dos scripts y una variante.
+
+**Script 1: preparar la escena**
+
+- `al presionar (bandera verde)`
+  - `ir a x: (0) y: (0)`
+  - `apuntar en dirección (90)`
+  - `fijar estilo de rotación a (izquierda-derecha)`
+  - `decir (¡Hola!) durante (2) segundos`
+
+**Script 2: moverse a la derecha** (repite el patrón para las otras tres flechas)
+
+- `al presionar tecla (flecha derecha)`
+  - `cambiar x en (10)`
+  - `siguiente disfraz`
+
+**Las cuatro flechas**
+
+| Tecla | Bloque de movimiento |
+|---|---|
+| flecha derecha | `cambiar x en (10)` |
+| flecha izquierda | `cambiar x en (-10)` |
+| flecha arriba | `cambiar y en (10)` |
+| flecha abajo | `cambiar y en (-10)` |
+
+En el escenario de Scratch, `x` crece hacia la derecha y `y` crece hacia arriba. Por eso bajar es restar en `y`. El bloque `siguiente disfraz` alterna entre los dos dibujos del gato y da la ilusión de caminar. El estilo de rotación "izquierda-derecha" evita que el gato quede de cabeza cuando cambia de dirección.
+
+**Variante: que camine solo**
+
+- `al presionar (bandera verde)`
+  - `por siempre`
+    - `mover (3) pasos`
+    - `si toca un borde, rebotar`
+
+`por siempre` repite sin parar lo que tenga adentro; para detenerlo pulsa el botón rojo junto a la bandera.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Contador de clics" archivo="contador-de-clics.sb3" ejecutar="Pulsa la bandera verde y haz clic sobre el objeto" salida="En el escenario aparece un letrero con la variable clics en cero. Cada clic sobre el objeto suma uno. Al llegar a 10, el objeto dice ¡Llegaste a 10! Si presionas la tecla r, el contador vuelve a cero">
+
+Antes de armar los scripts, ve a **Variables**, pulsa **Crear una variable**, ponle el nombre `clics` y elige la opción para todos los objetos. Verifica que su casilla esté marcada para que se vea en el escenario.
+
+**Script 1: empezar de cero**
+
+- `al presionar (bandera verde)`
+  - `fijar (clics) a (0)`
+
+**Script 2: contar cada clic**
+
+- `al hacer clic en este objeto`
+  - `cambiar (clics) en (1)`
+  - `iniciar sonido (el que quieras)`
+  - `si <(clics) = (10)> entonces`
+    - `decir (¡Llegaste a 10!) durante (2) segundos`
+
+**Script 3: reiniciar**
+
+- `al presionar tecla (r)`
+  - `fijar (clics) a (0)`
+
+Una variable es una cajita con nombre. `fijar` le da un valor y `cambiar` le suma o resta. El bloque `si` hace la pregunta una sola vez, justo después de cada clic. Por eso la comparación va dentro del script del clic y no en un script aparte. El operador `=` viene de la categoría **Operadores**, y la variable `clics` de la categoría **Variables**: arrástrala al hueco izquierdo.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Un quiz de preguntas" archivo="quiz.sb3" ejecutar="Pulsa la bandera verde y contesta en el cuadro de texto" salida="El objeto hace tres preguntas, una tras otra. Si contestas bien, dice ¡Correcto! y suma un punto; si no, dice la respuesta correcta. Al final dice cuántos puntos hiciste">
+
+Crea una variable `puntos` (para todos los objetos). Todo el quiz va en un solo script.
+
+**Script único**
+
+- `al presionar (bandera verde)`
+  - `fijar (puntos) a (0)`
+  - `preguntar (¿Cuánto es 7 + 5?) y esperar`
+  - `si <(respuesta) = (12)> entonces`
+    - `decir (¡Correcto!) durante (2) segundos`
+    - `cambiar (puntos) en (1)`
+  - `si no`
+    - `decir (Casi. La respuesta es 12) durante (2) segundos`
+  - `preguntar (¿De qué color es el cielo en un día despejado?) y esperar`
+  - `si <(respuesta) = (azul)> entonces`
+    - `decir (¡Correcto!) durante (2) segundos`
+    - `cambiar (puntos) en (1)`
+  - `si no`
+    - `decir (Casi. La respuesta es azul) durante (2) segundos`
+  - `preguntar (¿Cuántos días tiene una semana?) y esperar`
+  - `si <(respuesta) = (7)> entonces`
+    - `decir (¡Correcto!) durante (2) segundos`
+    - `cambiar (puntos) en (1)`
+  - `si no`
+    - `decir (Casi. La respuesta es 7) durante (2) segundos`
+  - `decir (unir (Tus puntos: ) (puntos)) durante (3) segundos`
+
+`preguntar ... y esperar` detiene el script, muestra un cuadro de texto y guarda lo que escribas en el bloque `respuesta` (categoría **Sensores**). `si ... entonces ... si no` ofrece dos caminos: uno si la condición es verdadera y otro si es falsa. Scratch no distingue mayúsculas de minúsculas al comparar texto, así que "Azul" también cuenta. El bloque `unir` pega dos textos y sirve para mostrar el puntaje dentro de una frase.
+
+**Para mejorarlo:** cada pregunta repite el mismo patrón. Con la categoría **Mis Bloques** puedes crear un bloque propio que reciba la pregunta y la respuesta correcta, y así no copias tres veces los mismos bloques.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Juego de atrapar manzanas" archivo="atrapa-manzanas.sb3" ejecutar="Pulsa la bandera verde y mueve el ratón de izquierda a derecha" salida="Una manzana cae desde un punto aleatorio de la parte alta. Mueves la cesta con el ratón para atraparla. Cada manzana atrapada suma un punto y cada una que se escapa quita una vida. Con cero vidas, aparece ¡Fin del juego! y todo se detiene">
+
+Necesitas dos objetos: una **Cesta** y una **Manzana**. Elígelos de la biblioteca de objetos (el botón redondo de abajo a la derecha). Crea dos variables para todos los objetos: `puntos` y `vidas`. Tamaño de referencia: el escenario va de -240 a 240 en `x` y de -180 a 180 en `y`.
+
+**Objeto Cesta**
+
+- `al presionar (bandera verde)`
+  - `ir a x: (0) y: (-140)`
+  - `por siempre`
+    - `fijar x a (posición x del ratón)`
+
+La cesta copia la posición horizontal del ratón. Como solo cambia `x`, nunca sube ni baja.
+
+**Objeto Manzana**
+
+- `al presionar (bandera verde)`
+  - `fijar (puntos) a (0)`
+  - `fijar (vidas) a (3)`
+  - `por siempre`
+    - `ir a x: (elegir número al azar entre (-200) y (200)) y: (170)`
+    - `repetir hasta que <<¿tocando (Cesta)?> o <(posición en y) < (-160)>>`
+      - `cambiar y en (-5)`
+    - `si <¿tocando (Cesta)?> entonces`
+      - `cambiar (puntos) en (1)`
+    - `si no`
+      - `cambiar (vidas) en (-1)`
+    - `si <(vidas) = (0)> entonces`
+      - `decir (¡Fin del juego!) durante (2) segundos`
+      - `detener (todos)`
+
+Cada vuelta de `por siempre` es una manzana nueva: nace arriba en un punto al azar, cae de 5 en 5 y la vuelta termina cuando toca la cesta o llega abajo. Entonces el script decide si fue punto o vida perdida, y revisa si el juego terminó. Todo el control del juego sale de dos ideas: una variable que cuenta y un `si` que revisa. Los bloques `¿tocando (Cesta)?` y `posición en y` salen de **Sensores** y **Movimiento**; el `o` y el `<` de **Operadores**.
+
+**Retos para mejorarlo:** que la manzana caiga más rápido cada vez que sumas un punto, que aparezca una manzana mala que quite vidas, o que la cesta diga algo cuando atrapa una.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Dibujo con el lápiz" archivo="dibujo-con-lapiz.sb3" ejecutar="Pulsa la bandera verde" salida="El objeto dibuja un cuadrado, y después la figura se repite girando un poco cada vez hasta formar una flor de cuadrados, con el color cambiando poco a poco">
+
+El lápiz es una extensión. Pulsa el botón azul de abajo a la izquierda (**Añadir extensión**) y elige **Lápiz**. Aparece una categoría nueva con bloques como `bajar lápiz`, `subir lápiz`, `borrar todo` y `sellar`.
+
+**Primero, un cuadrado**
+
+- `al presionar (bandera verde)`
+  - `borrar todo`
+  - `ir a x: (0) y: (0)`
+  - `apuntar en dirección (90)`
+  - `fijar tamaño de lápiz a (3)`
+  - `bajar lápiz`
+  - `repetir (4)`
+    - `mover (100) pasos`
+    - `girar ↻ (90) grados`
+  - `subir lápiz`
+
+Un cuadrado son cuatro lados iguales y cuatro giros de 90 grados. Con `repetir (4)` escribes la instrucción una sola vez en lugar de cuatro.
+
+**Después, una flor de cuadrados**
+
+- `al presionar (bandera verde)`
+  - `borrar todo`
+  - `ir a x: (0) y: (0)`
+  - `apuntar en dirección (90)`
+  - `fijar tamaño de lápiz a (2)`
+  - `bajar lápiz`
+  - `repetir (36)`
+    - `repetir (4)`
+      - `mover (100) pasos`
+      - `girar ↻ (90) grados`
+    - `girar ↻ (10) grados`
+    - `cambiar (color) de lápiz en (5)`
+  - `subir lápiz`
+
+Un `repetir` dentro de otro dibuja cada cuadrado, y el de afuera gira 10 grados entre uno y otro: 36 vueltas de 10 grados dan una vuelta completa de 360. El bloque `cambiar (color) de lápiz en (5)` hace que el color varíe en cada cuadrado. Para que el dibujo no tape al gato, puedes usar `esconder` al inicio del script.
+
+**Variante: dibujar con el ratón**
+
+- `al presionar (bandera verde)`
+  - `borrar todo`
+  - `por siempre`
+    - `ir a (puntero del ratón)`
+    - `si <¿ratón presionado?> entonces`
+      - `bajar lápiz`
+    - `si no`
+      - `subir lápiz`
+
+Aquí el lápiz solo deja trazo mientras mantienes el botón del ratón presionado.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Armaste los bloques pero no pasa nada">
+
+Casi siempre falta el bloque de sombrero. Un script que no empieza con un bloque de **Eventos**, como `al presionar (bandera verde)`, solo se ejecuta si haces clic sobre él. Revisa que todos los bloques estén pegados a uno de sombrero y no flotando sueltos en el área de código.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Un si que solo se revisa una vez">
+
+Si pones un `si <¿tocando (borde)?> entonces` suelto, Scratch lo evalúa en un solo instante y sigue. Para vigilar algo de forma continua, el `si` tiene que ir dentro de un `por siempre` o de un `repetir`. Es el error de lógica más frecuente al hacer juegos.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Variable para este objeto o para todos">
+
+Al crear una variable, Scratch te pregunta si es para todos los objetos o solo para uno. Si la haces solo para un objeto, los demás no pueden leerla ni cambiarla. Cuando varios objetos comparten un puntaje o las vidas, crea la variable para todos los objetos.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar reiniciar los valores">
+
+Si el puntaje no vuelve a cero al iniciar, la segunda partida empieza con lo que dejó la primera. Al principio del script con la bandera verde, usa `fijar (puntos) a (0)` para todas tus variables, y manda a cada objeto a su posición inicial.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Cerrar la pestaña sin guardar">
+
+Si trabajas sin cuenta, Scratch no guarda tu proyecto en ningún lado. Si cierras la pestaña perderás el trabajo. Usa **Archivo > Guardar en tu computadora** cada cierto tiempo y ponle un nombre claro al archivo `.sb3`.
+
+</Callout>
+
+## Buenas prácticas
+
+- Ponle nombre claro a tus objetos y variables: `puntos` y `vidas` se entienden, `variable1` no.
+- Mantén los scripts cortos. Si uno crece demasiado, divídelo en varios o crea un bloque propio en **Mis Bloques**.
+- Prueba cada bloque nuevo apenas lo pongas, en lugar de armar todo y probar al final.
+- Usa comentarios: clic derecho sobre un bloque y elige la opción de agregar un comentario.
+- Antes de programar un juego, escribe en papel qué objetos hay, qué hace cada uno y qué reglas tiene.
+- Reinicia siempre posición y variables al presionar la bandera verde.
+- Usa mensajes (`enviar` y `al recibir`) para que los objetos se coordinen, en lugar de copiar los mismos bloques en varios lados.
+- Revisa proyectos de otras personas y usa la opción de remezclar para aprender cómo hicieron algo.
+
+## Siguiente paso
+
+Ya conoces los conceptos base: secuencias, bucles, condiciones, variables y eventos. Haz variaciones de los cinco proyectos: agrega niveles, sonidos, un fondo que cambie o un segundo jugador. Los tutoriales oficiales de Scratch y la Guía Curricular de Computación Creativa tienen decenas de ideas más.
+
+Cuando los bloques se te queden cortos, el salto natural es un lenguaje de texto. [Python desde cero](/guias/python/) es una buena primera opción porque se lee casi como una frase, y [JavaScript desde cero](/guias/javascript/) te permite hacer juegos y páginas dentro del navegador. Guarda tus proyectos con [Git y GitHub desde cero](/guias/git/) cuando pases a código. Todos los recursos están en [la biblioteca de Scratch](/biblioteca/scratch/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

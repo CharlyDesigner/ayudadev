@@ -1,0 +1,273 @@
+---
+titulo: 'Cómo pensar como programador'
+descripcion: 'Descomponer problemas, escribir el plan antes del código, depurar con método, probar casos límite y pedir ayuda bien. Hábitos con ejemplos en Python que corren tal cual.'
+tema: generales
+nivel: principiante
+tiempoLectura: 25
+publicado: 2026-10-09
+libros: ['generales-missing-semester-es', 'generales-cs50x-harvard', 'generales-como-ser-un-programador', 'generales-camino-a-un-mejor-programador']
+requisitos: ['Haber escrito alguna vez un programa corto, en cualquier lenguaje']
+etiquetas: ['pensamiento-computacional', 'depuracion', 'pruebas', 'buenas-practicas']
+orden: 1
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Programar no es memorizar sintaxis. Es resolver problemas con una forma de pensar que se aprende y se practica. Esta guía reúne los hábitos que más ayudan al empezar: dividir, planear, probar, depurar y pedir ayuda. Los ejemplos usan Python, pero las ideas sirven en cualquier lenguaje.
+
+## Qué es y para qué sirve
+
+- **Descomponer.** Un problema grande se parte en problemas pequeños que ya sabes resolver. Casi todo programa es una composición de funciones sencillas.
+- **Abstraer.** Ignoras los detalles que no importan y nombras lo que sí. Una función con buen nombre te deja pensar en "qué hace" y olvidar "cómo lo hace".
+- **Pensar en patrones.** Muchos problemas nuevos son versiones de problemas conocidos: buscar, contar, ordenar, filtrar, transformar. Reconocer el patrón ahorra tiempo.
+- **Planear antes de teclear.** Un plan en palabras (pseudocódigo) revela errores de lógica cuando todavía son baratos de corregir.
+- **Pensar en los casos límite.** Vacío, uno, muchos, repetidos, negativos, texto con acentos. Los fallos suelen vivir en las orillas.
+- **Depurar como un experimento.** Un error es un dato, no un castigo. Formulas una hipótesis, la pruebas y descartas hasta encontrar la causa.
+- **Aprender de forma incremental.** Programar se aprende escribiendo muchos programas pequeños, no leyendo un libro de una sola vez.
+
+## Prepara tu entorno
+
+No hace falta mucho: un editor, un intérprete y el hábito de guardar tu trabajo.
+
+<Pasos>
+
+1. **Instala Python 3.** En **Windows** descarga el instalador desde [python.org/downloads](https://www.python.org/downloads/) y marca **"Add python.exe to PATH"**. En **macOS** usa el instalador de python.org o `brew install python`. En **Linux** suele venir instalado; si no, `sudo apt install python3`.
+2. **Instala un editor.** [VS Code](https://code.visualstudio.com/) con la extensión oficial de Python es una opción cómoda y gratuita.
+3. **Crea una carpeta** `pensar` y guarda ahí cada ejemplo con el nombre indicado.
+4. **Ejecuta cada archivo** con `python nombre.py` (en macOS y Linux, `python3 nombre.py`). Con [uv](https://docs.astral.sh/uv/) también funciona `uv run nombre.py`.
+5. **Ten a mano papel o un archivo de notas.** Escribir el plan y lo que ya probaste forma parte del trabajo.
+
+</Pasos>
+
+## Ejemplos paso a paso
+
+En los comandos usamos `python`; si tu sistema solo reconoce `python3`, cámbialo.
+
+<Ejemplo numero={1} titulo="Del plan en palabras al código" archivo="palabras.py" ejecutar="python palabras.py" salida={"ser 5\ncuestión 1\nes 1"}>
+
+```python
+# Paso 1: escribe el plan en palabras (pseudocódigo) como comentarios
+#   1. Pasar el texto a minúsculas y separarlo en palabras
+#   2. Contar cuántas veces aparece cada palabra
+#   3. Mostrar las más frecuentes
+
+texto = "Ser o no ser, esa es la cuestión. Ser, ser y ser."
+
+# Paso 2: traduce cada línea del plan a código
+palabras = texto.lower().replace(",", "").replace(".", "").split()
+
+conteo = {}
+for palabra in palabras:
+    conteo[palabra] = conteo.get(palabra, 0) + 1
+
+# Orden: primero las más frecuentes; en empate, orden alfabético
+ranking = sorted(conteo.items(), key=lambda par: (-par[1], par[0]))
+for palabra, veces in ranking[:3]:
+    print(palabra, veces)
+```
+
+Los comentarios del principio son el plan. Cada paso se convierte en pocas líneas, y si te atoras, sabes exactamente en qué paso. Fíjate en que definimos el desempate: sin él, el orden de las palabras con la misma frecuencia sería arbitrario. Decidir esas reglas por escrito evita sorpresas.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Descomponer en funciones pequeñas" archivo="funciones.py" ejecutar="python funciones.py" salida={"['debe tener al menos 8 caracteres', 'debe incluir un número', 'debe incluir una mayúscula']\n[]"}>
+
+```python
+# Descomponer: en lugar de una función enorme, varias pequeñas con un solo trabajo
+def tiene_largo_minimo(clave, minimo=8):
+    return len(clave) >= minimo
+
+
+def tiene_numero(clave):
+    return any(c.isdigit() for c in clave)
+
+
+def tiene_mayuscula(clave):
+    return any(c.isupper() for c in clave)
+
+
+def problemas(clave):
+    """Devuelve la lista de reglas que la clave no cumple."""
+    reglas = [
+        (tiene_largo_minimo, "debe tener al menos 8 caracteres"),
+        (tiene_numero, "debe incluir un número"),
+        (tiene_mayuscula, "debe incluir una mayúscula"),
+    ]
+    return [mensaje for regla, mensaje in reglas if not regla(clave)]
+
+
+print(problemas("hola"))
+print(problemas("MiClave2026"))
+```
+
+Cada función responde una pregunta y se puede probar sola. Añadir una regla nueva es añadir una función y una fila en la lista, sin tocar el resto. Una lista vacía significa que la clave cumple todo. Los números de las reglas son un ejemplo: en un sistema real sigue las recomendaciones actuales de seguridad.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Depurar con método" archivo="depurar.py" ejecutar="python depurar.py" salida={"Falla con lista vacía: division by zero\nNone\n9.0"}>
+
+```python
+# Depurar con método: 1) reproducir  2) aislar  3) entender  4) corregir  5) probar
+
+def promedio(numeros):
+    return sum(numeros) / len(numeros)
+
+
+# 1) Reproducir: encuentra la entrada mínima que falla
+try:
+    promedio([])
+except ZeroDivisionError as error:
+    print("Falla con lista vacía:", error)
+
+# 2) Aislar y entender: len([]) es 0, así que la división no tiene sentido.
+# 3) Decidir qué debería pasar y dejarlo escrito
+def promedio_seguro(numeros):
+    if not numeros:
+        return None          # decisión explícita: sin datos, sin promedio
+    return sum(numeros) / len(numeros)
+
+
+# 4) Probar el caso que fallaba y los normales
+print(promedio_seguro([]))
+print(promedio_seguro([8, 9, 10]))
+```
+
+Lo más valioso es el orden. Primero reproduces el fallo con la entrada más pequeña posible. Después lees el mensaje de error con calma: dice qué tipo de error ocurrió y en qué línea. Luego decides qué debería pasar, porque a veces no hay una respuesta obvia. Aquí elegimos devolver `None`. Por último, pruebas el caso que fallaba y también los normales, por si la corrección rompió algo.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Probar casos normales y casos límite" archivo="casos_limite.py" ejecutar="python casos_limite.py" salida={"ok    'anita lava la tina'\nok    'Anita, lava la tina.'\nok    'hola'\nok    ''\nok    'a'\nok    'Ana 12 21 ana'"}>
+
+```python
+def es_palindromo(texto):
+    # Ignora mayúsculas, espacios y signos
+    limpio = [c.lower() for c in texto if c.isalnum()]
+    return limpio == limpio[::-1]
+
+
+# Casos normales, casos límite y casos tramposos
+pruebas = [
+    ("anita lava la tina", True),
+    ("Anita, lava la tina.", True),
+    ("hola", False),
+    ("", True),             # vacío: ¿es palíndromo? decidimos que sí
+    ("a", True),            # un solo carácter
+    ("Ana 12 21 ana", True),
+]
+
+for texto, esperado in pruebas:
+    resultado = es_palindromo(texto)
+    estado = "ok" if resultado == esperado else "FALLA"
+    print(f"{estado:<5} {texto!r}")
+```
+
+Una tabla de casos es una prueba sencilla y reutilizable. Mezcla entradas típicas con las de las orillas: texto vacío, un carácter, mayúsculas, signos y números. Algunos casos obligan a tomar una decisión, como si el texto vacío es o no un palíndromo; lo importante es decidir y dejarlo escrito. Cuando domines esta idea, el siguiente paso es usar un marco de pruebas como `pytest`, que hace lo mismo con más comodidad.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Nombres que explican la intención" archivo="nombres.py" ejecutar="python nombres.py" salida={"['Ana', 'Eva']\n['Ana', 'Eva']\nMismo resultado"}>
+
+```python
+# Antes: funciona, pero hay que adivinar qué hace
+def f(l, x):
+    r = []
+    for i in l:
+        if i[1] > x:
+            r.append(i[0])
+    return r
+
+
+# Después: mismo comportamiento, con nombres que explican la intención
+def alumnos_aprobados(calificaciones, minimo):
+    aprobados = []
+    for nombre, nota in calificaciones:
+        if nota > minimo:
+            aprobados.append(nombre)
+    return aprobados
+
+
+datos = [("Ana", 9), ("Luis", 5), ("Eva", 7)]
+print(f(datos, 6))
+print(alumnos_aprobados(datos, 6))
+assert f(datos, 6) == alumnos_aprobados(datos, 6)
+print("Mismo resultado")
+```
+
+Refactorizar es mejorar el código sin cambiar lo que hace. Ambas funciones devuelven lo mismo; la segunda se lee sola. El `assert` comprueba que el cambio no alteró el comportamiento: cambia código con una red de seguridad. Pregúntate siempre si alguien más, o tú dentro de seis meses, entendería ese nombre sin una explicación.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Cómo pedir ayuda para que te la den" archivo="pregunta.txt">
+
+```text
+Título: ZeroDivisionError al calcular el promedio con una lista vacía
+
+Qué quiero lograr
+Calcular el promedio de las calificaciones de un grupo.
+
+Qué esperaba y qué pasó
+Esperaba un número. Con un grupo sin calificaciones el programa termina con:
+ZeroDivisionError: division by zero
+
+Código mínimo que reproduce el problema
+def promedio(numeros):
+    return sum(numeros) / len(numeros)
+
+promedio([])
+
+Lo que ya probé
+- Con [8, 9, 10] funciona y devuelve 9.0.
+- Revisé que la lista llegue vacía desde la función que lee el archivo.
+
+Entorno
+Python 3.12, Windows 11.
+```
+
+Una buena pregunta se puede contestar sin adivinar. Incluye el objetivo, el error completo, el código mínimo que lo reproduce, lo que ya intentaste y tu entorno. Preparar la pregunta suele resolver el problema antes de enviarla: es el método del patito de goma, explicar tu código en voz alta a un objeto. Esta plantilla también sirve para escribirle a una persona o a una herramienta de IA.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Escribir código antes de entender el problema">
+Si no sabes explicar el problema con tus palabras y con un ejemplo de entrada y salida, todavía no estás listo para programarlo. Escribe tres ejemplos a mano, incluido uno difícil, y resuélvelos en papel antes de teclear.
+</Callout>
+
+<Callout tipo="warning" titulo="Cambiar cosas al azar hasta que funcione">
+Modificar líneas sin entender por qué falla puede esconder el problema o crear otro. Cambia una sola cosa a la vez, observa el resultado y vuelve atrás si no ayudó. Si no sabes por qué funciona, aún no lo resolviste.
+</Callout>
+
+<Callout tipo="warning" titulo="No leer el mensaje de error">
+El mensaje casi siempre dice el tipo de error, el archivo y la línea. Lee de abajo hacia arriba: la última línea es la causa y las anteriores son el camino que llevó hasta ahí. Copiar el mensaje exacto al buscar o preguntar ahorra mucho tiempo.
+</Callout>
+
+<Callout tipo="warning" titulo="Probar solo el caso feliz">
+Que funcione con la entrada de ejemplo no significa que sea correcto. Prueba vacío, un elemento, valores repetidos, números negativos, textos con acentos y entradas inválidas. La mayoría de los errores de producción viven ahí.
+</Callout>
+
+<Callout tipo="warning" titulo="Copiar y pegar código sin entenderlo">
+Pegar una solución de un foro o de una IA puede funcionar hoy y fallar mañana sin que sepas por qué. Léelo línea por línea, ejecútalo con tus propios datos y reescríbelo con tus palabras. Si no puedes explicarlo, no es tuyo todavía.
+</Callout>
+
+## Buenas prácticas
+
+- Practica a diario aunque sean veinte minutos. La constancia pesa más que las maratones.
+- Resuelve el problema a mano con un ejemplo pequeño antes de escribir código.
+- Escribe funciones cortas con nombres claros y un solo trabajo.
+- Haz cambios pequeños y ejecuta el programa seguido, en lugar de escribir cien líneas y probarlas al final.
+- Guarda tu trabajo con control de versiones. [Git](/guias/git/) te permite experimentar sin miedo a romper algo.
+- Lee código de otras personas y pide que lean el tuyo; es la forma más rápida de mejorar.
+- Cuando te atores más de media hora, explica el problema por escrito. Sirve para ti y para quien te ayude.
+- Aprende las herramientas de tu entorno (terminal, editor, depurador). Te devuelven el tiempo que inviertes en ellas.
+
+## Siguiente paso
+
+- **Elige un lenguaje y practica.** [Python](/guias/python/) y [JavaScript](/guias/javascript/) son buenos puntos de partida. Después de cada concepto nuevo, escribe un programa pequeño que lo use.
+- **Aprende las herramientas.** [El semestre faltante](https://missing-semester-esp.github.io/) enseña terminal, editores, Git y depuración, justo lo que casi nadie explica en clase.
+- **Sigue con los fundamentos.** Las guías de [Algoritmos y estructuras de datos](/guias/algoritmos/) y [Metodologías ágiles](/guias/metodologias-desarrollo/) te ayudan a resolver problemas más grandes y a trabajar en equipo.
+- **Explora más libros gratuitos** en la [biblioteca de temas generales](/biblioteca/generales/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

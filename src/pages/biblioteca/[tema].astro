@@ -1,8 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '@layouts/BaseLayout.astro';
-import SectionHeader from '@components/ui/SectionHeader.astro';
 import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import TemaBadge from '@components/ui/TemaBadge.astro';
 import FiltrosBar from '@components/biblioteca/FiltrosBar.astro';
 import RecursoCard from '@components/biblioteca/RecursoCard.astro';
 import TemaCard from '@components/biblioteca/TemaCard.astro';
@@ -16,14 +16,31 @@ import { SITE } from '@data/site';
 import { plural } from '@lib/text';
 
 export async function getStaticPaths() {
-  const guias = await getCollection('guias', (g) => !g.data.borrador);
+  const [guias, hojas, retos, proyectos, fundamentos, glosario, rutas] = await Promise.all([
+    getCollection('guias', (e) => !e.data.borrador),
+    getCollection('hojas', (e) => !e.data.borrador),
+    getCollection('retos', (e) => !e.data.borrador),
+    getCollection('proyectos', (e) => !e.data.borrador),
+    getCollection('fundamentos', (e) => !e.data.borrador),
+    getCollection('glosario'),
+    getCollection('rutas', (e) => !e.data.borrador),
+  ]);
   return TEMAS.map((tema) => ({
     params: { tema: tema.slug },
-    props: { tema, guia: guias.find((g) => g.data.tema === tema.slug) ?? null },
+    props: {
+      tema,
+      guia: guias.find((g) => g.data.tema === tema.slug) ?? null,
+      hojas: hojas.filter((h) => h.data.tema === tema.slug).map((h) => ({ id: h.id, titulo: h.data.titulo })),
+      retos: retos.filter((r) => r.data.tema === tema.slug).map((r) => ({ id: r.id, titulo: r.data.titulo })),
+      proyectos: proyectos.filter((p) => p.data.temas.includes(tema.slug)).map((p) => ({ id: p.id, titulo: p.data.titulo })),
+      fundamentos: fundamentos.filter((f) => f.data.temas.includes(tema.slug)).map((f) => ({ id: f.id, titulo: f.data.titulo })),
+      terminos: glosario.filter((t) => t.data.tema === tema.slug).map((t) => ({ id: t.data.id, termino: t.data.termino })),
+      rutas: rutas.filter((r) => r.data.pasos.some((p) => p.tema === tema.slug)).map((r) => ({ id: r.id, titulo: r.data.titulo })),
+    },
   }));
 }
 
-const { tema, guia } = Astro.props;
+const { tema, guia, hojas, retos, proyectos, fundamentos, terminos, rutas } = Astro.props;
 const area = areaPorId(tema.area);
 const lista = recursosPorTema(tema.slug);
 const conteo = conteoPorTema();
@@ -36,6 +53,15 @@ const migas = [
   { nombre: 'Biblioteca', href: '/biblioteca/' },
   { nombre: tema.nombre, href: path },
 ];
+
+const bloques = [
+  guia && { titulo: 'Guía con ejemplos', icono: 'code', enlaces: [{ texto: `${tema.nombre} desde cero`, href: `/guias/${guia.id}/` }] },
+  rutas.length > 0 && { titulo: 'Rutas que lo incluyen', icono: 'route', enlaces: rutas.map((r) => ({ texto: r.titulo, href: `/rutas/${r.id}/` })) },
+  hojas.length > 0 && { titulo: 'Hojas de referencia', icono: 'file-text', enlaces: hojas.map((h) => ({ texto: h.titulo, href: `/hojas/${h.id}/` })) },
+  retos.length > 0 && { titulo: `Retos (${retos.length})`, icono: 'puzzle', enlaces: [...retos.slice(0, 4).map((r) => ({ texto: r.titulo, href: `/retos/${r.id}/` })), ...(retos.length > 4 ? [{ texto: `Ver los ${retos.length} retos`, href: '/retos/' }] : [])] },
+  proyectos.length > 0 && { titulo: 'Proyectos', icono: 'rocket', enlaces: proyectos.slice(0, 4).map((p) => ({ texto: p.titulo, href: `/proyectos/${p.id}/` })) },
+  fundamentos.length > 0 && { titulo: 'Conceptos relacionados', icono: 'school', enlaces: fundamentos.slice(0, 4).map((f) => ({ texto: f.titulo, href: `/fundamentos/${f.id}/` })) },
+].filter(Boolean) as { titulo: string; icono: string; enlaces: { texto: string; href: string }[] }[];
 ---
 
 <BaseLayout
@@ -46,12 +72,20 @@ const migas = [
 >
   <div class="container-site py-10 sm:py-14">
     <Breadcrumbs migas={migas} class="mb-6" />
-    <SectionHeader nivel="h1" eyebrow={area.nombre} titulo={tema.nombre} descripcion={tema.descripcion} />
+
+    <header class="flex flex-col gap-6 sm:flex-row sm:items-center">
+      <TemaBadge tema={tema} class="h-20 w-20 sm:h-24 sm:w-24" />
+      <div class="max-w-2xl">
+        <p class="eyebrow">{area.nombre}</p>
+        <h1 class="mt-2 text-3xl font-bold tracking-tight text-balance sm:text-5xl">{tema.nombre}</h1>
+        <p class="mt-3 text-pretty text-muted">{tema.descripcion}</p>
+      </div>
+    </header>
 
     <div class="mt-6 flex flex-wrap gap-2">
       {guia && (
         <a href={`/guias/${guia.id}/`} class="btn btn-primary">
-          <Icon name="code" class="h-4 w-4" /> Guía con ejemplos de {tema.nombre}
+          <Icon name="code" class="h-4 w-4" /> Guía con ejemplos
         </a>
       )}
       <a href={issueUrl('nuevo-recurso', { title: `[Recurso] ${tema.nombre}: `, tema: tema.nombre })} rel="noopener" target="_blank" class="btn btn-secondary">
@@ -59,13 +93,32 @@ const migas = [
       </a>
       {tema.librosgratis && (
         <a href={`${SITE.inspiracion.url}/libros/${tema.librosgratis}/`} rel="noopener" target="_blank" class="btn btn-ghost">
-          Más libros en librosgratis.dev <Icon name="arrow-up-right" class="h-4 w-4" />
+          Más en librosgratis.dev <Icon name="arrow-up-right" class="h-4 w-4" />
         </a>
       )}
     </div>
 
-    <section class="mt-10" aria-labelledby="lista-titulo">
-      <h2 id="lista-titulo" class="mb-4 text-xl font-semibold">{plural(lista.length, 'recurso', 'recursos')}</h2>
+    {bloques.length > 0 && (
+      <section class="mt-10" aria-labelledby="aprende-titulo">
+        <h2 id="aprende-titulo" class="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">Aprende {tema.nombre} en AyudaDev</h2>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {bloques.map((b) => (
+            <div class="card p-5">
+              <p class="flex items-center gap-2 text-sm font-semibold"><Icon name={b.icono as any} class="h-4 w-4 text-accent-ink" /> {b.titulo}</p>
+              <ul class="mt-3 space-y-1.5 text-sm">
+                {b.enlaces.map((e) => <li><a href={e.href} class="text-muted hover:text-accent-ink">{e.texto}</a></li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+        {terminos.length > 0 && (
+          <p class="mt-4 flex flex-wrap items-center gap-2 text-sm text-muted">En el glosario: {terminos.slice(0, 8).map((t) => <a href={`/glosario/#${t.id}`} class="chip !px-2.5 !py-1 !text-xs">{t.termino}</a>)}</p>
+        )}
+      </section>
+    )}
+
+    <section class="mt-12" aria-labelledby="lista-titulo">
+      <h2 id="lista-titulo" class="mb-4 text-xl font-semibold">{plural(lista.length, 'recurso gratis', 'recursos gratis')}</h2>
       {lista.length ? (
         <>
           <FiltrosBar total={lista.length} temaFijo={tema.slug} />

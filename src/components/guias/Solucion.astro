@@ -1,0 +1,16 @@
+---
+interface Props {
+  titulo?: string;
+}
+const { titulo = 'Ver la solución' } = Astro.props;
+---
+
+<details class="not-prose group my-6 overflow-hidden rounded-2xl border border-line bg-surface">
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 font-semibold hover:bg-surface-2">
+    <span>{titulo}</span>
+    <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-muted transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  </summary>
+  <div class="space-y-3 border-t border-line px-5 py-4 text-[0.95rem] leading-relaxed [&_code]:rounded-md [&_code]:border [&_code]:border-line [&_code]:bg-surface-2 [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.85em] [&_pre_code]:border-0 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5">
+    <slot />
+  </div>
+</details>

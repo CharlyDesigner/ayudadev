@@ -1,0 +1,37 @@
+---
+import { getCollection } from 'astro:content';
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import CardContenido from '@components/ui/CardContenido.astro';
+
+const lista = (await getCollection('carrera', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Carrera', href: '/carrera/' },
+];
+---
+
+<ListadoLayout
+  titulo="Carrera en programación"
+  descripcion="De aprender a conseguir tu primer trabajo: portafolio, GitHub, LinkedIn, entrevistas técnicas, freelance, inglés técnico y cómo no quemarte."
+  path="/carrera/"
+  eyebrow="Carrera"
+  migas={migas}
+  total={lista.length}
+  placeholder="Busca: portafolio, entrevista, freelance, inglés..."
+  unidad="artículos"
+>
+  {lista.length === 0 && <p class="card p-8 text-center text-muted">Los primeros artículos están en camino.</p>}
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {lista.map((e) => (
+      <CardContenido
+        href={`/carrera/${e.id}/`}
+        titulo={e.data.titulo}
+        descripcion={e.data.descripcion}
+        badges={e.data.etiquetas.slice(0, 2)}
+        meta={e.data.tiempoLectura ? `${e.data.tiempoLectura} min` : undefined}
+        progId={`carrera:${e.id}`}
+        texto={`${e.data.titulo} ${e.data.descripcion} ${e.data.etiquetas.join(' ')}`}
+      />
+    ))}
+  </div>
+</ListadoLayout>

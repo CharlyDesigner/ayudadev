@@ -1,0 +1,168 @@
+---
+titulo: 'Depuración: DevTools, breakpoints y logs'
+descripcion: 'Un método para encontrar errores en tu código: leer el mensaje, reproducir, usar logs, breakpoints y las herramientas del navegador y del editor.'
+categoria: herramientas
+nivel: principiante
+tiempoLectura: 12
+publicado: 2026-10-09
+temas: [javascript, nodejs, python]
+etiquetas: [depuracion, devtools, breakpoints, logs, debugger]
+orden: 51
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Tu programa da un resultado raro y no sabes por qué. Cambias cosas al azar, agregas líneas, borras otras, y ahora está peor. Esa frustración es normal, y casi siempre se debe a que se intenta arreglar sin antes **entender qué está pasando**.
+
+Depurar es el arte de encontrar la causa de un error de forma ordenada. No es un don: es un método y un puñado de herramientas. Aprenderlas es de lo que más rápido te hace avanzar como programador.
+
+## Qué es
+
+**Depurar** (*debugging*) es el proceso de localizar y corregir la causa de un comportamiento incorrecto. Un **bug** es el error. Una **depuración** buena no adivina: formula una hipótesis, la prueba y la confirma o la descarta.
+
+Tienes tres herramientas principales:
+
+- **Mensajes de error y trazas.** Lo que el programa mismo te dice.
+- **Logs.** Mensajes que tú agregas para ver qué ocurre.
+- **Depurador (debugger).** Pausa el programa para inspeccionarlo por dentro.
+
+## Paso cero: lee el error
+
+Un error te da tres datos valiosos: **qué** pasó, **dónde** y **cómo se llegó ahí**. Fíjate en el tipo (`TypeError`, `KeyError`), el mensaje y la **traza** (*stack trace*), una lista de las llamadas que llevaron al fallo. Normalmente la línea más útil es la que pertenece a tu código, no a una librería.
+
+Antes de tocar nada, haz esto:
+
+1. Lee el mensaje completo, de principio a fin.
+2. Identifica el archivo y la línea de tu código.
+3. **Reproduce el error** de forma consistente. Si no puedes reproducirlo, no puedes saber si lo arreglaste.
+4. Reduce: ¿cuál es el caso más pequeño que lo provoca?
+
+## Logs: la herramienta más sencilla
+
+Imprimir valores en puntos clave te muestra qué está pasando. Es lo primero que se prueba y está bien usarlo.
+
+<Ejemplo numero={1} titulo="Encontrar un bug con logs" archivo="depurar.mjs" ejecutar="node depurar.mjs" salida="notas: [ '8', '9', '10' ]
+promedio: 2970
+┌─────────┬───────┬──────────┐
+│ (index) │ valor │ tipo     │
+├─────────┼───────┼──────────┤
+│ 0       │ '8'   │ 'string' │
+│ 1       │ '9'   │ 'string' │
+│ 2       │ '10'  │ 'string' │
+└─────────┴───────┴──────────┘">
+
+```js
+function promedio(numeros) {
+  let suma = 0;
+  for (const n of numeros) suma += n;
+  return suma / numeros.length;
+}
+const notas = ["8", "9", "10"];
+console.log("notas:", notas);
+console.log("promedio:", promedio(notas));
+console.table(notas.map((n) => ({ valor: n, tipo: typeof n })));
+```
+
+El promedio de 8, 9 y 10 debería ser 9, pero da `2970`. Mirando `notas` con `console.log` ves comillas: son **texto**, no números. Entonces `0 + "8"` produce `"08"`, luego `"089"`, luego `"08910"`, y al dividir entre 3 da 2970. La tabla de `console.table` confirma el tipo `string`. La causa no estaba en `promedio`, sino en los datos de entrada. Arreglo: convertir con `Number(n)`.
+
+</Ejemplo>
+
+Tips para usar logs bien:
+
+- Escribe **etiquetas** junto al valor (`console.log("notas:", notas)`), no solo el valor.
+- Imprime el **tipo** y la **forma** de los datos, no solo si "existe".
+- En Python, `print()` y el módulo `logging` hacen lo mismo.
+
+## El depurador: pausa y mira
+
+Los logs te obligan a adivinar dónde mirar y a volver a ejecutar cada vez. Un **depurador** te deja **pausar el programa** en una línea y examinar todo en ese instante. Los conceptos son los mismos en cualquier lenguaje:
+
+| Concepto | Qué es |
+|---|---|
+| **Breakpoint** (punto de interrupción) | Una marca en una línea donde el programa se detiene antes de ejecutarla |
+| **Step over** (paso por encima) | Ejecuta la línea actual y pasa a la siguiente, sin entrar a las funciones que llame |
+| **Step into** (paso adentro) | Entra a la función que se llama en esa línea |
+| **Step out** (paso afuera) | Termina la función actual y vuelve a quien la llamó |
+| **Continue** (continuar) | Sigue hasta el próximo breakpoint o hasta que termine |
+| **Call stack** (pila de llamadas) | Quién llamó a quién hasta llegar a donde estás |
+
+El flujo típico: pones un breakpoint antes de donde crees que falla, ejecutas, el programa se detiene, revisas los valores y avanzas con step over línea por línea hasta ver el momento exacto en que algo deja de ser lo que esperabas.
+
+## DevTools del navegador
+
+Los navegadores modernos traen herramientas para desarrolladores. Ábrelas con F12 o con clic derecho y "Inspeccionar". Los paneles que más vas a usar:
+
+- **Console**: ves errores y mensajes de `console.log`, y puedes escribir JavaScript para probar.
+- **Elements**: inspeccionas y cambias en vivo el HTML y el CSS. Ideal para ver por qué un estilo no se aplica.
+- **Sources** (o Depurador): abres tus archivos, pones breakpoints y recorres el código paso a paso. También puedes escribir `debugger;` en tu código para que el navegador pause ahí cuando las herramientas estén abiertas.
+- **Network**: ves cada petición que hace la página, su estado, tiempo y respuesta. Es la primera parada cuando "no cargan los datos".
+
+## Depurar en Node.js y Python
+
+En Node.js puedes iniciar tu script esperando a un depurador:
+
+```bash
+# Pausa en la primera línea y espera a que te conectes
+node --inspect-brk depurar.mjs
+```
+
+Luego te conectas desde las DevTools del navegador o desde tu editor, donde puedes poner breakpoints con un clic junto al número de línea.
+
+En Python, la forma rápida es la función incorporada `breakpoint()`, que abre el depurador `pdb` en esa línea:
+
+```python
+notas = [8, 9, 10]
+breakpoint()   # el programa se detiene aquí
+print(sum(notas) / len(notas))
+```
+
+Dentro de `pdb` usas comandos cortos:
+
+| Comando | Qué hace |
+|---|---|
+| `p notas` | Imprime el valor de una variable o expresión |
+| `n` | Siguiente línea (step over) |
+| `s` | Entra a la función (step into) |
+| `c` | Continúa hasta el siguiente breakpoint |
+| `q` | Sale del depurador |
+
+<Callout tipo="tip" titulo="Divide y vencerás">
+
+Cuando no sepas dónde está el error, parte el problema por la mitad. Pon un log o un breakpoint a mitad de tu flujo y mira si ahí los datos ya están mal. Si sí, el fallo está antes; si no, está después. En pocos pasos encuentras la línea. Es la misma idea de la búsqueda binaria.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Cuidado con lo que dejas en el código">
+
+No dejes `debugger;`, `breakpoint()` ni `console.log` con datos sensibles en lo que subes a producción. Un `breakpoint()` olvidado detiene un servidor en espera de que alguien escriba en una terminal. Y nunca imprimas contraseñas, tokens o datos personales en logs: quedan guardados en archivos y servicios externos.
+
+</Callout>
+
+## Un método que siempre funciona
+
+1. **Reproduce.** Consigue una forma fiable de hacerlo fallar.
+2. **Lee el error.** Mensaje, archivo, línea y traza.
+3. **Formula una hipótesis.** "Creo que `notas` tiene texto, no números."
+4. **Pruébala** con un log o un breakpoint. No cambies código todavía.
+5. **Corrige una cosa a la vez.** Si cambias tres, no sabrás cuál arregló.
+6. **Verifica** que el caso ya funciona y que no rompiste otros.
+7. **Escribe una prueba** para que ese error no vuelva sin que te enteres.
+
+## Pruébalo tú
+
+1. Corre el ejemplo del promedio, encuentra el bug con el log y arréglalo con `Number(n)`.
+2. Abre cualquier página en tu navegador, abre DevTools y en Network recarga. Busca la petición más lenta y mira su respuesta.
+3. En un proyecto tuyo pon un breakpoint dentro de un bucle y recórrelo con step over. Observa cómo cambian las variables.
+4. En Python, escribe un programa con un error de índice (`lista[10]` en una lista de tres), léelo en la traza y luego ponle un `breakpoint()` justo antes.
+
+## Errores y mitos comunes
+
+- **"El error siempre está en mi última línea."** A menudo se origina antes y se manifiesta después.
+
+## Qué sigue
+
+- Aprende a dejar tus errores controlados con [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+- Mira cómo ayudarte de una IA sin perder el control en [Revisar y depurar con IA](/ia/aprende/revisar-y-depurar-con-ia/).
+- Entiende qué ves en la pestaña Network con [Cómo funciona internet](/fundamentos/como-funciona-internet/) y [HTTP, cliente y servidor](/fundamentos/http-cliente-servidor/).
+- Elige tu entorno en [Editor, IDE y terminal](/fundamentos/que-es-un-ide-y-un-editor/).

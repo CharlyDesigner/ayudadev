@@ -1,0 +1,98 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Mi progreso', href: '/progreso/' },
+];
+---
+
+<BaseLayout title="Mi progreso" description="Lo que has completado en AyudaDev. Se guarda solo en este navegador." path="/progreso/" noindex>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Tu avance" titulo="Mi progreso" descripcion="Todo se guarda solo en este navegador. Puedes exportarlo para llevarlo a otro dispositivo." />
+
+    <div class="mt-6 flex flex-wrap gap-2">
+      <button type="button" class="btn btn-secondary btn-sm" data-prog-export><Icon name="download" class="h-4 w-4" /> Exportar</button>
+      <label class="btn btn-secondary btn-sm cursor-pointer"><Icon name="upload" class="h-4 w-4" /> Importar<input type="file" accept="application/json" class="visually-hidden" data-prog-import /></label>
+      <button type="button" class="btn btn-ghost btn-sm" data-prog-clear><Icon name="trash" class="h-4 w-4" /> Vaciar</button>
+    </div>
+
+    <p class="mt-6 text-sm text-muted" data-prog-status aria-live="polite">Cargando tu progreso...</p>
+
+    <section id="rutas-progreso" class="mt-8" hidden>
+      <h2 class="mb-3 text-xl font-semibold">Tus rutas</h2>
+      <div class="grid gap-3 md:grid-cols-2" data-prog-rutas></div>
+    </section>
+
+    <div class="mt-10 grid gap-8 md:grid-cols-2" data-prog-grupos></div>
+
+    <noscript><p class="card mt-6 p-6 text-sm">El progreso necesita JavaScript activado para guardarse en tu navegador.</p></noscript>
+  </div>
+</BaseLayout>
+
+<script>
+  import { progreso, reemplazarProgreso, alCambiarProgreso } from '@/scripts/progreso';
+
+  interface Item { id: string; titulo: string; href: string }
+  interface Ruta { id: string; titulo: string; href: string; pasos: number }
+  interface Datos { guias: Item[]; retos: Item[]; proyectos: Item[]; fundamentos: Item[]; carrera: Item[]; rutas: Ruta[] }
+
+  const status = document.querySelector<HTMLElement>('[data-prog-status]');
+  const grupos = document.querySelector<HTMLElement>('[data-prog-grupos]');
+  const rutasSec = document.getElementById('rutas-progreso');
+  const rutasEl = document.querySelector<HTMLElement>('[data-prog-rutas]');
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
+  let datos: Datos | null = null;
+
+  const render = () => {
+    if (!datos || !status || !grupos || !rutasEl || !rutasSec) return;
+    const hechos = new Set(progreso());
+    const GRUPOS: [keyof Omit<Datos, 'rutas'>, string][] = [['guias', 'Guías'], ['retos', 'Retos'], ['proyectos', 'Proyectos'], ['fundamentos', 'Fundamentos'], ['carrera', 'Carrera']];
+    let total = 0;
+    grupos.innerHTML = GRUPOS.map(([k, nombre]) => {
+      const lista = datos![k];
+      const hechosLista = lista.filter((i) => hechos.has(i.id));
+      total += hechosLista.length;
+      if (!lista.length) return '';
+      return `<section><h2 class="mb-3 flex items-baseline justify-between text-xl font-semibold"><span>${nombre}</span><span class="text-sm font-normal text-muted">${hechosLista.length} de ${lista.length}</span></h2>
+        <div class="progress-track mb-3"><div class="progress-fill" style="width:${Math.round((hechosLista.length / lista.length) * 100)}%"></div></div>
+        ${hechosLista.length ? `<ul class="space-y-1.5 text-sm">${hechosLista.map((i) => `<li class="flex items-center gap-2"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0 text-accent-ink" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><a href="${esc(i.href)}" class="hover:text-accent-ink">${esc(i.titulo)}</a></li>`).join('')}</ul>` : `<p class="text-sm text-muted">Aún no completas ninguno. <a href="/${k}/" class="link">Empieza aquí</a>.</p>`}</section>`;
+    }).join('');
+
+    const rutasEmpezadas = datos.rutas.map((r) => ({ r, n: [...hechos].filter((id) => id.startsWith(`ruta:${r.id}:`)).length })).filter((x) => x.n > 0);
+    total += rutasEmpezadas.reduce((a, x) => a + x.n, 0);
+    rutasSec.hidden = rutasEmpezadas.length === 0;
+    rutasEl.innerHTML = rutasEmpezadas.map(({ r, n }) => `<a href="${esc(r.href)}" class="card card-hover p-4"><span class="font-semibold">${esc(r.titulo)}</span><span class="mt-1 block text-sm text-muted">${n} de ${r.pasos} pasos</span><span class="progress-track mt-3 block"><span class="progress-fill block" style="width:${Math.round((n / r.pasos) * 100)}%"></span></span></a>`).join('');
+
+    status.textContent = total ? `Llevas ${total} ${total === 1 ? 'elemento completado' : 'elementos completados'}. Sigue así.` : 'Aún no marcas nada como completado. Entra a una guía, reto o ruta y pulsa "Marcar como completado".';
+  };
+
+  fetch('/progreso.json').then((r) => r.json()).then((d: Datos) => { datos = d; render(); }).catch(() => { if (status) status.textContent = 'No se pudo cargar tu progreso.'; });
+  alCambiarProgreso(render);
+
+  document.querySelector('[data-prog-export]')?.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(progreso(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ayudadev-progreso.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.querySelector<HTMLInputElement>('[data-prog-import]')?.addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (Array.isArray(data)) reemplazarProgreso([...progreso(), ...data.filter((x) => typeof x === 'string')]);
+    } catch {
+      if (status) status.textContent = 'Ese archivo no es válido.';
+    }
+  });
+  document.querySelector('[data-prog-clear]')?.addEventListener('click', () => {
+    if (confirm('¿Vaciar todo tu progreso?')) reemplazarProgreso([]);
+  });
+</script>

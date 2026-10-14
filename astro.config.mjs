@@ -10,6 +10,7 @@ export default defineConfig({
   site: 'https://dev.carlosnavarro.site',
   trailingSlash: 'always',
   compressHTML: true,
+  devToolbar: { enabled: false },
   integrations: [
     mdx(),
     sitemap({

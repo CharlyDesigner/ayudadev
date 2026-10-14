@@ -1,0 +1,59 @@
+---
+/**
+ * Plantilla de páginas de listado con buscador y filtros por chips (src/scripts/chipfilter.ts).
+ * Slot por defecto: el contenido filtrable (elementos con [data-item]). Slot "filtros": grupos de FiltroChips.
+ */
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { migasLd, type Miga } from '@lib/seo';
+
+interface Props {
+  titulo: string;
+  descripcion: string;
+  path: string;
+  eyebrow: string;
+  migas: Miga[];
+  total: number;
+  placeholder?: string;
+  enlace?: { href: string; label: string };
+  image?: string;
+  jsonLd?: Record<string, unknown>[];
+  /** Texto de la unidad, p. ej. "retos". */
+  unidad?: string;
+}
+const { titulo, descripcion, path, eyebrow, migas, total, placeholder = 'Buscar...', enlace, image, jsonLd = [], unidad = 'resultados' } = Astro.props;
+---
+
+<BaseLayout title={titulo} description={descripcion} path={path} image={image} jsonLd={[migasLd(migas), ...jsonLd]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow={eyebrow} titulo={titulo} descripcion={descripcion} enlace={enlace} />
+
+    <slot name="intro" />
+
+    <div data-chipfilter class="card mt-8 flex flex-col gap-4 p-4 sm:p-5" role="search" aria-label={`Filtrar ${unidad}`}>
+      <div class="relative">
+        <Icon name="search" class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted" />
+        <input type="search" data-chip-q class="field pl-11" placeholder={placeholder} aria-label={`Buscar ${unidad}`} autocomplete="off" />
+      </div>
+      <slot name="filtros" />
+      <p class="text-sm text-muted" aria-live="polite"><span data-chip-count>{total}</span> de {total} {unidad}</p>
+    </div>
+
+    <div class="mt-8">
+      <slot />
+    </div>
+
+    <div data-chip-empty hidden class="card mt-6 p-8 text-center">
+      <p class="font-semibold">No encontramos nada con esos filtros.</p>
+      <p class="mt-1 text-sm text-muted">Prueba con otra palabra o quita algún filtro.</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { montarChipFilter } from '@/scripts/chipfilter';
+  montarChipFilter();
+</script>

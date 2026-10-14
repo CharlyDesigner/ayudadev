@@ -1,0 +1,209 @@
+---
+titulo: 'Expresiones regulares: sintaxis y patrones'
+descripcion: 'Clases, anclas, cuantificadores, grupos, lookaround y banderas de las expresiones regulares, con usos en JavaScript, Python, grep y sed y patrones comunes.'
+tema: generales
+etiquetas: ['regex', 'expresiones regulares', 'javascript', 'python', 'grep']
+publicado: 2026-10-09
+orden: 6
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Una expresión regular describe un patrón de texto. La sintaxis base es casi igual en JavaScript, Python, grep -E y sed -E; las diferencias se marcan. Todos los ejemplos se ejecutaron en Node 24 y Python 3.
+
+## Caracteres y clases
+
+| Sintaxis | Coincide con |
+| --- | --- |
+| `abc` | El texto literal `abc` |
+| `.` | Cualquier carácter menos salto de línea |
+| `\d` | Un dígito (0 a 9) |
+| `\D` | Cualquier cosa que no sea dígito |
+| `\w` | Letra ASCII, dígito o guion bajo |
+| `\W` | Lo que no es `\w` |
+| `\s` | Espacio, tabulador o salto de línea |
+| `\S` | Lo que no es espacio |
+| `[abc]` | Uno de: `a`, `b` o `c` |
+| `[a-z]` | Una letra minúscula ASCII |
+| `[^abc]` | Cualquiera menos `a`, `b` o `c` |
+| `[a-zA-Z0-9]` | Letra o dígito ASCII |
+| `\.` | Un punto literal. Antepón la barra invertida a cualquier símbolo especial para tomarlo literal |
+
+<Callout tipo="warning" titulo="\w no entiende acentos ni la ñ">
+
+En JavaScript, `"ñandú".match(/\w+/)` devuelve `and`. Para letras de cualquier idioma usa `[\p{L}]+` con la bandera `u`. En Python 3, `\w` sí reconoce acentos en cadenas `str`, salvo que uses `re.ASCII`.
+
+</Callout>
+
+## Anclas y límites
+
+| Sintaxis | Coincide con |
+| --- | --- |
+| `^` | Inicio del texto (o de cada línea con la bandera `m`) |
+| `$` | Fin del texto (o de cada línea con `m`) |
+| `\b` | Límite de palabra: `\bgato\b` encuentra `gato` y no `gatos` |
+| `\B` | Lo que no es un límite de palabra |
+
+## Cuantificadores
+
+| Sintaxis | Repite |
+| --- | --- |
+| `a*` | 0 o más veces |
+| `a+` | 1 o más |
+| `a?` | 0 o 1 (opcional) |
+| `a{3}` | Exactamente 3 |
+| `a{2,4}` | De 2 a 4 |
+| `a{2,}` | 2 o más |
+| `a+?`, `a*?` | Versión perezosa: toma lo mínimo posible |
+
+Por defecto los cuantificadores son voraces. Sobre `"aaa"`, `a+` captura `aaa` y `a+?` captura solo `a`.
+
+## Grupos y alternativas
+
+| Sintaxis | Qué hace |
+| --- | --- |
+| `(abc)` | Grupo que captura (se numera 1, 2, 3...) |
+| `(?:abc)` | Grupo que no captura |
+| `a\|b` | `a` o `b` |
+| `(?<nombre>\d+)` | Grupo con nombre en JavaScript |
+| `(?P<nombre>\d+)` | Grupo con nombre en Python (ahí no existe el estilo `(?<nombre>...)`) |
+| `\1` | Repite lo capturado por el grupo 1 |
+| `(\w)\1` | Dos letras iguales seguidas: coincide en `hello`, no en `helo` |
+
+## Lookaround: mirar sin consumir
+
+| Sintaxis | Coincide si... |
+| --- | --- |
+| `(?=...)` | ...lo que sigue es `...` |
+| `(?!...)` | ...lo que sigue NO es `...` |
+| `(?<=...)` | ...lo que precede es `...` |
+| `(?<!...)` | ...lo que precede NO es `...` |
+
+```text
+precio: 45     (?<=precio: )\d+  ->  45
+45USD          \d+(?=USD)        ->  45
+```
+
+En Python, el lookbehind exige un largo fijo. En grep, `-P` activa estas funciones; `-E` no las tiene.
+
+## Banderas
+
+| JavaScript | Python | Efecto |
+| --- | --- | --- |
+| `i` | `re.I` | Ignora mayúsculas y minúsculas |
+| `g` | (se usa `findall` o `finditer`) | Todas las coincidencias, no solo la primera |
+| `m` | `re.M` | `^` y `$` operan por línea |
+| `s` | `re.S` | `.` también coincide con salto de línea |
+| `u` | (por defecto) | Unicode, habilita `\p{L}` en JavaScript |
+| `y` | no existe | Coincide solo desde `lastIndex` (sticky) |
+
+## En JavaScript
+
+```js
+const t = "ana@correo.com, luis@sitio.mx. Fecha 2026-10-09";
+
+/\d+/.test(t)                          // true
+t.match(/\w+@\w+\.\w+/g);               // ['ana@correo.com', 'luis@sitio.mx']
+/(\d{4})-(\d{2})-(\d{2})/.exec(t).slice(1)   // ['2026', '10', '09']
+
+const m = t.match(/(?<anio>\d{4})-(?<mes>\d{2})/);
+m.groups.anio;                          // '2026'
+
+"a1b22".replace(/\d+/g, "#");           // 'a#b#'
+"2026-10-09".replace(/(\d+)-(\d+)-(\d+)/, "$3/$2/$1");   // '09/10/2026'
+"Hola Mundo".replace(/(?<a>\w+) (?<b>\w+)/, "$<b> $<a>"); // 'Mundo Hola'
+"uno, dos;tres".split(/[,;]\s*/);       // ['uno', 'dos', 'tres']
+[..."a1b2".matchAll(/\d/g)].map(x => x.index);   // [1, 3]
+"a b".replaceAll(/ /g, "_")            // 'a_b'
+```
+
+| Método | Devuelve |
+| --- | --- |
+| `re.test(texto)` | `true` o `false` |
+| `texto.match(re)` | Primera coincidencia con grupos, o todas si lleva `g` |
+| `texto.matchAll(re)` | Iterador con todas (requiere `g`) |
+| `texto.replace(re, nuevo)` | Texto con reemplazos |
+| `texto.search(re)` | Índice de la primera coincidencia o `-1` |
+| `texto.split(re)` | Arreglo separado por la expresión |
+
+<Callout tipo="warning" titulo="Cuidado con la bandera g y test">
+
+Una expresión con `g` guarda `lastIndex` entre llamadas. `const re = /a/g; re.test("aa")` da `true`, otra vez `true` y la tercera `false`. Para validar, no uses `g`.
+
+</Callout>
+
+## En Python
+
+```python
+import re
+
+t = "ana@correo.com, luis@sitio.mx. Fecha 2026-10-09"
+re.findall(r"\w+@\w+\.\w+", t)               # ['ana@correo.com', 'luis@sitio.mx']
+m = re.search(r"(?P<anio>\d{4})-(?P<mes>\d{2})", t)
+m.group("anio"), m.group(2)                  # ('2026', '10')
+m.groupdict()                                # {'anio': '2026', 'mes': '10'}
+re.sub(r"(\d+)-(\d+)-(\d+)", r"\3/\2/\1", "2026-10-09")   # '09/10/2026'
+re.sub(r"\d+", lambda x: str(int(x.group()) * 2), "a1b22")  # 'a2b44'
+re.split(r"[,;]\s*", "uno, dos;tres")        # ['uno', 'dos', 'tres']
+re.match(r"\d+", "12ab").group()             # '12' (solo al inicio)
+re.fullmatch(r"\d+", "12ab")                 # None (debe coincidir todo)
+re.escape("a.b*c")                           # 'a\\.b\\*c'
+p = re.compile(r"^b$", re.M | re.I)          # compila para reusar
+p.findall("a\nB\nc")                         # ['B']
+```
+
+| Función | Qué hace |
+| --- | --- |
+| `re.search(p, s)` | Primera coincidencia en cualquier posición |
+| `re.match(p, s)` | Coincidencia solo al inicio |
+| `re.fullmatch(p, s)` | Debe coincidir toda la cadena |
+| `re.findall(p, s)` | Lista de coincidencias (o de grupos si los hay) |
+| `re.finditer(p, s)` | Iterador de objetos de coincidencia |
+| `re.sub(p, nuevo, s)` | Reemplaza |
+| `re.split(p, s)` | Separa |
+
+Escribe los patrones como cadenas crudas `r"..."` para no duplicar las barras invertidas.
+
+## En la terminal
+
+```bash
+grep -oE '[a-z]+@[a-z.]+' archivo.txt            # solo la parte que coincide
+grep -E '^[a-z][0-9]$' archivo.txt               # regex extendida
+grep -oP '(?<=precio )\d+' archivo.txt           # -P permite lookbehind y \d
+sed -E 's/([0-9]+)-([0-9]+)-([0-9]+)/\3\/\2\/\1/' archivo.txt
+```
+
+`grep -E` y `sed -E` no entienden `\d`: usa `[0-9]`. `grep -P` no existe en todas las versiones (por ejemplo, en el `grep` de macOS).
+
+## Patrones comunes
+
+| Para validar | Patrón | Nota |
+| --- | --- | --- |
+| Color hexadecimal | `^#?([0-9a-f]{3}\|[0-9a-f]{6})$` con `i` | `#FFaa00` sí, `#ffaa0` no |
+| Teléfono 555-1234 | `^\d{3}-\d{4}$` | Ajusta a tu formato |
+| IPv4 (forma) | `^(?:\d{1,3}\.){3}\d{1,3}$` | No comprueba que cada número sea 0 a 255 |
+| Fecha ISO | `^\d{4}-\d{2}-\d{2}$` | No comprueba que el día exista |
+| Solo letras (con acentos) | `^[\p{L} ]+$` con `u` | En JavaScript |
+| Espacios sobrantes | `^\s+\|\s+$` con `g` | Para recortar; mejor `trim()` |
+| Correo (simple) | `^[^\s@]+@[^\s@]+\.[^\s@]+$` | Detecta forma básica, no valida que exista |
+
+Para correos reales, la prueba definitiva es enviar un mensaje de confirmación. Una regex perfecta para correos es casi imposible.
+
+## Buenas prácticas
+
+| Consejo | Por qué |
+| --- | --- |
+| Ancla con `^` y `$` al validar | Sin anclas, `\d+` acepta `abc123xyz` |
+| Prefiere clases específicas a `.*` | `.*` voraz suele capturar de más |
+| Usa grupos con nombre | El código se lee mejor que con `$1`, `$2` |
+| Evita anidar cuantificadores como `(a+)+` | Puede causar retroceso catastrófico y congelar el programa |
+| No analices HTML con regex | Usa un analizador (DOM, BeautifulSoup) |
+| Prueba tus patrones | En una herramienta como regex101 o en la consola |
+
+## Para ir más a fondo
+
+- [Expresiones regulares en MDN](https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Regular_expressions)
+- [Hoja de referencia de regex en MDN](https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Regular_expressions/Cheatsheet)
+- [Módulo re de Python](https://docs.python.org/es/3/library/re.html)
+- Hoja de AyudaDev: [Bash y Linux, comandos de terminal](/hojas/bash-y-linux-comandos/)
+- Biblioteca: [libros y cursos de temas generales](/biblioteca/generales/)

@@ -1,0 +1,274 @@
+---
+titulo: 'Linux y la terminal desde cero'
+descripcion: 'Qué es la terminal, cómo abrirla en tu sistema, comandos para moverte, permisos, tuberías y tus primeros scripts de bash con salidas reales.'
+tema: linux
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['linux-la-linea-de-comandos-de-linux', 'linux-manual-bash-scripting-wikilibros', 'linux-terminal-unix-software-carpentry', 'linux-el-arte-del-terminal']
+requisitos: ['Saber qué es un archivo y una carpeta', 'Un equipo con Windows, macOS o Linux']
+etiquetas: ['linux', 'terminal', 'bash', 'permisos', 'scripts']
+orden: 72
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Linux es un sistema operativo libre que se usa muchísimo en servidores, contenedores y herramientas de desarrollo. La **terminal** es la ventana donde le das órdenes escritas, y **bash** es el programa que las interpreta. Aprenderlas te da velocidad: lo que haces con diez clics lo haces con una línea, y lo que repites a diario lo conviertes en un script.
+
+El modelo mental que necesitas:
+
+- **Todo es texto y archivos**: configuración, registros, dispositivos y procesos se tratan como archivos. Por eso unas pocas herramientas de texto sirven para casi todo.
+- **Programas pequeños que se combinan**: cada comando hace una cosa (`ls` lista, `grep` busca, `sort` ordena) y los unes con tuberías (`|`).
+- **Un solo árbol de carpetas**: todo cuelga de `/` (la raíz). Tu carpeta personal es `~`, por ejemplo `/home/ana`. No hay letras de unidad como `C:`.
+- **Rutas absolutas y relativas**: `/home/ana/docs` empieza desde la raíz; `docs/notas.txt` parte de la carpeta donde estás. `.` es la carpeta actual y `..` la anterior.
+- **Permisos**: cada archivo tiene un dueño, un grupo y permisos de lectura (`r`), escritura (`w`) y ejecución (`x`) para dueño, grupo y el resto.
+- **Flujos estándar**: cada programa tiene entrada (`stdin`), salida (`stdout`) y errores (`stderr`). Con `>`, `>>`, `<` y `|` los rediriges.
+- **Código de salida**: cuando un comando termina deja un número. `0` significa éxito y cualquier otro valor significa error. Los scripts se apoyan en eso.
+- **Distribuciones**: Ubuntu, Debian, Fedora y otras. Los comandos de esta guía son los mismos en todas; solo cambia el gestor de paquetes (`apt`, `dnf`, `pacman`).
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Linux**: ya lo tienes. Abre la aplicación Terminal de tu distribución (en muchas, con `Ctrl+Alt+T`).
+2. **macOS**: abre la aplicación Terminal. Los comandos de esta guía funcionan igual. En macOS algunas opciones de herramientas como `stat` o `sed` son distintas a las de Linux; si algo no coincide, prueba esta guía en Linux o en WSL.
+3. **Windows con WSL (recomendado)**: abre PowerShell como administradora o administrador y escribe `wsl --install`. Reinicia cuando te lo pida y crea tu usuario de Linux. La [guía de instalación de Microsoft](https://learn.microsoft.com/es-mx/windows/wsl/install) explica los detalles. Tendrás una terminal de Ubuntu dentro de Windows.
+4. **Windows sin WSL**: instala Git para Windows, que incluye **Git Bash**, y úsalo para los ejemplos de movimiento, texto y scripts. Ten en cuenta que los permisos de archivos no se comportan igual que en Linux.
+5. Comprueba que bash funciona con `bash --version`. Debe mostrar una versión de GNU bash.
+6. Crea tu primer script. Guarda esto como `hola.sh` y córrelo con `bash hola.sh`:
+
+   ```bash
+   #!/usr/bin/env bash
+   echo "Hola, terminal"
+   ```
+
+</Pasos>
+
+Cuando veas `$` al inicio de una línea en otras guías, es el indicador de la terminal (el *prompt*): no lo escribas. En esta guía los ejemplos son archivos `.sh` que puedes guardar y correr con `bash archivo.sh`.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Moverte y manejar archivos" archivo="01-archivos.sh" ejecutar="bash 01-archivos.sh" salida={"proyecto\n.\n./docs\n./docs/notas.txt\n./pruebas\n./src\n./src/app.sh\nHola Linux\ncopia.txt\n0"}>
+
+```bash
+# Crea tres carpetas de una vez con llaves y entra a la principal
+mkdir -p proyecto/{src,docs,pruebas}
+cd proyecto
+
+# touch crea archivos vacíos
+touch src/app.sh docs/notas.txt
+
+# Nombre de la carpeta actual y árbol de archivos ordenado
+basename "$PWD"
+find . | sort
+
+# Escribe texto en un archivo y léelo
+echo "Hola Linux" > docs/notas.txt
+cat docs/notas.txt
+
+# Copia, mueve y borra
+cp docs/notas.txt docs/copia.txt
+mv docs/copia.txt pruebas/
+ls pruebas
+rm pruebas/copia.txt
+
+# Cuenta cuántos archivos quedaron en pruebas
+ls pruebas | wc -l
+```
+
+`mkdir -p` crea también las carpetas intermedias. `>` reemplaza el contenido del archivo y `cat` lo muestra. `cp` copia, `mv` mueve o renombra y `rm` borra sin pasar por una papelera, así que revisa antes de borrar. Para ver dónde estás, usa `pwd`; para volver a tu carpeta personal, `cd` sin argumentos.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Permisos: por qué un script dice Permission denied" archivo="02-permisos.sh" ejecutar="bash 02-permisos.sh" salida={"-rw-r--r-- 644\n02-permisos.sh: line 4: ./hola.sh: Permission denied\nfalló con código 126\n-rwxr--r-- 744\nHola desde un script\n-rwxr-xr-x 755"}>
+
+```bash
+# Crea un script sin permiso de ejecución
+printf '#!/usr/bin/env bash\necho "Hola desde un script"\n' > hola.sh
+stat -c '%A %a' hola.sh
+./hola.sh || echo "falló con código $?"
+
+# u+x agrega ejecución al dueño (u = user)
+chmod u+x hola.sh
+stat -c '%A %a' hola.sh
+./hola.sh
+
+# En número: 7 = rwx, 5 = r-x. Dueño todo, grupo y resto leer y ejecutar
+chmod 755 hola.sh
+stat -c '%A %a' hola.sh
+```
+
+Pruébalo en Linux, macOS o WSL: en Git Bash sobre Windows los permisos de archivo no se reflejan igual. La columna de la izquierda (`-rw-r--r--`) son las letras: primero el tipo, luego tres grupos de tres para dueño, grupo y resto. Los números suman `r=4`, `w=2` y `x=1`, por eso `rwx` es 7. Aquí `stat -c` es la forma de Linux; en macOS el formato es distinto. El permiso inicial 644 depende de tu `umask`, que en la mayoría de los sistemas es 022. El mensaje del error sale en tu idioma si tu sistema está en español.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Tuberías y filtros sobre un archivo de registro" archivo="03-filtros.sh" ejecutar="bash 03-filtros.sh" salida={"6\n192.168.1.10 GET /productos 404\n192.168.1.12 POST /login 500\n      3 192.168.1.10\n      2 192.168.1.11\n      1 192.168.1.12\n      3 /inicio\n      2 /productos"}>
+
+Guarda estas seis líneas como `acceso.log` en la misma carpeta:
+
+```text
+192.168.1.10 GET /inicio 200
+192.168.1.11 GET /productos 200
+192.168.1.10 GET /productos 404
+192.168.1.12 POST /login 500
+192.168.1.11 GET /inicio 200
+192.168.1.10 GET /inicio 200
+```
+
+Y este es el script:
+
+```bash
+# Cuántas líneas tiene el archivo
+wc -l < acceso.log
+
+# Solo las peticiones con error (el código es la última columna)
+grep -E " (404|500)$" acceso.log
+
+# Cuántas peticiones hizo cada IP, de más a menos
+cut -d' ' -f1 acceso.log | sort | uniq -c | sort -rn
+
+# Las dos páginas más visitadas
+awk '{print $3}' acceso.log | sort | uniq -c | sort -rn | head -n 2
+```
+
+Cada `|` toma la salida del comando de la izquierda y la usa como entrada del de la derecha. `cut` saca una columna, `sort` ordena, `uniq -c` cuenta repetidos (solo junta los que están seguidos, por eso va después de `sort`) y `sort -rn` ordena por número de mayor a menor. Así, con piezas pequeñas, respondes preguntas que en una hoja de cálculo tomarían varios pasos.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Tu primer script con argumentos, ciclo y función" archivo="saludo.sh" ejecutar="bash saludo.sh Ana Luis" salida={"Hola, Ana\nHola, Luis\nSaludé a 2 personas"}>
+
+```bash
+#!/usr/bin/env bash
+# Uso: ./saludo.sh nombre1 nombre2 ...
+# Si algo falla, el script se detiene (-e), no acepta variables vacías (-u)
+# y detecta errores dentro de tuberías (pipefail)
+set -euo pipefail
+
+# Una función con una variable local
+saludar() {
+  local nombre="$1"
+  echo "Hola, $nombre"
+}
+
+# $# es la cantidad de argumentos que recibió el script
+if [ "$#" -eq 0 ]; then
+  echo "Uso: $0 nombre [nombre...]" >&2
+  exit 1
+fi
+
+# "$@" recorre cada argumento, respetando los espacios de cada uno
+for persona in "$@"; do
+  saludar "$persona"
+done
+echo "Saludé a $# personas"
+```
+
+`$1` es el primer argumento, `$#` la cantidad y `"$@"` todos. Los espacios dentro de `[ ]` son obligatorios. Si corres el script sin nombres, imprime el uso en el flujo de errores (`>&2`) y termina con código 1: `bash saludo.sh` muestra `Uso: saludo.sh nombre [nombre...]`. Para correrlo como `./saludo.sh` dale primero permiso con `chmod +x saludo.sh`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Redirección y códigos de salida" archivo="05-redireccion.sh" ejecutar="bash 05-redireccion.sh" salida={"inicio\nsegunda línea\n1\ncódigo de salida: 1\ncódigo de salida: 0\ncreada\nya existía"}>
+
+```bash
+# > crea o reemplaza el archivo; >> agrega al final
+echo "inicio" > salida.txt
+echo "segunda línea" >> salida.txt
+cat salida.txt
+
+# -c cuenta las líneas que coinciden
+grep -c "línea" salida.txt
+
+# -q no imprime nada, solo deja el código de salida en $?
+grep -q "ERROR" salida.txt; echo "código de salida: $?"
+grep -q "inicio" salida.txt; echo "código de salida: $?"
+
+# && ejecuta lo siguiente solo si el anterior tuvo éxito, || solo si falló
+mkdir carpeta && echo "creada" || echo "no se pudo"
+
+# 2> redirige los errores; /dev/null es un pozo sin fondo
+mkdir carpeta 2>/dev/null || echo "ya existía"
+```
+
+`grep` termina con 0 cuando encuentra algo y con 1 cuando no. Esa convención es la base de los condicionales de bash: `if grep -q "ERROR" archivo; then ...`. La segunda vez que corre `mkdir carpeta` falla porque la carpeta ya existe, pero redirigimos su mensaje a `/dev/null` y reaccionamos con `||`.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un script de respaldo con tar" archivo="respaldo.sh" ejecutar="mkdir proyecto && echo a > proyecto/a.txt && echo b > proyecto/b.txt && bash respaldo.sh proyecto" salida={"Respaldo creado: respaldo-proyecto.tar.gz\nproyecto/\nproyecto/a.txt\nproyecto/b.txt"}>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ${1:?mensaje} detiene el script con un error si no pasaste argumento
+origen="${1:?Falta la carpeta de origen}"
+
+# $(...) guarda la salida de un comando en una variable
+destino="respaldo-$(basename "$origen").tar.gz"
+
+# c = crear, z = comprimir con gzip, f = nombre del archivo
+tar -czf "$destino" "$origen"
+echo "Respaldo creado: $destino"
+
+# t = listar el contenido; sort fija el orden porque tar no lo garantiza
+tar -tzf "$destino" | sort
+```
+
+Este es el patrón de casi todos los scripts útiles: recibes un dato, lo validas, haces el trabajo y avisas qué pasó. Si lo corres sin argumento, bash se detiene con un mensaje parecido a `respaldo.sh: line 3: 1: Falta la carpeta de origen`. Para correrlo cada noche, el programador de tareas de Linux se llama `cron`: lo configuras con `crontab -e` y apuntas a tu script con una ruta absoluta.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Espacios alrededor del signo igual">
+
+En bash no puedes escribir `nombre = "Ana"`: bash piensa que `nombre` es un comando y responde `nombre: command not found`. Se escribe pegado: `nombre="Ana"`. Lo contrario pasa dentro de los corchetes, donde los espacios sí son obligatorios: `[ "$a" = "$b" ]`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Variables sin comillas">
+
+`rm $archivo` se rompe si el nombre tiene espacios, porque bash lo parte en dos palabras. Escribe siempre `"$archivo"` entre comillas dobles. Es la causa de la mayoría de los errores raros en scripts.
+
+</Callout>
+
+<Callout tipo="warning" titulo="rm -rf con una variable vacía">
+
+Un comando como `rm -rf "$carpeta"/*` es peligroso si `carpeta` está vacía: puede apuntar a la raíz. Activa `set -u` al inicio del script, usa `${carpeta:?}` para exigir que tenga valor y revisa con `echo` antes de borrar. Y nunca copies comandos con `sudo` y `rm -rf` sin entender qué hacen.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Permission denied al correr un script">
+
+Si `./script.sh` responde `Permission denied`, falta el permiso de ejecución: usa `chmod +x script.sh`. Y recuerda el `./`: sin él, bash busca el comando en las carpetas de tu `PATH` y no en la carpeta actual. Con `bash script.sh` no necesitas el permiso, porque tú le pasas el archivo a bash.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Scripts de Windows con saltos de línea CRLF">
+
+Si guardaste el script en Windows y en Linux ves `/bin/bash^M: bad interpreter: No such file or directory`, el archivo tiene finales de línea de Windows (CRLF). Conviértelo con `dos2unix script.sh` si lo tienes instalado, o configura tu editor para guardar con saltos de línea LF. Con Git, `core.autocrlf` ayuda a evitarlo.
+
+</Callout>
+
+## Buenas prácticas
+
+- Empieza tus scripts con `#!/usr/bin/env bash` y `set -euo pipefail`, y entiende qué hace cada opción antes de usarla.
+- Pon comillas dobles a las variables: `"$variable"`.
+- Antes de ejecutar algo destructivo, muestra primero lo que va a afectar con `ls` o `echo`.
+- Usa `man comando` o `comando --help` antes de buscar en internet. Para una explicación corta con ejemplos existe también el proyecto de páginas `tldr`.
+- Aprende a usar `Tab` para autocompletar y la flecha arriba y `Ctrl+R` para buscar en tu historial. Ahorran muchísimo tiempo.
+- Revisa tus scripts con ShellCheck, un analizador gratuito que señala errores típicos de bash.
+- Usa `sudo` solo cuando haga falta y sabiendo qué comando corres.
+- Guarda tus scripts útiles en un repositorio de Git.
+
+## Siguiente paso
+
+Ya te mueves por el sistema, combinas comandos y escribes scripts con argumentos y control de errores. Lo que sigue es practicar con problemas reales: automatiza tus respaldos, renombra archivos en lote o procesa un CSV con `awk`. Sigue con el libro de William Shotts de la biblioteca, que cubre permisos, procesos, `sed` y `find` a fondo, y entra a un juego como OverTheWire Bandit para practicar por SSH.
+
+Para llevar tus scripts a producción mira [Docker desde cero](/guias/docker/); para versionarlos, la guía de [Git y GitHub](/guias/git/). Si quieres una visión más amplia, revisa los temas de [sistemas operativos](/biblioteca/sistemas-operativos/). Todos los recursos están en [la biblioteca de Linux y terminal](/biblioteca/linux/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

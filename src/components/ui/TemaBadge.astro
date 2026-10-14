@@ -1,0 +1,41 @@
+---
+/**
+ * Logo oficial de un tema (lenguaje, framework o herramienta) sobre una tarjeta clara.
+ * La tarjeta clara garantiza contraste con cualquier color de marca en modo oscuro y claro.
+ * Si el tema no tiene logo, muestra su monograma. Es decorativo: el nombre siempre va como texto al lado.
+ */
+interface Props {
+  /** Datos mínimos del tema. */
+  tema: { abrev: string; logo?: string };
+  class?: string;
+  /** Lado del logo en px dentro de la tarjeta. */
+  logoSize?: number;
+}
+const { tema, class: className = 'h-11 w-11', logoSize } = Astro.props;
+const corto = tema.abrev.length > 3;
+---
+
+{tema.logo ? (
+  <span
+    aria-hidden="true"
+    class:list={['logo-tile grid shrink-0 place-items-center rounded-2xl', className]}
+  >
+    <img
+      src={`/logos/${tema.logo}.svg`}
+      alt=""
+      width={logoSize}
+      height={logoSize}
+      loading="lazy"
+      decoding="async"
+      class="h-[64%] w-[64%] object-contain"
+    />
+  </span>
+) : (
+  <span
+    aria-hidden="true"
+    style="container-type:size"
+    class:list={['grid shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink', className]}
+  >
+    <span class="font-mono font-semibold leading-none tracking-tight" style={`font-size:${corto ? 24 : tema.abrev.length === 3 ? 30 : 38}cqmin`}>{tema.abrev}</span>
+  </span>
+)}

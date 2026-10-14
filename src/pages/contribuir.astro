@@ -1,0 +1,176 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import { SITE } from '@data/site';
+import { TEMAS } from '@data/temas';
+import { RECURSOS } from '@data/library';
+import { ETIQUETAS_FORMATO, ETIQUETAS_LICENCIA, ETIQUETAS_NIVEL, ETIQUETAS_TIPO, FORMATOS, LICENCIAS, NIVELES, TIPOS } from '@lib/schemas';
+import { issueUrl } from '@lib/github';
+import { migasLd } from '@lib/seo';
+
+const titulo = 'Contribuye con tu cuenta de GitHub';
+const descripcion = 'Propón recursos, corrige páginas o escribe guías. Cada aporte lleva tu identidad de GitHub y pasa por revisión humana antes de publicarse, así el contenido sigue siendo confiable.';
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Contribuir', href: '/contribuir/' },
+];
+const contexto = { temas: TEMAS.map((t) => t.slug), urlsExistentes: RECURSOS.map((r) => r.url), repo: SITE.repo };
+
+const confianza = [
+  ['Tu identidad', 'Inicias sesión en GitHub y cada aporte queda firmado con tu cuenta. Nadie publica de forma anónima.', 'users'],
+  ['Revisión humana', 'Nada se publica directo. Una persona mantenedora revisa y aprueba cada pull request.', 'check'],
+  ['Revisión automática', 'Un robot valida el formato, que no haya duplicados y que los enlaces carguen.', 'robot'],
+  ['Historial público', 'Todo queda en el historial de Git: quién cambió qué y cuándo, y se puede revertir.', 'file-text'],
+] as const;
+
+const formas = [
+  ['Proponer un recurso', 'Libro, curso o documentación gratuita. Llena el formulario de abajo.', '#proponer', 'upload', false],
+  ['Reportar un enlace roto', 'Un recurso ya no carga o dejó de ser gratis.', issueUrl('enlace-roto'), 'alert-triangle', true],
+  ['Corregir o mejorar una página', 'En cada guía o artículo hay un botón "Sugerir un cambio" que abre el editor de GitHub.', '/guias/', 'github', false],
+  ['Escribir una guía, reto o glosario', 'Sigue la plantilla de la guía de contenido y abre un pull request.', `${SITE.repo}/blob/main/docs/CONTENIDO.md`, 'code', true],
+  ['Contribuir con ayuda de IA', 'Conecta tu asistente al servidor MCP, deja que prepare la propuesta y revísala tú.', '/conectar-ia/', 'sparkles', false],
+] as const;
+
+const pasos = [
+  ['Preparas el aporte', 'Con el formulario, el editor de GitHub o tu propio editor.'],
+  ['GitHub te pide iniciar sesión', 'Si no tienes cuenta, la creas gratis. GitHub crea una copia (fork) a tu nombre.'],
+  ['Se abre un pull request', 'Una revisión automática comprueba formato, duplicados y enlaces.'],
+  ['Lo revisa una persona', 'Puede pedirte cambios. Te avisa GitHub por correo.'],
+  ['Se publica', 'Al aprobarse se integra y el sitio se actualiza. Tu nombre aparece en los colaboradores.'],
+];
+---
+
+<BaseLayout title={titulo} description={descripcion} path="/contribuir/" jsonLd={[migasLd(migas)]}>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Comunidad" titulo={titulo} descripcion={descripcion} enlace={{ href: `${SITE.repo}/graphs/contributors`, label: 'Ver colaboradores' }} />
+
+    <section class="mt-10" aria-labelledby="confianza-titulo">
+      <h2 id="confianza-titulo" class="mb-4 text-sm font-semibold uppercase tracking-wider text-muted">Cómo mantenemos la confianza</h2>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {confianza.map(([t, d, i]) => (
+          <div class="card p-5">
+            <span class="grid h-10 w-10 place-items-center rounded-2xl bg-accent text-on-accent"><Icon name={i} class="h-5 w-5" /></span>
+            <p class="mt-3 font-semibold">{t}</p>
+            <p class="mt-1 text-sm leading-relaxed text-muted">{d}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="formas-titulo">
+      <h2 id="formas-titulo" class="mb-4 text-2xl font-bold tracking-tight">Formas de contribuir</h2>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {formas.map(([t, d, h, i, externo]) => (
+          <a href={h} class="card card-hover flex items-start gap-3 p-5" rel={externo ? 'noopener' : undefined} target={externo ? '_blank' : undefined}>
+            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink"><Icon name={i} class="h-5 w-5" /></span>
+            <span><span class="block font-semibold">{t}</span><span class="mt-1 block text-sm leading-snug text-muted">{d}</span></span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section id="proponer" class="mt-16 scroll-mt-24" aria-labelledby="proponer-titulo">
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div>
+          <h2 id="proponer-titulo" class="text-2xl font-bold tracking-tight">Proponer un recurso</h2>
+          <p class="mt-2 text-muted">Solo recursos gratuitos, legales y con enlace a la fuente original. Al terminar, GitHub te pedirá iniciar sesión y abrirá el pull request a tu nombre.</p>
+
+          <form id="form-recurso" class="mt-6 grid gap-4 sm:grid-cols-2" novalidate autocomplete="off">
+            <label class="sm:col-span-2 text-sm font-medium">Título
+              <input name="titulo" class="field mt-1" maxlength="120" placeholder="Ej. Aprende Python con ejercicios" required />
+            </label>
+            <label class="text-sm font-medium">Autor o proyecto
+              <input name="autor" class="field mt-1" maxlength="120" placeholder="Nombre de quien lo creó" required />
+            </label>
+            <label class="text-sm font-medium">Enlace oficial
+              <input name="url" type="url" class="field mt-1" placeholder="https://" required />
+            </label>
+            <label class="text-sm font-medium">Tema
+              <select name="tema" class="field mt-1" required>
+                <option value="">Elige un tema</option>
+                {TEMAS.map((t) => <option value={t.slug}>{t.nombre}</option>)}
+              </select>
+            </label>
+            <label class="text-sm font-medium">Tipo
+              <select name="tipo" class="field mt-1">{TIPOS.map((t) => <option value={t}>{ETIQUETAS_TIPO[t]}</option>)}</select>
+            </label>
+            <label class="text-sm font-medium">Nivel
+              <select name="nivel" class="field mt-1">{NIVELES.map((n) => <option value={n}>{ETIQUETAS_NIVEL[n]}</option>)}</select>
+            </label>
+            <label class="text-sm font-medium">Formato
+              <select name="formato" class="field mt-1">{FORMATOS.map((f) => <option value={f}>{ETIQUETAS_FORMATO[f]}</option>)}</select>
+            </label>
+            <label class="text-sm font-medium">Idioma
+              <select name="idioma" class="field mt-1"><option value="es">Español</option><option value="en">Inglés</option></select>
+            </label>
+            <label class="text-sm font-medium">Licencia
+              <select name="licencia" class="field mt-1">{LICENCIAS.map((l) => <option value={l} selected={l === 'desconocida'}>{ETIQUETAS_LICENCIA[l]}</option>)}</select>
+            </label>
+            <label class="sm:col-span-2 text-sm font-medium">Descripción (qué aprendes y para quién es)
+              <textarea name="descripcion" rows="3" class="field mt-1 !rounded-3xl" maxlength="240" placeholder="Entre 20 y 240 caracteres, con tus palabras" required></textarea>
+            </label>
+            <label class="sm:col-span-2 text-sm font-medium">Etiquetas (opcional, separadas por coma)
+              <input name="etiquetas" class="field mt-1" placeholder="ejercicios, desde-cero, interactivo" />
+            </label>
+
+            <div id="errores-recurso" hidden role="alert" class="sm:col-span-2 rounded-2xl border border-danger/40 bg-danger/5 p-4 text-sm text-danger"></div>
+
+            <div class="sm:col-span-2 flex flex-wrap items-center gap-3">
+              <button type="submit" class="btn btn-primary">Preparar mi propuesta</button>
+              <p class="text-xs text-muted">No enviamos nada desde aquí: tú lo confirmas en GitHub.</p>
+            </div>
+          </form>
+
+          <div id="salida-recurso" hidden class="card mt-8 p-5 sm:p-6">
+            <p class="eyebrow">Listo para enviar</p>
+            <h3 class="mt-2 text-lg font-semibold">Tu archivo: <code id="ruta-recurso" class="rounded-md border border-line bg-surface-2 px-1.5 font-mono text-sm"></code></h3>
+            <pre class="mt-4 max-h-80 overflow-auto rounded-2xl border border-line bg-surface-2 p-4 font-mono text-[0.8rem] leading-relaxed"><code id="codigo-recurso"></code></pre>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <a id="abrir-github" href="#" rel="noopener" target="_blank" class="btn btn-primary"><Icon name="github" class="h-4 w-4" /> Abrir en GitHub e iniciar sesión</a>
+              <button type="button" id="copiar-codigo" class="btn btn-secondary"><Icon name="copy" class="h-4 w-4" /> Copiar código</button>
+            </div>
+            <p class="mt-3 text-xs text-muted">En GitHub verás "Propose changes". Se crea un fork a tu nombre y el pull request. Antes de enviarlo, abre el enlace y confirma que carga y es gratis.</p>
+          </div>
+
+          <script type="application/json" id="datos-contribuir" set:html={JSON.stringify(contexto)} />
+        </div>
+
+        <aside class="space-y-4">
+          <div class="card p-5">
+            <h3 class="font-semibold">Qué sí aceptamos</h3>
+            <ul class="mt-3 space-y-2 text-sm text-muted">
+              <li>Gratis de verdad, sin pagos ocultos para leer.</li>
+              <li>Legal: lo publica su autor, editorial o universidad, o tiene licencia abierta.</li>
+              <li>Enlace a la fuente original, nunca a copias ni espejos.</li>
+              <li>En español, o en inglés si es imprescindible.</li>
+            </ul>
+          </div>
+          <div class="card p-5">
+            <h3 class="font-semibold">Qué pasa después</h3>
+            <ol class="mt-3 space-y-3 text-sm">
+              {pasos.map(([t, d], i) => (
+                <li class="flex gap-3"><span class="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold text-on-accent">{i + 1}</span><span><span class="block font-medium">{t}</span><span class="block text-muted">{d}</span></span></li>
+              ))}
+            </ol>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="mt-16 max-w-3xl" aria-labelledby="reglas-titulo">
+      <h2 id="reglas-titulo" class="text-2xl font-bold tracking-tight">Para quien contribuye seguido</h2>
+      <div class="prose mt-4">
+        <p>Si vas a aportar con frecuencia, trabaja con un fork y abre pull requests pequeños. Las personas colaboradoras con varios aportes aprobados pueden pasar a ser revisoras de su área. Todo está descrito en la <a href={`${SITE.repo}/blob/main/docs/GOBERNANZA.md`} rel="noopener" target="_blank">guía de gobernanza</a> y en <a href={`${SITE.repo}/blob/main/CONTRIBUTING.md`} rel="noopener" target="_blank">CONTRIBUTING</a>.</p>
+        <p>Si usas una IA para preparar tu aporte, dilo en la descripción del pull request y revisa tú cada dato: tú firmas lo que envías.</p>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import { montarContribuir } from '@/scripts/contribuir';
+  montarContribuir();
+</script>

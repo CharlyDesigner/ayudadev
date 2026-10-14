@@ -3,13 +3,13 @@ import Icon from '@components/ui/Icon.astro';
 
 const actual = Astro.url.pathname;
 const tabs = [
-  { label: 'Inicio', href: '/', icon: 'home' },
-  { label: 'Biblioteca', href: '/biblioteca/', icon: 'book' },
-  { label: 'Guías', href: '/guias/', icon: 'code' },
-  { label: 'IA', href: '/ia/', icon: 'sparkles' },
-  { label: 'Más', href: '/noticias/', icon: 'menu' },
+  { label: 'Inicio', href: '/', icon: 'home', match: ['/'] },
+  { label: 'Biblioteca', href: '/biblioteca/', icon: 'book', match: ['/biblioteca/'] },
+  { label: 'Guías', href: '/guias/', icon: 'code', match: ['/guias/'] },
+  { label: 'IA', href: '/ia/', icon: 'sparkles', match: ['/ia/'] },
+  { label: 'Explorar', href: '/explorar/', icon: 'layout-grid', match: ['/explorar/', '/rutas/', '/fundamentos/', '/glosario/', '/hojas/', '/retos/', '/proyectos/', '/herramientas/', '/comunidad/', '/carrera/', '/noticias/', '/progreso/', '/empieza-aqui/'] },
 ] as const;
-const activo = (href: string) => (href === '/' ? actual === '/' : actual.startsWith(href));
+const activo = (t: (typeof tabs)[number]) => (t.href === '/' ? actual === '/' : t.match.some((m) => actual.startsWith(m)));
 ---
 
 <nav aria-label="Navegación móvil" class="fixed inset-x-3 bottom-3 z-40 md:hidden">
@@ -18,10 +18,10 @@ const activo = (href: string) => (href === '/' ? actual === '/' : actual.startsW
       <li class="flex-1">
         <a
           href={tab.href}
-          aria-current={activo(tab.href) ? 'page' : undefined}
+          aria-current={activo(tab) ? 'page' : undefined}
           class:list={[
-            'flex flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[11px] font-medium transition-colors',
-            activo(tab.href) ? 'text-accent-ink' : 'text-muted',
+            'flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1 text-[11px] font-medium transition-colors',
+            activo(tab) ? 'bg-surface text-accent-ink' : 'text-muted',
           ]}
         >
           <Icon name={tab.icon} class="h-5 w-5" />

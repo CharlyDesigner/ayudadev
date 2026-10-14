@@ -1,0 +1,170 @@
+---
+titulo: 'La terminal explicada'
+descripcion: 'Qué son la terminal, la consola y el shell, los comandos básicos en PowerShell, bash y zsh, y cómo usarla sin miedo desde tu primer día.'
+categoria: herramientas
+nivel: principiante
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [linux, git]
+etiquetas: [terminal, bash, powershell, comandos, shell]
+orden: 46
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Todos los tutoriales de programación dicen lo mismo: "abre una terminal y escribe esto". Y ahí está esa ventana negra, con un cursor parpadeando, que parece pensada para hackers de película. Te da miedo escribir algo mal y romper tu computadora.
+
+Respira. La terminal es solo otra forma de hacer lo que ya haces con el ratón: abrir carpetas, copiar archivos, ejecutar programas. Con la diferencia de que escribes lo que quieres y puedes repetirlo, automatizarlo y combinarlo. Aprender sus bases te ahorra horas durante toda tu carrera.
+
+## Qué es
+
+Tres palabras se mezclan todo el tiempo:
+
+- **Terminal** (o consola): la ventana donde escribes. Es solo el "cuadro de texto".
+- **Shell**: el programa que está dentro de la terminal, lee lo que escribes y lo ejecuta. Ejemplos: **bash** y **zsh** (macOS y Linux) y **PowerShell** (Windows).
+- **Comando**: una instrucción que le das al shell, como `ls` o `cd`.
+
+Cuando escribes `ls` y presionas Enter, el shell busca un programa llamado `ls`, lo ejecuta, y te muestra lo que imprimió. Eso es todo.
+
+El **prompt** es el texto que aparece antes del cursor, normalmente con tu carpeta actual. Siempre estás "parado" en una carpeta, llamada **directorio de trabajo**, y muchos comandos actúan sobre ella.
+
+## Moverte y mirar: los comandos del día a día
+
+PowerShell trae alias para los comandos clásicos, por eso `ls`, `cd`, `cat` y `pwd` funcionan en las dos. Los nombres "reales" de PowerShell se llaman cmdlets y siguen el patrón Verbo-Sustantivo.
+
+| Qué quieres hacer | PowerShell (Windows) | bash o zsh (macOS y Linux) |
+|---|---|---|
+| Saber dónde estás | `Get-Location` o `pwd` | `pwd` |
+| Listar archivos | `Get-ChildItem` o `ls` | `ls` |
+| Listar con detalles | `ls` | `ls -l` |
+| Entrar a una carpeta | `cd carpeta` | `cd carpeta` |
+| Subir un nivel | `cd ..` | `cd ..` |
+| Ir a tu carpeta personal | `cd ~` | `cd ~` |
+| Crear una carpeta | `mkdir nombre` | `mkdir nombre` |
+| Crear un archivo vacío | `New-Item archivo.txt` | `touch archivo.txt` |
+| Ver el contenido de un archivo | `Get-Content a.txt` o `cat a.txt` | `cat a.txt` |
+| Copiar | `Copy-Item a.txt b.txt` o `cp` | `cp a.txt b.txt` |
+| Mover o renombrar | `Move-Item a.txt b.txt` o `mv` | `mv a.txt b.txt` |
+| Borrar un archivo | `Remove-Item a.txt` o `rm` | `rm a.txt` |
+| Borrar una carpeta con todo | `Remove-Item -Recurse carpeta` | `rm -r carpeta` |
+| Buscar texto en un archivo | `Select-String "hola" a.txt` | `grep "hola" a.txt` |
+| Limpiar la pantalla | `Clear-Host` o `cls` | `clear` |
+| Ayuda de un comando | `Get-Help Get-ChildItem` | `man ls` o `ls --help` |
+
+Una nota sobre rutas: Windows usa `C:\Users\tu\carpeta` y las demás usan `/home/tu/carpeta` o `/Users/tu/carpeta`. PowerShell acepta ambas barras. En bash, si una ruta tiene espacios, enciérrala entre comillas: `cd "Mis Documentos"`.
+
+<Callout tipo="info" titulo="¿Y Git Bash o WSL en Windows?">
+
+Si quieres usar los comandos de bash en Windows, tienes opciones: Git Bash (viene con Git para Windows) o WSL, el subsistema de Windows para Linux, que corre un Linux real dentro de Windows. Para empezar, PowerShell es suficiente. Para los tutoriales hechos para Linux, WSL suele ahorrarte fricción.
+
+</Callout>
+
+## Práctica real en 6 comandos
+
+Corre esto en una carpeta de prueba (usa bash, zsh o Git Bash):
+
+<Ejemplo numero={1} titulo="Crear, leer, copiar y buscar" archivo="practica.sh" ejecutar="bash practica.sh" salida="hola mundo
+adiós
+1:hola mundo
+2 notas.txt
+notas.txt
+src
+copia.txt">
+
+```bash
+# Crea una carpeta de prueba y entra en ella
+mkdir prueba
+cd prueba
+
+# Escribe una línea y agrega otra al final
+echo "hola mundo" > notas.txt
+echo "adiós" >> notas.txt
+
+# Léelo, busca una palabra con número de línea y cuenta líneas
+cat notas.txt
+grep -n "hola" notas.txt
+wc -l notas.txt
+
+# Crea una carpeta y copia el archivo adentro
+mkdir src
+cp notas.txt src/copia.txt
+ls
+ls src
+```
+
+El símbolo `>` guarda la salida de un comando en un archivo, **reemplazando** lo que hubiera. `>>` la agrega al final. Esto se llama redirección y es de lo más útil de la terminal.
+
+</Ejemplo>
+
+## Pipes: encadenar comandos
+
+El símbolo `|` (pipe) toma la salida de un comando y se la pasa al siguiente. Es como una línea de ensamblaje.
+
+```bash
+# Cuenta cuántos archivos hay en la carpeta actual
+ls | wc -l
+
+# En PowerShell sería
+# ls | Measure-Object
+```
+
+Una diferencia importante: en bash los comandos se pasan **texto**; en PowerShell se pasan **objetos** con propiedades. Por eso en PowerShell puedes hacer `ls | Where-Object Length -gt 1000` sin recortar texto. Cada enfoque tiene sus ventajas; los conceptos son los mismos.
+
+## Variables de entorno, PATH y códigos de salida
+
+- **PATH** es la lista de carpetas donde el shell busca programas. Si escribes `node` y dice "no se reconoce el comando" o "command not found", casi siempre es que el programa no está instalado o su carpeta no está en el PATH.
+- **Código de salida**: cada programa termina con un número. Por convención, `0` significa éxito y cualquier otro número significa error. En bash lo ves con `echo $?` y en PowerShell con `echo $LASTEXITCODE`.
+
+```bash
+ls noexiste
+echo "codigo=$?"
+```
+
+Dará algo como `ls: cannot access 'noexiste': No such file or directory` y un código distinto de cero. Las herramientas de automatización usan ese número para saber si algo falló.
+
+## Atajos que te cambian la vida
+
+| Atajo | Qué hace |
+|---|---|
+| Tab | Autocompleta nombres de archivos y comandos |
+| Flecha arriba | Trae el comando anterior |
+| Ctrl + C | Detiene el programa que está corriendo |
+| Ctrl + L | Limpia la pantalla (bash y zsh) |
+| Ctrl + R | Busca en tu historial de comandos (bash y zsh) |
+| Clic derecho o Ctrl + Shift + V | Pegar, según tu terminal |
+
+<Callout tipo="tip" titulo="Usa Tab todo el tiempo">
+
+Escribe las primeras letras de una carpeta y presiona Tab. Te ahorra errores de escritura y te muestra qué hay en la carpeta. Si hay varias opciones, presiona Tab dos veces para verlas.
+
+</Callout>
+
+<Callout tipo="warning" titulo="rm y Remove-Item no tienen papelera">
+
+Lo que borras en la terminal no pasa por la papelera de reciclaje. Se va para siempre. Revisa dos veces la ruta, no copies comandos con `rm -rf` o `Remove-Item -Recurse -Force` sin entender qué borran, y mucho menos con `sudo`. Si dudas, primero lista con `ls` lo que vas a borrar.
+
+</Callout>
+
+## Pruébalo tú
+
+1. Abre una terminal, escribe `pwd` (o `Get-Location`) y fíjate dónde estás. Luego `ls` para ver qué hay.
+2. Crea una carpeta `practica`, entra, crea un archivo `datos.txt` con `echo "uno" > datos.txt` y agrega dos líneas más con `>>`.
+3. Usa `cat` o `Get-Content` para leerlo y `grep` o `Select-String` para encontrar una línea.
+4. Provoca un error a propósito con `ls noexiste` y revisa el código de salida.
+5. Presiona flecha arriba, edita el comando anterior y vuélvelo a correr, sin escribirlo completo.
+
+## Errores y mitos comunes
+
+- **"La terminal es peligrosa."** Lo es tanto como el explorador de archivos: solo borra lo que le pides. Lee antes de pegar comandos.
+- **"Tengo que memorizar todo."** No. Se aprende por uso. Guarda los comandos útiles en notas y usa el historial.
+- **"PowerShell y bash son lo mismo."** Se parecen en lo básico, pero difieren en sintaxis, variables y tuberías.
+- **"Si un comando no hace nada, falló."** Muchos comandos exitosos no imprimen nada. Revisa el código de salida o el resultado.
+- **"Debo ejecutar todo como administrador."** Casi nunca. Usa permisos elevados solo cuando sepas por qué.
+
+## Qué sigue
+
+- Aprende a guardar tu trabajo con la [guía de Git y GitHub](/guias/git/).
+- Configura valores y secretos desde la terminal en [Variables de entorno y secretos](/fundamentos/variables-de-entorno/).
+- Elige dónde escribir código en [Editor, IDE y terminal](/fundamentos/que-es-un-ide-y-un-editor/).
+- Profundiza en la [biblioteca de Linux y terminal](/biblioteca/linux/) y guarda los comandos en el [glosario](/glosario/).

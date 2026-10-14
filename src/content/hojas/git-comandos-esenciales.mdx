@@ -1,0 +1,188 @@
+---
+titulo: 'Git: comandos esenciales'
+descripcion: 'Los comandos de Git que usas todos los días: configurar, commits, ramas, remotos, deshacer cambios y revisar el historial, en tablas de consulta rápida.'
+tema: git
+etiquetas: ['git', 'commits', 'ramas', 'terminal']
+publicado: 2026-10-09
+orden: 1
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Los comandos de Git que más usas, agrupados por tarea. Probados con Git 2.55.
+
+## Configuración inicial
+
+| Comando | Qué hace |
+| --- | --- |
+| `git config --global user.name "Tu Nombre"` | Define el nombre que aparece en tus commits |
+| `git config --global user.email "tu@correo.com"` | Define el correo de tus commits |
+| `git config --global init.defaultBranch main` | Los repositorios nuevos arrancan en `main` |
+| `git config --global --list` | Muestra tu configuración global |
+| `git config --get user.email` | Muestra un solo valor |
+
+## Crear y obtener repositorios
+
+| Comando | Qué hace |
+| --- | --- |
+| `git init` | Crea un repositorio en la carpeta actual |
+| `git init -b main` | Lo crea y nombra la rama inicial `main` |
+| `git clone URL` | Copia un repositorio remoto con todo su historial |
+| `git clone URL carpeta` | Lo copia a una carpeta con otro nombre |
+| `git clone --depth 1 URL` | Copia solo el último commit (descarga rápida) |
+
+## El ciclo diario
+
+| Comando | Qué hace |
+| --- | --- |
+| `git status` | Muestra qué cambió y qué está preparado |
+| `git status -sb` | Lo mismo en formato corto, con la rama |
+| `git add archivo` | Prepara un archivo para el siguiente commit |
+| `git add .` | Prepara todo lo nuevo o modificado desde aquí |
+| `git add -p` | Prepara cambios por trozos, preguntando uno a uno |
+| `git commit -m "mensaje"` | Guarda lo preparado con un mensaje |
+| `git commit -am "mensaje"` | Prepara archivos ya rastreados y hace commit |
+| `git commit --amend` | Corrige el último commit (mensaje o contenido) |
+| `git commit --amend --no-edit` | Añade lo preparado al último commit sin cambiar el mensaje |
+
+```bash
+git status -sb          # ## main
+git add README.md       # prepara
+git commit -m "Agrega README"
+git log --oneline -3    # últimos 3 commits, una línea cada uno
+```
+
+<Callout tipo="warning" titulo="No uses --amend en commits ya publicados">
+
+`--amend` reescribe el commit: cambia su hash. Si ya lo subiste y otras personas lo tienen, evita reescribirlo.
+
+</Callout>
+
+## Ver diferencias e historial
+
+| Comando | Qué hace |
+| --- | --- |
+| `git diff` | Cambios sin preparar |
+| `git diff --staged` | Cambios preparados (lo que entrará al commit) |
+| `git diff rama1..rama2` | Diferencias entre dos ramas |
+| `git diff --stat` | Resumen de archivos y líneas cambiadas |
+| `git log` | Historial completo |
+| `git log --oneline` | Una línea por commit |
+| `git log --oneline --graph --all` | Dibuja las ramas |
+| `git log -p archivo` | Cambios de cada commit que tocó el archivo |
+| `git log --author="Ana"` | Commits de una persona |
+| `git log -S"texto"` | Commits que añadieron o quitaron ese texto |
+| `git show HEAD` | Detalle del último commit |
+| `git blame archivo` | Quién cambió cada línea y en qué commit |
+| `git shortlog -sn` | Número de commits por autor |
+
+## Ramas
+
+| Comando | Qué hace |
+| --- | --- |
+| `git branch` | Lista las ramas locales |
+| `git branch -vv` | Lista con último commit y rama remota que sigue |
+| `git branch --show-current` | Muestra el nombre de la rama actual |
+| `git switch rama` | Cambia a una rama |
+| `git switch -c nueva` | Crea la rama y cambia a ella |
+| `git switch -` | Vuelve a la rama anterior |
+| `git branch -m nuevo-nombre` | Renombra la rama actual |
+| `git branch -d rama` | Borra una rama ya fusionada |
+| `git branch -D rama` | Borra una rama aunque no esté fusionada |
+| `git merge rama` | Fusiona `rama` en la actual |
+| `git merge --no-ff rama` | Fusiona siempre creando un commit de merge |
+| `git merge --abort` | Cancela una fusión con conflictos |
+
+## Remotos
+
+| Comando | Qué hace |
+| --- | --- |
+| `git remote -v` | Lista los remotos y sus URL |
+| `git remote add origin URL` | Registra un remoto llamado `origin` |
+| `git push -u origin main` | Sube la rama y la deja enlazada con el remoto |
+| `git push` | Sube la rama actual (ya enlazada) |
+| `git fetch` | Descarga cambios sin modificar tus archivos |
+| `git fetch --prune` | Además, quita referencias a ramas remotas borradas |
+| `git pull` | `fetch` más fusión en tu rama |
+| `git pull --rebase` | `fetch` más rebase en lugar de merge |
+| `git push origin --delete rama` | Borra una rama en el remoto |
+
+## Deshacer cosas
+
+| Comando | Qué hace |
+| --- | --- |
+| `git restore archivo` | Descarta cambios sin preparar de un archivo |
+| `git restore --staged archivo` | Saca un archivo de la zona de preparación |
+| `git restore --source=HEAD~1 archivo` | Trae el archivo como estaba un commit atrás |
+| `git reset --soft HEAD~1` | Deshace el commit y deja los cambios preparados |
+| `git reset HEAD~1` | Deshace el commit y deja los cambios sin preparar |
+| `git reset --hard HEAD~1` | Deshace el commit y borra los cambios |
+| `git revert HEAD` | Crea un commit nuevo que invierte el último |
+| `git revert -m 1 HEAD` | Igual, si el último commit es un merge |
+| `git clean -n` | Muestra qué archivos sin rastrear borraría (simulacro) |
+| `git clean -fd` | Los borra de verdad |
+| `git reflog` | Historial de movimientos de HEAD, para rescatar commits |
+
+<Callout tipo="warning" titulo="Comandos que no se pueden deshacer">
+
+`git reset --hard`, `git restore archivo` y `git clean -fd` descartan trabajo que no estaba en un commit. Ese trabajo no aparece en el `reflog`. Haz `git clean -n` antes de `-fd`.
+
+</Callout>
+
+## Guardar trabajo a medias
+
+| Comando | Qué hace |
+| --- | --- |
+| `git stash` | Guarda tus cambios y deja el directorio limpio |
+| `git stash -u` | Incluye también archivos nuevos sin rastrear |
+| `git stash list` | Lista lo guardado (`stash@{0}`, `stash@{1}`...) |
+| `git stash pop` | Recupera lo último guardado y lo borra de la lista |
+| `git stash apply` | Lo recupera pero lo deja en la lista |
+| `git stash drop` | Borra la entrada más reciente |
+
+## Etiquetas
+
+| Comando | Qué hace |
+| --- | --- |
+| `git tag` | Lista las etiquetas |
+| `git tag -a v1.0 -m "versión 1"` | Crea una etiqueta anotada |
+| `git tag v1.0.1` | Crea una etiqueta ligera |
+| `git push origin v1.0` | Sube una etiqueta |
+| `git push --tags` | Sube todas las etiquetas |
+
+## Ignorar archivos
+
+Crea un `.gitignore` en la raíz antes del primer commit. Los comentarios van en su propia línea con `#`:
+
+```gitignore
+# carpeta completa
+node_modules/
+# secretos: nunca al repositorio
+.env
+# por extensión
+*.log
+# excepción con !
+!importante.log
+```
+
+`.gitignore` no afecta a archivos que ya rastrea Git. Para dejar de rastrear uno: `git rm --cached archivo`.
+
+## Referencias útiles
+
+| Sintaxis | Significa |
+| --- | --- |
+| `HEAD` | El commit donde estás |
+| `HEAD~1` o `HEAD~` | Su padre (un commit atrás) |
+| `HEAD~3` | Tres commits atrás |
+| `HEAD^2` | Segundo padre de un merge |
+| `origin/main` | La rama `main` del remoto tal como la viste en el último fetch |
+| `main..feat` | Los commits que están en `feat` y no en `main` |
+
+## Para ir más a fondo
+
+- [Referencia oficial de comandos de Git](https://git-scm.com/docs)
+- [Pro Git en español](https://git-scm.com/book/es/v2)
+- [Documentación de GitHub en español](https://docs.github.com/es)
+- Hoja de AyudaDev: [Git, flujos de trabajo en equipo](/hojas/git-flujos-de-trabajo/)
+- Guía de AyudaDev: [Git y GitHub desde cero](/guias/git/)
+- Biblioteca: [libros y cursos de Git](/biblioteca/git/)

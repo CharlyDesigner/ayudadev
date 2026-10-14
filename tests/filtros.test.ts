@@ -3,7 +3,7 @@ import { filtrarRecursos, ordenRecursos } from '@lib/catalog';
 import { normalizar, aSlug } from '@lib/text';
 import type { Recurso, Tema } from '@lib/schemas';
 
-const tema = (slug: string, area: Tema['area']): Tema => ({ slug, nombre: slug, area, descripcion: 'descripción de prueba' });
+const tema = (slug: string, area: Tema['area']): Tema => ({ slug, nombre: slug, area, abrev: slug.slice(0, 2), descripcion: 'descripción de prueba' });
 const temas: Tema[] = [tema('javascript', 'lenguajes'), tema('git', 'herramientas')];
 
 const r = (over: Partial<Recurso>): Recurso => ({

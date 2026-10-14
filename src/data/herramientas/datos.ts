@@ -1,0 +1,13 @@
+import type { HerramientaInput } from '../herramientas';
+
+const herramientas: HerramientaInput[] = [
+  { id: 'bruno', nombre: 'Bruno', categoria: 'datos', descripcion: 'Cliente de APIs de código abierto que guarda tus peticiones como archivos de texto, fáciles de versionar con Git. Alternativa ligera a Postman.', url: 'https://www.usebruno.com/', gratis: 'si', sistemas: ['windows', 'macos', 'linux'], idioma: 'en', destacado: true, verificado: '2026-10-09' },
+  { id: 'hoppscotch', nombre: 'Hoppscotch', categoria: 'datos', descripcion: 'Cliente de APIs de código abierto que corre en el navegador, con soporte para REST y GraphQL. Útil para probar un endpoint sin instalar nada.', url: 'https://hoppscotch.io/', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'postman', nombre: 'Postman', categoria: 'datos', descripcion: 'Plataforma muy extendida para probar, documentar y automatizar peticiones a APIs. Verás que la piden en muchas ofertas de trabajo.', url: 'https://www.postman.com/', gratis: 'limitado', sistemas: ['windows', 'macos', 'linux', 'web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'dbeaver', nombre: 'DBeaver', categoria: 'datos', descripcion: 'Cliente de bases de datos universal para PostgreSQL, MySQL, SQLite y muchas más. Su edición Community es gratuita y de código abierto.', url: 'https://dbeaver.io/', gratis: 'si', sistemas: ['windows', 'macos', 'linux'], idioma: 'en', destacado: true, verificado: '2026-10-09' },
+  { id: 'pgadmin', nombre: 'pgAdmin', categoria: 'datos', descripcion: 'La herramienta gráfica de la comunidad para administrar bases de datos PostgreSQL: consultas, tablas, usuarios y copias de seguridad.', url: 'https://www.pgadmin.org/', logo: 'postgresql', gratis: 'si', sistemas: ['windows', 'macos', 'linux'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'mongodb-compass', nombre: 'MongoDB Compass', categoria: 'datos', descripcion: 'Interfaz gráfica de MongoDB para explorar colecciones, armar consultas y analizar la estructura de tus documentos sin usar la consola.', url: 'https://www.mongodb.com/products/tools/compass', logo: 'mongodb', gratis: 'si', sistemas: ['windows', 'macos', 'linux'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'db-browser-for-sqlite', nombre: 'DB Browser for SQLite', categoria: 'datos', descripcion: 'Programa visual y de código abierto para crear y editar archivos SQLite, con editor de tablas y consultas SQL. Muy bueno para practicar.', url: 'https://sqlitebrowser.org/', logo: 'sqlite', gratis: 'si', sistemas: ['windows', 'macos', 'linux'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+];
+
+export default herramientas;

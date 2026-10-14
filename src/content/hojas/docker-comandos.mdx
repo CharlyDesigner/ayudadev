@@ -1,0 +1,247 @@
+---
+titulo: 'Docker: comandos esenciales'
+descripcion: 'Comandos de Docker para correr contenedores, construir imágenes, usar volúmenes y redes, limpiar espacio y usar Compose, con un Dockerfile y un compose.yaml de ejemplo.'
+tema: docker
+etiquetas: ['docker', 'contenedores', 'compose', 'dockerfile', 'imágenes']
+publicado: 2026-10-09
+orden: 20
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Docker empaqueta una aplicación con todo lo que necesita y la ejecuta aislada, igual en tu máquina y en el servidor. Una **imagen** es la plantilla; un **contenedor** es una imagen en ejecución.
+
+## Correr contenedores
+
+| Comando | Qué hace |
+| --- | --- |
+| `docker run nginx` | Descarga la imagen si hace falta y arranca un contenedor (en primer plano) |
+| `docker run -d nginx` | En segundo plano (`-d`, detached) |
+| `docker run -d -p 8080:80 nginx` | Publica el puerto: `tu_puerto:puerto_del_contenedor` |
+| `docker run --name web nginx` | Le pone nombre al contenedor |
+| `docker run --rm alpine echo hola` | Borra el contenedor al terminar |
+| `docker run -it ubuntu bash` | Sesión interactiva con terminal |
+| `docker run -e CLAVE=valor imagen` | Pasa una variable de entorno |
+| `docker run --env-file .env imagen` | Variables desde un archivo |
+| `docker run -v mi_volumen:/datos imagen` | Monta un volumen con nombre |
+| `docker run -v "$(pwd)":/app imagen` | Monta tu carpeta actual (útil en desarrollo) |
+| `docker run -w /app imagen` | Carpeta de trabajo dentro del contenedor |
+| `docker run -u 1000 imagen` | Ejecuta como otro usuario |
+| `docker run --network mi_red imagen` | Conecta a una red |
+| `docker run --restart unless-stopped imagen` | Reinicia solo, salvo que lo detengas tú |
+| `docker run --platform linux/amd64 imagen` | Fuerza una arquitectura |
+
+```bash
+# un servidor web en http://localhost:8080
+docker run -d --name web -p 8080:80 nginx
+
+# una terminal desechable
+docker run --rm -it alpine sh
+```
+
+<Callout tipo="info" titulo="Orden de los argumentos">
+
+Las opciones de `docker run` van antes del nombre de la imagen. Lo que va después es el comando que se ejecuta dentro: en `docker run --rm alpine echo hola`, `echo hola` corre en el contenedor.
+
+</Callout>
+
+## Gestionar contenedores
+
+| Comando | Qué hace |
+| --- | --- |
+| `docker ps` | Contenedores en ejecución |
+| `docker ps -a` | Todos, incluidos los detenidos |
+| `docker stop web` | Detiene con gracia (envía `SIGTERM`) |
+| `docker kill web` | Detiene de golpe |
+| `docker start web` | Arranca uno detenido |
+| `docker restart web` | Reinicia |
+| `docker rm web` | Borra un contenedor detenido |
+| `docker rm -f web` | Lo borra aunque esté corriendo |
+| `docker logs web` | Muestra la salida |
+| `docker logs -f --tail 100 web` | Sigue la salida en vivo, desde las últimas 100 líneas |
+| `docker exec -it web sh` | Abre una terminal dentro de uno en ejecución |
+| `docker exec web ls /app` | Ejecuta un comando y regresa |
+| `docker cp web:/ruta/archivo .` | Copia del contenedor a tu equipo |
+| `docker cp archivo web:/ruta/` | Copia de tu equipo al contenedor |
+| `docker inspect web` | Configuración completa en JSON |
+| `docker stats` | Uso de CPU y memoria en vivo |
+| `docker top web` | Procesos dentro del contenedor |
+| `docker port web` | Puertos publicados |
+
+Atajo para pasar solo un dato: `docker inspect -f '{{.State.Status}}' web`.
+
+## Imágenes
+
+| Comando | Qué hace |
+| --- | --- |
+| `docker images` | Lista las imágenes locales |
+| `docker pull nginx:1.27` | Descarga una versión concreta |
+| `docker build -t miapp:1.0 .` | Construye con el `Dockerfile` de la carpeta actual |
+| `docker build -f Otro.Dockerfile -t miapp .` | Usa otro archivo |
+| `docker build --no-cache -t miapp .` | Ignora la caché |
+| `docker tag miapp:1.0 usuario/miapp:1.0` | Le pone otro nombre |
+| `docker login` | Inicia sesión en un registro |
+| `docker push usuario/miapp:1.0` | Sube la imagen al registro |
+| `docker rmi miapp:1.0` | Borra una imagen |
+| `docker history miapp` | Capas de la imagen y su tamaño |
+| `docker save -o miapp.tar miapp` | Exporta a un archivo |
+| `docker load -i miapp.tar` | Importa desde un archivo |
+
+Una imagen se identifica como `registro/usuario/nombre:etiqueta`. Sin etiqueta se usa `latest`, que no garantiza ser la versión más reciente ni la misma de ayer; en producción fija una versión.
+
+## Volúmenes y redes
+
+| Comando | Qué hace |
+| --- | --- |
+| `docker volume create datos` | Crea un volumen |
+| `docker volume ls` | Lista volúmenes |
+| `docker volume inspect datos` | Detalles (dónde se guarda) |
+| `docker volume rm datos` | Borra un volumen |
+| `docker network create mi_red` | Crea una red |
+| `docker network ls` | Lista redes |
+| `docker network connect mi_red web` | Conecta un contenedor a una red |
+
+Los datos dentro de un contenedor desaparecen al borrarlo. Lo que debe persistir (una base de datos, subidas de usuarios) va en un volumen. En una misma red definida por el usuario, los contenedores se encuentran por nombre: `postgres://db:5432` apunta al contenedor llamado `db`.
+
+## Limpiar espacio
+
+| Comando | Qué hace |
+| --- | --- |
+| `docker system df` | Muestra cuánto ocupa Docker |
+| `docker container prune` | Borra los contenedores detenidos |
+| `docker image prune` | Borra imágenes sin etiqueta (colgantes) |
+| `docker image prune -a` | Borra todas las que ningún contenedor usa |
+| `docker volume prune` | Borra volúmenes sin usar |
+| `docker system prune` | Contenedores detenidos, redes sin uso e imágenes colgantes |
+
+<Callout tipo="warning" titulo="prune borra para siempre">
+
+`docker volume prune` y `docker system prune --volumes` eliminan datos que ningún contenedor esté usando en ese momento, y no hay papelera. Revisa con `docker volume ls` antes.
+
+</Callout>
+
+## Dockerfile
+
+Un `Dockerfile` describe cómo construir una imagen, instrucción por instrucción:
+
+```dockerfile
+FROM node:24-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY . .
+ENV NODE_ENV=production
+EXPOSE 3000
+USER node
+CMD ["node", "servidor.js"]
+```
+
+| Instrucción | Qué hace |
+| --- | --- |
+| `FROM` | Imagen base. Siempre es la primera |
+| `WORKDIR` | Carpeta de trabajo para lo que sigue |
+| `COPY origen destino` | Copia archivos de tu proyecto a la imagen |
+| `RUN` | Ejecuta un comando al construir (instalar dependencias) |
+| `ENV` | Define una variable de entorno |
+| `ARG` | Variable que solo existe al construir (`--build-arg`) |
+| `EXPOSE` | Documenta el puerto (no lo publica; eso lo hace `-p`) |
+| `USER` | Usuario con el que corre lo que sigue |
+| `CMD` | Comando por defecto al arrancar el contenedor |
+| `ENTRYPOINT` | Ejecutable fijo; `CMD` se convierte en sus argumentos |
+| `VOLUME` | Declara un punto de montaje |
+| `HEALTHCHECK` | Comando que comprueba si la app está sana |
+
+Copiar primero `package*.json` y ejecutar `npm ci` antes de `COPY . .` aprovecha la caché: las dependencias solo se reinstalan cuando cambia `package.json`. Usa la forma con corchetes (`CMD ["node", "x.js"]`) para que la app reciba las señales de apagado.
+
+### Multi-etapa: imágenes más pequeñas
+
+```dockerfile
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+```
+
+La imagen final solo contiene el resultado de la compilación, no las herramientas para generarla.
+
+### .dockerignore
+
+Un archivo `.dockerignore` junto al `Dockerfile` evita copiar lo innecesario o secreto:
+
+```text
+node_modules
+.git
+.env
+*.log
+```
+
+## Docker Compose
+
+Compose define varios contenedores en un archivo. Se usa `docker compose` (con espacio); la herramienta antigua `docker-compose` ya no se mantiene.
+
+```yaml
+# compose.yaml
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://usuario:clave@db:5432/app
+    depends_on:
+      - db
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: clave
+      POSTGRES_DB: app
+    volumes:
+      - datos:/var/lib/postgresql/data
+
+volumes:
+  datos:
+```
+
+| Comando | Qué hace |
+| --- | --- |
+| `docker compose up` | Crea y arranca todo (en primer plano) |
+| `docker compose up -d` | En segundo plano |
+| `docker compose up -d --build` | Reconstruye las imágenes antes |
+| `docker compose down` | Detiene y borra contenedores y redes |
+| `docker compose down -v` | Además borra los volúmenes |
+| `docker compose ps` | Estado de los servicios |
+| `docker compose logs -f web` | Sigue los registros de un servicio |
+| `docker compose exec web sh` | Terminal dentro de un servicio |
+| `docker compose run --rm web npm test` | Ejecuta un comando puntual en un contenedor nuevo |
+| `docker compose build` | Construye las imágenes |
+| `docker compose pull` | Descarga las imágenes más recientes |
+| `docker compose restart web` | Reinicia un servicio |
+| `docker compose config` | Valida y muestra el archivo ya resuelto |
+
+En Compose, los servicios se ven por su nombre: `web` conecta con la base de datos en el host `db`. No pongas contraseñas reales en el `compose.yaml` del repositorio; usa un archivo `.env` fuera del control de versiones.
+
+## Problemas frecuentes
+
+| Síntoma | Qué revisar |
+| --- | --- |
+| `port is already allocated` | Otro programa usa ese puerto. Cambia el de la izquierda en `-p` |
+| La app no responde desde el navegador | Escucha en `127.0.0.1` dentro del contenedor. Debe escuchar en `0.0.0.0` |
+| Pierdes los datos al recrear | Falta un volumen |
+| `Cannot connect to the Docker daemon` | Docker Desktop o el servicio no está iniciado |
+| Cambias código y no se refleja | Reconstruye con `--build`, o monta tu carpeta con `-v` en desarrollo |
+| El contenedor sale al instante | Mira `docker logs nombre`: el proceso principal terminó |
+| `permission denied` en un volumen | El usuario del contenedor no es dueño de esa carpeta |
+
+## Para ir más a fondo
+
+- [Referencia de docker run](https://docs.docker.com/reference/cli/docker/container/run/)
+- [Referencia de Dockerfile](https://docs.docker.com/reference/dockerfile/)
+- [Documentación de Docker Compose](https://docs.docker.com/compose/)
+- Hoja de AyudaDev: [Bash y Linux, comandos de terminal](/hojas/bash-y-linux-comandos/)
+- Biblioteca: [libros y cursos de Docker](/biblioteca/docker/)

@@ -1,0 +1,46 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import { temaPorSlug } from '@data/temas';
+import { SITE } from '@data/site';
+import { guiaDeTema } from '@lib/guias';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('hojas', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+  return lista.map((e, i) => ({ params: { slug: e.id }, props: { e, anterior: lista[i - 1] ?? null, siguiente: lista[i + 1] ?? null } }));
+}
+
+const { e, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(e);
+const tema = temaPorSlug(e.data.tema);
+const guiaSlug = tema ? await guiaDeTema(tema.slug) : undefined;
+const path = `/hojas/${e.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Hojas de referencia', href: '/hojas/' },
+  { nombre: e.data.titulo, href: path },
+];
+---
+
+<ArticleLayout
+  titulo={e.data.titulo}
+  descripcion={e.data.descripcion}
+  path={path}
+  eyebrow="Hoja de referencia"
+  logo={tema?.logo}
+  migas={migas}
+  headings={headings}
+  publicado={e.data.publicado}
+  actualizado={e.data.actualizado}
+  sinNewsletter
+  anterior={anterior ? { titulo: anterior.data.titulo, href: `/hojas/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.titulo, href: `/hojas/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/hojas/${e.id}.mdx`}
+>
+  <Content />
+  {tema && (
+    <p class="not-prose mt-10 text-sm text-muted">
+      ¿Quieres aprender más? Mira la <a href={`/biblioteca/${tema.slug}/`} class="link">biblioteca de {tema.nombre}</a>{guiaSlug && <> o la <a href={`/guias/${guiaSlug}/`} class="link">guía con ejemplos</a></>}.
+    </p>
+  )}
+</ArticleLayout>

@@ -1,0 +1,196 @@
+---
+titulo: 'Permisos y procesos en Linux'
+descripcion: 'Cómo leer y cambiar permisos con chmod y chown, qué significa 755 o 644, y cómo ver, detener y controlar procesos con ps, kill, jobs y systemctl.'
+tema: linux
+etiquetas: ['linux', 'permisos', 'chmod', 'procesos', 'kill']
+publicado: 2026-10-09
+orden: 4
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Quién puede hacer qué con un archivo y cómo controlar los programas que se están ejecutando. Pensado para Linux y macOS.
+
+## Leer la salida de ls -l
+
+```text
+-rwxr-xr-- 1 ana devs 1204 oct  9 10:30 script.sh
+```
+
+| Parte | Significado |
+| --- | --- |
+| `-` (primer carácter) | Tipo: `-` archivo, `d` carpeta, `l` enlace simbólico |
+| `rwx` (1.º trío) | Permisos del dueño (`ana`) |
+| `r-x` (2.º trío) | Permisos del grupo (`devs`) |
+| `r--` (3.º trío) | Permisos del resto de personas |
+| `1` | Número de enlaces duros |
+| `ana` y `devs` | Dueño y grupo |
+| `1204` | Tamaño en bytes |
+
+| Letra | En un archivo | En una carpeta |
+| --- | --- | --- |
+| `r` (lectura) | Leer el contenido | Listar lo que contiene |
+| `w` (escritura) | Modificarlo | Crear, renombrar y borrar dentro |
+| `x` (ejecución) | Ejecutarlo como programa | Entrar con `cd` y acceder a lo de dentro |
+
+## Valores octales
+
+Cada permiso suma un valor: lectura 4, escritura 2, ejecución 1. Un dígito por trío (dueño, grupo, resto).
+
+| Octal | Símbolo | Uso típico |
+| --- | --- | --- |
+| `644` | `rw-r--r--` | Archivos normales |
+| `600` | `rw-------` | Archivos privados, como llaves SSH |
+| `755` | `rwxr-xr-x` | Scripts, programas y carpetas |
+| `700` | `rwx------` | Carpeta solo tuya (por ejemplo `~/.ssh`) |
+| `775` | `rwxrwxr-x` | Carpeta compartida con tu grupo |
+| `444` | `r--r--r--` | Solo lectura para todos |
+| `777` | `rwxrwxrwx` | Todo para todos. Evítalo |
+
+Cálculo: `rwx` es 4+2+1 = 7, `r-x` es 4+0+1 = 5, `r--` es 4. Por eso `rwxr-xr--` es `754`.
+
+## chmod: cambiar permisos
+
+| Comando | Qué hace |
+| --- | --- |
+| `chmod 755 script.sh` | Fija los permisos con octal |
+| `chmod +x script.sh` | Añade ejecución para todos |
+| `chmod u+x script.sh` | Añade ejecución solo al dueño |
+| `chmod g-w archivo` | Quita escritura al grupo |
+| `chmod o-rwx archivo` | Quita todo al resto |
+| `chmod a+r archivo` | Da lectura a todos |
+| `chmod u=rw,go=r archivo` | Fija exactamente: dueño `rw`, el resto `r` |
+| `chmod -R 755 carpeta` | Aplica a la carpeta y todo lo que contiene |
+
+En la forma simbólica, `u` es dueño, `g` grupo, `o` resto y `a` todos; `+` añade, `-` quita y `=` fija.
+
+<Callout tipo="warning" titulo="No arregles errores con chmod 777">
+
+Si algo dice `Permission denied`, abrir todo con `777` oculta el problema y crea uno de seguridad. Averigua quién es el dueño con `ls -l` y corrige con `chown` o con los permisos mínimos necesarios.
+
+</Callout>
+
+## Dueño y grupo
+
+| Comando | Qué hace |
+| --- | --- |
+| `whoami` | Tu usuario |
+| `id` | Tu usuario, grupo y todos tus grupos |
+| `groups` | Los grupos a los que perteneces |
+| `chown ana archivo` | Cambia el dueño (suele requerir `sudo`) |
+| `chown ana:devs archivo` | Cambia dueño y grupo |
+| `chown -R ana:devs carpeta` | Recursivo |
+| `chgrp devs archivo` | Cambia solo el grupo |
+| `sudo comando` | Ejecuta un comando como administrador |
+| `sudo -u usuario comando` | Ejecuta como otro usuario |
+| `umask` | Muestra la máscara de permisos por defecto |
+
+Con `umask 022` (valor habitual) los archivos nuevos nacen `644` y las carpetas `755`. Con `umask 077` nacen `600` y `700`: solo para ti.
+
+## Permisos especiales
+
+| Permiso | Qué hace |
+| --- | --- |
+| `chmod u+s archivo` (setuid) | El programa se ejecuta con los permisos de su dueño |
+| `chmod g+s carpeta` (setgid) | Lo que se cree dentro hereda el grupo de la carpeta |
+| `chmod +t carpeta` (sticky) | Solo el dueño del archivo (o de la carpeta) puede borrarlo, como en `/tmp` |
+
+## Ver procesos
+
+| Comando | Qué hace |
+| --- | --- |
+| `ps` | Procesos de tu terminal actual |
+| `ps aux` | Todos los procesos, con usuario, CPU y memoria |
+| `ps -ef` | Todos, con el PID del proceso padre (`PPID`) |
+| `ps aux \| grep node` | Filtra por nombre |
+| `pgrep node` | Solo los PID de procesos que coinciden |
+| `pgrep -a node` | PID y línea de comando completa |
+| `top` | Monitor en vivo (`q` sale) |
+| `htop` | Monitor más cómodo (hay que instalarlo) |
+| `pstree` | Procesos en forma de árbol |
+| `uptime` | Tiempo encendido y carga |
+| `free -h` | Memoria libre y usada |
+
+## Detener procesos
+
+| Comando | Qué hace |
+| --- | --- |
+| `kill 1234` | Pide al proceso 1234 que termine (señal `SIGTERM`, 15) |
+| `kill -9 1234` | Lo termina a la fuerza (`SIGKILL`), sin dejarle limpiar |
+| `kill -l` | Lista las señales disponibles |
+| `kill -0 1234` | No envía nada: solo comprueba si el proceso existe |
+| `pkill node` | Termina procesos por nombre |
+| `pkill -f "npm run dev"` | Busca coincidencias en la línea de comando completa |
+| `killall nombre` | Termina todos los procesos con ese nombre |
+
+| Señal | Número | Para qué sirve |
+| --- | --- | --- |
+| `SIGHUP` | 1 | Terminal cerrada. Muchos servicios la usan para recargar configuración |
+| `SIGINT` | 2 | Lo que envía `Ctrl+C` |
+| `SIGKILL` | 9 | Terminar sin remedio. No se puede capturar |
+| `SIGTERM` | 15 | Terminar con amabilidad (la predeterminada de `kill`) |
+
+Prueba primero `kill PID`. Usa `kill -9` solo si no responde.
+
+## Primer y segundo plano
+
+| Comando | Qué hace |
+| --- | --- |
+| `comando &` | Lo lanza en segundo plano |
+| `$!` | PID del último proceso lanzado en segundo plano |
+| `jobs` | Lista los trabajos de esta terminal |
+| `fg %1` | Trae el trabajo 1 al primer plano |
+| `bg %1` | Reanuda el trabajo 1 en segundo plano |
+| `kill %1` | Termina el trabajo 1 |
+| `Ctrl+Z` | Suspende el comando actual |
+| `wait` | Espera a que terminen los trabajos en segundo plano |
+| `nohup comando &` | Sigue vivo aunque cierres la terminal |
+| `disown %1` | Desvincula el trabajo de la terminal |
+
+```bash
+sleep 30 &            # [1] 10350
+echo "pid=$!"         # pid=10350
+jobs                  # [1]+  Running   sleep 30 &
+kill %1               # termina el trabajo 1
+wait                  # espera y recoge el estado
+```
+
+## Qué usa un puerto
+
+| Comando | Qué hace |
+| --- | --- |
+| `ss -tulpn` | Puertos TCP y UDP en escucha, con el proceso (requiere `sudo` para ver todos) |
+| `lsof -i :3000` | Qué proceso usa el puerto 3000 |
+| `kill $(lsof -t -i :3000)` | Termina el proceso que ocupa el puerto 3000 |
+
+Sirve cuando un servidor de desarrollo dice `address already in use`.
+
+## Servicios con systemd
+
+En la mayoría de distribuciones actuales (Ubuntu, Debian, Fedora, Arch):
+
+| Comando | Qué hace |
+| --- | --- |
+| `systemctl status nginx` | Estado del servicio |
+| `sudo systemctl start nginx` | Lo inicia |
+| `sudo systemctl stop nginx` | Lo detiene |
+| `sudo systemctl restart nginx` | Lo reinicia |
+| `sudo systemctl enable nginx` | Lo inicia con el arranque del sistema |
+| `sudo systemctl enable --now nginx` | Lo activa y lo inicia ahora |
+| `journalctl -u nginx` | Registros del servicio |
+| `journalctl -u nginx -f` | Registros en vivo |
+
+## Prioridad
+
+| Comando | Qué hace |
+| --- | --- |
+| `nice -n 10 comando` | Lo inicia con menos prioridad (valores de -20 a 19; mayor es más amable) |
+| `renice 10 -p 1234` | Cambia la prioridad de un proceso ya en marcha |
+
+## Para ir más a fondo
+
+- [chmod en el manual de Linux (man7.org)](https://man7.org/linux/man-pages/man1/chmod.1.html)
+- [Señales en Linux (man7.org)](https://man7.org/linux/man-pages/man7/signal.7.html)
+- [ps en el manual de Linux (man7.org)](https://man7.org/linux/man-pages/man1/ps.1.html)
+- Hoja de AyudaDev: [Bash y Linux, comandos de terminal](/hojas/bash-y-linux-comandos/)
+- Biblioteca: [libros y cursos de Linux y terminal](/biblioteca/linux/)

@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import CardContenido from '@components/ui/CardContenido.astro';
+import FiltroChips from '@components/ui/FiltroChips.astro';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
+import { temaPorSlug } from '@data/temas';
+
+const CATEGORIAS: Record<string, string> = {
+  internet: 'Internet y web',
+  programacion: 'Programación',
+  datos: 'Datos',
+  seguridad: 'Seguridad',
+  calidad: 'Calidad y pruebas',
+  arquitectura: 'Arquitectura',
+  herramientas: 'Herramientas',
+  ia: 'IA',
+};
+const lista = (await getCollection('fundamentos', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+const cats = Object.keys(CATEGORIAS).map((c) => ({ valor: c, etiqueta: CATEGORIAS[c]!, conteo: lista.filter((e) => e.data.categoria === c).length })).filter((c) => c.conteo > 0);
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Fundamentos', href: '/fundamentos/' },
+];
+---
+
+<ListadoLayout
+  titulo="Fundamentos explicados"
+  descripcion="Los conceptos que todo programador necesita entender, explicados en español sencillo y con ejemplos: cómo funciona internet, qué es una API, bases de datos, seguridad, pruebas y más."
+  path="/fundamentos/"
+  eyebrow="Fundamentos"
+  migas={migas}
+  total={lista.length}
+  placeholder="Busca un concepto: API, HTTP, Big O, SQL injection..."
+  unidad="artículos"
+  image="/og/guias.png"
+>
+  <Fragment slot="filtros">
+    <FiltroChips grupo="categoria" etiqueta="Tema" opciones={cats} />
+    <FiltroChips grupo="nivel" etiqueta="Nivel" opciones={['principiante', 'intermedio', 'avanzado'].map((n) => ({ valor: n, etiqueta: ETIQUETAS_NIVEL[n as keyof typeof ETIQUETAS_NIVEL] }))} />
+  </Fragment>
+
+  {lista.length === 0 && <p class="card p-8 text-center text-muted">Los primeros artículos están en camino.</p>}
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {lista.map((e) => {
+      const tema = e.data.temas[0] ? temaPorSlug(e.data.temas[0]) : undefined;
+      return (
+        <CardContenido
+          href={`/fundamentos/${e.id}/`}
+          titulo={e.data.titulo}
+          descripcion={e.data.descripcion}
+          badges={[CATEGORIAS[e.data.categoria] ?? e.data.categoria, ETIQUETAS_NIVEL[e.data.nivel]]}
+          meta={e.data.tiempoLectura ? `${e.data.tiempoLectura} min` : undefined}
+          tema={tema}
+          datos={{ categoria: e.data.categoria, nivel: e.data.nivel }}
+          texto={`${e.data.titulo} ${e.data.descripcion} ${e.data.etiquetas.join(' ')}`}
+        />
+      );
+    })}
+  </div>
+</ListadoLayout>

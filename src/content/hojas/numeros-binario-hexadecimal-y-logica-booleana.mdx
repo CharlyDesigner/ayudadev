@@ -1,0 +1,300 @@
+---
+titulo: 'Binario, hexadecimal y lógica booleana'
+descripcion: 'Sistemas de numeración, conversión entre bases, operaciones de bits, complemento a dos, números decimales en computadora y tablas de verdad con las leyes de De Morgan.'
+tema: matematicas
+etiquetas: ['binario', 'hexadecimal', 'bits', 'lógica booleana', 'matemáticas']
+publicado: 2026-10-09
+orden: 24
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cómo cuenta una computadora y cómo decide. Todos los resultados de esta hoja se calcularon con Node 24 y Python 3.14.
+
+## Sistemas de numeración
+
+| Sistema | Base | Dígitos | Prefijo en código |
+| --- | --- | --- | --- |
+| Decimal | 10 | 0 a 9 | (ninguno) |
+| Binario | 2 | 0 y 1 | `0b` |
+| Octal | 8 | 0 a 7 | `0o` |
+| Hexadecimal | 16 | 0 a 9 y A a F | `0x` |
+
+| Decimal | Binario | Octal | Hexadecimal |
+| --- | --- | --- | --- |
+| 0 | 00000 | 0 | 0 |
+| 1 | 00001 | 1 | 1 |
+| 2 | 00010 | 2 | 2 |
+| 3 | 00011 | 3 | 3 |
+| 4 | 00100 | 4 | 4 |
+| 5 | 00101 | 5 | 5 |
+| 6 | 00110 | 6 | 6 |
+| 7 | 00111 | 7 | 7 |
+| 8 | 01000 | 10 | 8 |
+| 9 | 01001 | 11 | 9 |
+| 10 | 01010 | 12 | A |
+| 11 | 01011 | 13 | B |
+| 12 | 01100 | 14 | C |
+| 13 | 01101 | 15 | D |
+| 14 | 01110 | 16 | E |
+| 15 | 01111 | 17 | F |
+| 16 | 10000 | 20 | 10 |
+
+Cada dígito hexadecimal equivale a exactamente 4 bits (`F` es `1111`), por eso el hexadecimal es la forma compacta de leer binario: `0xFF` es `1111 1111`.
+
+## Convertir a decimal
+
+Cada posición vale la base elevada a su posición, contando desde 0 por la derecha.
+
+| Número | Cálculo | Resultado |
+| --- | --- | --- |
+| `1101` en binario | 1×8 + 1×4 + 0×2 + 1×1 | 13 |
+| `FF` en hexadecimal | 15×16 + 15×1 | 255 |
+| `777` en octal | 7×64 + 7×8 + 7×1 | 511 |
+| `1F` en hexadecimal | 1×16 + 15×1 | 31 |
+
+## Convertir desde decimal
+
+Divide entre la base una y otra vez y anota los residuos; léelos de abajo hacia arriba.
+
+```text
+13 en binario:
+13 ÷ 2 = 6  residuo 1
+ 6 ÷ 2 = 3  residuo 0
+ 3 ÷ 2 = 1  residuo 1
+ 1 ÷ 2 = 0  residuo 1
+Lee de abajo hacia arriba: 1101
+
+255 en hexadecimal:
+255 ÷ 16 = 15  residuo 15 (F)
+ 15 ÷ 16 = 0   residuo 15 (F)
+Lee de abajo hacia arriba: FF
+```
+
+| Pasar de... a... | Atajo |
+| --- | --- |
+| Binario a hexadecimal | Agrupa los bits de 4 en 4 desde la derecha: `1111 1010` es `FA` |
+| Hexadecimal a binario | Cambia cada dígito por sus 4 bits: `3C` es `0011 1100` |
+| Binario a octal | Agrupa de 3 en 3: `111 101` es `75` |
+
+## Potencias de 2
+
+| Potencia | Valor | Hex |
+| --- | --- | --- |
+| 2^0 | 1 | 1 |
+| 2^4 | 16 | 10 |
+| 2^7 | 128 | 80 |
+| 2^8 | 256 | 100 |
+| 2^10 | 1 024 | 400 |
+| 2^16 | 65 536 | 10000 |
+| 2^24 | 16 777 216 | 1000000 |
+| 2^30 | 1 073 741 824 | 40000000 |
+| 2^32 | 4 294 967 296 | 100000000 |
+
+Con n bits cuentas 2^n valores: de 0 a 2^n − 1. Así, 8 bits van de 0 a 255 y 16 bits, de 0 a 65 535.
+
+## Conversión en código
+
+| Lenguaje | Expresión | Resultado |
+| --- | --- | --- |
+| JavaScript | `(13).toString(2)` | `'1101'` |
+| JavaScript | `(255).toString(16)` | `'ff'` |
+| JavaScript | `parseInt("1101", 2)` | `13` |
+| JavaScript | `parseInt("ff", 16)` | `255` |
+| JavaScript | `0b1101`, `0xff`, `0o17` | `13`, `255`, `15` |
+| JavaScript | `(5).toString(2).padStart(8, "0")` | `'00000101'` |
+| Python | `bin(13)`, `hex(255)`, `oct(8)` | `'0b1101'`, `'0xff'`, `'0o10'` |
+| Python | `int("1101", 2)`, `int("ff", 16)` | `13`, `255` |
+| Python | `int("0x1f", 16)`, `int("0b101", 0)` | `31`, `5` (base `0`: la deduce del prefijo) |
+| Python | `f"{13:08b}"` | `'00001101'` |
+| Python | `f"{255:X}"`, `f"{255:#x}"` | `'FF'`, `'0xff'` |
+
+## Operaciones con bits
+
+| Operador | Nombre | Ejemplo | Resultado |
+| --- | --- | --- | --- |
+| `&` | AND | `0b1010 & 0b0110` | `0b0010` (2) |
+| `\|` | OR | `0b1010 \| 0b0110` | `0b1110` (14) |
+| `^` | XOR (uno u otro, no ambos) | `0b1010 ^ 0b0110` | `0b1100` (12) |
+| `~` | NOT (invierte) | `~5` | `-6` |
+| `<<` | Desplaza a la izquierda | `1 << 3` | `8` (multiplica por 2^3) |
+| `>>` | Desplaza a la derecha | `16 >> 2` | `4` (divide entre 2^2) |
+
+En JavaScript, `>>>` es el desplazamiento sin signo: `-16 >>> 28` da `15`. Los operadores de bits de JavaScript trabajan con enteros de 32 bits.
+
+### Trucos con bits
+
+| Quieres | Escribe | Ejemplo |
+| --- | --- | --- |
+| Saber si `n` es impar | `n & 1` | `5 & 1` da `1`, `6 & 1` da `0` |
+| Multiplicar por 2 | `n << 1` | `5 << 1` da `10` |
+| Dividir entre 2 (entero) | `n >> 1` | `9 >> 1` da `4` |
+| Quedarte con el último byte | `n & 0xFF` | `0x1234 & 0xFF` da `0x34` |
+| Saber si `n` es potencia de 2 | `n > 0 && (n & (n - 1)) === 0` | `8 & 7` da `0` |
+| Activar el bit `k` | `n \| (1 << k)` | |
+| Apagar el bit `k` | `n & ~(1 << k)` | |
+| Invertir el bit `k` | `n ^ (1 << k)` | |
+| Comprobar el bit `k` | `(n >> k) & 1` | |
+| Cifrar con XOR | `a ^ clave`; repetirlo lo deshace | `3 ^ 5 ^ 5` da `3` |
+
+### Banderas (permisos con una máscara)
+
+```js
+const LEER = 1, ESCRIBIR = 2, EJECUTAR = 4;   // cada permiso es un bit distinto
+
+let permisos = 0;
+permisos |= LEER | EJECUTAR;                  // activa: 5  (101)
+(permisos & ESCRIBIR) !== 0;                  // false
+(permisos & EJECUTAR) !== 0;                  // true
+permisos &= ~EJECUTAR;                        // apaga: 1   (001)
+permisos ^= ESCRIBIR;                         // invierte: 3 (011)
+```
+
+Es la misma idea de los permisos de Linux (`r` = 4, `w` = 2, `x` = 1).
+
+## Enteros negativos: complemento a dos
+
+Con 8 bits, el bit más alto indica el signo. Para obtener `-n`: invierte todos los bits de `n` y suma 1.
+
+```text
+ 5  = 00000101
+invertir  11111010
+sumar 1   11111011  = -5
+```
+
+| Bits | Con signo | Sin signo |
+| --- | --- | --- |
+| 8 | -128 a 127 | 0 a 255 |
+| 16 | -32 768 a 32 767 | 0 a 65 535 |
+| 32 | -2 147 483 648 a 2 147 483 647 | 0 a 4 294 967 295 |
+| 64 | -9 223 372 036 854 775 808 a 9 223 372 036 854 775 807 | 0 a 18 446 744 073 709 551 615 |
+
+En JavaScript: `(-5 >>> 0).toString(2).slice(-8)` da `'11111011'`. En Python: `bin(-5 & 0xFF)` da `'0b11111011'`.
+
+### Desbordamiento (overflow)
+
+| Código | Resultado | Por qué |
+| --- | --- | --- |
+| `new Int8Array([128])[0]` (JS) | `-128` | 128 no cabe en 8 bits con signo y da la vuelta |
+| `new Uint8Array([256, -1])` (JS) | `[0, 255]` | Sin signo también da la vuelta |
+| `1 << 31` (JS) | `-2147483648` | El bit 31 es el signo |
+| `2**53 + 1 === 2**53` (JS) | `true` | Pasado `Number.MAX_SAFE_INTEGER` los enteros pierden exactitud |
+| `2**100` (Python) | `1267650600228229401496703205376` | Python usa enteros de tamaño ilimitado |
+
+En JavaScript, para enteros grandes exactos usa `BigInt`: `2n ** 64n` da `18446744073709551616n`.
+
+## Números con decimales
+
+Las computadoras guardan los decimales en binario (estándar IEEE 754). Muchos decimales sencillos no tienen representación exacta:
+
+```js
+0.1 + 0.2                         // 0.30000000000000004
+0.1 + 0.2 === 0.3                 // false
+Math.abs(0.1 + 0.2 - 0.3) < Number.EPSILON;   // true: compara con tolerancia
+(0.1).toFixed(20)                 // '0.10000000000000000555'
+```
+
+```python
+0.1 + 0.2                         # 0.30000000000000004
+import math
+math.isclose(0.1 + 0.2, 0.3)      # True
+from decimal import Decimal
+Decimal("0.1") + Decimal("0.2")   # Decimal('0.3')  (para dinero)
+```
+
+| Tipo | Bits | Precisión aproximada |
+| --- | --- | --- |
+| `float32` | 32 | 7 cifras decimales |
+| `float64` (el `number` de JavaScript y el `float` de Python) | 64 | 15 a 16 cifras decimales |
+
+Guarda dinero en centavos (enteros) o con `Decimal`, nunca en `float`. Nunca compares decimales con `===`.
+
+## Tamaños de datos
+
+| Unidad | Valor |
+| --- | --- |
+| Bit | 0 o 1 |
+| Byte | 8 bits |
+| KB (kilobyte) | 1 000 bytes |
+| KiB (kibibyte) | 1 024 bytes |
+| MB / MiB | 1 000 000 / 1 048 576 bytes |
+| GB / GiB | 10^9 / 2^30 bytes |
+
+El prefijo con "i" (KiB, MiB, GiB) usa potencias de 2; el que no la lleva (KB, MB, GB) usa potencias de 10. Los discos se venden en potencias de 10, por eso un disco de 1 TB muestra menos en el sistema operativo si este cuenta en potencias de 2.
+
+## Lógica booleana
+
+Un valor booleano es verdadero o falso. Las operaciones básicas:
+
+| Operación | JavaScript | Python | Significa |
+| --- | --- | --- | --- |
+| AND (y) | `a && b` | `a and b` | Verdadero si ambos lo son |
+| OR (o) | `a \|\| b` | `a or b` | Verdadero si al menos uno lo es |
+| NOT (no) | `!a` | `not a` | Invierte |
+| XOR (o exclusivo) | `a !== b` | `a != b` | Verdadero si son distintos |
+| Igualdad (XNOR) | `a === b` | `a == b` | Verdadero si son iguales |
+
+### Tablas de verdad
+
+| a | b | a AND b | a OR b | a XOR b | a NAND b | a NOR b |
+| --- | --- | --- | --- | --- | --- | --- |
+| V | V | V | V | F | F | F |
+| V | F | F | V | V | V | F |
+| F | V | F | V | V | V | F |
+| F | F | F | F | F | V | V |
+
+NAND es NOT(AND); NOR es NOT(OR). Con solo puertas NAND se puede construir cualquier circuito lógico.
+
+### Leyes útiles
+
+| Ley | Expresión |
+| --- | --- |
+| De Morgan 1 | `!(a && b)` es igual a `!a \|\| !b` |
+| De Morgan 2 | `!(a \|\| b)` es igual a `!a && !b` |
+| Doble negación | `!!a` es igual a `a` |
+| Identidad | `a && true` es `a`; `a \|\| false` es `a` |
+| Dominancia | `a && false` es `false`; `a \|\| true` es `true` |
+| Distributiva | `a && (b \|\| c)` es igual a `(a && b) \|\| (a && c)` |
+| Absorción | `a \|\| (a && b)` es `a` |
+
+edad < 18 || !tieneIdLas dos leyes de De Morgan se comprobaron con las cuatro combinaciones de `a` y `b`: dan el mismo resultado. Sirven para simplificar condiciones: `if (!(edad >= 18 && tieneId))` equivale a `if (edad < 18 || !tieneId)`.
+
+### Cortocircuito
+
+`&&` y `||` dejan de evaluar en cuanto saben el resultado, y devuelven uno de los operandos (no siempre `true` o `false`):
+
+| Expresión (JavaScript) | Resultado |
+| --- | --- |
+| `5 && 6` | `6` (el primero es verdadero, devuelve el segundo) |
+| `0 && "y"` | `0` (el primero es falso, ni mira el segundo) |
+| `"" \|\| "x"` | `'x'` |
+| `0 \|\| null` | `null` |
+| `null ?? 1` | `1` (solo `null` y `undefined` pasan al segundo) |
+| `usuario && usuario.nombre` | Evita el error si `usuario` es `null` |
+
+### Verdadero y falso en cada lenguaje
+
+| Valor | JavaScript | Python |
+| --- | --- | --- |
+| `0` | falso | falso |
+| `""` | falso | falso |
+| `null` / `None` | falso | falso |
+| `NaN` | falso | verdadero |
+| `[]` (lista vacía) | verdadero | falso |
+| `{}` (objeto o dict vacío) | verdadero | falso |
+| `"0"` | verdadero | verdadero |
+| `[0]` | verdadero | verdadero |
+
+<Callout tipo="warning" titulo="Listas vacías: JavaScript y Python difieren">
+
+En JavaScript, `[]` es verdadero: `if ([])` entra. En Python, `[]` es falso: `if []` no entra. Comprueba la longitud de forma explícita (`arr.length === 0` o `len(lista) == 0`) si quieres que se lea igual en ambos.
+
+</Callout>
+
+## Para ir más a fondo
+
+- [Operadores de JavaScript en MDN](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Operators)
+- [Number.prototype.toString en MDN](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Number/toString)
+- [Tipos numéricos y operaciones de bits en Python](https://docs.python.org/es/3/library/stdtypes.html)
+- Hoja de AyudaDev: [ASCII, Unicode y codificaciones](/hojas/ascii-unicode-y-codificaciones/)
+- Biblioteca: [libros y cursos de matemáticas](/biblioteca/matematicas/)

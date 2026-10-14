@@ -1,0 +1,240 @@
+---
+titulo: 'curl y SSH: peticiones y acceso remoto'
+descripcion: 'Opciones de curl para GET, POST, JSON, formularios, autenticación y descargas, y SSH para conectarte a servidores: llaves, config, scp, rsync y túneles.'
+tema: linux
+etiquetas: ['curl', 'ssh', 'http', 'scp', 'terminal']
+publicado: 2026-10-09
+orden: 19
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+`curl` hace peticiones desde la terminal; `ssh` te conecta de forma segura a otra máquina. Los ejemplos de curl se probaron con curl 8.21 contra un servidor local, y los de ssh con OpenSSH 10.5.
+
+## curl: lo básico
+
+| Comando | Qué hace |
+| --- | --- |
+| `curl URL` | GET y muestra el cuerpo |
+| `curl -i URL` | Incluye los encabezados de la respuesta |
+| `curl -I URL` | Solo encabezados (petición `HEAD`) |
+| `curl -s URL` | Modo silencioso: sin barra de progreso |
+| `curl -sS URL` | Silencioso, pero muestra los errores |
+| `curl -v URL` | Detallado: ves la petición (`>`) y la respuesta (`<`) |
+| `curl -L URL` | Sigue las redirecciones |
+| `curl -f URL` | Falla con código 22 si el servidor responde 400 o más |
+| `curl --max-time 5 URL` | Límite total de 5 segundos |
+| `curl --connect-timeout 2 URL` | Límite para conectar (si no, error 28) |
+| `curl --retry 3 URL` | Reintenta ante errores temporales |
+| `curl --compressed URL` | Pide la respuesta comprimida y la descomprime |
+
+`curl -s` no muestra errores ni el progreso, pero tampoco te avisa si el servidor responde 404. Usa `-f` o revisa el código de estado.
+
+## Elegir método y enviar datos
+
+| Comando | Qué hace |
+| --- | --- |
+| `curl -X DELETE URL` | Usa otro método (`PUT`, `PATCH`, `DELETE`...) |
+| `curl -d "a=1&b=2" URL` | `POST` de formulario (`application/x-www-form-urlencoded`) |
+| `curl --data-urlencode "q=hola mundo" URL` | Codifica el valor (`q=hola+mundo`) |
+| `curl -G --data-urlencode "q=a b" URL` | Manda los datos en la URL con `GET` (`?q=a+b`) |
+| `curl -d @archivo.json URL` | Toma el cuerpo de un archivo |
+| `curl -F "archivo=@foto.png" -F "nombre=Ana" URL` | Formulario con archivos (`multipart/form-data`) |
+| `curl -T archivo.txt URL` | Sube un archivo con `PUT` |
+
+`-d` ya implica `POST`, así que no hace falta `-X POST`.
+
+### Enviar JSON
+
+```bash
+curl -X POST https://api.ejemplo.com/usuarios \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Ana"}'
+
+# atajo (curl 7.82 o posterior): pone Content-Type y Accept por ti
+curl --json '{"nombre":"Ana"}' https://api.ejemplo.com/usuarios
+```
+
+En Windows con `cmd` o PowerShell, las comillas simples no funcionan como en Bash; usa Git Bash o escapa las comillas dobles. En PowerShell escribe `curl.exe`, porque `curl` es un alias de otro comando.
+
+## Encabezados, autenticación y cookies
+
+| Comando | Qué hace |
+| --- | --- |
+| `curl -H "Accept: application/json" URL` | Añade un encabezado |
+| `curl -H "Authorization: Bearer TOKEN" URL` | Autenticación con token |
+| `curl -H "X-Api-Key: clave" URL` | Encabezado propio |
+| `curl -u usuario:clave URL` | Autenticación básica |
+| `curl -A "mi-agente" URL` | Cambia el `User-Agent` |
+| `curl -b "sid=abc" URL` | Envía una cookie |
+| `curl -c cookies.txt -b cookies.txt URL` | Guarda y reutiliza cookies |
+| `curl -e https://origen.com URL` | Fija el `Referer` |
+| `curl -k URL` | Ignora errores de certificado. Solo para pruebas locales |
+
+<Callout tipo="warning" titulo="No pegues secretos en la línea de comandos">
+
+Tokens y contraseñas escritos en el comando quedan en el historial de la terminal y en la lista de procesos. Guárdalos en una variable de entorno (`-H "Authorization: Bearer $TOKEN"`) o en un archivo con permisos restringidos.
+
+</Callout>
+
+## Guardar y medir
+
+| Comando | Qué hace |
+| --- | --- |
+| `curl -o salida.txt URL` | Guarda en un archivo con el nombre que elijas |
+| `curl -O URL` | Guarda con el nombre del final de la URL |
+| `curl -L -O URL` | Descarga siguiendo redirecciones |
+| `curl -C - -O URL` | Reanuda una descarga interrumpida |
+| `curl -o /dev/null -s -w "%{http_code}\n" URL` | Solo el código de estado |
+| `curl -s -o /dev/null -w "%{http_code} %{url_effective}\n" -L URL` | Código y URL final tras redirecciones |
+| `curl -w "%{time_total}\n" -o /dev/null -s URL` | Tiempo total de la petición |
+| `curl URL \| jq .` | Muestra JSON con formato (requiere instalar `jq`) |
+
+Variables útiles de `-w`: `%{http_code}`, `%{time_total}`, `%{size_download}`, `%{url_effective}`, `%{content_type}`.
+
+## curl: códigos de salida frecuentes
+
+| Código | Significa |
+| --- | --- |
+| `0` | Éxito |
+| `6` | No se pudo resolver el nombre del servidor |
+| `7` | No se pudo conectar |
+| `22` | El servidor respondió 400 o más (con `-f`) |
+| `28` | Se agotó el tiempo |
+| `35` | Falló el protocolo TLS |
+| `60` | Certificado no verificable |
+
+Consulta el último con `echo $?`.
+
+## SSH: conectarte
+
+| Comando | Qué hace |
+| --- | --- |
+| `ssh usuario@servidor` | Abre una sesión remota |
+| `ssh -p 2222 usuario@servidor` | Usa otro puerto |
+| `ssh -i ~/.ssh/mi_llave usuario@servidor` | Elige la llave privada |
+| `ssh usuario@servidor "ls -la"` | Ejecuta un comando y regresa |
+| `ssh -v usuario@servidor` | Detallado, para diagnosticar (`-vvv` aún más) |
+| `ssh -J salto usuario@destino` | Pasa por un servidor intermedio (bastión) |
+| `exit` o `Ctrl+D` | Cierra la sesión |
+| `ssh -V` | Muestra la versión |
+
+La primera vez, SSH pide confirmar la huella del servidor y la guarda en `~/.ssh/known_hosts`. Si la huella cambia después, SSH te avisa: puede ser una reinstalación del servidor o un ataque. Si estás seguro de que es lo primero, quita la entrada vieja con `ssh-keygen -R servidor`.
+
+## SSH: llaves
+
+```bash
+# 1. Crear un par de llaves (Ed25519 es la opción moderna)
+ssh-keygen -t ed25519 -C "ana@laptop"
+# Genera ~/.ssh/id_ed25519 (privada) y ~/.ssh/id_ed25519.pub (pública)
+
+# 2. Copiar la pública al servidor
+ssh-copy-id usuario@servidor
+
+# 3. Entrar sin contraseña
+ssh usuario@servidor
+```
+
+| Comando | Qué hace |
+| --- | --- |
+| `ssh-keygen -t ed25519 -C "comentario"` | Crea una llave Ed25519 |
+| `ssh-keygen -t rsa -b 4096` | Llave RSA, para sistemas antiguos |
+| `ssh-keygen -lf ~/.ssh/id_ed25519.pub` | Muestra tamaño y huella de una llave |
+| `ssh-keygen -y -f ~/.ssh/id_ed25519` | Obtiene la pública a partir de la privada |
+| `ssh-keygen -p -f ~/.ssh/id_ed25519` | Cambia o añade la contraseña de la llave |
+| `ssh-keygen -R servidor` | Borra un servidor de `known_hosts` |
+| `ssh-add ~/.ssh/id_ed25519` | Carga la llave en el agente (escribes la contraseña una vez) |
+| `ssh-add -l` | Lista las llaves cargadas |
+| `cat ~/.ssh/id_ed25519.pub` | La pública, lista para pegar en GitHub o en `authorized_keys` |
+
+<Callout tipo="warning" titulo="La llave privada nunca se comparte">
+
+Solo la `.pub` se entrega a servidores y a GitHub. La privada (`id_ed25519` sin extensión) se queda en tu máquina. Protégela con una contraseña y con permisos `600` (`chmod 600 ~/.ssh/id_ed25519`); SSH rechaza llaves legibles por otras personas.
+
+</Callout>
+
+Permisos esperados en el servidor y en tu equipo: carpeta `~/.ssh` en `700`, llave privada en `600`, `authorized_keys` en `600`.
+
+## SSH: el archivo config
+
+Crea `~/.ssh/config` para acortar conexiones:
+
+```text
+Host miserver
+    HostName 203.0.113.10
+    User ana
+    Port 2222
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 60
+
+Host *
+    AddKeysToAgent yes
+```
+
+Ahora basta `ssh miserver`. Para comprobar cómo interpreta SSH la configuración: `ssh -G miserver`.
+
+| Opción | Efecto |
+| --- | --- |
+| `HostName` | Dirección o dominio real |
+| `User` | Usuario por defecto |
+| `Port` | Puerto |
+| `IdentityFile` | Llave a usar |
+| `ProxyJump` | Servidor intermedio (equivale a `-J`) |
+| `ServerAliveInterval 60` | Mantiene la conexión viva enviando señales cada 60 s |
+| `Host *` | Valores para todos los destinos |
+
+## Copiar archivos
+
+| Comando | Qué hace |
+| --- | --- |
+| `scp archivo usuario@servidor:/ruta/` | Sube un archivo |
+| `scp usuario@servidor:/ruta/archivo .` | Baja un archivo a la carpeta actual |
+| `scp -r carpeta usuario@servidor:/ruta/` | Sube una carpeta completa |
+| `scp -P 2222 archivo servidor:/ruta/` | Otro puerto (aquí la `P` es mayúscula) |
+| `rsync -avz carpeta/ usuario@servidor:/ruta/` | Sincroniza: solo copia lo que cambió |
+| `rsync -avzn carpeta/ servidor:/ruta/` | Simulacro con `-n`: muestra qué haría |
+| `rsync -avz --delete origen/ destino/` | Además borra en el destino lo que ya no está en el origen |
+| `sftp usuario@servidor` | Sesión interactiva de transferencia (`get`, `put`, `ls`, `cd`) |
+
+En `rsync`, la barra final de `carpeta/` importa: con barra copia el contenido; sin barra copia la carpeta misma. `rsync` puede requerir instalarlo.
+
+## Túneles
+
+| Comando | Qué hace |
+| --- | --- |
+| `ssh -L 8080:localhost:80 servidor` | El puerto 8080 de tu máquina llega al puerto 80 visto desde el servidor |
+| `ssh -L 5433:db.interna:5432 bastion` | Accede a una base de datos que solo ve el bastión |
+| `ssh -R 9000:localhost:3000 servidor` | Expone tu puerto 3000 en el 9000 del servidor |
+| `ssh -D 1080 servidor` | Proxy SOCKS en tu puerto 1080 |
+| `ssh -N -L ... servidor` | Solo el túnel, sin abrir una consola |
+| `ssh -f -N -L ... servidor` | Igual, en segundo plano |
+
+## SSH con Git
+
+```bash
+ssh -T git@github.com      # prueba la conexión con tu llave
+git remote set-url origin git@github.com:usuario/repo.git   # usar SSH en un repositorio existente
+```
+
+Pega el contenido de `~/.ssh/id_ed25519.pub` en la configuración de tu cuenta de GitHub, en la sección de llaves SSH.
+
+## Problemas frecuentes
+
+| Mensaje | Qué revisar |
+| --- | --- |
+| `Permission denied (publickey)` | La pública no está en `authorized_keys`, la llave no está cargada, o el usuario es incorrecto |
+| `Connection timed out` | Servidor apagado, puerto equivocado o firewall |
+| `Connection refused` | El servicio SSH no está escuchando en ese puerto |
+| `WARNING: UNPROTECTED PRIVATE KEY FILE!` | Permisos demasiado abiertos: `chmod 600` a la llave |
+| `REMOTE HOST IDENTIFICATION HAS CHANGED` | La huella cambió. Verifica y luego `ssh-keygen -R servidor` |
+| `curl: (60)` | Certificado no verificable: revisa fecha del sistema y la cadena de certificados |
+| `curl: (28)` | Tiempo agotado: sube `--max-time` o revisa la red |
+
+## Para ir más a fondo
+
+- [Manual de curl](https://curl.se/docs/manpage.html)
+- [Todo sobre HTTP con curl](https://curl.se/docs/httpscripting.html)
+- [Manual de ssh (OpenBSD)](https://man.openbsd.org/ssh)
+- [Archivo de configuración ssh_config](https://man.openbsd.org/ssh_config)
+- Hoja de AyudaDev: [HTTP, métodos y códigos de estado](/hojas/http-metodos-y-codigos-de-estado/)
+- Biblioteca: [libros y cursos de Linux y terminal](/biblioteca/linux/)

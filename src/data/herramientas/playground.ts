@@ -1,0 +1,13 @@
+import type { HerramientaInput } from '../herramientas';
+
+const herramientas: HerramientaInput[] = [
+  { id: 'stackblitz', nombre: 'StackBlitz', categoria: 'playground', descripcion: 'Entorno de desarrollo completo en el navegador para proyectos con Node.js, React, Angular o Vue, sin instalar nada. Perfecto para probar ideas rápido.', url: 'https://stackblitz.com/', gratis: 'limitado', sistemas: ['web'], idioma: 'en', destacado: true, verificado: '2026-10-09' },
+  { id: 'codepen', nombre: 'CodePen', categoria: 'playground', descripcion: 'Editor en línea de HTML, CSS y JavaScript con vista previa instantánea y una gran galería de ejemplos para inspirarte.', url: 'https://codepen.io/', gratis: 'limitado', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'compiler-explorer', nombre: 'Compiler Explorer', categoria: 'playground', descripcion: 'Escribe código en C, C++, Rust, Go y otros lenguajes y mira el ensamblador que genera el compilador. Muy útil para entender el rendimiento.', url: 'https://godbolt.org/', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'python-tutor', nombre: 'Python Tutor', categoria: 'playground', descripcion: 'Visualiza paso a paso cómo se ejecuta tu código y qué hay en memoria en cada línea. Excelente para entender variables, listas y recursión.', url: 'https://pythontutor.com/', logo: 'python', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: true, verificado: '2026-10-09' },
+  { id: 'go-playground', nombre: 'Go Playground', categoria: 'playground', descripcion: 'Espacio oficial del proyecto Go para escribir, ejecutar y compartir fragmentos de código sin instalar el lenguaje.', url: 'https://go.dev/play/', logo: 'go', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'rust-playground', nombre: 'Rust Playground', categoria: 'playground', descripcion: 'Escribe y ejecuta código Rust en el navegador, con opciones para ver el ensamblador y probar distintas versiones del compilador.', url: 'https://play.rust-lang.org/', logo: 'rust', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'typescript-playground', nombre: 'TypeScript Playground', categoria: 'playground', descripcion: 'Editor oficial de TypeScript en el navegador: escribe tipos, mira el JavaScript resultante y comparte tu ejemplo con un enlace.', url: 'https://www.typescriptlang.org/play/', logo: 'typescript', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+];
+
+export default herramientas;

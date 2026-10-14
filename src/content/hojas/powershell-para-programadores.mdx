@@ -1,0 +1,204 @@
+---
+titulo: 'PowerShell para programadores'
+descripcion: 'Equivalencias entre Bash y PowerShell, cmdlets Verbo-Sustantivo, objetos en la tubería, variables, funciones y scripts. Lo esencial para trabajar en Windows.'
+tema: linux
+etiquetas: ['powershell', 'windows', 'terminal', 'cmdlets', 'scripts']
+publicado: 2026-10-09
+orden: 5
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+PowerShell es la terminal de Windows, pero en lugar de texto pasa objetos entre comandos. Los ejemplos se probaron en Windows PowerShell 5.1; donde PowerShell 7 se comporta distinto, se indica.
+
+## La idea clave
+
+Un cmdlet se llama `Verbo-Sustantivo` (`Get-ChildItem`, `Set-Location`). Lo que sale de un cmdlet son objetos con propiedades, así que filtras por propiedad y no por columnas de texto.
+
+| Bash | PowerShell | Qué hace |
+| --- | --- | --- |
+| `pwd` | `Get-Location` (alias `pwd`) | Carpeta actual |
+| `ls` | `Get-ChildItem` (alias `ls`, `dir`) | Lista archivos |
+| `cd` | `Set-Location` (alias `cd`) | Cambia de carpeta |
+| `cat` | `Get-Content` (alias `cat`, `gc`) | Muestra un archivo |
+| `cp` | `Copy-Item` (alias `cp`) | Copia |
+| `mv` | `Move-Item` o `Rename-Item` | Mueve o renombra |
+| `rm` | `Remove-Item` (alias `rm`) | Borra |
+| `mkdir` | `New-Item -ItemType Directory` (o `mkdir`) | Crea carpeta |
+| `touch` | `New-Item archivo.txt` | Crea archivo vacío |
+| `grep` | `Select-String` | Busca texto |
+| `echo` | `Write-Output` (alias `echo`) | Escribe una salida |
+| `which` | `Get-Command` | Ruta de un comando |
+| `man` | `Get-Help` | Ayuda |
+| `ps` | `Get-Process` | Procesos |
+| `kill` | `Stop-Process` | Termina procesos |
+| `env` | `Get-ChildItem Env:` | Variables de entorno |
+| `export X=1` | `$env:X = "1"` | Variable de entorno (solo esta sesión) |
+| `curl` | `Invoke-WebRequest` o `Invoke-RestMethod` | Peticiones HTTP |
+
+<Callout tipo="info" titulo="Descubre comandos">
+
+`Get-Command *json*` lista los comandos con ese nombre. `Get-Help Get-ChildItem -Examples` muestra ejemplos. `Get-Member` (sobre cualquier objeto en la tubería) enseña sus propiedades y métodos.
+
+</Callout>
+
+## Archivos y carpetas
+
+| Comando | Qué hace |
+| --- | --- |
+| `Get-ChildItem -Recurse -Filter *.txt` | Busca `.txt` en todas las subcarpetas |
+| `Get-ChildItem -Force` | Incluye archivos ocultos |
+| `Get-Content a.txt -TotalCount 5` | Primeras 5 líneas |
+| `Get-Content a.txt -Tail 5` | Últimas 5 líneas |
+| `Get-Content a.txt -Wait` | Sigue el archivo en vivo |
+| `Set-Content a.txt "hola"` | Escribe (sobrescribe) |
+| `Add-Content a.txt "más"` | Añade al final |
+| `"hola" \| Out-File a.txt` | Redirige a un archivo |
+| `Test-Path a.txt` | `True` o `False` si existe |
+| `Copy-Item a.txt b.txt` | Copia |
+| `Rename-Item b.txt c.txt` | Renombra |
+| `Remove-Item carpeta -Recurse -Force` | Borra una carpeta con todo |
+| `Join-Path $env:TEMP "x"` | Une rutas con el separador correcto |
+
+Para escribir en UTF-8 sin sorpresas usa `-Encoding utf8`. En PowerShell 5.1 añade una marca BOM; PowerShell 7 usa UTF-8 sin BOM por defecto.
+
+## Tuberías y objetos
+
+```powershell
+# procesos que más CPU consumen
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 5 Name, CPU
+
+# líneas con "error" de un archivo
+Get-Content a.txt | Select-String "error"
+
+# transformar cada elemento
+1..3 | ForEach-Object { $_ * 2 }     # 2 4 6
+1..5 | Where-Object { $_ -gt 3 }     # 4 5
+```
+
+| Cmdlet | Qué hace |
+| --- | --- |
+| `Where-Object { $_.Prop -gt 3 }` (alias `?`) | Filtra |
+| `ForEach-Object { $_ }` (alias `%`) | Aplica algo a cada elemento |
+| `Select-Object Nombre, Edad` | Elige propiedades |
+| `Select-Object -First 3` | Los primeros 3 |
+| `Select-Object -ExpandProperty Nombre` | Devuelve el valor, no un objeto |
+| `Sort-Object Edad -Descending` | Ordena |
+| `Group-Object` | Agrupa y cuenta |
+| `Measure-Object -Sum -Average` | Suma y promedio |
+| `Compare-Object $a $b` | Diferencias entre dos colecciones |
+| `Tee-Object -Variable t` | Pasa la salida y la guarda en `$t` |
+| `Format-Table` / `Format-List` | Presentación (úsalo al final de la tubería) |
+
+`$_` (o `$PSItem`) es el elemento actual dentro de las llaves.
+
+## Variables y tipos
+
+```powershell
+$nombre = "Ana"                       # sin tipo explícito
+[int]$edad = 30                       # con tipo
+"Hola $nombre, tienes $($edad + 1)"   # comillas dobles interpolan
+'literal $nombre'                     # comillas simples no
+$arr = @(1, 2, 3)                     # arreglo
+$arr.Length                           # 3
+$h = @{ a = 1; b = 2 }                # tabla hash (diccionario)
+$h['a']                               # 1
+$obj = [pscustomobject]@{ Nombre = "Ana"; Edad = 30 }
+$obj.Nombre                           # Ana
+$null -eq $x                          # True si $x no existe
+"{0:N2}" -f 3.14159                   # 3.14 (formato)
+```
+
+## Operadores
+
+PowerShell no usa `>`, `<` ni `==` para comparar: esos símbolos son de redirección y asignación.
+
+| Operador | Significa |
+| --- | --- |
+| `-eq`, `-ne` | Igual, distinto (no distingue mayúsculas) |
+| `-gt`, `-ge`, `-lt`, `-le` | Mayor, mayor o igual, menor, menor o igual |
+| `-like "a*"` | Coincidencia con comodines |
+| `-match "^a(b)"` | Expresión regular (resultados en `$Matches`) |
+| `-replace "o","0"` | Reemplazo con regex |
+| `-split ","` y `-join "-"` | Separar y unir |
+| `-contains 2` | La colección contiene el valor |
+| `-and`, `-or`, `-not` | Lógicos |
+| `-ceq`, `-cmatch` | Versiones que sí distinguen mayúsculas |
+
+## Control de flujo
+
+```powershell
+if ($edad -ge 18) { "adulto" } elseif ($edad -ge 12) { "joven" } else { "niño" }
+
+foreach ($n in 1..3) { "n$n" }
+
+$i = 0
+while ($i -lt 3) { $i++ }
+
+switch (2) { 1 { "uno" } 2 { "dos" } default { "otro" } }
+
+try {
+    Get-Item nada -ErrorAction Stop       # sin -ErrorAction Stop no entra al catch
+} catch {
+    "falló: $($_.Exception.Message)"
+} finally {
+    "siempre"
+}
+```
+
+## Funciones y scripts
+
+```powershell
+function Saludar([string]$n = "mundo") {
+    "Hola, $n"                 # lo que escribes se devuelve solo, sin return
+}
+Saludar Ana                    # Hola, Ana
+```
+
+| Elemento | Detalle |
+| --- | --- |
+| Extensión | `.ps1`. Se ejecuta con `.\script.ps1` |
+| Argumentos | Bloque `param([string]$Nombre)` al inicio del script |
+| Política de ejecución | Si bloquea scripts: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
+| Perfil | El archivo cuya ruta está en `$PROFILE` se ejecuta al abrir la terminal |
+| `&&` y `\|\|` | Existen en PowerShell 7, no en Windows PowerShell 5.1 (usa `;` y `if ($?)`) |
+
+## Web y JSON
+
+```powershell
+$r = Invoke-WebRequest https://example.com -UseBasicParsing
+$r.StatusCode                                   # 200
+Invoke-RestMethod https://api.github.com/zen -UserAgent "mi-script"
+
+$obj | ConvertTo-Json -Compress                 # {"Nombre":"Ana","Edad":30}
+'{"a":1,"b":[1,2]}' | ConvertFrom-Json         # objeto con a y b
+```
+
+`Invoke-RestMethod` convierte el JSON de la respuesta en objetos; `Invoke-WebRequest` te da la respuesta completa. En Windows PowerShell 5.1 se recomienda `-UseBasicParsing` con `Invoke-WebRequest`.
+
+## Procesos, red y sistema
+
+| Comando | Qué hace |
+| --- | --- |
+| `Get-Process -Name node` | Procesos por nombre |
+| `Stop-Process -Name node` | Los termina |
+| `Stop-Process -Id 1234 -Force` | Termina por PID |
+| `Get-NetTCPConnection -State Listen` | Puertos en escucha |
+| `Get-NetTCPConnection -LocalPort 3000` | Qué usa el puerto 3000 |
+| `Start-Job { 1 + 1 }` | Tarea en segundo plano (luego `Receive-Job`) |
+| `Get-Date -Format "yyyy-MM-dd"` | Fecha con formato |
+| `$env:Path -split ';'` | Directorios del PATH, uno por línea |
+| `winget install Git.Git` | Instala programas con el administrador de paquetes de Windows |
+
+<Callout tipo="warning" titulo="Los alias de curl y wget">
+
+En Windows PowerShell 5.1, `curl` y `wget` son alias de `Invoke-WebRequest` y no aceptan las opciones del `curl` real. Para el ejecutable verdadero escribe `curl.exe`.
+
+</Callout>
+
+## Para ir más a fondo
+
+- [Documentación oficial de PowerShell](https://learn.microsoft.com/es-es/powershell/)
+- [Operadores de PowerShell (about_Operators)](https://learn.microsoft.com/es-es/powershell/module/microsoft.powershell.core/about/about_operators)
+- Hoja de AyudaDev: [Bash y Linux, comandos de terminal](/hojas/bash-y-linux-comandos/)
+- Biblioteca: [libros y cursos de Linux y terminal](/biblioteca/linux/)

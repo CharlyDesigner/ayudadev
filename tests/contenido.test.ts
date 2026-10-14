@@ -48,9 +48,11 @@ describe('guías', () => {
   it('tienen las secciones obligatorias', () => {
     for (const g of guias) {
       const texto = cuerpo(g);
-      for (const h of ['## Qué es', '## Instálalo', '## Ejemplos', '## Errores comunes', '## Siguiente paso']) {
+      for (const h of ['## Qué es', '## Ejemplos', '## Errores comunes', '## Siguiente paso']) {
         expect(texto.includes(h), `${g}: falta "${h}"`).toBe(true);
       }
+      // Los temas conceptuales pueden usar "Prepara tu entorno" en lugar de "Instálalo".
+      expect(/## (Instálalo|Prepara tu entorno)/.test(texto), `${g}: falta la sección de instalación o preparación`).toBe(true);
       expect(texto.includes('<LibrosRecomendados'), `${g}: falta LibrosRecomendados`).toBe(true);
     }
   });

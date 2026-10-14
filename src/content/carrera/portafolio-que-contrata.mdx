@@ -1,0 +1,155 @@
+---
+titulo: 'Un portafolio que sí convence'
+descripcion: 'Qué mostrar, cuántos proyectos incluir, cómo escribir un caso de estudio y una plantilla de README para que quien te revise entienda tu trabajo rápido.'
+tiempoLectura: 10
+publicado: 2026-10-09
+etiquetas: ['portafolio', 'proyectos', 'README', 'casos de estudio']
+orden: 2
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Quien revisa portafolios tiene poco tiempo. Abre tu sitio, mira unos segundos y decide si sigue o no. Tu trabajo es hacerle fácil entender qué sabes hacer. Un portafolio que convence no es el más bonito, es el más claro.
+
+## Qué es (y qué no es) un portafolio
+
+Es una colección corta de trabajo tuyo, explicado. No es una lista de tutoriales copiados ni un currículum disfrazado. Responde tres preguntas:
+
+- ¿Qué sabe hacer esta persona?
+- ¿Cómo piensa cuando resuelve un problema?
+- ¿Cómo se comunica?
+
+Por eso importa más explicar el proceso que subir diez capturas.
+
+## Qué mostrar
+
+La regla es calidad sobre cantidad. De dos a cuatro proyectos bien presentados valen más que quince a medias.
+
+Elige proyectos que muestren cosas distintas:
+
+- Uno con interfaz y datos guardados (por ejemplo, una app de tareas con almacenamiento).
+- Uno que consuma una API externa y maneje errores.
+- Uno que hayas hecho en equipo, o que refleje colaboración (PRs, issues).
+- Opcional: uno que resuelva una necesidad real de alguien, como el negocio de un familiar.
+
+Evita incluir:
+
+- Clones exactos de un tutorial, sin cambios propios.
+- Proyectos sin terminar o que no abren.
+- Código que no entiendes. Te lo preguntarán.
+
+Si no sabes qué construir, en [Proyectos](/proyectos/) hay ideas con requisitos y retos extra.
+
+## Dónde publicarlo
+
+Tu portafolio puede vivir en un sitio sencillo. Plataformas gratuitas como GitHub Pages, Vercel, Netlify o Cloudflare Pages permiten publicar páginas estáticas. Elige una y no gastes semanas decidiendo.
+
+Estructura mínima de la página principal:
+
+1. Quién eres en dos líneas.
+2. Tus proyectos destacados, cada uno con captura, resumen y enlaces.
+3. Tecnologías que usas.
+4. Cómo contactarte (correo, GitHub, LinkedIn).
+
+Asegúrate de que cargue bien en el celular. Muchas personas lo abrirán ahí.
+
+## Estructura de un caso de estudio
+
+Un caso de estudio cuenta la historia de un proyecto. No tiene que ser largo, pero sí ordenado. Una estructura que funciona:
+
+1. **Contexto**: qué problema había y para quién.
+2. **Tu rol**: qué hiciste tú, sobre todo si fue en equipo.
+3. **Objetivo**: qué querías lograr.
+4. **Decisiones**: qué tecnologías elegiste y por qué, qué alternativas descartaste.
+5. **Reto principal**: lo más difícil y cómo lo resolviste.
+6. **Resultado**: qué quedó funcionando, con enlace en vivo o captura. Si tienes un dato real (por ejemplo, "mi hermano ya lo usa cada semana"), dilo. Si no, no inventes cifras.
+7. **Qué aprendí o qué mejoraría**: la honestidad aquí suma puntos.
+
+```text
+Proyecto: Control de gastos del taller
+Contexto: Un taller familiar llevaba los gastos en una libreta.
+Mi rol: Diseño, frontend y almacenamiento.
+Reto: Evitar que se perdieran los datos al cerrar el navegador.
+Decisión: Usé localStorage porque era suficiente para un solo usuario;
+  descarté una base de datos para no complicar el despliegue.
+Resultado: Funciona en celular, con exportación a CSV.
+Siguiente paso: Agregar respaldo en la nube.
+```
+
+Fíjate en que no hay números inventados. Un resultado honesto y pequeño convence más que una cifra dudosa.
+
+## Plantilla de README para cada proyecto
+
+El README es la portada de cada repositorio. Muchas personas lo leen antes de abrir tu sitio. Cópiala y adáptala:
+
+```markdown
+# Nombre del proyecto
+
+Una frase que explique qué hace y para quién.
+
+![Captura de pantalla](./docs/captura.png)
+
+**Demo en vivo:** https://tu-enlace.ejemplo
+
+## Qué incluye
+
+- Función 1
+- Función 2
+- Función 3
+
+## Tecnologías
+
+HTML, CSS, JavaScript (ajusta a tu caso)
+
+## Cómo ejecutarlo en local
+
+1. Clona el repositorio.
+2. Instala dependencias con el comando que uses.
+3. Inicia el proyecto con el comando que uses.
+
+## Decisiones y aprendizajes
+
+Dos o tres párrafos cortos: por qué elegiste esto, qué fue difícil.
+
+## Próximas mejoras
+
+- Idea 1
+- Idea 2
+
+## Autor
+
+Tu nombre, enlace a GitHub y LinkedIn.
+```
+
+Prueba tus instrucciones en una carpeta nueva. Si no funcionan desde cero, quien te revise tampoco podrá ejecutarlas.
+
+## Checklist antes de publicar
+
+- Cada proyecto abre sin errores y los enlaces funcionan.
+- Hay una captura o demo visible en los primeros segundos.
+- Cada repositorio tiene README con instrucciones probadas.
+- No hay claves, contraseñas ni archivos privados subidos.
+- El sitio se ve bien en celular.
+- Hay una forma clara de contactarte.
+- Revisaste la ortografía en español, y en inglés si lo usas.
+- Pediste a alguien que lo abra y te diga qué entendió en diez segundos.
+
+<Callout tipo="tip" titulo="Pide una revisión externa">
+Muéstrale tu portafolio a alguien que no programa y pregúntale qué entiende. Si no sabe a qué te dedicas después de diez segundos, ajusta el texto de arriba. Otra buena opción es pedir revisión en [la comunidad](/comunidad/).
+</Callout>
+
+## Errores frecuentes
+
+- **Diseño recargado.** Un diseño limpio con buen texto gana a uno lleno de animaciones.
+- **Descripciones vacías.** "Proyecto de práctica" no dice nada. Explica el problema.
+- **Subir secretos.** Si en tu código hay claves de servicios, revócalas y límpialas del historial.
+- **Plantilla sin personalizar.** Si usas una plantilla, cambia todo el contenido de ejemplo.
+- **No actualizar.** Revisa tu portafolio cada tres o cuatro meses.
+
+<Callout tipo="warning" titulo="No presentes proyectos ajenos como propios">
+Usar tutoriales para aprender está bien. Presentar un proyecto ajeno como propio no. Si partiste de una guía, dilo en el README y explica qué cambiaste o agregaste. En una entrevista te pedirán que expliques cada parte, y se nota cuando no la construiste tú.
+</Callout>
+
+## Tu siguiente paso
+
+Elige un proyecto y escribe su caso de estudio esta semana, con la plantilla de arriba. Después, ordena tu presencia en [Tu perfil de GitHub como currículum](/carrera/github-como-curriculum/). Si aún no tienes proyectos, empieza en [Proyectos](/proyectos/) y practica con [Retos](/retos/). Para conocer términos que no entiendas, consulta el [Glosario](/glosario/).

@@ -1,0 +1,186 @@
+---
+titulo: 'JSON, CSV, XML y YAML'
+descripcion: 'Los cuatro formatos de datos que verás todo el tiempo: cómo se ven, en qué se diferencian, cuándo usar cada uno y qué errores comunes evitar al leerlos.'
+categoria: datos
+nivel: principiante
+tiempoLectura: 9
+publicado: 2026-10-09
+temas: [javascript, python]
+etiquetas: [json, csv, xml, yaml, formatos, datos]
+orden: 6
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Un programa guarda datos en memoria como objetos, listas y números. Pero la memoria desaparece al apagar. Para guardar algo en un archivo o enviarlo por internet, hay que convertirlo en **texto** que otro programa pueda leer. Esa conversión sigue un formato. Este artículo te presenta los cuatro más comunes y cuándo conviene cada uno.
+
+## Qué es
+
+Un **formato de datos** es un acuerdo sobre cómo escribir información en texto. Es como el idioma de una carta: si tú y quien la lee usan el mismo, se entienden.
+
+Al convertir datos en texto se le llama **serializar**. Al regresar el texto a datos usables se le llama **deserializar** (o parsear).
+
+Vamos a usar los mismos datos en los cuatro formatos para que los compares: una lista con dos productos.
+
+## JSON
+
+JSON (JavaScript Object Notation) es el formato estrella de las APIs web. Aunque nació de la sintaxis de JavaScript, lo entienden prácticamente todos los lenguajes.
+
+```json
+[
+  { "nombre": "Café", "precio": 120, "enStock": true },
+  { "nombre": "Pan", "precio": 35, "enStock": false }
+]
+```
+
+Solo tiene seis tipos de valor: **texto** (siempre entre comillas dobles), **número**, **booleano** (`true` o `false`), **nulo** (`null`), **arreglo** (`[ ]`) y **objeto** (`{ }` con pares clave y valor). Las claves siempre van entre comillas dobles.
+
+Ejemplo en JavaScript, guardado como `j.mjs`:
+
+```js
+// JSON: de texto a objeto y de vuelta
+const texto = '{"nombre":"Ana","edad":30,"lenguajes":["js","python"],"activa":true,"jefe":null}';
+const obj = JSON.parse(texto);
+console.log(obj.lenguajes[1]);          // python
+console.log(typeof obj.edad);           // number
+console.log(JSON.stringify(obj, null, 2)); // de vuelta a texto, con sangría
+
+// Errores típicos: comillas simples y coma final
+for (const malo of ["{'a': 1}", '{"a": 1,}']) {
+  try { JSON.parse(malo); } catch (e) { console.log(e.name + ': ' + e.message); }
+}
+
+// Lo que JSON no puede guardar
+console.log(JSON.stringify({ fecha: new Date(0), f: () => 1, u: undefined }));
+```
+
+Salida (los mensajes de error pueden variar según tu versión de Node.js):
+
+```text
+python
+number
+{
+  "nombre": "Ana",
+  "edad": 30,
+  "lenguajes": [
+    "js",
+    "python"
+  ],
+  "activa": true,
+  "jefe": null
+}
+SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+SyntaxError: Expected double-quoted property name in JSON at position 8 (line 1 column 9)
+{"fecha":"1970-01-01T00:00:00.000Z"}
+```
+
+Observa tres cosas. JSON **no acepta comillas simples ni comas finales**. Las **fechas** se convierten a texto, y al leerlas de vuelta serán texto, no fechas. Las funciones y los valores `undefined` simplemente se descartan.
+
+**Úsalo para:** APIs, configuración de herramientas (`package.json`), almacenamiento de datos con estructura anidada.
+
+**Ojo:** JSON no admite comentarios.
+
+## CSV
+
+CSV (Comma-Separated Values) es una **tabla en texto**. Cada línea es una fila, y los valores se separan con comas. La primera línea suele ser el encabezado.
+
+```text
+nombre,precio,enStock
+Café,120,true
+Pan,35,false
+```
+
+Es lo que exportan Excel y Google Sheets. Es compacto y fácil de abrir, pero tiene límites:
+
+- **No tiene tipos.** Todo es texto. `120` y `"120"` se ven igual, y tu programa decide si lo convierte en número.
+- **No tiene estructura anidada.** Una tabla plana no puede guardar una lista dentro de una celda sin trucos.
+- **Los separadores varían.** Algunas configuraciones regionales usan punto y coma, porque la coma es el separador decimal. Si un valor contiene una coma, debe ir entre comillas: `"Pérez, Ana",30`.
+
+**Úsalo para:** datos tabulares (hojas de cálculo), exportar o importar a bases de datos, análisis de datos.
+
+## XML
+
+XML (eXtensible Markup Language) usa **etiquetas** como HTML, pero con los nombres que tú inventes. Es más largo que JSON, pero describe bien documentos con estructura.
+
+```xml
+<productos>
+  <producto enStock="true">
+    <nombre>Café</nombre>
+    <precio>120</precio>
+  </producto>
+  <producto enStock="false">
+    <nombre>Pan</nombre>
+    <precio>35</precio>
+  </producto>
+</productos>
+```
+
+Cada etiqueta abre y se cierra, y puede tener **atributos** (`enStock="true"`). Lo verás en sistemas empresariales y servicios más antiguos, en canales de noticias (RSS), en archivos de configuración de algunas plataformas y en formatos como SVG.
+
+**Úsalo para:** integrarte con sistemas que ya lo usan, documentos con texto mezclado con etiquetas, formatos estándar de industria.
+
+## YAML
+
+YAML está pensado para que **las personas lo lean y escriban**. Usa sangría en lugar de llaves y etiquetas, y sí permite comentarios.
+
+```yaml
+# lista de productos
+- nombre: Café
+  precio: 120
+  enStock: true
+- nombre: Pan
+  precio: 35
+  enStock: false
+```
+
+Es muy común en **configuración**: flujos de GitHub Actions, archivos de Docker Compose y manifiestos de otras herramientas.
+
+**Úsalo para:** archivos de configuración que editarás a mano.
+
+<Callout tipo="warning" titulo="La sangría cuenta, y los tipos se adivinan">
+En YAML, un espacio de más cambia el significado, y no se permiten tabuladores para sangrar. Además, el lector adivina el tipo de cada valor. Prueba esto con PyYAML (`pip install pyyaml`), que sigue la versión 1.1 de YAML:
+
+```python
+import yaml
+print(yaml.safe_load("pais: no\nversion: 3.10\nactivo: yes"))
+print(yaml.safe_load('pais: "no"\nversion: "3.10"'))
+```
+
+Verás `{'pais': False, 'version': 3.1, 'activo': True}` y luego `{'pais': 'no', 'version': '3.10'}`. El `no` sin comillas se volvió booleano y `3.10` perdió el cero. Cuando un valor debe ser texto, ponlo entre comillas. Otros lectores, que siguen YAML 1.2, interpretan algunos de estos casos de otra forma, así que no dependas de la adivinanza.
+</Callout>
+
+## Comparación
+
+| Formato | Legible para personas | Tipos de datos | Anidación | Comentarios | Uso típico |
+| --- | --- | --- | --- | --- | --- |
+| JSON | Sí | Sí, básicos | Sí | No | APIs web |
+| CSV | Sí, para tablas | No, todo es texto | No | No | Hojas de cálculo, datos planos |
+| XML | Regular, es verboso | Texto con atributos | Sí | Sí | Sistemas empresariales, documentos |
+| YAML | Muy legible | Sí, inferidos | Sí | Sí | Configuración |
+
+<Callout tipo="tip" titulo="Cómo elegir">
+Si es para una API, usa JSON. Si es una tabla que alguien abrirá en una hoja de cálculo, usa CSV. Si hablas con un sistema que ya exige XML, usa XML. Si es configuración que editas a mano, YAML (o JSON si prefieres rigidez).
+</Callout>
+
+## Pruébalo tú
+
+1. Crea `datos.json` con la lista de productos de arriba y verifica que sea válido: `node -e "console.log(JSON.parse(require('fs').readFileSync('datos.json','utf8')).length)"` debe imprimir `2`.
+2. Ejecuta el archivo `j.mjs` del ejemplo y rompe un JSON a propósito. Lee el mensaje de error: te dice la posición exacta.
+3. Si usas Python, instala PyYAML y convierte tu JSON a YAML con `yaml.safe_dump(json.load(open('datos.json')), allow_unicode=True, sort_keys=False)`.
+4. Abre una hoja de cálculo, escribe dos filas y exporta como CSV. Abre el archivo en el Bloc de notas y observa cómo quedó.
+
+## Errores y mitos comunes
+
+- **"JSON es lo mismo que un objeto de JavaScript."** No. JSON es texto. Un objeto de JavaScript acepta comillas simples, comentarios y funciones. JSON no.
+- **"Puedo poner comentarios en JSON."** No. Si necesitas comentarios, usa YAML u otro formato de configuración.
+- **"CSV es tan simple que no falla."** Falla con comas dentro de valores, saltos de línea dentro de celdas, separadores distintos y codificaciones. Usa una librería de CSV en lugar de dividir el texto con `split(',')`.
+- **"XML ya murió."** Sigue vivo en muchos sistemas. No tienes que amarlo, pero te lo encontrarás.
+- **"Guardo contraseñas en un JSON o YAML de configuración y lo subo al repositorio."** Los secretos no van en archivos versionados. Mira [variables de entorno](/fundamentos/variables-de-entorno/).
+- **"Los números en JSON son enteros o decimales."** JSON solo dice "número". Los números muy grandes pueden perder precisión en JavaScript. Si necesitas exactitud, como identificadores largos, envíalos como texto.
+
+## Qué sigue
+
+- [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/): donde más usarás JSON.
+- [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/) y [bases de datos NoSQL](/fundamentos/bases-de-datos-nosql/): dónde viven los datos de manera permanente.
+- [Guía de JavaScript](/guias/javascript/) y [guía de Python](/guias/python/) para practicar con `JSON.parse` y `json.loads`.
+- [Terminal explicada](/fundamentos/terminal-explicada/) y [glosario](/glosario/).

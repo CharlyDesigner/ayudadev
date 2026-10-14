@@ -1,0 +1,263 @@
+---
+titulo: 'Matemáticas para programadores'
+descripcion: 'Lógica, aritmética modular, conteo, estadística, vectores y probabilidad explicados con código en Python que corre tal cual. Para programar con más criterio.'
+tema: matematicas
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['matematicas-khan-academy-matematicas', 'matematicas-temas-logica-informatica-us', 'matematicas-matematica-discreta-uma', 'matematicas-algebra-lineal-bujosa']
+requisitos: ['Saber lo básico de Python: variables, bucles y funciones', 'Aritmética y álgebra de secundaria']
+etiquetas: ['logica', 'discreta', 'estadistica', 'algebra-lineal', 'probabilidad']
+orden: 5
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+No necesitas ser matemático para programar, pero algunas áreas aparecen una y otra vez: lógica en cada `if`, aritmética modular en hashes y cifrado, conteo en algoritmos, estadística en datos, y álgebra lineal en gráficos e inteligencia artificial. Esta guía recorre esas áreas con código, para que cada idea tenga algo que puedas ejecutar y tocar.
+
+## Qué es y para qué sirve
+
+- **Lógica.** Las condiciones de tus programas son lógica proposicional: `y`, `o`, `no`, y las tablas de verdad que dicen cuándo algo es cierto. Simplificar una condición es aplicar leyes lógicas.
+- **Matemática discreta.** Trabaja con cosas que se cuentan: conjuntos, grafos, relaciones, combinaciones. Es la base de las estructuras de datos y los algoritmos.
+- **Aritmética modular.** Los números "dan la vuelta" como en un reloj. Está detrás de los hashes, los generadores de números aleatorios, los dígitos de verificación y la criptografía.
+- **Estadística y probabilidad.** Resumen datos, miden la incertidumbre y te dicen cuándo un resultado es fiable. Se usan en pruebas A/B, monitoreo, ciencia de datos y aprendizaje automático.
+- **Álgebra lineal.** Vectores y matrices representan puntos, imágenes y datos. Transformar un punto en un gráfico o entrenar una red neuronal son multiplicaciones de matrices.
+- **Cálculo.** Mide cómo cambian las cosas. Aparece sobre todo en optimización y en el entrenamiento de modelos de IA.
+- **Cómo estudiarlo.** Primero la intuición y un ejemplo con código; después la definición formal. Ejecutar y modificar el ejemplo ayuda más que leer una demostración sin practicar.
+
+## Prepara tu entorno
+
+Los ejemplos usan solo la biblioteca estándar de Python, sin instalar paquetes.
+
+<Pasos>
+
+1. **Instala Python 3.** En **Windows** descarga el instalador desde [python.org/downloads](https://www.python.org/downloads/) y marca **"Add python.exe to PATH"**. En **macOS** usa el instalador de python.org o `brew install python`. En **Linux** suele venir instalado; si no, `sudo apt install python3`.
+2. **Comprueba la versión** con `python --version` (en macOS y Linux, `python3 --version`). Los ejemplos necesitan Python 3.8 o superior.
+3. **Crea una carpeta** `mate` y guarda ahí cada ejemplo con el nombre de archivo indicado.
+4. **Ejecuta cada archivo** con `python nombre.py`. Con [uv](https://docs.astral.sh/uv/) también funciona `uv run nombre.py`.
+5. **Para practicar sin código,** [Khan Academy en español](https://es.khanacademy.org/math) tiene ejercicios con retroalimentación inmediata desde aritmética hasta cálculo.
+
+</Pasos>
+
+## Ejemplos paso a paso
+
+En los comandos usamos `python`; si tu sistema solo reconoce `python3`, cámbialo.
+
+<Ejemplo numero={1} titulo="Lógica: tablas de verdad y ley de De Morgan" archivo="logica.py" ejecutar="python logica.py" salida={"p      q      (p y q) o no p\nTrue   True   True\nTrue   False  False\nFalse  True   True\nFalse  False  True\nDe Morgan se cumple en todos los casos: True"}>
+
+```python
+from itertools import product
+
+# Tabla de verdad de  (p y q) o no p   y comprobación de una ley de De Morgan
+print("p      q      (p y q) o no p")
+for p, q in product([True, False], repeat=2):
+    resultado = (p and q) or (not p)
+    print(f"{str(p):<6} {str(q):<6} {resultado}")
+
+# De Morgan: no (p y q)  equivale a  (no p) o (no q)
+equivalentes = all(
+    (not (p and q)) == ((not p) or (not q))
+    for p, q in product([True, False], repeat=2)
+)
+print("De Morgan se cumple en todos los casos:", equivalentes)
+```
+
+`product` genera todas las combinaciones de verdadero y falso. Con dos variables hay cuatro filas; con `n` variables hay `2^n`. Comprobar una equivalencia es revisar que dos expresiones den lo mismo en todas las filas. Las leyes de De Morgan te sirven para simplificar condiciones como `if not (a and b)`, que equivale a `if not a or not b`.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Aritmética modular" archivo="modular.py" ejecutar="python modular.py" salida={"17 % 5 = 2\n-3 % 5 = 2\nHora: 2\nmcd(48, 18) = 6\n7^222 mod 13 = 12\nInverso de 3 módulo 11: 4 -> 1\nkrod pxqgr -> hola mundo"}>
+
+```python
+from math import gcd
+
+# El operador % da el residuo: la base de relojes, calendarios y hashes
+print("17 % 5 =", 17 % 5)
+print("-3 % 5 =", -3 % 5)   # en Python el resultado nunca es negativo con módulo positivo
+
+# Reloj de 12 horas: 9 horas después de las 5
+print("Hora:", (5 + 9) % 12)
+
+# Máximo común divisor y exponenciación modular rápida
+print("mcd(48, 18) =", gcd(48, 18))
+print("7^222 mod 13 =", pow(7, 222, 13))
+
+# Inverso modular: x tal que (3 * x) % 11 == 1
+inverso = pow(3, -1, 11)
+print("Inverso de 3 módulo 11:", inverso, "->", (3 * inverso) % 11)
+
+# Un cifrado César es aritmética modular con 26 letras
+def cesar(texto, desplazamiento):
+    salida = ""
+    for c in texto:
+        if "a" <= c <= "z":
+            salida += chr((ord(c) - ord("a") + desplazamiento) % 26 + ord("a"))
+        else:
+            salida += c
+    return salida
+
+secreto = cesar("hola mundo", 3)
+print(secreto, "->", cesar(secreto, -3))
+```
+
+Con módulo positivo, `%` en Python siempre devuelve un valor entre 0 y el módulo menos uno, algo que no pasa igual en todos los lenguajes. `pow(base, exponente, módulo)` calcula potencias enormes sin desbordarse, y es la operación que usan RSA y otros algoritmos. El inverso modular es el "dividir" de este mundo. El cifrado César es un juguete, no protege nada, pero muestra por qué el módulo hace que el alfabeto dé la vuelta.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Conjuntos y conteo" archivo="conteo.py" ejecutar="python conteo.py" salida={"Unión: [1, 2, 3, 4, 5]\nIntersección: [3, 4]\nDiferencia a - b: [1, 2]\nPermutaciones de 4: 24\nOrdenar 2 de 4 en fila: 12\nElegir un comité de 2 entre 4: 6\n[('A', 'B'), ('A', 'C'), ('A', 'D'), ('B', 'C'), ('B', 'D'), ('C', 'D')]\n12"}>
+
+```python
+from itertools import combinations, permutations
+from math import comb, factorial, perm
+
+# Conjuntos
+a = {1, 2, 3, 4}
+b = {3, 4, 5}
+print("Unión:", sorted(a | b))
+print("Intersección:", sorted(a & b))
+print("Diferencia a - b:", sorted(a - b))
+
+# Conteo: ¿de cuántas formas se ordenan 4 personas en una fila?
+print("Permutaciones de 4:", factorial(4))
+print("Ordenar 2 de 4 en fila:", perm(4, 2))
+print("Elegir un comité de 2 entre 4:", comb(4, 2))
+
+# Y las puedes listar, no solo contarlas
+print(list(combinations("ABCD", 2)))
+print(len(list(permutations("ABCD", 2))))
+```
+
+Los conjuntos de Python implementan las operaciones de la teoría de conjuntos. La diferencia entre permutación y combinación es si importa el orden: ordenar a dos de cuatro personas en una fila da 12 posibilidades, pero elegir un comité de dos da 6. Saber contar te dice cuánto crece un problema antes de intentar resolverlo por fuerza bruta: el factorial de 20 ya tiene 19 dígitos.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Estadística descriptiva y valores extremos" archivo="estadistica.py" ejecutar="python estadistica.py" salida={"Media: 345\nMediana: 107.5\nDesviación estándar: 625.6\nMedia sin el extremo: 108.6\nMediana sin el extremo: 105"}>
+
+```python
+from statistics import mean, median, pstdev
+
+# Tiempos de respuesta de una API en milisegundos (datos de ejemplo)
+tiempos = [120, 95, 110, 105, 98, 130, 102, 2000]
+
+print("Media:", round(mean(tiempos), 1))
+print("Mediana:", median(tiempos))
+print("Desviación estándar:", round(pstdev(tiempos), 1))
+
+# Un valor extremo arrastra la media, pero casi no mueve la mediana
+sin_extremo = [t for t in tiempos if t < 1000]
+print("Media sin el extremo:", round(mean(sin_extremo), 1))
+print("Mediana sin el extremo:", median(sin_extremo))
+```
+
+Una sola petición lenta de 2000 ms lleva la media a 345, un valor que no describe a ninguna petición real. La mediana, 107.5, sí refleja lo típico. Por eso en monitoreo se mira la mediana y los percentiles altos, no solo el promedio. La desviación estándar mide qué tan dispersos están los datos; aquí es grande por el valor extremo. Los datos de este ejemplo son inventados.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Vectores y matrices como transformaciones" archivo="algebra.py" ejecutar="python algebra.py" salida={"Producto punto: 32\nGiro de (2, 1): [-1, 2]\nEscala de (2, 1): [4, 2]"}>
+
+```python
+# Vectores y matrices con listas de Python (sin librerías)
+def producto_punto(u, v):
+    return sum(a * b for a, b in zip(u, v))
+
+
+def multiplicar(matriz, vector):
+    return [producto_punto(fila, vector) for fila in matriz]
+
+
+u = [1, 2, 3]
+v = [4, 5, 6]
+print("Producto punto:", producto_punto(u, v))
+
+# Una matriz es una transformación: esta gira un punto 90 grados a la izquierda
+giro_90 = [
+    [0, -1],
+    [1, 0],
+]
+print("Giro de (2, 1):", multiplicar(giro_90, [2, 1]))
+
+# Y esta lo escala al doble
+escala_2 = [
+    [2, 0],
+    [0, 2],
+]
+print("Escala de (2, 1):", multiplicar(escala_2, [2, 1]))
+```
+
+El producto punto, `1*4 + 2*5 + 3*6 = 32`, es la operación básica del álgebra lineal. Mide qué tan alineados están dos vectores y está en el corazón de las redes neuronales. Multiplicar una matriz por un vector aplica una transformación: giros, escalas y reflejos en gráficos 2D y 3D funcionan así. Para matrices grandes se usa NumPy, que hace lo mismo mucho más rápido.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Probabilidad exacta y simulación" archivo="probabilidad.py" ejecutar="python probabilidad.py" salida={"Probabilidad exacta de sumar 7: 1/6 = 0.1667\nEstimación con 100000 lanzamientos: 0.1701"}>
+
+```python
+import random
+from fractions import Fraction
+from itertools import product
+
+# Probabilidad exacta: contamos casos favorables entre casos posibles
+casos = list(product(range(1, 7), repeat=2))          # 36 resultados de dos dados
+favorables = [c for c in casos if sum(c) == 7]
+exacta = Fraction(len(favorables), len(casos))
+print("Probabilidad exacta de sumar 7:", exacta, "=", round(float(exacta), 4))
+
+# Simulación: lanzamos muchas veces y vemos qué tan cerca queda
+azar = random.Random(42)                               # semilla fija para repetir el resultado
+
+
+def dado():
+    return int(azar.random() * 6) + 1
+
+
+lanzamientos = 100_000
+aciertos = sum(1 for _ in range(lanzamientos) if dado() + dado() == 7)
+print("Estimación con 100000 lanzamientos:", round(aciertos / lanzamientos, 4))
+```
+
+Hay 36 resultados posibles con dos dados y 6 de ellos suman 7, así que la probabilidad exacta es 1/6. La simulación da un número cercano pero no idéntico: es una estimación. Con una semilla fija el resultado es repetible, y eso sirve para depurar y probar. Si cambias o quitas la semilla, la estimación cambia ligeramente en cada ejecución. Simular es útil cuando calcular la respuesta exacta es difícil.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Comparar decimales con igualdad exacta">
+En casi todos los lenguajes, `0.1 + 0.2 == 0.3` es falso porque los decimales binarios no representan todo exactamente. Compara con una tolerancia (`math.isclose`) o usa `decimal` o `fractions` cuando necesites exactitud, como en dinero.
+</Callout>
+
+<Callout tipo="warning" titulo="Usar el promedio sin mirar los datos">
+Un promedio puede esconder valores extremos o dos grupos distintos. Revisa también la mediana, el mínimo, el máximo y, si puedes, una gráfica antes de sacar conclusiones.
+</Callout>
+
+<Callout tipo="warning" titulo="Confundir correlación con causalidad">
+Que dos cosas suban juntas no significa que una cause la otra. Antes de afirmar que un cambio mejoró algo, compara con un grupo de control o con una prueba A/B bien diseñada.
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar el comportamiento del módulo con negativos">
+En Python, `-3 % 5` da 2, pero en C, Java o JavaScript da -3. Si portas código entre lenguajes, revisa cómo trata cada uno los residuos de números negativos y la división entera.
+</Callout>
+
+<Callout tipo="warning" titulo="Memorizar fórmulas sin practicar">
+Leer una demostración no equivale a entenderla. Escribe el ejemplo en código, cambia los números, rompe la fórmula a propósito y mira qué pasa. Practicar con ejercicios, como los de Khan Academy, afianza más que releer.
+</Callout>
+
+## Buenas prácticas
+
+- Convierte cada concepto en un experimento pequeño en código: es más fácil recordar lo que ejecutaste.
+- Dibuja el problema: un grafo, una recta numérica o una tabla de verdad aclaran más que una fórmula.
+- Verifica tus resultados con casos pequeños que puedas calcular a mano.
+- Usa las bibliotecas estándar (`math`, `statistics`, `fractions`, `itertools`) y NumPy cuando los datos crezcan.
+- Fija una semilla al simular con números aleatorios para que tus pruebas sean repetibles.
+- Estudia con constancia, aunque sea poco cada día. Las matemáticas se construyen sobre lo anterior.
+- Aprende la notación poco a poco; casi toda se traduce directamente a un bucle o una función.
+
+## Siguiente paso
+
+- **Practica con una base sólida.** [Khan Academy en español](https://es.khanacademy.org/math) cubre aritmética, álgebra y estadística con ejercicios graduales.
+- **Profundiza en lógica y matemática discreta** con los apuntes de [Lógica informática de la Universidad de Sevilla](https://www.cs.us.es/~jalonso/cursos/li/temas/temas-LI-2015-16.pdf) y los libros de la [biblioteca de matemáticas](/biblioteca/matematicas/).
+- **Aplícalas a algoritmos.** La guía de [Algoritmos y estructuras de datos](/guias/algoritmos/) usa conteo, recursión y grafos que verás aquí en versión formal.
+- **Úsalas en IA.** Con vectores, matrices y probabilidad ya puedes seguir la guía de [Inteligencia artificial y machine learning desde cero](/guias/inteligencia-artificial/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

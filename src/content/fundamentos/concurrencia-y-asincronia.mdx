@@ -1,0 +1,211 @@
+---
+titulo: 'Concurrencia y asincronía: hilos, procesos y async/await'
+descripcion: 'Entiende la diferencia entre concurrencia y paralelismo, cuándo usar hilos, procesos o async/await, y cómo evitar las condiciones de carrera en Python y JavaScript.'
+categoria: programacion
+nivel: intermedio
+tiempoLectura: 13
+publicado: 2026-10-09
+temas: [python, javascript, sistemas-operativos]
+etiquetas: [async, await, hilos, procesos, concurrencia, paralelismo]
+orden: 26
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Tu programa descarga tres archivos uno por uno. Mientras espera la respuesta del primero, la computadora no hace nada útil: solo espera. Es como un cocinero que pone agua a hervir y se queda mirando la olla en lugar de picar las verduras. La concurrencia es el arte de aprovechar esos tiempos muertos.
+
+## Qué es
+
+Dos palabras que se confunden:
+
+- **Concurrencia:** manejar varias tareas que avanzan en turnos, intercalándose. Un solo cocinero que alterna entre la olla, el sartén y la tabla de picar.
+- **Paralelismo:** ejecutar varias tareas en el mismo instante, en núcleos distintos del procesador. Tres cocineros trabajando a la vez.
+
+La concurrencia es un asunto de **estructura** de tu programa. El paralelismo es un asunto de **hardware** disponible. Puedes tener concurrencia sin paralelismo.
+
+Antes de escoger herramienta, identifica qué tipo de trabajo haces:
+
+| Tipo de trabajo | Qué es | Ejemplos | Qué ayuda |
+| --- | --- | --- | --- |
+| Limitado por E/S | Esperas a algo externo | Red, disco, base de datos | Async o hilos |
+| Limitado por CPU | Calculas sin parar | Procesar imágenes, simulaciones | Procesos (paralelismo real) |
+
+## Async/await: un solo hilo que no se queda esperando
+
+Con **async/await** tienes un solo hilo que ejecuta tareas, pero cuando una tarea llega a una espera (por ejemplo, una respuesta de red), **cede el control** y el hilo atiende otra. Cuando la espera termina, regresa a la primera. Eso es lo que pasa en el **bucle de eventos** (event loop).
+
+```text
+Tarea A: ejecuta --- espera red ............ continúa --- fin
+Tarea B:             ejecuta --- espera red ............ continúa --- fin
+Hilo:    [A][B][..libre..]  [A][B]
+```
+
+Nadie ejecuta código a la vez; solo se aprovechan las esperas. Eso reduce mucho las carreras de datos, pero no las elimina: si dos tareas leen un dato, esperan y luego lo escriben, pueden pisarse igual.
+
+<Ejemplo numero={1} titulo="Secuencial contra concurrente en Python" archivo="asincronia.py" ejecutar="uv run asincronia.py" salida={"(['A listo', 'B listo'], 2.0)\n(['A listo', 'B listo'], 1.0)"}>
+
+```python
+import asyncio
+import time
+
+async def descargar(nombre, segundos):
+    await asyncio.sleep(segundos)      # simula esperar la red
+    return f"{nombre} listo"
+
+async def secuencial():
+    t = time.perf_counter()
+    a = await descargar("A", 1)        # espera a que termine A
+    b = await descargar("B", 1)        # y luego empieza B
+    return [a, b], round(time.perf_counter() - t, 1)
+
+async def concurrente():
+    t = time.perf_counter()
+    r = await asyncio.gather(descargar("A", 1), descargar("B", 1))
+    return list(r), round(time.perf_counter() - t, 1)
+
+print(asyncio.run(secuencial()))
+print(asyncio.run(concurrente()))
+```
+
+Dos esperas de un segundo tardan dos segundos una tras otra, y uno solo con `gather`, porque las esperas se solapan. Una función `async def` devuelve algo que debes esperar con `await`, y `asyncio.run` arranca el bucle de eventos.
+
+</Ejemplo>
+
+En JavaScript es la misma idea, y además el modelo está integrado en el lenguaje. Este ejemplo también muestra en qué orden se ejecutan las cosas:
+
+<Ejemplo numero={2} titulo="El orden en JavaScript" archivo="orden.mjs" ejecutar="node orden.mjs" salida={"1 inicio\n2 fin del código síncrono\n3 promesa\n4 timeout"}>
+
+```js
+console.log("1 inicio");
+setTimeout(() => console.log("4 timeout"), 0);
+Promise.resolve().then(() => console.log("3 promesa"));
+console.log("2 fin del código síncrono");
+```
+
+Aunque el temporizador es de cero milisegundos, se ejecuta al final. Primero corre todo el código síncrono, luego las promesas pendientes y después los temporizadores. Entender esto evita muchos "¿por qué se ejecutó en este orden?".
+
+</Ejemplo>
+
+```js
+const espera = (ms, nombre) => new Promise((r) => setTimeout(() => r(nombre), ms));
+
+async function main() {
+  // Una tras otra: tarda la suma de las esperas
+  await espera(300, "A");
+  await espera(300, "B");
+
+  // Todas a la vez: tarda lo que la más lenta
+  const resultados = await Promise.all([espera(300, "A"), espera(300, "B")]);
+  console.log(resultados);   // [ 'A', 'B' ]
+
+  // Los errores se capturan con try/catch, como en código normal
+  try {
+    await Promise.reject(new Error("falló"));
+  } catch (e) {
+    console.log("capturado:", e.message);
+  }
+}
+main();
+```
+
+<Callout tipo="tip" titulo="La regla de oro del async">
+Si dos operaciones no dependen una de la otra, lánzalas juntas con `Promise.all` o `asyncio.gather`. Si una necesita el resultado de la otra, usa `await` en orden. Olvidar el `await` es el error número uno: obtienes una promesa o una corrutina en vez del resultado.
+</Callout>
+
+## Hilos: varios caminos en el mismo programa
+
+Un **hilo** (thread) es un camino de ejecución dentro de un proceso. Varios hilos comparten la misma memoria, y el sistema operativo los va alternando (o los corre a la vez si hay varios núcleos). Esto los hace baratos, pero también peligrosos: si dos hilos cambian el mismo dato al mismo tiempo, puedes obtener resultados incorrectos.
+
+A ese problema se le llama **condición de carrera**. Imagina dos personas que leen el saldo (100), cada una le suma 10 y guarda el resultado. El saldo final es 110, no 120, porque una escritura pisó a la otra. La solución es un **candado** (lock): solo una persona entra a la vez a esa sección crítica.
+
+```python
+import threading
+
+saldo = 0
+candado = threading.Lock()
+
+def depositar(veces):
+    global saldo
+    for _ in range(veces):
+        with candado:          # solo un hilo a la vez en este bloque
+            saldo += 1
+
+hilos = [threading.Thread(target=depositar, args=(10_000,)) for _ in range(4)]
+for h in hilos: h.start()
+for h in hilos: h.join()
+print(saldo)   # 40000 con candado
+```
+
+Con el candado, el resultado es siempre 40000. Sin él, no hay garantía de que lo sea.
+
+En Python existe además una limitación histórica: el **GIL** (Global Interpreter Lock), que en la versión estándar permite que solo un hilo ejecute código Python a la vez. Por eso los hilos ayudan con esperas de E/S, pero no aceleran cálculos pesados. Las versiones más recientes de Python incluyen compilaciones opcionales sin GIL, pero no las damos por hechas en tus proyectos: revisa la documentación oficial de tu versión.
+
+## Procesos: paralelismo real
+
+Un **proceso** es un programa en ejecución con su propia memoria. Varios procesos no comparten datos por defecto, así que evitas carreras, pero comunicarlos cuesta más y arrancar uno es más lento que un hilo. Cada proceso puede usar un núcleo distinto, y por eso son la herramienta para el trabajo limitado por CPU.
+
+<Ejemplo numero={3} titulo="Hilos y procesos con cálculo pesado" archivo="cpu.py" ejecutar="uv run cpu.py" salida={"secuencial: 2.24 s\nhilos: 2.81 s\nprocesos: 1.51 s"}>
+
+```python
+import time
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
+def cpu(n):
+    s = 0
+    for i in range(n):
+        s += i * i
+    return s
+
+def medir(nombre, f):
+    t = time.perf_counter()
+    f()
+    print(f"{nombre}: {time.perf_counter() - t:.2f} s")
+
+if __name__ == "__main__":      # necesario en Windows y macOS para procesos
+    trabajos = [10_000_000] * 4
+    medir("secuencial", lambda: [cpu(n) for n in trabajos])
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        medir("hilos", lambda: list(ex.map(cpu, trabajos)))
+    with ProcessPoolExecutor(max_workers=4) as ex:
+        medir("procesos", lambda: list(ex.map(cpu, trabajos)))
+```
+
+Estos tiempos son de una corrida en una computadora de prueba y varían bastante entre corridas y equipos. Lo que sí se repite: los hilos no mejoran frente a la versión secuencial (por el GIL), mientras que los procesos sí reducen el tiempo al usar varios núcleos. La protección `if __name__ == "__main__"` evita que cada proceso hijo vuelva a ejecutar todo el archivo.
+
+</Ejemplo>
+
+<Callout tipo="warning" titulo="Concurrencia no es magia ni siempre ayuda">
+Crear hilos o procesos tiene un costo, y los datos compartidos traen errores difíciles de reproducir: un fallo que aparece una vez de cada mil ejecuciones. Antes de complicar tu código, mide si de verdad esperas por E/S o por CPU. Y no bloquees el hilo principal con tareas largas en una interfaz o servidor: congelarías todo mientras tanto.
+</Callout>
+
+## Cómo elegir
+
+- **Muchas esperas de red o disco** (llamar a APIs, descargar, consultar una base de datos): async/await primero. Si tu biblioteca no soporta async, usa hilos.
+- **Cálculo pesado** (procesar imágenes, simulaciones): procesos, o una biblioteca que lo haga por ti.
+- **Un servidor web:** casi todos los frameworks modernos ya manejan la concurrencia; tú solo evitas bloquear.
+- **Un script sencillo:** probablemente nada de esto. Empieza secuencial.
+
+Este modelo también explica por qué JavaScript en el navegador nunca se congela si programas bien: una sola pila, un bucle de eventos y esperas que no bloquean. Las llamadas a servicios web son el caso típico, como verás en [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/).
+
+## Pruébalo tú
+
+1. Cambia el segundo ejemplo de Python para descargar tres "archivos" de 1, 2 y 3 segundos con `gather`. Predice cuánto tarda antes de ejecutarlo.
+2. Quita el `Lock` del ejemplo de hilos y sube las veces a un millón. Observa si el saldo final queda en 4 millones. Puede que sí o que no, y eso es justo el problema.
+3. En JavaScript, escribe una función `esperar(ms)` con una promesa y úsala con `await` dentro de un bucle. Luego reescríbelo con `Promise.all`.
+4. Escribe en papel el orden en que se imprimirá un programa que mezcla `console.log`, `setTimeout` y `Promise.then`, y luego compruébalo.
+
+## Errores y mitos comunes
+
+- **"Async significa paralelo."** Async suele correr en un solo hilo, alternando tareas en sus esperas.
+- **"Más hilos siempre es más rápido."** Con CPU en Python no, y con demasiados hilos pierdes tiempo cambiando de uno a otro.
+- **"`await` bloquea el programa."** Bloquea esa función, pero cede el control para que otras tareas avancen.
+- **"El GIL hace inútiles los hilos en Python."** Siguen siendo útiles para E/S.
+- **"Un bug de concurrencia siempre falla."** A menudo es intermitente, y por eso es tan difícil de depurar.
+
+## Qué sigue
+
+- Aprende cómo el sistema operativo gestiona procesos e hilos en la [biblioteca de sistemas operativos](/biblioteca/sistemas-operativos/).
+- Revisa cómo se comunican los programas por la red: [HTTP, cliente y servidor](/fundamentos/http-cliente-servidor/).
+- Aprende a probar código con tiempos y esperas: [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+- Practica con la [guía de JavaScript](/guias/javascript/), la [guía de Go](/guias/go/) (famoso por su concurrencia), el [glosario](/glosario/) y los [retos](/retos/).

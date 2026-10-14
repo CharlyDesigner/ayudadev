@@ -36,18 +36,41 @@ export const SITE = {
   ogDefault: '/og/default.png',
 } as const;
 
-export const NAV = [
+export interface NavItem {
+  label: string;
+  href: string;
+  descripcion?: string;
+  icono?: string;
+  hijos?: NavItem[];
+}
+
+export const NAV: NavItem[] = [
   { label: 'Biblioteca', href: '/biblioteca/' },
   { label: 'Guías', href: '/guias/' },
+  { label: 'Rutas', href: '/rutas/' },
   { label: 'IA', href: '/ia/' },
+  {
+    label: 'Referencia',
+    href: '/explorar/',
+    hijos: [
+      { label: 'Fundamentos', href: '/fundamentos/', icono: 'school', descripcion: 'Conceptos explicados desde cero' },
+      { label: 'Glosario', href: '/glosario/', icono: 'book', descripcion: 'Términos en lenguaje sencillo' },
+      { label: 'Hojas de referencia', href: '/hojas/', icono: 'file-text', descripcion: 'Cheatsheets para consultar rápido' },
+      { label: 'Retos', href: '/retos/', icono: 'puzzle', descripcion: 'Ejercicios con pistas y solución' },
+      { label: 'Proyectos', href: '/proyectos/', icono: 'rocket', descripcion: 'Ideas para tu portafolio' },
+      { label: 'Herramientas', href: '/herramientas/', icono: 'tool', descripcion: 'Editores, playgrounds y más' },
+      { label: 'Comunidad', href: '/comunidad/', icono: 'share', descripcion: 'Canales, podcasts y comunidades' },
+      { label: 'Carrera', href: '/carrera/', icono: 'newspaper', descripcion: 'Portafolio, entrevistas, freelance' },
+    ],
+  },
   { label: 'Noticias', href: '/noticias/' },
-  { label: 'Apoya', href: '/apoya/' },
-] as const;
+];
 
 export const FOOTER_LINKS = [
   { label: 'Acerca de', href: '/acerca/' },
   { label: 'Enviar recurso', href: '/enviar-recurso/' },
   { label: 'Newsletter', href: '/newsletter/' },
+  { label: 'Apoya el proyecto', href: '/apoya/' },
   { label: 'Privacidad', href: '/privacidad/' },
   { label: 'RSS', href: '/rss.xml' },
 ] as const;

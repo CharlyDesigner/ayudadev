@@ -1,0 +1,159 @@
+---
+titulo: 'Monolito o microservicios: cómo decidir'
+descripcion: 'Qué es un monolito, qué son los microservicios, qué ganas y qué pagas con cada uno, y por qué un monolito modular suele ser el mejor punto de partida.'
+categoria: arquitectura
+nivel: avanzado
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [docker, nodejs, generales]
+etiquetas: [arquitectura, monolito, microservicios, escalabilidad, diseño]
+orden: 32
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Empiezas un proyecto nuevo y alguien en el equipo dice: "hagámoslo con microservicios, así escala". Suena profesional. Tres meses después tienes ocho repositorios, cinco archivos de configuración distintos y una función de registro que necesita que cuatro servicios estén vivos a la vez. Todavía no tienes usuarios. Esta decisión de arquitectura merece más cabeza que moda.
+
+## Qué es
+
+Un **monolito** es una aplicación que vive en una sola unidad: un solo código, un solo programa que se despliega entero, normalmente con una sola base de datos. Es como una tienda departamental: todo está bajo el mismo techo.
+
+Los **microservicios** dividen la aplicación en servicios pequeños e independientes. Cada uno hace una cosa (pagos, usuarios, catálogo), se despliega por separado y se comunica con los demás por la red. Es como un centro comercial con tiendas independientes: cada una puede remodelarse sin cerrar las demás, pero necesitas pasillos, señalización y administración común.
+
+```text
+MONOLITO                          MICROSERVICIOS
+
++-----------------------+         +---------+   +----------+   +---------+
+| usuarios | pedidos    |         | usuarios|   | pedidos  |   |  pagos  |
+| catálogo | pagos      |         +----+----+   +-----+----+   +----+----+
+|     una sola BD       |              |  red / HTTP  |             |
++-----------------------+            [BD 1]        [BD 2]        [BD 3]
+```
+
+Ninguno es "el bueno". Cada uno cambia un conjunto de problemas por otro.
+
+## Lo que ganas y lo que pagas
+
+| Aspecto | Monolito | Microservicios |
+| --- | --- | --- |
+| Empezar | Rápido: un proyecto | Lento: infraestructura primero |
+| Llamadas internas | Una llamada de función | Una llamada de red, puede fallar o tardar |
+| Datos | Una base de datos, transacciones sencillas | Una base por servicio, consistencia difícil |
+| Despliegue | Todo junto | Cada servicio por separado |
+| Escalar | Se copia todo | Escalas solo la parte que lo necesita |
+| Equipos | Varios en el mismo código | Equipos autónomos por servicio |
+| Depurar | Un solo registro de errores | Hay que rastrear peticiones entre servicios |
+| Costo operativo | Bajo | Alto: monitoreo, redes, versiones |
+
+La ventaja real de los microservicios es **organizativa y de escala**: equipos grandes que no se estorban, y partes del sistema con cargas muy distintas. Esa ventaja solo aparece cuando ya tienes esos problemas.
+
+## El costo escondido: la red
+
+Dentro de un monolito, llamar a otra parte del sistema es una llamada de función: rápida y casi siempre exitosa. Entre microservicios es una petición por la red. Puede tardar, perderse o fallar, y hay que programar para eso: tiempos máximos de espera, reintentos, qué hacer si el otro servicio está caído.
+
+<Ejemplo numero={1} titulo="La misma llamada, local contra remota" archivo="pagos.py" ejecutar="uv run pagos.py" salida={"confirmado\nintento 1 falló: el servicio de pagos no respondió\nintento 2 falló: el servicio de pagos no respondió\nconfirmado\nintento 1 falló: el servicio de pagos no respondió\nintento 2 falló: el servicio de pagos no respondió\nintento 3 falló: el servicio de pagos no respondió\nno se pudo completar"}>
+
+```python
+from typing import Protocol
+
+class Pagos(Protocol):
+    def cobrar(self, cliente_id: int, monto: float) -> bool: ...
+
+class PagosLocal:
+    """En el monolito: una llamada normal a una función."""
+    def cobrar(self, cliente_id, monto):
+        return monto > 0
+
+class PagosRemoto:
+    """Si algún día es un servicio aparte: la red puede fallar."""
+    def __init__(self, fallos):
+        self.fallos = fallos
+    def cobrar(self, cliente_id, monto):
+        if self.fallos > 0:
+            self.fallos -= 1
+            raise TimeoutError("el servicio de pagos no respondió")
+        return monto > 0
+
+class Pedidos:
+    def __init__(self, pagos: Pagos):
+        self.pagos = pagos
+    def confirmar(self, cliente_id, total):
+        return "confirmado" if self.pagos.cobrar(cliente_id, total) else "rechazado"
+
+print(Pedidos(PagosLocal()).confirmar(1, 250))
+
+def con_reintentos(f, intentos=3):
+    for n in range(1, intentos + 1):
+        try:
+            return f()
+        except TimeoutError as e:
+            print(f"intento {n} falló: {e}")
+    return "no se pudo completar"
+
+p = Pedidos(PagosRemoto(fallos=2))
+print(con_reintentos(lambda: p.confirmar(1, 250)))   # se recupera al tercer intento
+p2 = Pedidos(PagosRemoto(fallos=5))
+print(con_reintentos(lambda: p2.confirmar(1, 250)))  # se rinde
+```
+
+Con `PagosLocal` no pasa nada raro. Con `PagosRemoto` aparece todo un mundo nuevo: errores, reintentos y decisiones de qué hacer cuando no se logra. Esto es solo una simulación; en un sistema real también tendrías que cuidar que un reintento no cobre dos veces. Fíjate también en otra cosa: `Pedidos` solo conoce la interfaz `Pagos`, no su implementación. Esa separación es la clave del siguiente apartado.
+
+</Ejemplo>
+
+Otro costo es el de los datos. En un monolito, guardar un pedido y descontar inventario puede ser una sola transacción: o pasan las dos cosas o ninguna. Con una base de datos por servicio, esa garantía se pierde y hay que diseñar flujos que toleren fallos a la mitad. Las bases del modelo relacional están en [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/).
+
+## El camino intermedio: monolito modular
+
+Entre los dos extremos hay una opción que muchos equipos consideran el mejor punto de partida: el **monolito modular**. Sigue siendo una sola aplicación desplegable, pero por dentro está dividida en módulos con fronteras claras. Cada módulo expone una interfaz pequeña y esconde sus detalles, y los demás módulos solo hablan con esa interfaz (como `Pagos` en el ejemplo).
+
+Así consigues buena parte del orden de los microservicios sin pagar el costo de la red. Si más adelante un módulo realmente necesita vivir por separado, ya tiene una frontera limpia y extraerlo es mucho más fácil. Es la misma idea de organización que viste en [Programación orientada a objetos sin misterio](/fundamentos/programacion-orientada-a-objetos/), aplicada a escala de sistema.
+
+<Callout tipo="tip" titulo="Una regla práctica para decidir">
+Empieza con un monolito modular. Considera separar un servicio cuando tengas un motivo concreto y medible: esa parte necesita escalar distinto del resto, la despliega un equipo distinto con ritmo propio, o requiere otra tecnología. Si el motivo es "porque es lo moderno", todavía no es momento.
+</Callout>
+
+## Señales de que quizá necesitas separar
+
+- Muchos equipos se pisan en el mismo código y los despliegues requieren coordinar a todos.
+- Una parte del sistema tiene una carga muy distinta (por ejemplo, procesar videos) y obliga a escalar todo para atenderla.
+- Un módulo necesita otro lenguaje o tecnología y lo hace mejor aislado.
+- Un fallo en una parte secundaria tumba todo el sistema y quieres aislarlo.
+- Los tiempos de compilación y de pruebas del monolito ya frenan al equipo.
+
+## Qué necesitas antes de ir a microservicios
+
+Si decides separar, prepara el terreno. Sin esto, el costo se dispara:
+
+1. **Automatización de despliegue.** Cada servicio necesita su propio flujo, como el de [CI/CD explicado con GitHub Actions](/fundamentos/integracion-continua-y-despliegue-continuo/).
+2. **Contenedores.** Empaquetar cada servicio de forma reproducible. Mira la [biblioteca de Docker](/biblioteca/docker/).
+3. **Observabilidad.** Registros centralizados, métricas y trazas para seguir una petición a través de varios servicios.
+4. **Contratos claros entre servicios.** Una API bien definida y versionada. Si no la tienes, revisa [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/).
+5. **Manejo de fallos.** Tiempos de espera, reintentos y planes alternos, como el ejemplo de arriba.
+6. **Pruebas que cubran las integraciones.** Más información en [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+
+<Callout tipo="warning" titulo="El monolito distribuido">
+El peor resultado es dividir en servicios que dependen tanto unos de otros que deben desplegarse juntos y no pueden funcionar solos. Tienes todos los costos de los microservicios (red, complejidad) y ninguna ventaja. Si no puedes cambiar un servicio sin tocar otros tres, las fronteras están mal trazadas.
+</Callout>
+
+## Pruébalo tú
+
+1. Elige una aplicación que conozcas (una tienda en línea, una app de tareas) y dibuja sus módulos: ¿qué partes se podrían separar con una interfaz clara?
+2. Modifica el ejemplo de Python para que `PagosRemoto` falle una vez y verifica con cuántos intentos se recupera.
+3. Agrega a `con_reintentos` una espera entre intentos con `time.sleep` y piensa por qué reintentar al instante puede empeorar un problema.
+4. Escribe en una frase el motivo concreto por el que separarías el módulo de pagos. Si no puedes, probablemente aún no hace falta.
+
+## Errores y mitos comunes
+
+- **"Microservicios son más modernos, así que son mejores."** Son una herramienta para ciertos problemas, no una mejora automática.
+- **"Un monolito no puede escalar."** Puede escalar bastante, copiándolo en varios servidores. Muchos productos grandes empezaron así.
+- **"Con microservicios los equipos van más rápido."** Solo si las fronteras están bien definidas. Si no, avanzan más lento.
+- **"Monolito significa código desordenado."** No: un monolito modular puede estar muy bien organizado.
+- **"Se puede cambiar la decisión sin costo."** Pasar de un extremo a otro es posible, pero cuesta, por eso conviene decidir con información real.
+
+## Qué sigue
+
+- Aprende soluciones de diseño reutilizables: [Patrones de diseño que sí vas a usar](/fundamentos/patrones-de-diseno/).
+- Entiende cómo se hablan los servicios: [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/).
+- Repasa cómo se comunican los programas en la red: [HTTP, cliente y servidor](/fundamentos/http-cliente-servidor/).
+- Consulta el [glosario](/glosario/), la [biblioteca de Docker](/biblioteca/docker/) y los [retos](/retos/).

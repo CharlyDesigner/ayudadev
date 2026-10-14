@@ -1,0 +1,61 @@
+---
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import FiltroChips from '@components/ui/FiltroChips.astro';
+import Icon from '@components/ui/Icon.astro';
+import { HERRAMIENTAS, CATEGORIAS_HERRAMIENTA, ETIQUETAS_CATEGORIA } from '@data/herramientas';
+
+const GRATIS: Record<string, string> = { si: 'Gratis', limitado: 'Gratis con límites', no: 'De pago' };
+const SISTEMAS: Record<string, string> = { windows: 'Windows', macos: 'macOS', linux: 'Linux', web: 'Navegador' };
+const cats = CATEGORIAS_HERRAMIENTA.map((c) => ({ valor: c, etiqueta: ETIQUETAS_CATEGORIA[c], conteo: HERRAMIENTAS.filter((h) => h.categoria === c).length })).filter((c) => c.conteo > 0);
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Herramientas', href: '/herramientas/' },
+];
+---
+
+<ListadoLayout
+  titulo="Herramientas para programar"
+  descripcion="Editores, terminales, playgrounds en línea, bases de datos de práctica y más. Lo que usan las personas que programan, con una nota de cuándo conviene cada una."
+  path="/herramientas/"
+  eyebrow="Tu kit de trabajo"
+  migas={migas}
+  total={HERRAMIENTAS.length}
+  placeholder="Busca una herramienta: VS Code, terminal, playground..."
+  unidad="herramientas"
+>
+  <Fragment slot="filtros">
+    <FiltroChips grupo="categoria" etiqueta="Categoría" opciones={cats} />
+    <FiltroChips grupo="gratis" etiqueta="Precio" opciones={[{ valor: 'si', etiqueta: 'Gratis' }, { valor: 'limitado', etiqueta: 'Con límites' }]} />
+  </Fragment>
+
+  {HERRAMIENTAS.length === 0 && <p class="card p-8 text-center text-muted">La lista está en camino.</p>}
+  <div class="space-y-12">
+    {cats.map((c) => (
+      <section data-chip-seccion aria-labelledby={`cat-${c.valor}`}>
+        <h2 id={`cat-${c.valor}`} class="mb-4 text-xl font-semibold">{c.etiqueta}</h2>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {HERRAMIENTAS.filter((h) => h.categoria === c.valor)
+            .sort((a, b) => Number(b.destacado) - Number(a.destacado) || a.nombre.localeCompare(b.nombre, 'es'))
+            .map((h) => (
+              <article class="card card-hover relative flex gap-4 p-5" data-item data-categoria={h.categoria} data-gratis={h.gratis} data-texto={`${h.nombre} ${h.descripcion}`}>
+                {h.logo ? (
+                  <span class="logo-tile grid h-12 w-12 shrink-0 place-items-center rounded-2xl p-2.5" aria-hidden="true"><img src={`/logos/${h.logo}.svg`} alt="" width="32" height="32" loading="lazy" decoding="async" class="h-full w-full object-contain" /></span>
+                ) : (
+                  <span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink" aria-hidden="true"><Icon name="tool" class="h-6 w-6" /></span>
+                )}
+                <div class="min-w-0">
+                  <h3 class="font-semibold leading-snug"><a href={h.url} rel="noopener" target="_blank" class="after:absolute after:inset-0 after:rounded-[var(--radius-card)] hover:text-accent-ink">{h.nombre}</a></h3>
+                  <p class="mt-1 text-sm leading-relaxed text-muted">{h.descripcion}</p>
+                  <p class="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span class:list={['badge', h.gratis === 'si' && 'badge-accent']}>{GRATIS[h.gratis]}</span>
+                    {h.sistemas.map((s) => <span class="badge">{SISTEMAS[s]}</span>)}
+                    {h.idioma === 'en' && <span class="badge">En inglés</span>}
+                  </p>
+                </div>
+              </article>
+            ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</ListadoLayout>

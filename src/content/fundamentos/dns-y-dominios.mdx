@@ -1,0 +1,165 @@
+---
+titulo: 'DNS y dominios explicados'
+descripcion: 'Cómo un nombre como ejemplo.com se convierte en una dirección IP: registros A, CNAME y MX, TTL, propagación y cómo consultar DNS desde tu terminal.'
+categoria: internet
+nivel: principiante
+tiempoLectura: 9
+publicado: 2026-10-09
+temas: [nodejs, linux]
+etiquetas: [dns, dominios, ip, registros, nslookup]
+orden: 3
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Los equipos se encuentran por números (direcciones IP), pero las personas recordamos nombres. Compraste un dominio, lo conectaste a tu sitio y "no carga todavía". O cambiaste de hosting y unos ven el sitio nuevo y otros el viejo. Casi siempre la respuesta está en el **DNS**, el sistema que traduce nombres en direcciones.
+
+## Qué es
+
+DNS (Domain Name System) es la **guía telefónica distribuida de internet**. Tú das un nombre y recibes los datos asociados: normalmente una dirección IP, pero también a dónde llega el correo o qué texto de verificación tiene el dominio.
+
+No existe un solo libro gigante. La información está repartida entre muchos servidores, organizada como un árbol. Eso permite que nadie sea el dueño de todo y que el sistema siga funcionando aunque algunos servidores fallen.
+
+Un **dominio** es el nombre que alquilas para identificar tu sitio. Se compone de partes separadas por puntos, leídas de derecha a izquierda:
+
+```text
+        blog.ejemplo.com.
+         |     |      |
+         |     |      +-- dominio de nivel superior (TLD): .com
+         |     +--------- dominio que tú registras: ejemplo
+         +--------------- subdominio que tú creas: blog
+```
+
+El punto final, invisible casi siempre, representa la **raíz** del árbol.
+
+## Quién responde cuando preguntas
+
+Cuando escribes `ejemplo.com` en el navegador, tu equipo no sale a buscar por todo el mundo. Pasa esto:
+
+1. Tu equipo y el navegador revisan su **caché**: si ya lo resolvieron hace poco, usan esa respuesta.
+2. Si no la tienen, preguntan a un **resolvedor recursivo**. Suele ser el de tu proveedor de internet o uno público que tú configuraste. Él hace el trabajo pesado.
+3. Si el resolvedor tampoco lo sabe, pregunta a un **servidor raíz**: "¿quién sabe de `.com`?". Este indica los servidores del TLD.
+4. Los servidores de `.com` indican cuáles son los **servidores autoritativos** de `ejemplo.com`.
+5. El servidor autoritativo, que guarda los datos oficiales del dominio, da la respuesta final.
+6. El resolvedor la devuelve a tu equipo y **la guarda en caché** un tiempo.
+
+```text
+Tu navegador --> resolvedor --> raíz --> servidor de .com --> servidor autoritativo
+      ^                                                              |
+      +------------------ respuesta: 203.0.113.10 <------------------+
+```
+
+Es como preguntar un teléfono: primero revisas tu agenda, luego llamas a informes, y ellos te encaminan hasta quien tiene el dato.
+
+## Tipos de registros
+
+Los datos de un dominio se guardan en **registros**. Estos son los que usarás en la práctica:
+
+| Tipo | Qué guarda | Ejemplo |
+| --- | --- | --- |
+| `A` | Una dirección IPv4 | `ejemplo.com` apunta a `203.0.113.10` |
+| `AAAA` | Una dirección IPv6 | `ejemplo.com` apunta a `2001:db8::1` |
+| `CNAME` | Un alias hacia otro nombre | `www.ejemplo.com` es alias de `ejemplo.com` |
+| `MX` | Servidores de correo del dominio | A dónde llegan los correos `@ejemplo.com` |
+| `TXT` | Texto libre | Verificación de propiedad, políticas de correo (SPF, DKIM, DMARC) |
+| `NS` | Servidores autoritativos | Quién administra los registros del dominio |
+
+Así se vería una zona sencilla en el panel de tu proveedor de dominio (usamos direcciones de documentación, no reales):
+
+```text
+Nombre    Tipo    Valor                 TTL
+@         A       203.0.113.10          3600
+www       CNAME   ejemplo.com.          3600
+blog      A       203.0.113.20          3600
+@         MX      10 correo.ejemplo.com 3600
+```
+
+El símbolo `@` significa "el dominio raíz". Ojo: en la raíz normalmente no puedes poner un `CNAME`, porque la raíz ya debe tener otros registros como `NS` y `MX`. Algunos proveedores ofrecen tipos propios (como ALIAS o CNAME aplanado) para resolver eso; revisa los de tu proveedor.
+
+## TTL y propagación
+
+Cada registro trae un **TTL** (time to live): los segundos que un resolvedor puede guardar la respuesta antes de volver a preguntar. En el ejemplo, `3600` segundos son una hora.
+
+De ahí sale la famosa "propagación del DNS". Nada se "propaga" como una señal: lo que pasa es que miles de cachés en el mundo tienen la respuesta vieja y la irán descartando cuando venza su TTL. Por eso, después de cambiar un registro, unos usuarios ven el cambio y otros no.
+
+Un truco profesional: si vas a migrar un sitio, **baja el TTL con anticipación** (con el tiempo del TTL anterior), haz el cambio y después súbelo otra vez.
+
+## Dominio, hosting y DNS no son lo mismo
+
+Se confunden mucho:
+
+- **Registrador:** la empresa donde compras o rentas el dominio.
+- **DNS:** el servicio donde están los registros. Puede ser del registrador, del hosting o de un tercero.
+- **Hosting:** la computadora donde vive tu sitio. El registro `A` o `CNAME` apunta hacia ahí.
+
+Puedes comprar el dominio en un lugar, administrar el DNS en otro y tener el sitio en un tercero. Lo importante es saber **dónde están configurados los servidores NS**, porque ahí se editan los registros que cuentan. Más sobre dónde vive un sitio en el artículo de [hosting y despliegue](/fundamentos/cloud-hosting-y-despliegue/).
+
+<Callout tipo="tip" titulo="Verifica en la fuente correcta">
+Si cambias un registro y no ves efecto, consulta directamente al servidor autoritativo o usa un resolvedor público distinto al de tu casa. Así descartas que sea tu caché local. En Windows, `ipconfig /flushdns` limpia la caché de tu equipo.
+</Callout>
+
+## Pruébalo tú
+
+Desde tu terminal puedes consultar DNS sin instalar nada. En Windows, macOS y Linux funciona `nslookup`:
+
+```bash
+nslookup example.com
+```
+
+La salida muestra el servidor que respondió y las direcciones del dominio. Si tienes `dig` (macOS y Linux), pide un tipo concreto con `dig example.com MX`.
+
+También puedes hacerlo con Node.js. Guarda esto como `dns.mjs` y ejecútalo con `node dns.mjs`:
+
+```js
+// Consulta distintos tipos de registro DNS de un dominio
+import dns from 'node:dns/promises';
+
+const dominio = 'example.com';
+console.log('A    :', await dns.resolve4(dominio));
+console.log('AAAA :', await dns.resolve6(dominio));
+console.log('NS   :', await dns.resolveNs(dominio));
+console.log('TXT  :', await dns.resolveTxt(dominio));
+```
+
+Las direcciones y nombres dependen del momento y de quién administre el dominio, pero la forma de la salida es esta:
+
+```text
+A    : [ '...', '...' ]              lista de direcciones IPv4
+AAAA : [ '...', '...' ]              lista de direcciones IPv6
+NS   : [ 'ns1.proveedor.com', ... ]  servidores autoritativos
+TXT  : [ [ 'v=spf1 -all' ] ]         listas de textos
+```
+
+Ahora prueba con un dominio que no existe:
+
+```js
+import dns from 'node:dns/promises';
+try {
+  await dns.resolve4('este-dominio-no-existe-12345.com');
+} catch (error) {
+  console.log(error.code); // ENOTFOUND
+}
+```
+
+`ENOTFOUND` es el error que verás en Node.js cuando un nombre no resuelve. Si lo ves al desarrollar, revisa que el dominio esté bien escrito antes de sospechar de tu código.
+
+<Callout tipo="warning" titulo="No pierdas el control de tu dominio">
+Quien administra tus registros DNS controla a dónde llega tu sitio y tu correo. Activa la verificación en dos pasos en la cuenta de tu registrador, y activa la renovación automática o un recordatorio: un dominio vencido puede ser registrado por otra persona.
+</Callout>
+
+## Errores y mitos comunes
+
+- **"Cambié el registro y ya debería verse."** Depende del TTL y de las cachés. Espera, y revisa con un resolvedor distinto al de tu casa.
+- **"El dominio y el hosting son un solo producto."** Se pueden contratar por separado y con empresas diferentes.
+- **"Un subdominio cuesta aparte."** No. Si tienes el dominio, creas subdominios (`blog`, `tienda`, `api`) como registros gratis en tu zona DNS.
+- **"`www` y sin `www` son el mismo sitio automáticamente."** No: son nombres distintos. Debes configurar ambos, y elegir uno como principal y redirigir el otro.
+- **"Poner un CNAME en la raíz es normal."** El estándar no lo permite junto a otros registros. Usa un registro `A` o el tipo especial de tu proveedor.
+- **"DNS es solo para sitios web."** También decide a dónde llega tu correo y sirve para demostrar que eres dueño del dominio ante otros servicios.
+
+## Qué sigue
+
+- [Cómo funciona internet](/fundamentos/como-funciona-internet/): el panorama completo en el que DNS es el primer paso.
+- [HTTP: cómo hablan el cliente y el servidor](/fundamentos/http-cliente-servidor/): lo que pasa justo después de resolver el nombre.
+- [Hosting, nube y despliegue](/fundamentos/cloud-hosting-y-despliegue/): a dónde apuntan tus registros.
+- [Terminal explicada](/fundamentos/terminal-explicada/): para practicar con `nslookup` y `curl`.
+- [Glosario](/glosario/) para repasar términos como dominio, subdominio y TTL.

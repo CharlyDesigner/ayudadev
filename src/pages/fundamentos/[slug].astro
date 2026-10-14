@@ -1,0 +1,52 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import { temaPorSlug } from '@data/temas';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
+import { SITE } from '@data/site';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('fundamentos', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+  return lista.map((e, i) => ({ params: { slug: e.id }, props: { e, anterior: lista[i - 1] ?? null, siguiente: lista[i + 1] ?? null } }));
+}
+
+const { e, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(e);
+const path = `/fundamentos/${e.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Fundamentos', href: '/fundamentos/' },
+  { nombre: e.data.titulo, href: path },
+];
+const temas = e.data.temas.map((s) => temaPorSlug(s)).filter((t) => t !== undefined);
+const meta = [
+  { icono: 'school' as const, texto: ETIQUETAS_NIVEL[e.data.nivel] },
+  ...(e.data.tiempoLectura ? [{ icono: 'clock' as const, texto: `${e.data.tiempoLectura} min de lectura` }] : []),
+];
+---
+
+<ArticleLayout
+  titulo={e.data.titulo}
+  descripcion={e.data.descripcion}
+  path={path}
+  eyebrow="Fundamentos"
+  migas={migas}
+  headings={headings}
+  publicado={e.data.publicado}
+  actualizado={e.data.actualizado}
+  meta={meta}
+  progId={`fundamento:${e.id}`}
+  anterior={anterior ? { titulo: anterior.data.titulo, href: `/fundamentos/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.titulo, href: `/fundamentos/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/fundamentos/${e.id}.mdx`}
+>
+  <Content />
+  {temas.length > 0 && (
+    <section class="not-prose mt-10">
+      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">Sigue aprendiendo</h2>
+      <div class="flex flex-wrap gap-2">
+        {temas.map((t) => <a href={`/biblioteca/${t!.slug}/`} class="chip">{t!.nombre}</a>)}
+      </div>
+    </section>
+  )}
+</ArticleLayout>

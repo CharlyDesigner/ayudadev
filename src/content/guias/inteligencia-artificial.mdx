@@ -1,0 +1,284 @@
+---
+titulo: 'Inteligencia artificial y machine learning desde cero'
+descripcion: 'Qué es aprender de datos y cómo funcionan una regresión, el descenso del gradiente, k vecinos, una neurona y un mini modelo de lenguaje, con código en Python.'
+tema: inteligencia-artificial
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['inteligencia-artificial-google-curso-intensivo-ml', 'inteligencia-artificial-ia-para-principiantes-microsoft', 'inteligencia-artificial-elements-of-ai', 'inteligencia-artificial-hugging-face-curso-llm']
+requisitos: ['Saber lo básico de Python: listas, bucles y funciones', 'Haber visto media, pendiente de una recta y derivadas a nivel intuitivo ayuda, pero no es obligatorio']
+etiquetas: ['machine-learning', 'regresion', 'redes-neuronales', 'llm', 'python']
+orden: 90
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+La inteligencia artificial parece magia hasta que ves cómo se construyen sus piezas. Esta guía no usa librerías pesadas: escribes a mano una regresión, un clasificador, una neurona y un modelo de lenguaje diminuto con la biblioteca estándar de Python. Así entiendes lo que hacen por dentro herramientas como scikit-learn, PyTorch o un chat con un modelo de lenguaje.
+
+## Qué es y para qué sirve
+
+- **La idea central es aprender de ejemplos.** En programación clásica escribes las reglas. En machine learning entregas datos y respuestas, y el sistema ajusta sus propios parámetros para encontrar las reglas.
+- **Un modelo es una función con parámetros.** Una recta `y = m * x + b` tiene dos parámetros. Una red neuronal grande tiene muchísimos más, pero el principio es el mismo.
+- **Entrenar es reducir un error.** Defines una pérdida que mide qué tan mal predice el modelo y ajustas los parámetros para que baje. El método más usado es el descenso del gradiente.
+- **Tipos de aprendizaje.** Supervisado (hay respuestas conocidas: clasificar o predecir un número), no supervisado (buscar grupos o patrones sin respuestas) y por refuerzo (aprender probando y recibiendo recompensas).
+- **Los modelos de lenguaje predicen la siguiente pieza de texto.** Convierten el texto en fragmentos llamados tokens, los representan con números y aprenden qué suele venir después. Eso se entrena con enormes cantidades de texto.
+- **Los datos importan tanto como el modelo.** Con datos pobres, sesgados o mal etiquetados, el mejor algoritmo da malos resultados.
+- **Funciona por probabilidad, no por comprensión.** Un modelo puede sonar seguro y estar equivocado. Siempre hay que verificar y evaluar.
+
+## Prepara tu entorno
+
+Los ejemplos de esta guía usan solo la biblioteca estándar. Más adelante te convendrá un entorno virtual con las librerías del oficio.
+
+<Pasos>
+
+1. **Instala Python 3.** En **Windows** descarga el instalador desde [python.org/downloads](https://www.python.org/downloads/) y marca **"Add python.exe to PATH"**. En **macOS** usa el instalador de python.org o `brew install python`. En **Linux** suele venir instalado; si no, `sudo apt install python3`.
+2. **Comprueba la versión** con `python --version` (en macOS y Linux, `python3 --version`).
+3. **Crea una carpeta** `ia` y guarda ahí cada ejemplo con el nombre de archivo indicado.
+4. **Ejecuta cada archivo** con `python nombre.py`. Con [uv](https://docs.astral.sh/uv/) también funciona `uv run nombre.py`.
+5. **Cuando pases a proyectos reales,** crea un entorno virtual por proyecto (`python -m venv .venv`) e instala ahí NumPy, pandas y scikit-learn con `pip install numpy pandas scikit-learn`. Con `uv` puedes usar `uv add numpy pandas scikit-learn`.
+
+</Pasos>
+
+## Ejemplos paso a paso
+
+En los comandos usamos `python`; si tu sistema solo reconoce `python3`, cámbialo. Los datos son inventados y pequeños a propósito, para que veas cada paso.
+
+<Ejemplo numero={1} titulo="Regresión lineal: predecir un número" archivo="regresion.py" ejecutar="python regresion.py" salida={"Modelo: nota = 6.49 * horas + 45.47\nPredicción para 7 horas: 90.9\nError cuadrático medio: 0.78"}>
+
+```python
+# Regresión lineal simple con mínimos cuadrados, solo con la biblioteca estándar
+horas = [1, 2, 3, 4, 5, 6]
+nota = [52, 58, 66, 70, 79, 84]    # datos de ejemplo
+
+n = len(horas)
+media_x = sum(horas) / n
+media_y = sum(nota) / n
+
+# Pendiente y ordenada al origen de la recta  y = m * x + b
+m = sum((x - media_x) * (y - media_y) for x, y in zip(horas, nota)) / sum((x - media_x) ** 2 for x in horas)
+b = media_y - m * media_x
+
+print(f"Modelo: nota = {m:.2f} * horas + {b:.2f}")
+print(f"Predicción para 7 horas: {m * 7 + b:.1f}")
+
+# Error medio cuadrático: qué tanto se equivoca el modelo con los datos conocidos
+ecm = sum((y - (m * x + b)) ** 2 for x, y in zip(horas, nota)) / n
+print(f"Error cuadrático medio: {ecm:.2f}")
+```
+
+El "modelo" son dos números, `m` y `b`, que la fórmula de mínimos cuadrados calcula para que la recta quede lo más cerca posible de todos los puntos. Después puedes predecir datos nuevos, como la nota esperada con 7 horas de estudio. Ten cuidado: la predicción para 7 horas extrapola fuera de los datos vistos, y fuera de ese rango el modelo puede fallar. El error cuadrático medio es la pérdida que se intenta reducir al entrenar.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Descenso del gradiente: aprender poco a poco" archivo="gradiente.py" ejecutar="python gradiente.py" salida={"época   1: pérdida=33.0000  w=1.400  b=0.500\népoca  10: pérdida=0.0137  w=2.069  b=0.804\népoca 100: pérdida=0.0001  w=2.005  b=0.987\népoca 500: pérdida=0.0000  w=2.000  b=1.000"}>
+
+```python
+# Aprender una recta con descenso del gradiente: el modelo mejora un poquito en cada vuelta
+xs = [0, 1, 2, 3, 4]
+ys = [1, 3, 5, 7, 9]          # la relación real es y = 2x + 1
+
+w, b = 0.0, 0.0              # parámetros que el modelo debe aprender
+tasa = 0.05                  # tamaño del paso
+n = len(xs)
+
+for epoca in range(1, 501):
+    # Predicción y error actual
+    errores = [(w * x + b) - y for x, y in zip(xs, ys)]
+    perdida = sum(e ** 2 for e in errores) / n
+
+    # Gradientes: hacia dónde subiría la pérdida; nos movemos en sentido contrario
+    grad_w = 2 * sum(e * x for e, x in zip(errores, xs)) / n
+    grad_b = 2 * sum(errores) / n
+    w -= tasa * grad_w
+    b -= tasa * grad_b
+
+    if epoca in (1, 10, 100, 500):
+        print(f"época {epoca:>3}: pérdida={perdida:.4f}  w={w:.3f}  b={b:.3f}")
+```
+
+Aquí el modelo parte de cero y no conoce la fórmula. En cada época calcula su error y mueve `w` y `b` un poco en la dirección que lo reduce. La pérdida baja de 33 a casi cero, y los parámetros se acercan a 2 y 1, que son los valores reales. Es el mismo algoritmo con el que se entrenan las redes neuronales; solo cambia el número de parámetros. La `tasa` es un hiperparámetro: si es muy grande, el modelo se pasa de largo; si es muy pequeña, tarda demasiado.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="k vecinos más cercanos: clasificar por parecido" archivo="knn.py" ejecutar="python knn.py" salida={"('manzana', ['manzana', 'manzana', 'manzana'])\n('mandarina', ['mandarina', 'mandarina', 'mandarina'])"}>
+
+```python
+from collections import Counter
+from math import dist
+
+# k vecinos más cercanos: clasifica según los ejemplos más parecidos
+# Cada ejemplo: (peso en gramos, diámetro en cm) y su etiqueta (datos de ejemplo)
+ejemplos = [
+    ((150, 7.0), "manzana"),
+    ((170, 7.5), "manzana"),
+    ((160, 7.2), "manzana"),
+    ((120, 6.0), "mandarina"),
+    ((110, 5.8), "mandarina"),
+    ((130, 6.2), "mandarina"),
+]
+
+
+def clasificar(punto, k=3):
+    # Ordenamos por distancia al punto nuevo y votamos entre los k más cercanos
+    vecinos = sorted(ejemplos, key=lambda e: dist(e[0], punto))[:k]
+    votos = Counter(etiqueta for _, etiqueta in vecinos)
+    return votos.most_common(1)[0][0], [etiqueta for _, etiqueta in vecinos]
+
+
+print(clasificar((155, 7.1)))
+print(clasificar((115, 5.9)))
+```
+
+Este algoritmo casi no "entrena": guarda los ejemplos y, cuando llega uno nuevo, busca los `k` más parecidos y vota. Cada fruta es un punto con dos características, y la distancia mide qué tan parecidas son. Cuando las características tienen escalas muy distintas (por ejemplo gramos y centímetros), conviene normalizarlas antes, porque la de mayor escala domina la distancia. Aquí el peso domina, y por eso el ejemplo funciona con datos tan separados.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Un tokenizador mínimo: del texto a los números" archivo="tokenizador.py" ejecutar="python tokenizador.py" salida={"['el', 'gato', 'come', 'pescado', 'el', 'perro', 'come', 'carne']\n{'el': 0, 'gato': 1, 'come': 2, 'pescado': 3, 'perro': 4, 'carne': 5}\n[0, 1, 2, 3, 0, 4, 2, 5]\nel gato come pescado el perro come carne"}>
+
+```python
+import re
+
+# Un tokenizador mínimo: convierte texto en números que un modelo puede procesar
+texto = "El gato come pescado. El perro come carne."
+
+# 1) Separar en palabras en minúsculas (los modelos reales usan subpalabras)
+tokens = re.findall(r"\w+", texto.lower())
+print(tokens)
+
+# 2) Vocabulario: cada palabra distinta recibe un número
+vocabulario = {}
+for t in tokens:
+    if t not in vocabulario:
+        vocabulario[t] = len(vocabulario)
+print(vocabulario)
+
+# 3) Codificar y decodificar
+ids = [vocabulario[t] for t in tokens]
+print(ids)
+inverso = {i: t for t, i in vocabulario.items()}
+print(" ".join(inverso[i] for i in ids))
+```
+
+Los modelos no leen letras ni palabras: leen números. Un tokenizador parte el texto en fragmentos (tokens) y asigna un identificador a cada uno. Los modelos de lenguaje reales usan subpalabras para poder representar cualquier texto con un vocabulario de tamaño fijo, y por eso una palabra rara puede ocupar varios tokens. Fíjate en que el punto y las mayúsculas se perdieron: decisiones como esas cambian lo que el modelo puede aprender.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Una neurona que aprende la compuerta AND" archivo="perceptron.py" ejecutar="python perceptron.py" salida={"Aprendió en la época 6\nPesos: [0.2, 0.1] sesgo: -0.2\n(0, 0) -> 0 (esperado 0 )\n(0, 1) -> 0 (esperado 0 )\n(1, 0) -> 0 (esperado 0 )\n(1, 1) -> 1 (esperado 1 )"}>
+
+```python
+# Un perceptrón (una sola neurona) que aprende la compuerta AND
+datos = [((0, 0), 0), ((0, 1), 0), ((1, 0), 0), ((1, 1), 1)]
+
+pesos = [0.0, 0.0]
+sesgo = 0.0
+tasa = 0.1
+
+
+def predecir(entrada):
+    suma = pesos[0] * entrada[0] + pesos[1] * entrada[1] + sesgo
+    return 1 if suma > 0 else 0       # función escalón: se activa o no
+
+
+for epoca in range(10):
+    errores = 0
+    for entrada, esperado in datos:
+        error = esperado - predecir(entrada)
+        if error != 0:
+            errores += 1
+            pesos[0] += tasa * error * entrada[0]
+            pesos[1] += tasa * error * entrada[1]
+            sesgo += tasa * error
+    if errores == 0:
+        print(f"Aprendió en la época {epoca + 1}")
+        break
+
+print("Pesos:", [round(p, 2) for p in pesos], "sesgo:", round(sesgo, 2))
+for entrada, esperado in datos:
+    print(entrada, "->", predecir(entrada), "(esperado", esperado, ")")
+```
+
+Una neurona artificial multiplica cada entrada por un peso, suma un sesgo y decide si se activa. Cuando se equivoca, corrige los pesos en proporción al error. Esta neurona simple aprende AND porque los casos se pueden separar con una línea. No puede aprender XOR: para eso se apilan neuronas en capas, que es lo que hace una red neuronal. Una red grande es esencialmente muchas de estas piezas, con una función de activación suave y entrenadas con descenso del gradiente.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un mini modelo de lenguaje con bigramas" archivo="bigramas.py" ejecutar="python bigramas.py" salida={"Después de 'gato': {'come': 1, 'duerme': 1}\nDespués de 'el': {'gato': 2, 'sofa': 1, 'perro': 2, 'patio': 1}\nel gato come pescado . el\nperro come pescado . el gato"}>
+
+```python
+from collections import Counter, defaultdict
+
+# Un modelo de lenguaje diminuto: predice la siguiente palabra contando pares de palabras
+corpus = (
+    "el gato come pescado . el gato duerme en el sofa . "
+    "el perro come carne . el perro duerme en el patio ."
+).split()
+
+siguientes = defaultdict(Counter)
+for actual, proximo in zip(corpus, corpus[1:]):
+    siguientes[actual][proximo] += 1
+
+print("Después de 'gato':", dict(siguientes["gato"]))
+print("Después de 'el':", dict(siguientes["el"]))
+
+
+def generar(inicio, largo=5):
+    palabras = [inicio]
+    for _ in range(largo):
+        opciones = siguientes[palabras[-1]]
+        if not opciones:
+            break
+        # Elegimos siempre la más frecuente; si hay empate, la que apareció primero
+        palabras.append(opciones.most_common(1)[0][0])
+    return " ".join(palabras)
+
+
+print(generar("el"))
+print(generar("perro"))
+```
+
+Este modelo cuenta qué palabra suele seguir a cuál y genera texto eligiendo la siguiente más frecuente. Es lo mismo que hace un modelo de lenguaje grande en esencia: predecir lo que viene, pero con redes neuronales, contexto largo y muchísimos más datos. Fíjate en el resultado: "perro come pescado" nunca aparece en el texto de entrenamiento. El modelo mezcló patrones y produjo algo plausible pero falso. Esa es una versión en miniatura de lo que se llama alucinación.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Evaluar con los mismos datos con los que entrenaste">
+Si pruebas el modelo con los ejemplos que ya vio, el resultado se ve excelente y no te dice nada. Separa un conjunto de prueba antes de entrenar y evalúa solo con él. Un modelo que memoriza los datos de entrenamiento y falla con datos nuevos sufre sobreajuste.
+</Callout>
+
+<Callout tipo="warning" titulo="Confiar en datos pequeños, sesgados o sucios">
+Un modelo aprende lo que hay en los datos, incluidos sus errores y prejuicios. Revisa de dónde vienen los datos, quién está representado y quién no, y limpia valores faltantes o mal etiquetados antes de entrenar.
+</Callout>
+
+<Callout tipo="warning" titulo="Extrapolar fuera del rango de los datos">
+Un modelo ajustado con 1 a 6 horas de estudio no sabe qué pasa con 40 horas. Las predicciones fuera del rango visto son poco fiables, aunque el número que devuelve parezca preciso.
+</Callout>
+
+<Callout tipo="warning" titulo="Tratar la salida de un modelo de lenguaje como un hecho">
+Los modelos generan texto plausible, no verificado. Pueden inventar datos, citas y código que no funciona. Comprueba siempre en la fuente original, ejecuta el código y pide al modelo que explique su razonamiento antes de aceptar la respuesta.
+</Callout>
+
+<Callout tipo="warning" titulo="Empezar por el modelo más grande en lugar del problema">
+Antes de elegir una red neuronal o un servicio de IA, define qué quieres predecir y cómo medirás el éxito. A menudo una regresión o un árbol de decisión sencillo resuelve el problema, es más fácil de explicar y cuesta menos de mantener.
+</Callout>
+
+## Buenas prácticas
+
+- Define el problema y la métrica de éxito antes de escribir código.
+- Empieza con una línea base sencilla (por ejemplo, predecir siempre el promedio) y mejora desde ahí.
+- Separa datos de entrenamiento, validación y prueba, y no mires los de prueba hasta el final.
+- Fija semillas aleatorias y guarda los parámetros para poder repetir tus resultados.
+- Visualiza tus datos y tus errores: una gráfica suele revelar lo que una métrica esconde.
+- No pegues datos personales o confidenciales en servicios de IA de terceros; revisa su política de uso.
+- Entiende la herramienta antes de automatizarla: lo que aprendiste a mano aquí te sirve para depurar las librerías.
+
+## Siguiente paso
+
+- **Un curso estructurado.** El [Curso intensivo de aprendizaje automático de Google](https://developers.google.com/machine-learning/crash-course?hl=es-419) y el currículo de [IA para principiantes de Microsoft](https://github.com/microsoft/AI-For-Beginners/blob/main/translations/es/README.md) te llevan de la teoría a la práctica con ejercicios.
+- **Refuerza las bases matemáticas** con la guía de [Matemáticas para programadores](/guias/matematicas/): vectores, matrices, estadística y probabilidad.
+- **Usa los modelos de lenguaje con criterio.** El [Curso de LLM de Hugging Face](https://huggingface.co/learn/llm-course/es/chapter1/1) explica cómo funcionan por dentro, y en la sección de [IA](/ia/) hay fichas de herramientas y guías para aprender con apoyo de la IA.
+- **Explora más recursos** en la [biblioteca de inteligencia artificial](/biblioteca/inteligencia-artificial/) y practica tu Python con la [guía de Python](/guias/python/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

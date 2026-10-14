@@ -1,0 +1,221 @@
+---
+titulo: 'JavaScript: métodos de arreglos y objetos'
+descripcion: 'map, filter, reduce, find, sort, flat, splice y toSorted; Object.keys, entries, fromEntries; Map, Set, copias y trampas, con resultados comprobados en Node 24.'
+tema: javascript
+etiquetas: ['javascript', 'arreglos', 'objetos', 'map', 'reduce']
+publicado: 2026-10-09
+orden: 12
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Los métodos que usas todos los días para transformar datos. Los resultados se comprobaron en Node 24.
+
+## Agregar y quitar
+
+Con `const a = [3, 1, 2]`:
+
+| Método | Qué hace | Devuelve |
+| --- | --- | --- |
+| `a.push(4)` | Añade al final | La nueva longitud (`4`) |
+| `a.pop()` | Quita el último | El elemento quitado |
+| `a.unshift(0)` | Añade al inicio | La nueva longitud |
+| `a.shift()` | Quita el primero | El elemento quitado |
+| `a.splice(i, n, ...nuevos)` | Quita `n` desde `i` e inserta `nuevos` | Lo quitado |
+| `a.length = 0` | Vacía el arreglo | |
+
+Todos modifican el arreglo original.
+
+```js
+const c = [1, 2, 3, 4, 5];
+c.splice(1, 2);          // devuelve [2, 3]; c queda [1, 4, 5]
+c.splice(1, 0, "x");     // inserta sin quitar; c queda [1, "x", 4, 5]
+```
+
+## Recorrer y transformar
+
+| Método | Qué hace | Ejemplo con `[3, 1, 2]` |
+| --- | --- | --- |
+| `a.forEach((x, i) => ...)` | Ejecuta algo por elemento; no devuelve nada | |
+| `a.map(x => x * 2)` | Nuevo arreglo transformado | `[6, 2, 4]` |
+| `a.filter(x => x > 1)` | Nuevo arreglo con los que cumplen | `[3, 2]` |
+| `a.reduce((s, x) => s + x, 0)` | Acumula en un solo valor | `6` |
+| `a.flatMap(x => [x, x * 10])` | `map` y aplana un nivel | `[3, 30, 1, 10, 2, 20]` |
+
+```js
+const personas = [{ n: "Ana", e: 30 }, { n: "Luis", e: 25 }, { n: "Eva", e: 30 }];
+
+personas.map(p => p.n);                    // ['Ana', 'Luis', 'Eva']
+personas.filter(p => p.e === 30).length;   // 2
+Math.max(...personas.map(p => p.e));       // 30
+
+// agrupar con reduce
+personas.reduce((acc, p) => {
+  (acc[p.e] ??= []).push(p.n);
+  return acc;
+}, {});
+// { '25': ['Luis'], '30': ['Ana', 'Eva'] }
+```
+
+Pasa siempre el valor inicial a `reduce` (el `0` o el `{}`): sin él, un arreglo vacío lanza un error.
+
+## Buscar y comprobar
+
+| Método | Resultado con `[3, 1, 2]` |
+| --- | --- |
+| `a.find(x => x > 1)` | `3` (primer elemento que cumple, o `undefined`) |
+| `a.findIndex(x => x > 1)` | `0` (o `-1`) |
+| `a.findLast(x => x < 3)` | `2` |
+| `a.findLastIndex(x => x < 3)` | `2` |
+| `a.some(x => x > 2)` | `true` (al menos uno cumple) |
+| `a.every(x => x > 0)` | `true` (todos cumplen) |
+| `a.includes(2)` | `true` |
+| `a.indexOf(2)` | `2` (o `-1`) |
+| `a.at(-1)` | `2` (último; admite negativos) |
+
+`includes` encuentra `NaN`; `indexOf` no: `[NaN].includes(NaN)` es `true` y `[NaN].indexOf(NaN)` es `-1`.
+
+## Extraer y combinar
+
+| Expresión | Resultado con `[3, 1, 2]` |
+| --- | --- |
+| `a.slice(1)` | `[1, 2]` (copia desde el índice 1) |
+| `a.slice(-2)` | `[1, 2]` (los últimos 2) |
+| `a.slice(0, 2)` | `[3, 1]` (sin incluir el índice 2) |
+| `a.join("-")` | `'3-1-2'` |
+| `a.concat([9])` | `[3, 1, 2, 9]` |
+| `[...a, 9]` | `[3, 1, 2, 9]` |
+| `[1, [2, [3]]].flat()` | `[1, 2, [3]]` |
+| `[1, [2, [3]]].flat(Infinity)` | `[1, 2, 3]` |
+| `Array.from({ length: 3 }, (_, i) => i * i)` | `[0, 1, 4]` |
+| `Array(3).fill(0)` | `[0, 0, 0]` |
+| `Array.from("abc")` o `[..."abc"]` | `['a', 'b', 'c']` |
+| `[...new Set([1, 1, 2])]` | `[1, 2]` (sin repetidos) |
+| `Array.isArray(x)` | `true` si es arreglo |
+
+## Ordenar
+
+```js
+[10, 9, 1].sort();                 // [1, 10, 9]  ordena como TEXTO
+[10, 9, 1].sort((a, b) => a - b);  // [1, 9, 10]  numérico ascendente
+[10, 9, 1].sort((a, b) => b - a);  // [10, 9, 1]  descendente
+
+["é", "e", "z"].sort();                           // ['e', 'z', 'é']
+["é", "e", "z"].sort((a, b) => a.localeCompare(b)); // ['e', 'é', 'z']
+```
+
+<Callout tipo="warning" titulo="sort y reverse modifican el arreglo original">
+
+`sort()`, `reverse()` y `splice()` cambian el arreglo en el sitio. Para no tocar el original, usa las versiones que devuelven copia (ES2023): `toSorted()`, `toReversed()`, `toSpliced()` y `with()`.
+
+</Callout>
+
+```js
+const b = [5, 1, 4];
+b.toSorted((x, y) => y - x);   // [5, 4, 1]; b sigue siendo [5, 1, 4]
+b.toReversed();                // [4, 1, 5]
+b.with(0, 99);                 // [99, 1, 4]
+b.toSpliced(1, 1);             // [5, 4]
+```
+
+Para ordenar por varios criterios: `a.sort((x, y) => x.e - y.e || x.n.localeCompare(y.n))`.
+
+## Objetos
+
+```js
+const o = { nombre: "Ana", edad: 30, dir: { ciudad: "CDMX" } };
+o.nombre;               // 'Ana'
+o["edad"];              // 30
+o.dir.ciudad;           // 'CDMX'
+o.rol = "admin";        // añadir
+delete o.rol;           // quitar
+"edad" in o;            // true
+```
+
+| Método | Resultado |
+| --- | --- |
+| `Object.keys(o)` | `['nombre', 'edad', 'dir']` |
+| `Object.values(o)` | Arreglo de valores |
+| `Object.entries(o)` | `[['nombre', 'Ana'], ...]` |
+| `Object.fromEntries([["a", 1], ["b", 2]])` | `{ a: 1, b: 2 }` |
+| `Object.assign({}, { a: 1 }, { b: 2 })` | `{ a: 1, b: 2 }` |
+| `{ ...o, edad: 31 }` | Copia con un valor cambiado |
+| `Object.hasOwn(o, "edad")` | `true` (propiedad propia) |
+| `Object.freeze(o)` | Impide cambios (solo el primer nivel) |
+| `Object.groupBy(arr, fn)` | Agrupa por la clave que devuelva `fn` (ES2024) |
+
+```js
+// transformar los valores de un objeto
+Object.fromEntries(
+  Object.entries({ a: 1, b: 2 }).map(([k, v]) => [k, v * 2])
+);   // { a: 2, b: 4 }
+
+// propiedades calculadas y métodos abreviados
+const k = "edad";
+const o2 = { [k]: 1, f() { return 2; } };   // { edad: 1, f: [Function: f] }
+
+Object.groupBy([1, 2, 3, 4], x => (x % 2 ? "impar" : "par"));
+// { impar: [1, 3], par: [2, 4] }
+```
+
+## Copiar
+
+| Forma | Profundidad |
+| --- | --- |
+| `{ ...o }` o `Object.assign({}, o)` | Superficial: los objetos internos se comparten |
+| `[...a]` o `a.slice()` | Superficial |
+| `structuredClone(o)` | Profunda: copia independiente |
+| `JSON.parse(JSON.stringify(o))` | Profunda, pero pierde `undefined`, funciones y convierte las fechas en texto |
+
+```js
+const o = { dir: { ciudad: "CDMX" } };
+
+const profunda = structuredClone(o);
+profunda.dir.ciudad = "GDL";
+o.dir.ciudad;            // 'CDMX'  (no cambió)
+
+const superficial = { ...o };
+superficial.dir.ciudad = "MTY";
+o.dir.ciudad;            // 'MTY'   (cambió el original)
+```
+
+## Map y Set
+
+```js
+const m = new Map([["a", 1]]);
+m.set("b", 2);
+m.get("a");              // 1
+m.has("b");              // true
+m.size;                  // 2
+[...m];                  // [['a', 1], ['b', 2]]
+Object.fromEntries(m);   // { a: 1, b: 2 }
+
+const s = new Set([1, 2]);
+s.add(2);                // no duplica
+s.has(3);                // false
+[...s];                  // [1, 2]
+```
+
+| Usa | Cuando |
+| --- | --- |
+| Objeto `{}` | Datos con forma fija, como un registro |
+| `Map` | Claves de cualquier tipo, muchas altas y bajas, orden de inserción garantizado |
+| `Set` | Valores únicos y consulta de pertenencia rápida |
+
+## Trampas
+
+| Código | Pasa esto |
+| --- | --- |
+| `["1", "2", "3"].map(parseInt)` | `[1, NaN, NaN]`: `map` pasa el índice como segundo argumento. Usa `.map(Number)` |
+| `forEach` con `await` | No espera. Usa `for...of` o `Promise.all(arr.map(...))` |
+| `arr.length = 1` | Recorta el arreglo |
+| `const copia = arr` | Es la misma referencia, no una copia |
+| `[1, 2, 3].sort()` con números de varias cifras | Orden alfabético. Pasa siempre un comparador |
+
+## Para ir más a fondo
+
+- [Array en MDN](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Array)
+- [Object en MDN](https://developer.mozilla.org/es/docs/Web/JavaScript/Reference/Global_Objects/Object)
+- Hoja de AyudaDev: [JavaScript, sintaxis esencial](/hojas/javascript-sintaxis-esencial/)
+- Guía de AyudaDev: [JavaScript desde cero](/guias/javascript/)
+- Biblioteca: [libros y cursos de JavaScript](/biblioteca/javascript/)

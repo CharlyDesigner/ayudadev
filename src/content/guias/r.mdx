@@ -1,0 +1,213 @@
+---
+titulo: 'R desde cero'
+descripcion: 'Qué es R, cómo instalarlo y tus primeros programas de análisis de datos con ejemplos que puedes copiar y ejecutar con Rscript.'
+tema: r
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['r-r-para-ciencia-de-datos', 'r-manual-de-r', 'r-ciencia-de-datos-gente-sociable', 'r-introduccion-ciencia-de-datos-irizarry']
+requisitos: ['Saber usar una terminal básica', 'Nociones de estadística ayudan, pero no son obligatorias']
+etiquetas: ['estadistica', 'datos', 'vectores', 'data-frame', 'tidyverse']
+orden: 25
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+R es un lenguaje creado para trabajar con datos: estadística, gráficos, análisis exploratorio y reportes reproducibles. Lo usan equipos de investigación, salud, economía, biología y ciencia de datos. Si tu pregunta empieza con "qué dicen estos datos", R es una de las mejores herramientas para responderla.
+
+- **Interpretado y dinámico**: escribes una línea, la ejecutas y ves el resultado. No hay paso de compilación ni declaración de tipos.
+- **Vectorizado**: casi todo es un vector. Un número suelto es un vector de longitud 1, y las operaciones se aplican a todos los elementos sin bucles.
+- **Índices desde 1**: el primer elemento de un vector es `x[1]`, no `x[0]`.
+- **Data frames**: la tabla (filas y columnas) es el objeto estrella. Cada columna es un vector y puede tener un tipo distinto.
+- **Valores faltantes explícitos**: `NA` representa un dato que no existe y se propaga en los cálculos, para que no pases por alto un hueco.
+- **Funcional**: las funciones son valores, y modificar un objeto crea una copia en lugar de cambiar el original.
+- **Paquetes**: la comunidad publica miles en CRAN. El conjunto más usado es el tidyverse (dplyr, ggplot2, readr y otros), pensado para analizar datos con código legible.
+- **Reproducible**: con Quarto mezclas texto, código y resultados en un solo documento que se regenera con un comando.
+
+## Instálalo y corre tu primer archivo
+
+R se instala desde CRAN, el repositorio oficial del proyecto. Además conviene un editor pensado para R, como RStudio Desktop o Positron, ambos de Posit y gratuitos.
+
+<Pasos>
+
+1. **Windows**: entra a [cran.r-project.org](https://cran.r-project.org/), elige "Download R for Windows", luego "base", y ejecuta el instalador.
+2. **macOS**: en la misma página elige "Download R for macOS" e instala el paquete que corresponda a tu Mac. Si usas Homebrew, también sirve `brew install r`.
+3. **Linux**: instala el paquete `r-base` de tu distribución o sigue las instrucciones de CRAN para tener la versión más reciente.
+4. Abre una terminal y escribe `R --version` para comprobar. Con `R` entras a la consola interactiva (el símbolo `>`), y con `q()` sales.
+5. Instala un editor: RStudio Desktop o Positron, desde [posit.co](https://posit.co/). Te dan consola, editor, gráficos y ayuda en una sola ventana.
+6. Crea un archivo `hola.R` con el código del primer ejemplo y córrelo con `Rscript hola.R`. En Windows, si el comando no se reconoce, ejecuta el archivo desde RStudio o agrega la carpeta `bin` de R a tu PATH.
+7. Para usar paquetes, dentro de R escribe `install.packages("tidyverse")`. Solo se instala una vez; después lo cargas con `library(tidyverse)`.
+
+</Pasos>
+
+Cada ejemplo de esta guía se guarda en un archivo con extensión `.R` y se ejecuta con `Rscript`. También puedes pegar las líneas una por una en la consola para ver cada resultado.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.R" ejecutar="Rscript hola.R" salida={'Hola, mundo\n[1] "Hola, mundo"'}>
+
+```r
+# cat() escribe el texto tal cual
+cat("Hola, mundo\n")
+
+# print() muestra el valor con el formato de R: [1] es el índice del primer elemento
+print("Hola, mundo")
+```
+
+Fíjate en el `[1]` de la segunda línea. R siempre imprime los valores como vectores, y ese número indica la posición del primer elemento de la fila. Con `cat()` escribes texto limpio, y `\n` es el salto de línea.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Vectores y operaciones vectorizadas" archivo="vectores.R" ejecutar="Rscript vectores.R" salida={'[1] 46 62 36 90\n[1] 29.25\n[1] 23 31 45'}>
+
+```r
+# c() combina valores en un vector; <- asigna
+edades <- c(23, 31, 18, 45)
+
+# Las operaciones se aplican a todos los elementos a la vez
+print(edades * 2)
+
+# Funciones de resumen
+print(mean(edades))
+
+# Un vector lógico dentro de [] filtra los elementos
+print(edades[edades > 20])
+```
+
+No necesitas un bucle para multiplicar cada elemento: `edades * 2` lo hace por ti. La condición `edades > 20` genera un vector de `TRUE` y `FALSE`, y al ponerlo entre corchetes te quedas solo con los elementos verdaderos.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Funciones, if y for" archivo="funciones.R" ejecutar="Rscript funciones.R" salida={'-3 es negativo\n0 es cero\n7 es positivo'}>
+
+```r
+# La última expresión de la función es su valor de retorno
+clasificar <- function(n) {
+  if (n < 0) {
+    "negativo"
+  } else if (n == 0) {
+    "cero"
+  } else {
+    "positivo"
+  }
+}
+
+for (n in c(-3, 0, 7)) {
+  # sep = "" evita los espacios extra que cat() agrega por defecto
+  cat(n, " es ", clasificar(n), "\n", sep = "")
+}
+```
+
+En R no se escribe `return` salvo que quieras salir antes. Como `if` también es una expresión, cada rama produce el valor que la función devuelve.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Data frames: tu primera tabla" archivo="tabla.R" ejecutar="Rscript tabla.R" salida={'  nombre calificacion\n1    Ana            9\n2   Luis            7\n3  Marta           10\n[1] 8.666667\n  nombre calificacion\n1    Ana            9\n3  Marta           10'}>
+
+```r
+# Cada columna es un vector; todas deben tener la misma longitud
+notas <- data.frame(
+  nombre = c("Ana", "Luis", "Marta"),
+  calificacion = c(9, 7, 10)
+)
+print(notas)
+
+# $ extrae una columna como vector
+print(mean(notas$calificacion))
+
+# [filas, columnas]: filtra filas con una condición; la coma vacía significa "todas las columnas"
+print(notas[notas$calificacion >= 9, ])
+```
+
+El data frame es el formato de casi cualquier análisis. Las filas se numeran solas, y al filtrar conservan su número original (por eso aparece la fila 3 sin la 2).
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Agrupar y resumir" archivo="resumen.R" ejecutar="Rscript resumen.R" salida={'  region importe\n1  Norte     300\n2    Sur     200'}>
+
+```r
+ventas <- data.frame(
+  region = c("Norte", "Sur", "Norte", "Sur", "Norte"),
+  importe = c(100, 80, 150, 120, 50)
+)
+
+# importe ~ region se lee "importe según región"; sum se aplica a cada grupo
+totales <- aggregate(importe ~ region, data = ventas, FUN = sum)
+print(totales)
+```
+
+Agrupar y resumir es la operación más común del análisis de datos. Aquí lo hacemos con R base. El tidyverse ofrece `group_by()` y `summarise()` con el mismo resultado y una sintaxis más fácil de leer en análisis largos.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="El pipe nativo" archivo="pipe.R" ejecutar="Rscript pipe.R" salida={'  region importe con_iva\n1  Norte     100   116.0\n3  Norte     150   174.0\n4    Sur     120   139.2'}>
+
+```r
+ventas <- data.frame(
+  region = c("Norte", "Sur", "Norte", "Sur", "Norte"),
+  importe = c(100, 80, 150, 120, 50)
+)
+
+# |> pasa el resultado de la izquierda como primer argumento de la función de la derecha
+resultado <- ventas |>
+  subset(importe >= 100) |>
+  transform(con_iva = importe * 1.16)
+
+print(resultado)
+```
+
+El pipe `|>` viene incluido en R y se lee de arriba abajo: toma `ventas`, quédate con los importes de 100 o más, y agrega una columna. Es el estilo que usa el tidyverse, y te sirve igual con funciones de R base.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Los NA se propagan">
+`mean(c(1, NA, 3))` devuelve `NA`, no 2. Un solo dato faltante contamina el resultado. Si quieres ignorarlos, pídelo de forma explícita con `mean(x, na.rm = TRUE)`, y revisa cuántos faltan con `sum(is.na(x))` para no esconder un problema de datos.
+</Callout>
+
+<Callout tipo="warning" titulo="El reciclado silencioso de vectores">
+`1:3 + 1:2` da `2 4 4`: R repite el vector corto hasta completar el largo y solo emite una advertencia cuando las longitudes no son múltiplos. Si dos vectores deberían medir lo mismo y no es así, probablemente hay un error antes en el código. Compara con `length()`.
+</Callout>
+
+<Callout tipo="warning" titulo="Convertir un factor con as.numeric">
+Si una columna numérica se leyó como factor, `as.numeric(f)` devuelve los códigos internos (1, 2, 3), no los valores. Primero pásalo a texto: `as.numeric(as.character(f))`. Mejor aún, importa los datos con el tipo correcto desde el inicio.
+</Callout>
+
+<Callout tipo="warning" titulo="Comparar decimales con ==">
+`0.1 + 0.2 == 0.3` da `FALSE` por la forma en que las computadoras guardan los decimales. Compara con tolerancia: `isTRUE(all.equal(0.1 + 0.2, 0.3))` o `dplyr::near()`.
+</Callout>
+
+<Callout tipo="warning" titulo="Rutas absolutas y setwd()">
+Un script con `setwd("C:/Users/yo/Documentos")` solo funciona en tu computadora. Trabaja siempre dentro de un proyecto (una carpeta con tu código y tus datos) y usa rutas relativas como `"datos/ventas.csv"`. El paquete `here` ayuda cuando el proyecto crece.
+</Callout>
+
+## Buenas prácticas
+
+- Trabaja con proyectos: una carpeta por análisis, con los datos originales aparte y nunca modificados.
+- Usa `<-` para asignar y nombres en `snake_case`, como `ventas_2026`. Elige nombres que se entiendan sin comentario.
+- Prefiere operaciones vectorizadas y funciones como `sum()` o `ifelse()` en lugar de bucles que crecen un vector.
+- Escribe `TRUE` y `FALSE` completos, nunca `T` y `F`, porque se pueden reasignar sin querer.
+- Fija `set.seed(123)` antes de cualquier operación aleatoria para que otros obtengan tus mismos resultados.
+- Inspecciona tus datos antes de analizarlos: `str(x)`, `summary(x)` y `head(x)` revelan tipos raros y valores faltantes.
+- Instala paquetes con `install.packages()` una sola vez y cárgalos con `library()` al inicio del script.
+- Cuando tu análisis madure, pásalo a un documento Quarto para unir código, gráficos y explicación.
+
+## Siguiente paso
+
+Ya sabes vectores, data frames, funciones y el pipe. Para seguir:
+
+- **Tidyverse y gráficos**: el libro R para Ciencia de Datos te lleva de importar un archivo a hacer gráficos con ggplot2 y limpiar datos con dplyr, paso a paso.
+- **Estadística**: con el libro de Irizarry practicas probabilidad, inferencia y regresión usando R.
+- **Reportes**: aprende Quarto para convertir tu análisis en un informe, una presentación o una página web.
+- **Si vienes de otro lenguaje**: compara con la [guía de Python](/guias/python/) y su ecosistema de datos. Con [SQL](/guias/sql/) harás las consultas que alimentan tus análisis.
+- **Control de versiones**: guarda tus proyectos con la [guía de Git](/guias/git/).
+
+Explora más libros y cursos gratis en la [biblioteca de R](/biblioteca/r/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

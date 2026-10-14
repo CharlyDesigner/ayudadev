@@ -1,0 +1,188 @@
+---
+titulo: 'Complejidad y notación Big O'
+descripcion: 'Qué significa que un algoritmo sea O(n) u O(n²), cómo medirlo con un experimento de tiempos en Python y cómo elegir la estructura correcta sin adivinar.'
+categoria: programacion
+nivel: intermedio
+tiempoLectura: 12
+publicado: 2026-10-09
+temas: [algoritmos, python]
+etiquetas: [big-o, complejidad, rendimiento, algoritmos]
+orden: 24
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Tu programa funciona perfecto con diez usuarios de prueba. Con diez mil se vuelve lento, y con cien mil se queda colgado. El código no cambió; los datos sí. La notación Big O sirve para predecir ese comportamiento antes de que ocurra, sin importar qué tan rápida sea tu computadora.
+
+## Qué es
+
+La **complejidad** describe cómo crece el trabajo de un algoritmo cuando crece el tamaño de la entrada. Se escribe con **Big O**, que dice "en el peor caso, el trabajo crece más o menos así". Lo que importa es la forma de la curva, no los segundos exactos.
+
+Una analogía: buscar una palabra en un diccionario.
+
+- Leerlo página por página hasta encontrarla: si el diccionario duplica su tamaño, tardas el doble.
+- Abrirlo a la mitad y descartar la mitad que no sirve, una y otra vez: si el diccionario duplica su tamaño, solo necesitas un paso más.
+
+Ambos métodos funcionan. Pero crecen de forma muy distinta.
+
+## Las complejidades que vas a ver
+
+Usamos `n` para el tamaño de la entrada.
+
+| Notación | Nombre | Cómo se siente | Ejemplo típico |
+| --- | --- | --- | --- |
+| O(1) | Constante | No importa el tamaño | Leer `lista[5]`, buscar en un diccionario |
+| O(log n) | Logarítmica | Crece muy despacio | Búsqueda binaria |
+| O(n) | Lineal | Proporcional | Recorrer una lista una vez |
+| O(n log n) | Casi lineal | Aceptable | Ordenar bien (`sorted`) |
+| O(n²) | Cuadrática | Se dispara | Dos bucles anidados sobre los mismos datos |
+| O(2^n) | Exponencial | Inviable pronto | Fibonacci recursivo ingenuo |
+
+```text
+trabajo
+  ^                                  O(2^n)
+  |                               /
+  |                          O(n^2)
+  |                      /  /
+  |              O(n log n)/ O(n)
+  |   ____________/___/___/____ O(log n), O(1)
+  +----------------------------------> n
+```
+
+Reglas para leer el código:
+
+1. **Ignora las constantes.** Un bucle que hace tres pasos por elemento sigue siendo O(n).
+2. **Quédate con el término que más crece.** O(n² + n) se simplifica a O(n²).
+3. **Bucles anidados se multiplican.** Un bucle dentro de otro, ambos sobre `n` elementos, da O(n²).
+4. **Bucles seguidos se suman.** Uno después de otro es O(n + n), o sea O(n).
+
+## El experimento: medir en vez de creer
+
+Vamos a resolver el mismo problema de dos maneras: detectar si una lista tiene elementos repetidos.
+
+<Ejemplo numero={1} titulo="Duplicados lento contra rápido" archivo="duplicados.py" ejecutar="uv run duplicados.py" salida={"      n  cuadratico (ms)  lineal (ms)\n   1000            15.62        0.054\n   2000            66.22        0.119\n   4000           257.09        0.185\n   8000          1017.73        0.500"}>
+
+```python
+import time
+
+def medir(f, *args):
+    t = time.perf_counter()
+    f(*args)
+    return (time.perf_counter() - t) * 1000  # milisegundos
+
+def hay_duplicados_lento(xs):
+    # O(n^2): compara cada par
+    for i in range(len(xs)):
+        for j in range(i + 1, len(xs)):
+            if xs[i] == xs[j]:
+                return True
+    return False
+
+def hay_duplicados_rapido(xs):
+    # O(n): recuerda lo visto en un conjunto
+    vistos = set()
+    for x in xs:
+        if x in vistos:
+            return True
+        vistos.add(x)
+    return False
+
+print(f"{'n':>7} {'cuadratico (ms)':>16} {'lineal (ms)':>12}")
+for n in (1_000, 2_000, 4_000, 8_000):
+    datos = list(range(n))  # sin duplicados: peor caso
+    lento = medir(hay_duplicados_lento, datos)
+    rapido = medir(hay_duplicados_rapido, datos)
+    print(f"{n:>7} {lento:>16.2f} {rapido:>12.3f}")
+```
+
+Esta salida es de una corrida real en una computadora de prueba. Tus números serán distintos, porque dependen de tu equipo, pero la forma debe repetirse. Fíjate en la columna cuadrática: cada vez que duplicas `n`, el tiempo se multiplica por cuatro aproximadamente. En la lineal, solo se duplica más o menos. Con diez veces más datos, la versión cuadrática tarda unas cien veces más.
+
+</Ejemplo>
+
+La versión rápida usa un **conjunto** (`set`), cuya búsqueda es O(1) en promedio porque se apoya en una tabla hash. Pagamos con un poco de memoria extra: el conjunto guarda hasta `n` elementos. Esa es una compensación frecuente entre **tiempo y espacio**.
+
+<Callout tipo="tip" titulo="Mide con datos de tamaños distintos">
+Para saber qué complejidad tiene tu código, corre el mismo experimento con `n`, `2n` y `4n` y observa cómo cambia el tiempo. Si se duplica, es lineal. Si se cuadruplica, es cuadrático. Es el método más honesto, y también el que más rápido te quita las dudas.
+</Callout>
+
+## Elegir la estructura correcta
+
+Buena parte del rendimiento no viene de escribir bucles más listos, sino de escoger la estructura de datos adecuada. Buscar un valor en una lista de un millón de números, contra un conjunto y contra una búsqueda binaria en la lista ordenada:
+
+<Ejemplo numero={2} titulo="Tres formas de buscar" archivo="buscar.py" ejecutar="uv run buscar.py" salida={"lista: 9.6037 ms, set: 0.000085 ms, binaria: 0.000208 ms\n(0, 19) (999999, 20)"}>
+
+```python
+import time
+from bisect import bisect_left
+
+n = 1_000_000
+lista = list(range(n))
+conjunto = set(lista)
+objetivo = n - 1
+
+def promedio_ms(f):
+    t = time.perf_counter()
+    for _ in range(100):
+        f()
+    return (time.perf_counter() - t) / 100 * 1000
+
+print(f"lista: {promedio_ms(lambda: objetivo in lista):.4f} ms, "
+      f"set: {promedio_ms(lambda: objetivo in conjunto):.6f} ms, "
+      f"binaria: {promedio_ms(lambda: bisect_left(lista, objetivo)):.6f} ms")
+
+def pasos_binaria(xs, x):
+    lo, hi, pasos = 0, len(xs) - 1, 0
+    while lo <= hi:
+        pasos += 1
+        mid = (lo + hi) // 2
+        if xs[mid] == x:
+            return mid, pasos
+        if xs[mid] < x:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1, pasos
+
+print(pasos_binaria(lista, 0), pasos_binaria(lista, objetivo))
+```
+
+La primera línea de la salida cambia en cada equipo, pero el orden entre los tres siempre se mantiene. La segunda línea es determinista: encontrar un valor entre un millón de elementos ordenados toma 19 o 20 pasos con búsqueda binaria. Cada paso descarta la mitad de los datos, por eso es O(log n). La búsqueda lineal habría revisado hasta un millón.
+
+</Ejemplo>
+
+La búsqueda binaria solo funciona si los datos **están ordenados**. Ordenar cuesta O(n log n), así que compensa cuando vas a buscar muchas veces. Para entender qué estructura conviene en cada caso, mira [Estructuras de datos básicas](/fundamentos/estructuras-de-datos-basicas/).
+
+## Complejidad de espacio y casos
+
+Big O también mide la **memoria**. Un algoritmo que crea una copia de la lista tiene complejidad de espacio O(n). Otro que solo usa un par de variables tiene O(1).
+
+Y el mismo algoritmo puede tener varios casos. Buscar un valor en una lista sin ordenar es O(1) si está al principio (mejor caso) y O(n) si está al final o no existe (peor caso). Big O suele hablar del peor caso porque es la garantía que puedes dar.
+
+Un caso especial que ya viste: Fibonacci recursivo sin memoria es exponencial, y con memoización baja a lineal. Lo explicamos en [Funciones y recursión](/fundamentos/funciones-y-recursion/).
+
+<Callout tipo="warning" titulo="No optimices a ciegas">
+Big O es una guía, no una orden. Con listas de 20 elementos, un O(n²) simple y claro es perfecto. La optimización prematura vuelve el código difícil de leer sin ganancia real. Primero haz que funcione y sea claro, luego mide, y solo entonces optimiza la parte que de verdad es lenta. Una herramienta de perfilado te dice cuál es: no adivines.
+</Callout>
+
+## Pruébalo tú
+
+1. Corre el experimento de duplicados en tu equipo y añade `n = 16_000` solo si no te desespera esperar. Comprueba si el tiempo cuadrático se vuelve a multiplicar por cuatro.
+2. Escribe una función que busque un elemento recorriendo la lista y otra que use un diccionario. Mide ambas con diez mil y con cien mil elementos.
+3. Para cada fragmento de código que escribas hoy, anota al lado su complejidad: `# O(n)`, `# O(n^2)`. Verás cuántas veces te equivocas, y así aprendes.
+4. Implementa la búsqueda binaria sin copiar la solución y verifica que encuentra el primer y el último elemento.
+
+## Errores y mitos comunes
+
+- **"O(1) significa que es rápido."** Significa que no depende de `n`. Puede ser constante y aun así lenta.
+- **"Mi computadora es rápida, no me afecta."** Una curva cuadrática alcanza a cualquier máquina cuando los datos crecen.
+- **"Big O mide segundos."** Mide cómo crece el trabajo, no cuánto tarda en tu equipo.
+- **"Siempre hay que buscar la complejidad más baja."** A veces la solución más sencilla es suficiente. El tamaño real de tus datos manda.
+- **"Una sola línea no puede ser cara."** `x in lista` esconde un recorrido completo, igual que `lista.insert(0, x)` mueve todos los elementos.
+
+## Qué sigue
+
+- Aprende qué estructuras usar y por qué: [Estructuras de datos básicas](/fundamentos/estructuras-de-datos-basicas/).
+- Profundiza en la [biblioteca de algoritmos y estructuras de datos](/biblioteca/algoritmos/), con libros gratuitos.
+- Entiende cómo el rendimiento depende también de la red y de las consultas: [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/).
+- Practica con los [retos](/retos/) y consulta el [glosario](/glosario/).

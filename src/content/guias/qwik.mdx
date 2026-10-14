@@ -1,0 +1,329 @@
+---
+titulo: 'Qwik desde cero'
+descripcion: 'Qué es Qwik y su idea de resumabilidad, cómo crear un proyecto y cómo construir páginas con señales, stores, rutas, loaders y endpoints.'
+tema: qwik
+nivel: intermedio
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['qwik-libro-desde-cero-a-produccion', 'qwik-primeros-pasos', 'qwik-tutorial-interactivo', 'qwik-piensa-en-qwik']
+requisitos: ['Saber JavaScript y un poco de TypeScript', 'Conocer la idea de componentes (por ejemplo, de React)', 'Tener Node.js instalado']
+etiquetas: ['qwik', 'resumabilidad', 'ssr', 'componentes', 'rendimiento']
+orden: 52
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Qwik es un framework web pensado para que tus páginas sean interactivas casi al instante, sin importar qué tan grande sea la aplicación. Lo logra enviando muy poco JavaScript al inicio y descargando el resto solo cuando hace falta. En esta guía creas un proyecto y construyes páginas con estado, rutas, datos del servidor y un endpoint.
+
+## Qué es y para qué sirve
+
+Estas son las ideas que tienes que tener claras:
+
+- **Resumabilidad en lugar de hidratación.** Los frameworks tradicionales envían el HTML y luego descargan y vuelven a ejecutar el código para "hidratar" la página. Qwik guarda en el propio HTML los listeners, los límites de componentes y el estado, y el navegador retoma la aplicación donde el servidor la dejó, sin repetir el trabajo.
+- **Carga diferida muy fina.** El código se divide en pedazos pequeños, y cada pedazo se descarga solo cuando se usa, por ejemplo, la primera vez que haces clic en un botón.
+- **El signo `$`.** Marca las fronteras donde Qwik puede cortar el código: `component$`, `onClick$`, `useTask$`, `routeLoader$`. Lo que va dentro de esas funciones es lo que se carga bajo demanda. Por eso debe poder serializarse.
+- **Se parece a React en la sintaxis.** Usas JSX, componentes que son funciones y props. Cambian los hooks (`useSignal`, `useStore`, `useTask$`) y el hecho de que el estado es reactivo y no vuelve a ejecutar todo el componente.
+- **Señales y stores.** `useSignal` guarda un valor y se lee y escribe con `.value`. `useStore` guarda un objeto reactivo, incluso en sus propiedades anidadas.
+- **Qwik City.** Es el meta-framework de Qwik: enrutamiento por carpetas, layouts, `routeLoader$` para datos del servidor, `routeAction$` para formularios y endpoints.
+- **Se renderiza primero en el servidor.** Cada página llega como HTML completo, bueno para SEO y para velocidad percibida.
+- **Dos líneas de versión.** Esta guía usa el paquete estable que instala `npm create qwik@latest`, que es `@builder.io/qwik`, en versión 1.x. El sitio oficial y el repositorio mencionan una versión 2 en camino, así que revisa las notas de cambios antes de empezar un proyecto largo.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala Node.js (versión LTS)** desde [nodejs.org](https://nodejs.org/). En **Windows** también sirve `winget install OpenJS.NodeJS.LTS`; en **macOS**, `brew install node`; en **Linux**, [nvm](https://github.com/nvm-sh/nvm) con `nvm install --lts`. Comprueba con `node -v`.
+2. **Crea el proyecto.** Ejecuta `npm create qwik@latest empty mi-app`. El argumento `empty` elige el proyecto en blanco con rutas incluidas. Si ejecutas solo `npm create qwik@latest`, un asistente te pregunta el nombre y la plantilla.
+3. **Instala las dependencias.** Entra con `cd mi-app` y ejecuta `npm install`.
+4. **Arranca el servidor de desarrollo** con `npm run dev`. La terminal muestra la dirección local, normalmente `http://localhost:5173`. Ábrela en el navegador.
+5. **Edita `src/routes/index.tsx`.** Es la página de inicio. Guarda y la página se actualiza sola.
+6. **Compila para producción** con `npm run build`. Para publicar necesitas un adaptador de tu hosting, que añades con `npm run qwik add`.
+
+</Pasos>
+
+Archivos importantes: `src/root.tsx` (la raíz de la aplicación), `src/routes` (cada carpeta con un `index.tsx` es una página) y `src/components` (tus componentes). Los ejemplos se probaron con el servidor de desarrollo.
+
+## Ejemplos paso a paso
+
+Vas a construir una página con un contador, una lista de tareas, una ruta dinámica, datos del servidor y un endpoint. Los archivos van dentro de `src`.
+
+<Ejemplo numero={1} titulo="Un componente con señal y evento" archivo="src/components/contador/contador.tsx" ejecutar="npm run dev" salida={'Aparece "Clics: 0". Cada clic en Sumar suma uno; Reiniciar vuelve a 0. Si miras el código fuente de la página, el HTML ya trae "Clics: 0" y los botones tienen un atributo on:click.'}>
+
+```tsx
+import { component$, useSignal } from "@builder.io/qwik";
+
+export const Contador = component$(() => {
+  // useSignal crea un valor reactivo: se lee y se escribe con .value
+  const cuenta = useSignal(0);
+
+  return (
+    <div>
+      <p>Clics: {cuenta.value}</p>
+      {/* El $ en onClick$ marca un trozo de código que se carga solo al hacer clic */}
+      <button onClick$={() => cuenta.value++}>Sumar</button>
+      <button onClick$={() => (cuenta.value = 0)}>Reiniciar</button>
+    </div>
+  );
+});
+```
+
+Para verlo, impórtalo en `src/routes/index.tsx` y úsalo con `<Contador />`. `component$` define un componente, y el `$` le dice al optimizador de Qwik que ese código puede vivir en su propio archivo. `useSignal(0)` guarda el valor, y al cambiar `cuenta.value` Qwik actualiza solo el texto que lo usa, sin volver a ejecutar todo el componente. Los botones llevan `onClick$`: el navegador no descarga el código de esos manejadores hasta que haces el primer clic. Esa es la resumabilidad en acción: la página ya vino armada del servidor y despierta al interactuar.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Props y Slot: componer componentes" archivo="src/components/tarjeta/tarjeta.tsx y src/routes/index.tsx" ejecutar="npm run dev" salida={'La página muestra el título "Mi primera app Qwik", una tarjeta destacada con el encabezado "Contador" que contiene el contador, y debajo dos enlaces: Saludo y Tareas.'}>
+
+Crea `src/components/tarjeta/tarjeta.tsx`:
+
+```tsx
+import { component$, Slot } from "@builder.io/qwik";
+
+interface TarjetaProps {
+  titulo: string;
+  destacada?: boolean;
+}
+
+export const Tarjeta = component$<TarjetaProps>(({ titulo, destacada = false }) => {
+  return (
+    <article class={destacada ? "tarjeta destacada" : "tarjeta"}>
+      <h2>{titulo}</h2>
+      {/* Slot: aquí se coloca el contenido que pasas entre las etiquetas */}
+      <Slot />
+    </article>
+  );
+});
+```
+
+Y reemplaza `src/routes/index.tsx`:
+
+```tsx
+import { component$ } from "@builder.io/qwik";
+import { Link, type DocumentHead } from "@builder.io/qwik-city";
+import { Contador } from "../components/contador/contador";
+import { Tarjeta } from "../components/tarjeta/tarjeta";
+
+export default component$(() => {
+  return (
+    <>
+      <h1>Mi primera app Qwik</h1>
+      <Tarjeta titulo="Contador" destacada>
+        <Contador />
+      </Tarjeta>
+      <nav>
+        <Link href="/saludo/Ana">Saludo</Link> | <Link href="/tareas">Tareas</Link>
+      </nav>
+    </>
+  );
+});
+
+export const head: DocumentHead = {
+  title: "Inicio | Mi app Qwik",
+};
+```
+
+Las props se declaran con una interfaz de TypeScript y se reciben como parámetro del componente. `Slot` funciona como el `children` de React: coloca lo que escribes entre `<Tarjeta>` y `</Tarjeta>`. En Qwik City, la página es el export por defecto de `index.tsx`, y `head` define el título y los metadatos. `Link` navega entre páginas. Los enlaces de Saludo y Tareas todavía no llevan a ninguna parte: los creas en los siguientes ejemplos.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Un store y un valor derivado" archivo="src/components/tareas/tareas.tsx y src/routes/tareas/index.tsx" ejecutar="npm run dev" salida={'En /tareas/ aparecen "Aprender Qwik" y "Crear mi app" (tachada) con "Pendientes: 1". Al escribir "Publicar mi sitio" y pulsar Agregar, aparece en la lista con "Pendientes: 2". Al marcar "Aprender Qwik", baja a "Pendientes: 1".'}>
+
+Crea `src/components/tareas/tareas.tsx`:
+
+```tsx
+import { component$, useStore, useComputed$ } from "@builder.io/qwik";
+
+interface Tarea {
+  id: number;
+  texto: string;
+  hecha: boolean;
+}
+
+export const Tareas = component$(() => {
+  // useStore: un objeto reactivo (también las propiedades anidadas)
+  const estado = useStore<{ lista: Tarea[]; texto: string }>({
+    lista: [
+      { id: 1, texto: "Aprender Qwik", hecha: false },
+      { id: 2, texto: "Crear mi app", hecha: true },
+    ],
+    texto: "",
+  });
+
+  // useComputed$: se recalcula cuando cambian los datos que lee
+  const pendientes = useComputed$(() => estado.lista.filter((t) => !t.hecha).length);
+
+  return (
+    <div>
+      <form
+        preventdefault:submit
+        onSubmit$={() => {
+          const limpio = estado.texto.trim();
+          if (!limpio) return;
+          estado.lista.push({ id: Date.now(), texto: limpio, hecha: false });
+          estado.texto = "";
+        }}
+      >
+        <input
+          placeholder="Nueva tarea"
+          value={estado.texto}
+          onInput$={(_, el) => (estado.texto = el.value)}
+        />
+        <button type="submit">Agregar</button>
+      </form>
+      <ul>
+        {estado.lista.map((tarea) => (
+          <li key={tarea.id}>
+            <label>
+              <input
+                type="checkbox"
+                checked={tarea.hecha}
+                onChange$={() => (tarea.hecha = !tarea.hecha)}
+              />
+              {tarea.hecha ? <s>{tarea.texto}</s> : tarea.texto}
+            </label>
+          </li>
+        ))}
+      </ul>
+      <p>Pendientes: {pendientes.value}</p>
+    </div>
+  );
+});
+```
+
+Y una página que lo use, `src/routes/tareas/index.tsx`:
+
+```tsx
+import { component$ } from "@builder.io/qwik";
+import type { DocumentHead } from "@builder.io/qwik-city";
+import { Tareas } from "../../components/tareas/tareas";
+
+export default component$(() => {
+  return (
+    <>
+      <h1>Mis tareas</h1>
+      <Tareas />
+    </>
+  );
+});
+
+export const head: DocumentHead = { title: "Tareas" };
+```
+
+A diferencia de React, aquí sí puedes mutar el store directamente: `estado.lista.push(...)` y `tarea.hecha = ...` son reactivos, porque Qwik envuelve el objeto en un proxy. El atributo `preventdefault:submit` evita que el formulario recargue la página. Se declara así, y no con `event.preventDefault()`, porque el manejador se carga de forma diferida y para entonces el navegador ya habría ejecutado la acción por defecto. `useComputed$` calcula `pendientes` y lo mantiene al día cuando cambia el store. Como todo el estado vive en el navegador, la lista se pierde al recargar. Para guardar de verdad necesitarías un servidor o `localStorage`.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Rutas por carpetas y parámetros" archivo="src/routes/saludo/[nombre]/index.tsx" ejecutar="npm run dev" salida={'Al visitar /saludo/Ana/ el HTML contiene <h1>Hola, Ana</h1>. Con /saludo/Luis/ se lee "Hola, Luis".'}>
+
+```tsx
+import { component$ } from "@builder.io/qwik";
+import { useLocation, type DocumentHead } from "@builder.io/qwik-city";
+
+export default component$(() => {
+  // La carpeta [nombre] crea una ruta dinámica: /saludo/Ana, /saludo/Luis...
+  const loc = useLocation();
+  return <h1>Hola, {loc.params.nombre}</h1>;
+});
+
+export const head: DocumentHead = { title: "Saludo" };
+```
+
+En Qwik City la ruta sale de la estructura de carpetas: cada carpeta dentro de `src/routes` que tiene un `index.tsx` es una página. Los corchetes (`[nombre]`) crean un segmento variable cuyo valor lees con `useLocation().params`. Fíjate en que la URL termina con una barra: por defecto Qwik City redirige `/tareas` a `/tareas/` con un código 301. Si pruebas con `curl`, usa la barra final o la opción `-L`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Datos del servidor con routeLoader$" archivo="src/routes/tareas/index.tsx" ejecutar="npm run dev" salida={'La página /tareas/ muestra, bajo el título, el párrafo "Datos preparados en el servidor". Ese texto viene ya escrito en el HTML que llega al navegador.'}>
+
+Actualiza `src/routes/tareas/index.tsx`:
+
+```tsx
+import { component$ } from "@builder.io/qwik";
+import { routeLoader$, type DocumentHead } from "@builder.io/qwik-city";
+import { Tareas } from "../../components/tareas/tareas";
+
+// routeLoader$ corre en el servidor antes de renderizar la página
+export const useServidor = routeLoader$(() => {
+  return { mensaje: "Datos preparados en el servidor" };
+});
+
+export default component$(() => {
+  const datos = useServidor();
+  return (
+    <>
+      <h1>Mis tareas</h1>
+      <p>{datos.value.mensaje}</p>
+      <Tareas />
+    </>
+  );
+});
+
+export const head: DocumentHead = { title: "Tareas" };
+```
+
+`routeLoader$` es la forma de Qwik City de cargar datos: la función se ejecuta en el servidor cada vez que se pide la página, y el componente la lee con el hook que exportas, aquí `useServidor`. Dentro del loader puedes consultar una base de datos, leer archivos o llamar a una API con claves secretas, porque ese código nunca llega al navegador. El nombre del hook debe empezar con `use` y el loader debe exportarse desde el archivo de la ruta. Para enviar datos al servidor, por ejemplo con un formulario, se usa `routeAction$`, que se explica en la documentación de Qwik City.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un endpoint JSON" archivo="src/routes/api/hora/index.ts" ejecutar="curl http://localhost:5173/api/hora?zona=Mexico" salida={'{"zona":"Mexico","ok":true}'}>
+
+```ts
+import type { RequestHandler } from "@builder.io/qwik-city";
+
+// Un endpoint: un archivo index.ts exporta funciones por método HTTP
+export const onGet: RequestHandler = async ({ json, query }) => {
+  const zona = query.get("zona") ?? "UTC";
+  json(200, { zona, ok: true });
+};
+```
+
+Si el archivo de una ruta es `index.ts` en lugar de `index.tsx`, no dibuja una página: es un endpoint. Exportas una función por método HTTP (`onGet`, `onPost`...) y respondes con `json`, `text` u otros ayudantes del evento de la petición. Aquí leemos el parámetro `zona` de la consulta y devolvemos un objeto. Sin parámetro, el valor por defecto es `UTC`. Los endpoints sirven para exponer datos a otras aplicaciones o recibir webhooks.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Captured variable in the closure can not be serialized">
+Es el error más característico de Qwik. Ocurre cuando una función con `$` (como `onClick$`) usa una función normal declarada fuera, por ejemplo `const saludar = () => ...`. Qwik debe poder serializar lo que captura el manejador, y una función normal no se puede. El propio mensaje te sugiere la solución: envuélvela con `$()`, es decir, `const saludar = $(() => ...)`. También sirve mover la lógica dentro del manejador o usar valores simples (números, textos, señales).
+</Callout>
+
+<Callout tipo="warning" titulo="window is not defined">
+El cuerpo de un componente se ejecuta primero en el servidor, donde no existen `window`, `document` ni `localStorage`. Usarlos al renderizar provoca ese error. Ponlos dentro de un manejador de evento (`onClick$`) o dentro de `useVisibleTask$`, que se ejecuta solo en el navegador cuando el componente se hace visible. Úsalo con moderación, porque obliga a descargar JavaScript temprano.
+</Callout>
+
+<Callout tipo="warning" titulo="onClick en lugar de onClick$">
+En Qwik los eventos llevan `$` porque su código se carga bajo demanda. Si escribes `onClick`, TypeScript te avisa con "Property 'onClick' does not exist ... Did you mean 'onClick$'?". Lo mismo pasa con `onInput$`, `onSubmit$` y los demás. Revisa los errores de tipos con `npx tsc --noEmit` mientras aprendes.
+</Callout>
+
+<Callout tipo="warning" titulo="Una página que no responde: falta la carpeta">
+Un archivo suelto como `src/routes/acerca.tsx` no crea una ruta. En desarrollo verás el mensaje "Not a SSR URL according to Qwik City". Crea una carpeta con el nombre de la ruta y dentro un `index.tsx`: `src/routes/acerca/index.tsx`.
+</Callout>
+
+<Callout tipo="warning" titulo="Redirección a la barra final de la URL">
+Si pides `/tareas` y recibes un 301 hacia `/tareas/`, no es un fallo: Qwik City termina por defecto las URL con barra. Escribe tus enlaces con la barra final o usa el componente `Link`, y recuerda poner la barra en tus pruebas con `curl`.
+</Callout>
+
+## Buenas prácticas
+
+- Lee primero [Think Qwik](https://qwik.dev/docs/think-qwik/) y la página sobre [resumabilidad](https://qwik.dev/docs/concepts/resumable/): entender la idea evita luchar contra el framework.
+- Mantén lo que va dentro de las funciones con `$` serializable: valores simples, señales, stores y otros QRL.
+- Haz el trabajo pesado en `routeLoader$` y `routeAction$`, es decir, en el servidor, y deja en el navegador lo mínimo.
+- Evita `useVisibleTask$` salvo que no haya otra opción; carga JavaScript apenas la página está visible.
+- Usa `useComputed$` para valores derivados en lugar de guardarlos duplicados en el estado.
+- Revisa los tipos con `npx tsc --noEmit` y el estilo con `npm run lint`.
+- Prueba con `npm run build` y revisa la versión de producción, no solo el servidor de desarrollo.
+- Prueba tus ideas rápido en el [Playground](https://qwik.dev/playground/) antes de integrarlas.
+
+## Siguiente paso
+
+Ya conoces la idea central y las piezas básicas de Qwik. Lo que sigue:
+
+- **Haz el tutorial interactivo.** El [tutorial oficial](https://qwik.dev/tutorial/welcome/overview/) cubre componentes, eventos, stores, contexto y slots con un editor en la página.
+- **Lee el libro en español.** [Qwik: Desde cero a producción](https://qwik-book-spanish.netlify.app/) recorre rutas, formularios, pruebas y despliegue.
+- **Aprende los formularios.** Estudia `routeAction$` y `Form` en la [documentación de Qwik City](https://qwik.dev/docs/qwikcity/).
+- **Compara enfoques.** [React](/guias/react/), [Angular](/guias/angular/) y [Astro](/guias/astro/) resuelven problemas parecidos de otra forma. Si te importa sobre todo el contenido y el rendimiento, Astro es una buena alternativa.
+- **Refuerza TypeScript.** [TypeScript desde cero](/guias/typescript/) te ayuda con las props y los loaders.
+- **Explora la biblioteca.** Todos los recursos de [Qwik](/biblioteca/qwik/) son gratuitos.
+
+<LibrosRecomendados ids={frontmatter.libros} />

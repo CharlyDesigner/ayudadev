@@ -1,0 +1,130 @@
+---
+titulo: 'Cómo funcionan los modelos de lenguaje (LLM)'
+descripcion: 'Qué hace por dentro un modelo como los de los chats de IA: predecir la siguiente pieza de texto, cómo se entrena y por qué a veces falla.'
+categoria: ia
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [inteligencia-artificial, python]
+etiquetas: [llm, ia, transformers, entrenamiento, prompts]
+orden: 40
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Usas un chat de IA y te responde como si entendiera todo. Escribe código, resume textos y explica errores. Luego inventa una función que no existe y lo dice con total seguridad. ¿Cómo puede ser tan bueno y tan raro a la vez?
+
+La respuesta corta: un modelo de lenguaje no "busca la verdad". Hace una sola cosa, una y otra vez: **predice qué texto sigue**. Todo lo demás sale de ahí. Si entiendes esa idea, vas a usar la IA con mucha más cabeza.
+
+## Qué es
+
+Un **LLM** (*Large Language Model*, modelo de lenguaje grande) es un programa entrenado con enormes cantidades de texto y código para predecir la siguiente pieza de un texto. Esas piezas se llaman **tokens** (te los explico en el siguiente artículo). Piensa en el autocompletado de tu teléfono, pero con muchísima más capacidad de captar contexto.
+
+Cuando le escribes "La capital de Francia es", el modelo calcula qué token es más probable después, escoge uno, lo agrega al texto y repite. Así va construyendo la respuesta pieza por pieza.
+
+Dos cosas importantes desde ya:
+
+- El modelo **no tiene una base de datos de hechos** que consulte. Tiene millones de números (llamados parámetros o pesos) que se ajustaron durante el entrenamiento.
+- El texto que genera es **plausible**, es decir, suena a lo que alguien diría. Que sea verdadero es otro asunto.
+
+## Predecir la siguiente palabra, en pequeño
+
+Para sentirlo, construye el modelo de lenguaje más simple posible: uno que solo mira la palabra anterior y recuerda qué palabras vinieron después en un texto de ejemplo.
+
+<Ejemplo numero={1} titulo="Un modelo de lenguaje de juguete" archivo="bigrama.py" ejecutar="python bigrama.py" salida="['come', 'duerme']
+['gato', 'gato', 'perro', 'perro']
+el perro come carne . el gato">
+
+```python
+import random
+
+texto = "el gato come pescado . el gato duerme . el perro come carne . el perro duerme ."
+palabras = texto.split()
+
+# Aprende: para cada palabra, qué palabras suelen venir después
+siguientes = {}
+for actual, siguiente in zip(palabras, palabras[1:]):
+    siguientes.setdefault(actual, []).append(siguiente)
+
+print(siguientes["gato"])
+print(siguientes["el"])
+
+# Genera: elige la siguiente palabra al azar entre las que vio
+random.seed(7)
+actual = "el"
+salida = [actual]
+for _ in range(6):
+    actual = random.choice(siguientes[actual])
+    salida.append(actual)
+print(" ".join(salida))
+```
+
+Este programa "aprendió" que después de `gato` viene `come` o `duerme`, y que después de `el` viene `gato` o `perro` con la misma frecuencia. Genera frases que suenan al texto original, pero no sabe qué es un gato. Un LLM real hace lo mismo en esencia, con una diferencia enorme: en lugar de mirar una palabra, mira miles de tokens anteriores a la vez y pondera cuáles importan más.
+
+</Ejemplo>
+
+## Cómo se construye un LLM
+
+Hay tres etapas, y conviene distinguirlas.
+
+1. **Preentrenamiento.** El modelo lee cantidades enormes de texto y código. En cada paso intenta adivinar el siguiente token y, cuando falla, sus parámetros se ajustan un poquito. Después de muchísimas repeticiones aprende gramática, estilo, patrones de código y mucho conocimiento general. Aquí se forma lo que llamamos "conocimiento".
+2. **Ajuste para obedecer instrucciones.** Un modelo recién preentrenado solo continúa textos. Para que responda como asistente se le entrena con ejemplos de conversaciones buenas y con la preferencia de personas (o de otros modelos) sobre qué respuestas son mejores.
+3. **Uso (inferencia).** Ya con los parámetros fijos, tú le escribes y él genera. **Aquí no aprende nada de tu conversación.** Lo que parece memoria es porque la aplicación le vuelve a enviar el historial en cada mensaje.
+
+<Callout tipo="info" titulo="La fecha de corte">
+
+El conocimiento del modelo se congela cuando termina su entrenamiento. Lo que pasó después, o una librería que salió ayer, no lo sabe a menos que se lo des en el mensaje o la aplicación le dé una herramienta de búsqueda.
+
+</Callout>
+
+## La arquitectura: atención en una idea
+
+Casi todos los LLM actuales usan una arquitectura llamada **transformer**. Su truco se llama **atención**: para decidir el siguiente token, el modelo mira todos los tokens anteriores y calcula cuáles son más relevantes para ese momento.
+
+Mira esta frase: "Ana le dijo a Sofía que **ella** ganó". Para saber a quién se refiere "ella", el modelo necesita relacionar esa palabra con las otras. La atención es el mecanismo que permite esa relación, sin importar si están pegadas o lejos. No necesitas las matemáticas para programar con IA; solo quédate con la idea de que **el modelo pondera el contexto completo**, y por eso importa tanto qué escribes en el prompt.
+
+## Por qué las respuestas cambian: la temperatura
+
+Si el modelo siempre eligiera el token más probable, daría siempre la misma respuesta. En la práctica elige entre varias opciones probables, con algo de azar. La **temperatura** controla cuánto azar:
+
+| Temperatura | Efecto | Útil para |
+|---|---|---|
+| Baja | Respuestas más predecibles y repetibles | Código, datos, extracción |
+| Alta | Respuestas más variadas y creativas | Ideas, nombres, borradores |
+
+Por eso, si le haces la misma pregunta dos veces, puede contestar distinto. No es capricho: es parte del diseño. Qué parámetros puedes ajustar depende de la herramienta, consulta su documentación oficial.
+
+<Callout tipo="tip" titulo="Usa el modelo mental correcto">
+
+Trata al LLM como a una persona muy leída con un recuerdo borroso, que improvisa con aplomo. Es excelente para explicar, proponer, reformular y escribir borradores. Es riesgoso como fuente única de datos exactos: fechas, cifras, nombres de funciones, números de versión. Para eso pídele que muestre su razonamiento y verifica.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Sonar seguro no es tener razón">
+
+El tono de la respuesta no tiene relación con su exactitud. El modelo usa el mismo estilo fluido para decir algo correcto y algo inventado. Nunca uses el tono como señal de confianza. En el artículo de alucinaciones verás cómo verificar.
+
+</Callout>
+
+## Pruébalo tú
+
+1. Copia el ejemplo del modelo de juguete y cámbiale el texto de entrenamiento por una canción o un párrafo tuyo. Genera 10 palabras. ¿Suena a tu texto?
+2. Cambia `random.seed(7)` por otro número y observa cómo cambia la frase.
+3. Haz algo más ambicioso: guarda las dos palabras anteriores como llave en lugar de una. Verás que el texto generado se parece más al original, porque tiene más contexto. Esa es la intuición detrás de las ventanas de contexto grandes.
+4. En un chat de IA pregunta lo mismo tres veces, con pocas palabras de diferencia. Anota qué cambia y qué no.
+
+## Errores y mitos comunes
+
+- **"El modelo busca en internet cada respuesta."** No. Responde desde sus parámetros, salvo que la aplicación le conecte una herramienta de búsqueda.
+- **"Aprende de mi conversación y mañana se acordará."** No, por defecto. Cada conversación empieza de cero. Algunas aplicaciones guardan notas aparte, pero eso lo hace la aplicación, no el modelo.
+- **"Entiende como una persona."** Lo que hace es muy útil y a veces parece comprensión, pero falla de formas que una persona no fallaría: cuenta mal letras, se equivoca en cuentas largas y sigue instrucciones ocultas en un texto.
+- **"Si dice que verificó, verificó."** Un modelo sin herramientas no ejecuta ni comprueba nada; puede describir una verificación que nunca hizo.
+- **"Más largo y más técnico es mejor."** Un prompt claro con ejemplo suele ganarle a uno largo y confuso.
+
+## Qué sigue
+
+- Sigue con [Tokens y ventana de contexto](/fundamentos/tokens-y-ventana-de-contexto/) para entender qué "ve" el modelo y cuánto le cabe.
+- Aprende por qué se equivocan y cómo detectarlo en [Alucinaciones y verificación](/fundamentos/alucinaciones-y-verificacion/).
+- Si usas IA para estudiar, lee [Aprende sin copiar](/ia/aprende/aprender-sin-copiar/).
+- Más recursos gratuitos en la [biblioteca de Inteligencia artificial](/biblioteca/inteligencia-artificial/) y términos nuevos en el [glosario](/glosario/).

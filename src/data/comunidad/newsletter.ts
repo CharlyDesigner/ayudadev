@@ -1,0 +1,15 @@
+import type { ComunidadInput } from '../comunidad';
+
+const items: ComunidadInput[] = [
+  { id: 'mouredev-log', nombre: 'mouredev.log();', tipo: 'newsletter', descripcion: 'Newsletter en español de Brais Moure sobre programación y desarrollo de software, con novedades y consejos para seguir aprendiendo.', url: 'https://newsletter.moure.dev/', temas: ['generales'], idioma: 'es', destacado: true, verificado: '2026-10-09' },
+  { id: 'web-reactiva-newsletter', nombre: 'Web Reactiva', tipo: 'newsletter', descripcion: 'Newsletter semanal en español que reúne recursos seleccionados sobre desarrollo y programación con IA: herramientas, artículos y tutoriales.', url: 'https://www.webreactiva.com/newsletter', temas: ['inteligencia-artificial', 'javascript'], idioma: 'es', destacado: false, verificado: '2026-10-09' },
+  { id: 'semanario-devschile', nombre: 'Semanario devsChile', tipo: 'newsletter', descripcion: 'Newsletter semanal en español de la comunidad devsChile, con un resumen de la actividad, ofertas de trabajo y enlaces útiles.', url: 'https://github.com/devschile/semanario', temas: ['generales'], idioma: 'es', destacado: false, verificado: '2026-10-09' },
+  { id: 'javascript-weekly', nombre: 'JavaScript Weekly', tipo: 'newsletter', descripcion: 'Boletín semanal en inglés con los mejores artículos, noticias y herramientas del ecosistema JavaScript. Un clásico para estar al día.', url: 'https://javascriptweekly.com/', temas: ['javascript'], idioma: 'en', destacado: true, verificado: '2026-10-09' },
+  { id: 'pycoders-weekly', nombre: "PyCoder's Weekly", tipo: 'newsletter', descripcion: 'Boletín semanal en inglés con artículos, proyectos y noticias de Python seleccionados por la comunidad.', url: 'https://pycoders.com/', temas: ['python'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'python-weekly', nombre: 'Python Weekly', tipo: 'newsletter', descripcion: 'Boletín semanal en inglés con artículos, proyectos, vídeos y ofertas relacionados con Python.', url: 'https://www.pythonweekly.com/', temas: ['python'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'this-week-in-rust', nombre: 'This Week in Rust', tipo: 'newsletter', descripcion: 'Resumen semanal en inglés de lo que ocurre en la comunidad Rust: noticias, artículos, nuevas versiones y eventos.', url: 'https://this-week-in-rust.org/', temas: ['rust'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'tldr-newsletter', nombre: 'TLDR', tipo: 'newsletter', descripcion: 'Resúmenes breves en inglés de noticias de tecnología, programación y ciencia de datos, para leer en pocos minutos.', url: 'https://tldr.tech/', temas: ['generales'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'hacker-newsletter', nombre: 'Hacker Newsletter', tipo: 'newsletter', descripcion: 'Resumen semanal en inglés con los mejores artículos de Hacker News, enviado cada viernes. Ayuda a descubrir lecturas de calidad.', url: 'https://hackernewsletter.com/', temas: ['generales'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+];
+
+export default items;

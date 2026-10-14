@@ -1,0 +1,407 @@
+---
+titulo: 'C++ desde cero'
+descripcion: 'Qué es C++, cómo instalar un compilador y tus primeros programas: tipos, funciones, vectores, clases y punteros inteligentes, con ejemplos para ejecutar.'
+tema: cpp
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['cpp-curso-con-clase', 'cpp-learncpp', 'cpp-curso-cpp-moderno-jesus-conde', 'cpp-cppreference-es']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['cpp', 'compilador', 'stl', 'raii', 'punteros']
+orden: 22
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+C++ es un lenguaje compilado que te da control fino sobre la memoria y el rendimiento. Se usa en videojuegos y motores gráficos, navegadores, sistemas operativos, finanzas de alta velocidad, robótica y programación competitiva. Es más difícil que otros lenguajes, pero entenderlo te enseña cómo funciona de verdad una computadora.
+
+Lo que necesitas tener claro:
+
+- **Se compila a código nativo**: `g++` convierte tu `.cpp` en un ejecutable para tu sistema. No hay máquina virtual; el programa corre directo en el procesador.
+- **Tipado estático**: cada variable tiene un tipo fijo (`int`, `double`, `std::string`) y el compilador revisa los errores antes de que ejecutes nada.
+- **Tú decides dónde vive cada valor**: en la pila (lo normal, se libera solo al salir del bloque) o en el heap (memoria dinámica, que hay que administrar).
+- **RAII**: el recurso (memoria, archivo, candado) se obtiene en el constructor de un objeto y se libera en su destructor. Esa es la idea central del C++ moderno.
+- **Referencias y punteros**: una referencia es otro nombre para una variable; un puntero guarda una dirección de memoria. Con ellos evitas copias, pero hay que usarlos con cuidado.
+- **Biblioteca estándar (STL)**: `std::vector`, `std::string`, `std::map` y algoritmos como `sort`, que casi siempre es mejor usar que reinventar.
+- **Comportamiento indefinido**: si haces algo que el lenguaje no permite, como leer fuera de un arreglo, el programa puede hacer cualquier cosa sin avisarte. Es el mayor riesgo del lenguaje.
+- **Varios estándares**: C++11, 14, 17, 20 y 23. Aquí usamos C++17, que ya está disponible en cualquier compilador actual.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Sin instalar nada**: prueba código en [Compiler Explorer](https://godbolt.org/), que compila y muestra la salida en el navegador.
+2. **Windows**: instala MSYS2 desde [msys2.org](https://www.msys2.org/), abre la terminal "MSYS2 UCRT64" y escribe `pacman -S mingw-w64-ucrt-x86_64-gcc`. Después agrega la carpeta `ucrt64\bin` de MSYS2 a tu `PATH`. Como alternativa, instala las Build Tools de Visual Studio con la carga de trabajo de C++ y usa su "Developer Command Prompt".
+3. **macOS**: ejecuta `xcode-select --install` en la terminal. Eso instala el compilador `clang++`, y el comando `g++` apunta a él.
+4. **Linux**: en Debian o Ubuntu escribe `sudo apt install g++`; en Fedora `sudo dnf install gcc-c++`.
+5. Cierra y vuelve a abrir la terminal. Comprueba con `g++ --version`.
+6. Crea una carpeta `cpp-practicas` y dentro un archivo `hola.cpp` con el contenido del ejemplo 1.
+7. Compílalo con `g++ -std=c++17 -Wall -Wextra hola.cpp -o hola` y córrelo con `./hola` (en Windows también puedes escribir `hola.exe`). Las opciones `-Wall -Wextra` activan avisos útiles. Si usas Visual Studio, compila con `cl /EHsc /std:c++17 hola.cpp`.
+
+</Pasos>
+
+Un editor con buen soporte, como VS Code con la extensión de C++, te marca errores mientras escribes. Para proyectos de varios archivos se usa CMake, pero no lo necesitas para aprender.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.cpp" ejecutar="g++ -std=c++17 -Wall -Wextra hola.cpp -o hola && ./hola" salida="Hola, mundo">
+
+```cpp
+#include <iostream>
+
+int main() {
+    std::cout << "Hola, mundo\n";
+    return 0;
+}
+```
+
+`#include <iostream>` trae las herramientas para entrada y salida. `main` es donde empieza el programa y devuelve un número: `0` significa que todo salió bien. `std::cout` es la salida estándar y el operador `<<` le va pasando lo que quieres imprimir. Cada instrucción termina en punto y coma.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables y tipos" archivo="variables.cpp" ejecutar="g++ -std=c++17 -Wall -Wextra variables.cpp -o variables && ./variables" salida="Ana tiene 21 años
+Inicial: A, activa: true
+Precio con IVA: 23.19
+7 / 2 = 3
+7 % 2 = 1
+7 / 2.0 = 3.5">
+
+```cpp
+#include <cmath>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string nombre = "Ana";   // texto
+    int edad = 20;                // entero
+    edad += 1;
+    double precio = 19.99;        // decimal
+    bool activa = true;           // verdadero o falso
+    char inicial = nombre[0];     // un solo carácter
+
+    std::cout << nombre << " tiene " << edad << " años\n";
+    std::cout << "Inicial: " << inicial
+              << ", activa: " << std::boolalpha << activa << "\n";
+
+    // Redondeo a dos decimales
+    double con_iva = std::round(precio * 1.16 * 100) / 100;
+    std::cout << "Precio con IVA: " << con_iva << "\n";
+
+    std::cout << "7 / 2 = " << 7 / 2 << "\n";       // división entera
+    std::cout << "7 % 2 = " << 7 % 2 << "\n";       // residuo
+    std::cout << "7 / 2.0 = " << 7 / 2.0 << "\n";   // división decimal
+    return 0;
+}
+```
+
+Aquí sí declaras el tipo de cada variable. `std::string` guarda texto y se indexa desde cero. `std::boolalpha` hace que los booleanos se impriman como `true` o `false` en lugar de `1` y `0`. Con dos enteros, `/` descarta los decimales; basta con que uno sea `double` para obtener `3.5`.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Funciones, condiciones y ciclos" archivo="control.cpp" ejecutar="g++ -std=c++17 -Wall -Wextra control.cpp -o control && ./control" salida="0 es cero
+1 es impar
+2 es par
+3 es impar
+4 es par
+5 es impar
+Cuenta regresiva: 3
+Cuenta regresiva: 2
+Cuenta regresiva: 1
+Despegue
+10, 7, 4, 1
+Miércoles">
+
+```cpp
+#include <iostream>
+#include <string>
+
+// Una función declara qué devuelve, su nombre y sus parámetros
+std::string clasificar(int n) {
+    if (n == 0) return "cero";
+    if (n % 2 == 0) return "par";
+    return "impar";
+}
+
+int main() {
+    for (int i = 0; i <= 5; ++i) {
+        std::cout << i << " es " << clasificar(i) << "\n";
+    }
+
+    int cuenta = 3;
+    while (cuenta > 0) {
+        std::cout << "Cuenta regresiva: " << cuenta << "\n";
+        --cuenta;
+    }
+    std::cout << "Despegue\n";
+
+    // Contar hacia atrás de 3 en 3
+    for (int i = 10; i >= 1; i -= 3) {
+        if (i != 10) std::cout << ", ";
+        std::cout << i;
+    }
+    std::cout << "\n";
+
+    int dia = 3;
+    switch (dia) {
+        case 1: std::cout << "Lunes\n"; break;
+        case 3: std::cout << "Miércoles\n"; break;
+        default: std::cout << "Otro día\n";
+    }
+    return 0;
+}
+```
+
+El `for` tiene tres partes: inicio, condición y paso. `++i` suma uno antes de seguir. En el `switch` cada caso termina con `break`; si lo olvidas, la ejecución sigue cayendo al caso de abajo. Una función que devuelve un valor debe terminar siempre en un `return`.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="vector, string y algoritmos" archivo="colecciones.cpp" ejecutar="g++ -std=c++17 -Wall -Wextra colecciones.cpp -o colecciones && ./colecciones" salida="Promedio: 8.5
+Mayor: 10
+Resultado: 80 90 100
+Ordenadas: 10 9 8 7
+Anita lava la tina: true
+Hola: false
+leche: 25 pesos
+pan: 12 pesos">
+
+```cpp
+#include <algorithm>
+#include <cctype>
+#include <iostream>
+#include <map>
+#include <numeric>
+#include <string>
+#include <vector>
+
+bool es_palindromo(const std::string& texto) {
+    std::string limpio;
+    for (char c : texto) {
+        if (std::isalpha(static_cast<unsigned char>(c))) {
+            limpio += static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+        }
+    }
+    // Compara el texto con él mismo recorrido al revés
+    return std::equal(limpio.begin(), limpio.end(), limpio.rbegin());
+}
+
+int main() {
+    std::vector<int> notas = {8, 9, 7, 10};
+
+    double suma = std::accumulate(notas.begin(), notas.end(), 0.0);
+    std::cout << "Promedio: " << suma / notas.size() << "\n";
+    std::cout << "Mayor: " << *std::max_element(notas.begin(), notas.end()) << "\n";
+
+    std::cout << "Resultado:";
+    for (int n : notas) {
+        if (n >= 8) std::cout << " " << n * 10;
+    }
+    std::cout << "\n";
+
+    // sort con una lambda que define el orden: de mayor a menor
+    std::sort(notas.begin(), notas.end(), [](int a, int b) { return a > b; });
+    std::cout << "Ordenadas:";
+    for (int n : notas) std::cout << " " << n;
+    std::cout << "\n";
+
+    std::cout << std::boolalpha;
+    std::cout << "Anita lava la tina: " << es_palindromo("Anita lava la tina") << "\n";
+    std::cout << "Hola: " << es_palindromo("Hola") << "\n";
+
+    // map guarda pares clave y valor, ordenados por clave
+    std::map<std::string, int> precios = {{"pan", 12}, {"leche", 25}};
+    for (const auto& [producto, precio] : precios) {
+        std::cout << producto << ": " << precio << " pesos\n";
+    }
+    return 0;
+}
+```
+
+`std::vector` es un arreglo que crece solo y es la colección que usarás casi siempre. Los algoritmos reciben un rango con `begin()` y `end()`. `const std::string&` pasa el texto por referencia constante: no se copia y la función no puede modificarlo. En `es_palindromo`, el ciclo se queda solo con las letras y las pasa a minúsculas; después compara el texto con su versión al revés. `std::map` guarda pares clave y valor ordenados por clave, por eso "leche" sale antes que "pan". Los corchetes con nombres, como `[producto, precio]`, desarman cada par (esto necesita C++17).
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Clases, excepciones y struct" archivo="clases.cpp" ejecutar="g++ -std=c++17 -Wall -Wextra clases.cpp -o clases && ./clases" salida="Ana: 150
+Retiro de 500: false
+Retiro de 30: true
+Ana: 120
+Error: El monto debe ser positivo
+Luis cumple 26 el próximo año">
+
+```cpp
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
+class Cuenta {
+public:
+    Cuenta(std::string titular, double saldo_inicial)
+        : titular_(std::move(titular)), saldo_(saldo_inicial) {}
+
+    void depositar(double monto) {
+        if (monto <= 0) {
+            throw std::invalid_argument("El monto debe ser positivo");
+        }
+        saldo_ += monto;
+    }
+
+    bool retirar(double monto) {
+        if (monto > saldo_) return false;
+        saldo_ -= monto;
+        return true;
+    }
+
+    // const: estos métodos no modifican el objeto
+    const std::string& titular() const { return titular_; }
+    double saldo() const { return saldo_; }
+
+private:                // los datos quedan ocultos
+    std::string titular_;
+    double saldo_;
+};
+
+// struct: igual que class, pero todo es público por defecto
+struct Persona {
+    std::string nombre;
+    int edad;
+};
+
+int main() {
+    Cuenta cuenta("Ana", 100.0);
+    cuenta.depositar(50);
+    std::cout << cuenta.titular() << ": " << cuenta.saldo() << "\n";
+
+    std::cout << std::boolalpha;
+    std::cout << "Retiro de 500: " << cuenta.retirar(500) << "\n";
+    std::cout << "Retiro de 30: " << cuenta.retirar(30) << "\n";
+    std::cout << cuenta.titular() << ": " << cuenta.saldo() << "\n";
+
+    try {
+        cuenta.depositar(-5);
+    } catch (const std::invalid_argument& e) {
+        std::cout << "Error: " << e.what() << "\n";
+    }
+
+    Persona p{"Luis", 25};
+    std::cout << p.nombre << " cumple " << p.edad + 1 << " el próximo año\n";
+    return 0;
+}
+```
+
+La lista después de los dos puntos en el constructor inicializa los campos directamente; es la forma correcta de hacerlo. Los datos van en `private` y el mundo exterior solo ve los métodos públicos. Los métodos marcados `const` prometen no cambiar el objeto. `cout` imprime `150` y no `150.0`, porque no muestra decimales sobrantes. `throw` lanza un error y `catch` lo atrapa.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Referencias, punteros y RAII" archivo="memoria.cpp" ejecutar="g++ -std=c++17 -Wall -Wextra memoria.cpp -o memoria && ./memoria" salida="Copia: 5
+Referencia: 10
+Puntero: 11
+Abro archivo A
+Abro archivo B
+Trabajando
+Cierro archivo B
+Cierro archivo A
+Fuera del bloque">
+
+```cpp
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+void duplicar_copia(int x) { x *= 2; }       // recibe una copia
+void duplicar(int& x) { x *= 2; }            // recibe una referencia
+
+// Un objeto que abre algo al crearse y lo cierra al destruirse
+class Recurso {
+public:
+    explicit Recurso(std::string nombre) : nombre_(std::move(nombre)) {
+        std::cout << "Abro " << nombre_ << "\n";
+    }
+    ~Recurso() { std::cout << "Cierro " << nombre_ << "\n"; }
+
+private:
+    std::string nombre_;
+};
+
+int main() {
+    int n = 5;
+    duplicar_copia(n);
+    std::cout << "Copia: " << n << "\n";        // sigue valiendo 5
+    duplicar(n);
+    std::cout << "Referencia: " << n << "\n";   // ahora vale 10
+
+    int* p = &n;     // p guarda la dirección de n
+    *p += 1;         // *p es el valor al que apunta
+    std::cout << "Puntero: " << n << "\n";
+
+    {
+        Recurso a("archivo A");                          // vive en la pila
+        auto b = std::make_unique<Recurso>("archivo B"); // propietario único en el heap
+        std::cout << "Trabajando\n";
+    }   // al cerrar el bloque se destruyen en orden inverso: primero b, luego a
+
+    std::cout << "Fuera del bloque\n";
+    return 0;
+}
+```
+
+Pasar por valor copia el argumento; pasar por referencia (`int&`) modifica el original. `&n` obtiene la dirección y `*p` accede al valor. Lo más importante es lo de abajo: `Recurso` se limpia solo porque su destructor corre al salir del bloque, y `unique_ptr` libera la memoria del heap sin que escribas `delete`. Esa es la idea de RAII, y es por qué en C++ moderno casi nunca ves `new` ni `delete`.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Variables sin inicializar">
+
+`int total;` sin valor contiene basura, y leerla es comportamiento indefinido: a veces "funciona" y a veces no. Inicializa siempre: `int total = 0;`. Los avisos `-Wall -Wextra` suelen detectar el caso evidente, pero no todos.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Salirte del vector con corchetes">
+
+`notas[10]` en un vector de cuatro elementos no da error: lee memoria ajena y el programa puede seguir como si nada o fallar más tarde. Usa `notas.at(10)` mientras aprendes: lanza una excepción clara. También compila con `-fsanitize=address,undefined` en GCC o Clang para detectar estos fallos al ejecutar.
+
+</Callout>
+
+<Callout tipo="warning" titulo="new sin delete">
+
+Si escribes `int* datos = new int[100];` y no haces `delete[] datos;`, pierdes esa memoria hasta que termine el programa. Si lanzas una excepción antes del `delete`, también. La solución moderna es no usar `new`: elige `std::vector` o `std::make_unique`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Restar uno al tamaño de un vector vacío">
+
+`v.size()` es un entero sin signo. Si el vector está vacío, `v.size() - 1` no da `-1`: da un número enorme, y un ciclo `for (i = 0; i <= v.size() - 1; ...)` no termina cuando esperas. Comprueba `v.empty()` antes o escribe la condición como `i < v.size()`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Acentos rotos en la consola de Windows">
+
+Si `"años"` se ve con símbolos raros, el problema suele ser la codificación de la consola, no tu código. Guarda el archivo como UTF-8 y corre `chcp 65001` en la terminal antes de ejecutar el programa. En Windows Terminal moderno suele funcionar sin tocar nada.
+
+</Callout>
+
+## Buenas prácticas
+
+- Compila siempre con `-Wall -Wextra` y atiende cada aviso; al aprender, agrega `-fsanitize=address,undefined`.
+- Prefiere `std::vector` y `std::string` sobre arreglos y cadenas de C.
+- Evita `new` y `delete` desnudos: usa `std::make_unique` y contenedores. Así el destructor limpia por ti.
+- Pasa objetos grandes por referencia constante (`const std::string&`) y los números pequeños por valor.
+- Marca `const` todo lo que no cambie, incluidos los métodos que no modifican el objeto.
+- Inicializa todas las variables al declararlas.
+- No uses `using namespace std;` en archivos de cabecera; en archivos de práctica puede ser cómodo, pero acostúmbrate a escribir `std::`.
+- Usa `.at()` para depurar y `static_cast` en lugar de las conversiones al estilo C.
+- Divide tu código en archivos `.hpp` y `.cpp` cuando el proyecto crezca, y usa CMake para compilarlo.
+
+## Siguiente paso
+
+Ya conoces los tipos, las funciones, el vector, las clases y la idea de RAII. Sigue con herencia y funciones virtuales, plantillas, lambdas a fondo, y el resto de la biblioteca estándar. Después aprende a dividir un proyecto en archivos y a compilarlo con CMake, y practica con retos en línea.
+
+Para las reglas finas del lenguaje consulta [cppreference en español](https://es.cppreference.com/w/). Si vienes de C, mira primero [C desde cero](/guias/c/); si buscas un lenguaje más seguro con ideas parecidas, compara con [Rust desde cero](/guias/rust/). Guarda cada ejercicio en un repositorio con [Git y GitHub desde cero](/guias/git/). Todos los recursos están en [la biblioteca de C++](/biblioteca/cpp/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import CardContenido from '@components/ui/CardContenido.astro';
+import FiltroChips from '@components/ui/FiltroChips.astro';
+import { temaPorSlug } from '@data/temas';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
+
+const lista = (await getCollection('retos', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+const temasUsados = [...new Set(lista.map((r) => r.data.tema))];
+const opcionesTema = temasUsados
+  .map((s) => ({ valor: s, etiqueta: temaPorSlug(s)?.nombre ?? s, conteo: lista.filter((r) => r.data.tema === s).length }))
+  .sort((a, b) => a.etiqueta.localeCompare(b.etiqueta, 'es'));
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Retos', href: '/retos/' },
+];
+---
+
+<ListadoLayout
+  titulo="Retos de práctica"
+  descripcion="Ejercicios cortos con pistas y solución para practicar de verdad. Intenta resolverlos tú primero: aprender a programar es programar."
+  path="/retos/"
+  eyebrow="Practica"
+  migas={migas}
+  total={lista.length}
+  placeholder="Busca un reto: fizzbuzz, palíndromo, arreglos..."
+  unidad="retos"
+>
+  <Fragment slot="intro">
+    <p class="mt-6 text-sm text-muted">Tu progreso se guarda solo en este navegador. Completados: <strong class="text-fg" data-prog-count="reto:">0</strong> de {lista.length}.</p>
+  </Fragment>
+  <Fragment slot="filtros">
+    <FiltroChips grupo="tema" etiqueta="Lenguaje" opciones={opcionesTema} />
+    <FiltroChips grupo="nivel" etiqueta="Nivel" opciones={['principiante', 'intermedio', 'avanzado'].map((n) => ({ valor: n, etiqueta: ETIQUETAS_NIVEL[n as keyof typeof ETIQUETAS_NIVEL] }))} />
+  </Fragment>
+
+  {lista.length === 0 && <p class="card p-8 text-center text-muted">Los primeros retos están en camino.</p>}
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {lista.map((r) => {
+      const tema = temaPorSlug(r.data.tema);
+      return (
+        <CardContenido
+          href={`/retos/${r.id}/`}
+          titulo={r.data.titulo}
+          descripcion={r.data.descripcion}
+          badges={[ETIQUETAS_NIVEL[r.data.nivel], tema?.nombre ?? r.data.tema]}
+          meta={`${r.data.tiempo} min`}
+          tema={tema}
+          progId={`reto:${r.id}`}
+          datos={{ tema: r.data.tema, nivel: r.data.nivel }}
+          texto={`${r.data.titulo} ${r.data.descripcion} ${r.data.conceptos.join(' ')}`}
+        />
+      );
+    })}
+  </div>
+</ListadoLayout>

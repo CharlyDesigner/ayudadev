@@ -1,0 +1,335 @@
+---
+titulo: 'LaTeX desde cero'
+descripcion: 'Qué es LaTeX, cómo instalarlo o usarlo en línea, y cómo crear un artículo con fórmulas, tablas, figuras, bibliografía y una presentación.'
+tema: latex
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['latex-learnlatex-es', 'latex-manual-aprende-con-alf', 'latex-introduccion-no-tan-corta', 'latex-wikilibros-manual']
+requisitos: ['Saber usar un editor de texto', 'Tener ganas de escribir tus documentos con comandos en lugar de botones']
+etiquetas: ['latex', 'pdflatex', 'formulas', 'bibliografia', 'beamer']
+orden: 73
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+LaTeX es un sistema para componer documentos. En lugar de arrastrar cosas en un procesador de texto, escribes un archivo de texto con instrucciones y un programa lo convierte en un PDF con tipografía de imprenta. Se usa mucho en ciencia, ingeniería y matemáticas para artículos, tesis, libros y presentaciones, sobre todo por sus fórmulas y su manejo de bibliografía.
+
+El modelo mental que necesitas:
+
+- **Escribes contenido, LaTeX decide la forma**: marcas qué es un título, una sección o una lista, y el sistema se encarga de la numeración, los espacios y los saltos de página.
+- **Se compila**: tu archivo `.tex` pasa por un compilador (`pdflatex`, `xelatex` o `lualatex`) que produce un `.pdf`. Si te equivocas, el compilador te avisa en un registro.
+- **Comandos y entornos**: un comando se escribe `\comando[opciones]{argumento}`. Un entorno es un bloque que abre con `\begin{nombre}` y cierra con `\end{nombre}`.
+- **Preámbulo y cuerpo**: todo lo que va antes de `\begin{document}` es el preámbulo, donde eliges la clase del documento y cargas paquetes. El contenido va después.
+- **Paquetes**: extensiones que agregan funciones, como `amsmath` para matemáticas, `graphicx` para imágenes o `biblatex` para bibliografía.
+- **Varias pasadas**: índices, referencias cruzadas y citas se resuelven en varias compilaciones. Por eso a veces ves signos de interrogación hasta que compilas otra vez.
+- **Archivos auxiliares**: junto al PDF aparecen `.aux`, `.log`, `.toc` y otros. Son temporales; el que debes leer cuando falla algo es el `.log`.
+- **Texto plano**: tus documentos funcionan bien con Git y se pueden comparar versión por versión.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **La opción más rápida**: usa un editor en línea como [Overleaf](https://www.overleaf.com/). Creas un proyecto, escribes y el PDF aparece al lado, sin instalar nada. Es buena para empezar y para trabajar en equipo.
+2. **Windows**: instala [MiKTeX](https://miktex.org/download) o [TeX Live](https://tug.org/texlive/). MiKTeX descarga los paquetes que te faltan cuando los pides.
+3. **macOS**: instala [MacTeX](https://tug.org/mactex/), la distribución de TeX Live para Mac.
+4. **Linux**: instala TeX Live con el gestor de paquetes de tu distribución. En Debian y Ubuntu, por ejemplo, busca los paquetes de TeX Live para LaTeX, para el idioma español, y también `biber` y `latexmk`, que usarás más abajo. Los nombres exactos pueden variar según la versión.
+5. Un editor ayuda mucho. Visual Studio Code con la extensión LaTeX Workshop o TeXstudio compilan y muestran el PDF con un clic.
+6. Comprueba la instalación con `pdflatex --version` y `latexmk -v` en la terminal. Los dos deben responder con un número de versión.
+
+</Pasos>
+
+Los ejemplos de esta guía usan `pdflatex` con codificación UTF-8, que es la que LaTeX asume hoy por defecto, así que puedes escribir acentos y eñes directamente. Guarda cada ejemplo en su propio archivo y compílalo con el comando indicado.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Tu primer documento" archivo="hola.tex" ejecutar="pdflatex hola.tex" salida="Se crea hola.pdf: una página con el título, el autor, la fecha y un párrafo con acentos y eñe.">
+
+```latex
+% Clase del documento: artículo con letra de 12 puntos
+\documentclass[12pt]{article}
+
+% Fuentes con soporte para acentos y eñes, e idioma español
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+% Datos del título
+\title{Mi primer documento}
+\author{Ana Pérez}
+\date{Octubre de 2026}
+
+\begin{document}
+\maketitle
+
+Hola, mundo. Este es mi primer documento en \LaTeX. Los acentos y la eñe funcionan sin trucos: canción, año, pingüino.
+
+\end{document}
+```
+
+El símbolo `%` inicia un comentario. `\documentclass` define el tipo de documento (`article`, `report`, `book`, `beamer`). El paquete `babel` con la opción `spanish` traduce los nombres automáticos ("Índice general", "Figura") y activa la separación de palabras en español. `\maketitle` pone el título que definiste arriba. Si el compilador termina sin errores, verás una línea final que dice que escribió `hola.pdf`; ábrelo para ver el resultado.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Secciones, listas y una tabla" archivo="informe.tex" ejecutar="pdflatex informe.tex && pdflatex informe.tex" salida="Se crea informe.pdf: portada con título, índice general, dos secciones, una lista numerada y una tabla con la leyenda Tabla 1.">
+
+```latex
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}   % es-tabla: "Tabla" en lugar de "Cuadro"
+\usepackage{booktabs}   % líneas de tabla más limpias
+
+\title{Informe de ventas}
+\author{Ana Pérez}
+\date{Octubre de 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Introducción}
+Este informe resume las ventas del trimestre.
+
+\section{Resultados}
+
+\subsection{Productos más vendidos}
+\begin{enumerate}
+  \item Cuadernos
+  \item Plumas
+  \item Mochilas
+\end{enumerate}
+
+\subsection{Ventas por mes}
+\begin{table}[htbp]
+  \centering
+  \caption{Ventas por mes (datos de ejemplo)}
+  \label{tab:ventas}
+  \begin{tabular}{lr}
+    \toprule
+    Mes & Ventas \\
+    \midrule
+    Julio & 120 \\
+    Agosto & 150 \\
+    Septiembre & 180 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+La tabla~\ref{tab:ventas} muestra el crecimiento mes a mes.
+
+\end{document}
+```
+
+`\section` y `\subsection` numeran solos y alimentan el índice de `\tableofcontents`. La opción `es-tabla` de babel hace que la leyenda diga "Tabla" y no "Cuadro", que es el nombre por defecto en español. Compilamos dos veces porque la primera escribe las entradas del índice en un archivo auxiliar y la segunda las lee. En `tabular`, `lr` significa una columna alineada a la izquierda y otra a la derecha; `&` separa columnas y `\\` termina la fila. Con `\label` y `\ref` apuntas a la tabla por nombre en lugar de escribir un número a mano, y el `~` evita que el número quede solo en otra línea.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Fórmulas: en línea, numeradas y alineadas" archivo="formulas.tex" ejecutar="pdflatex formulas.tex && pdflatex formulas.tex" salida="Se crea formulas.pdf: la identidad de Euler dentro del párrafo, la fórmula general numerada (1), dos ecuaciones alineadas numeradas (2) y (3), una matriz con una integral y la referencia a la ecuación (1).">
+
+```latex
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}   % entornos y símbolos matemáticos
+
+\begin{document}
+
+La identidad de Euler es $e^{i\pi} + 1 = 0$, escrita dentro del párrafo.
+
+La fórmula general para $ax^2 + bx + c = 0$ es
+\begin{equation}
+  x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+  \label{eq:cuadratica}
+\end{equation}
+
+La suma de los primeros $n$ números naturales:
+\begin{align}
+  \sum_{k=1}^{n} k &= 1 + 2 + \dots + n \\
+                   &= \frac{n(n+1)}{2} \label{eq:gauss}
+\end{align}
+
+Una matriz y una integral sin numerar:
+\[
+  A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix},
+  \qquad
+  \int_0^1 x^2 \, dx = \frac{1}{3}
+\]
+
+Recuerda la ecuación~\eqref{eq:cuadratica}.
+
+\end{document}
+```
+
+Entre signos de dólar `$...$` escribes matemáticas en línea. `equation` numera la fórmula y `align` alinea varias líneas en el `&`. Con `\[ ... \]` obtienes una fórmula centrada sin número. `^` es superíndice, `_` es subíndice, `\frac{a}{b}` una fracción y `\sqrt{x}` una raíz. `\eqref` pone el número entre paréntesis. Cuando necesites un símbolo y no recuerdes su comando, busca "detexify" en tu navegador: dibujas el símbolo y te sugiere el comando.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Bibliografía con biblatex" archivo="articulo.tex" ejecutar="latexmk -pdf -interaction=nonstopmode articulo.tex" salida="Se crea articulo.pdf: el texto con las citas (Lamport 1994) y (Knuth 1984) y, al final, una lista con las dos referencias.">
+
+Primero crea `referencias.bib` con tus fuentes, una entrada por obra:
+
+```bibtex
+@book{lamport1994,
+  author    = {Leslie Lamport},
+  title     = {{LaTeX}: A Document Preparation System},
+  edition   = {2},
+  publisher = {Addison-Wesley},
+  year      = {1994},
+}
+
+@book{knuth1984,
+  author    = {Donald E. Knuth},
+  title     = {The {TeX}book},
+  publisher = {Addison-Wesley},
+  year      = {1984},
+}
+```
+
+Después el documento `articulo.tex`:
+
+```latex
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{csquotes}   % lo recomienda biblatex junto con babel
+\usepackage[backend=biber, style=authoryear]{biblatex}
+\addbibresource{referencias.bib}
+
+\begin{document}
+
+\section{Antecedentes}
+LaTeX fue creado por Leslie Lamport como una capa de comandos sobre TeX \parencite{lamport1994}. TeX es obra de Donald Knuth \parencite{knuth1984}.
+
+\printbibliography
+
+\end{document}
+```
+
+`\addbibresource` indica el archivo `.bib`, `\parencite` inserta la cita con el estilo autor-año y `\printbibliography` imprime la lista. Para que todo se resuelva hay que correr varios programas en orden: `pdflatex`, luego `biber articulo` y luego `pdflatex` dos veces más. `latexmk` hace esa secuencia por ti y repite lo necesario, por eso conviene usarlo. Las llaves dobles en `{LaTeX}` y `{TeX}` protegen las mayúsculas del título. Si cambias de estilo (por ejemplo `style=numeric`), solo cambias esa opción y todas las citas se actualizan.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Figuras, márgenes y referencias cruzadas" archivo="figura.tex" ejecutar="latexmk -pdf -interaction=nonstopmode figura.tex" salida="Se crea figura.pdf: una imagen de ejemplo centrada con la leyenda Figura 1 y un párrafo que cita la figura por su número.">
+
+```latex
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[margin=2.5cm]{geometry}   % márgenes
+\usepackage{graphicx}                 % para incluir imágenes
+\usepackage{hyperref}                 % enlaces clicables; se carga casi al final
+
+\begin{document}
+
+\section{Resultados}
+En la figura~\ref{fig:ejemplo} se muestra la imagen de prueba.
+
+\begin{figure}[htbp]
+  \centering
+  % example-image-a es una imagen que trae el paquete mwe; cámbiala por tu archivo
+  \includegraphics[width=0.5\textwidth]{example-image-a}
+  \caption{Imagen de ejemplo}
+  \label{fig:ejemplo}
+\end{figure}
+
+Más información en \url{https://www.learnlatex.org/es/}.
+
+\end{document}
+```
+
+`figure` es un entorno flotante: LaTeX decide dónde colocarlo (`htbp` le da preferencias: aquí, arriba, abajo o en página aparte) para no dejar huecos. `\caption` pone la leyenda y el número, y `\label` debe ir después del `\caption`. `width=0.5\textwidth` ajusta la imagen a la mitad del ancho del texto. Para usar tu propia imagen, ponla en la misma carpeta y cambia el nombre en `\includegraphics`; funcionan PNG, JPG y PDF. `geometry` te deja controlar los márgenes sin tocar medidas a mano.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Una presentación con Beamer" archivo="presentacion.tex" ejecutar="pdflatex presentacion.tex" salida="Se crea presentacion.pdf: tres diapositivas, una de portada, una con una lista de tres puntos y una con la fórmula de Einstein.">
+
+```latex
+\documentclass{beamer}
+\usetheme{Madrid}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+
+\title{Introducción a \LaTeX}
+\author{Ana Pérez}
+\date{Octubre de 2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{¿Por qué LaTeX?}
+  \begin{itemize}
+    \item Fórmulas con calidad de imprenta
+    \item Bibliografía automática
+    \item Tu texto es un archivo que puedes versionar con Git
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Una fórmula}
+  \[ E = mc^2 \]
+\end{frame}
+
+\end{document}
+```
+
+En Beamer cada `frame` es una diapositiva. `\titlepage` arma la portada con los datos que pusiste arriba. El tema `Madrid` es uno de los que vienen incluidos; cámbialo cambiando solo el nombre en `\usetheme`. El mismo archivo de texto genera un PDF que puedes proyectar en pantalla completa.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Undefined control sequence">
+
+El compilador encontró un comando que no conoce. Puede ser una falta de ortografía (`\textbff`), o un comando de un paquete que no cargaste en el preámbulo (por ejemplo, usar `\includegraphics` sin `\usepackage{graphicx}`). Mira el número de línea que te indica el registro y revisa ese comando.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Missing $ inserted">
+
+Escribiste algo de matemáticas fuera de modo matemático. Los casos típicos son un guion bajo `_` o un acento circunflejo `^` en texto normal, o una fórmula sin signos de dólar. Encierra la fórmula entre `$...$` o escapa el carácter con `\_`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Caracteres reservados que se comen tu texto">
+
+En LaTeX son especiales `%`, `&`, `$`, `#`, `_`, `{`, `}`, `~`, `^` y `\`. Para escribirlos tal cual usa `\%`, `\&`, `\$`, `\#`, `\_`, `\{`, `\}`. Un `%` sin escapar convierte el resto de la línea en comentario, y desaparece sin avisar. Te pasará con porcentajes en cada informe.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Signos ?? en referencias y citas">
+
+Si ves `??` en lugar de un número de figura o `[?]` en una cita, LaTeX aún no resolvió la referencia. Compila otra vez, o dos. Para citas con `biblatex` ejecuta también `biber`. Lo más cómodo es usar `latexmk`, que repite las pasadas necesarias hasta que todo queda estable.
+
+</Callout>
+
+<Callout tipo="warning" titulo="File not found al cargar un paquete">
+
+Un error como `File 'booktabs.sty' not found` significa que ese paquete no está instalado. MiKTeX normalmente ofrece instalarlo en el momento. En TeX Live, usa su gestor `tlmgr` o instala el paquete de tu distribución. Y cuando haya muchos errores seguidos, arregla solo el primero y vuelve a compilar: los siguientes suelen ser consecuencia de ese.
+
+</Callout>
+
+## Buenas prácticas
+
+- Empieza siempre con una plantilla mínima que compile y agrega cosas poco a poco, compilando en cada paso.
+- Lee el primer error del registro. Los demás suelen ser consecuencia de ese.
+- Usa `\label` y `\ref` en lugar de escribir números a mano.
+- Mantén las fuentes de bibliografía en un archivo `.bib` y reutilízalo entre documentos.
+- Divide los documentos largos en varios archivos con `\input` o `\include`.
+- Carga solo los paquetes que necesitas y fíjate en la documentación de cada uno.
+- Usa `latexmk` para compilar. Vacía los archivos auxiliares con `latexmk -c`.
+- Si usas Git, ignora los archivos generados (`*.aux`, `*.log`, `*.toc`, `*.bbl`, `*.bcf`, `*.run.xml`) y versiona el `.tex` y el `.bib`.
+- Para tablas largas, ecuaciones o gráficos complejos, busca el paquete adecuado antes de inventar una solución: casi siempre existe.
+
+## Siguiente paso
+
+Ya compilaste tu primer documento, escribiste fórmulas, armaste tablas y figuras, citaste fuentes y hiciste una presentación. Lo que sigue es escribir de verdad: pasa un trabajo escolar o un artículo a LaTeX y consulta cada duda en las lecciones de learnlatex.org o en el manual de la biblioteca. Más adelante explora gráficos con TikZ, plantillas de tesis de tu universidad y estilos de bibliografía.
+
+Si quieres versionar tus documentos, la guía de [Git y GitHub](/guias/git/) es el siguiente paso natural. Y si vas a automatizar la compilación, la de [Linux y terminal](/guias/linux/) te enseña a escribir scripts. Todos los recursos están en [la biblioteca de LaTeX](/biblioteca/latex/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

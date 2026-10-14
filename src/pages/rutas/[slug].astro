@@ -1,0 +1,156 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import Icon from '@components/ui/Icon.astro';
+import ProgresoBoton from '@components/ui/ProgresoBoton.astro';
+import { temaPorSlug } from '@data/temas';
+import { recursoPorId } from '@data/library';
+import { ETIQUETAS_NIVEL, ETIQUETAS_TIPO } from '@lib/schemas';
+import { migasLd, articuloLd } from '@lib/seo';
+import { SITE } from '@data/site';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('rutas', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden);
+  return lista.map((e) => ({ params: { slug: e.id }, props: { e } }));
+}
+
+const { e } = Astro.props;
+const { Content } = await render(e);
+const [guias, retos, proyectos] = await Promise.all([getCollection('guias'), getCollection('retos'), getCollection('proyectos')]);
+const path = `/rutas/${e.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Rutas de estudio', href: '/rutas/' },
+  { nombre: e.data.titulo, href: path },
+];
+
+const pasos = e.data.pasos.map((p, i) => {
+  const guia = p.guia ? guias.find((g) => g.id === p.guia) : undefined;
+  if (p.guia && !guia) throw new Error(`Ruta ${e.id}: la guía "${p.guia}" no existe`);
+  const tema = p.tema ? temaPorSlug(p.tema) : undefined;
+  if (p.tema && !tema) throw new Error(`Ruta ${e.id}: el tema "${p.tema}" no existe`);
+  const recs = p.recursos.map((id) => {
+    const r = recursoPorId(id);
+    if (!r) throw new Error(`Ruta ${e.id}: el recurso "${id}" no existe`);
+    return r;
+  });
+  const rts = p.retos.map((s) => {
+    const r = retos.find((x) => x.id === s);
+    if (!r) throw new Error(`Ruta ${e.id}: el reto "${s}" no existe`);
+    return r;
+  });
+  const pys = p.proyectos.map((s) => {
+    const r = proyectos.find((x) => x.id === s);
+    if (!r) throw new Error(`Ruta ${e.id}: el proyecto "${s}" no existe`);
+    return r;
+  });
+  return { ...p, i, guia, tema, recs, rts, pys };
+});
+---
+
+<BaseLayout
+  title={`Ruta: ${e.data.titulo}`}
+  description={e.data.descripcion}
+  path={path}
+  type="article"
+  publishedTime={e.data.publicado}
+  jsonLd={[
+    migasLd(migas),
+    articuloLd({ tipo: 'TechArticle', titulo: e.data.titulo, descripcion: e.data.descripcion, path, publicado: e.data.publicado, actualizado: e.data.actualizado }),
+  ]}
+>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+
+    <header class="max-w-3xl">
+      <ul class="mb-4 flex items-center gap-2" aria-label="Tecnologías de la ruta">
+        {e.data.logos.slice(0, 6).map((l) => (
+          <li class="logo-tile grid h-11 w-11 place-items-center rounded-2xl p-2.5"><img src={`/logos/${l}.svg`} alt={l} width="32" height="32" class="h-full w-full object-contain" /></li>
+        ))}
+      </ul>
+      <p class="eyebrow">Ruta de estudio</p>
+      <h1 class="mt-3 text-3xl font-bold tracking-tight text-balance sm:text-5xl">{e.data.titulo}</h1>
+      <p class="mt-4 text-lg text-pretty text-muted">{e.data.descripcion}</p>
+      <dl class="mt-6 grid gap-3 sm:grid-cols-3">
+        <div class="card p-4"><dt class="text-xs text-muted">Nivel</dt><dd class="font-semibold">{ETIQUETAS_NIVEL[e.data.nivel]}</dd></div>
+        <div class="card p-4"><dt class="text-xs text-muted">Duración estimada</dt><dd class="font-semibold">{e.data.duracion}</dd></div>
+        <div class="card p-4"><dt class="text-xs text-muted">Pasos</dt><dd class="font-semibold">{e.data.pasos.length}</dd></div>
+      </dl>
+      <p class="mt-5 text-sm"><span class="font-medium">Es para ti si:</span> <span class="text-muted">{e.data.para}</span></p>
+
+      <div class="mt-6 rounded-[var(--radius-card)] border border-line bg-surface p-5">
+        <div class="mb-2 flex items-center justify-between text-sm">
+          <span class="font-semibold">Tu progreso</span>
+          <span class="text-muted" data-prog-ruta={e.id} data-prog-total={e.data.pasos.length}><span data-prog-text>Aún no empiezas</span></span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-label="Tu progreso en la ruta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-prog-ruta={e.id} data-prog-total={e.data.pasos.length}>
+          <div class="progress-fill" data-prog-fill></div>
+        </div>
+        <p class="mt-2 text-xs text-muted">Se guarda solo en este navegador.</p>
+      </div>
+    </header>
+
+    <ol class="mt-12 max-w-3xl space-y-5" aria-label="Pasos de la ruta">
+      {pasos.map((p) => (
+        <li class="card relative p-5 sm:p-6" data-prog-item>
+          <div class="flex items-start gap-4">
+            <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-accent text-sm font-bold text-on-accent" aria-hidden="true">{p.i + 1}</span>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-start justify-between gap-2">
+                <h2 class="prog-titulo text-xl font-semibold leading-snug">{p.titulo}</h2>
+                {p.duracion && <span class="badge inline-flex items-center gap-1"><Icon name="clock" class="h-3 w-3" /> {p.duracion}</span>}
+              </div>
+              <p class="mt-2 text-[0.95rem] leading-relaxed text-muted">{p.descripcion}</p>
+
+              {p.meta && (
+                <p class="mt-3 flex gap-2 rounded-2xl bg-surface-2 p-3 text-sm"><Icon name="check" class="mt-0.5 h-4 w-4 shrink-0 text-accent-ink" /><span><strong>Al terminar podrás:</strong> {p.meta}</span></p>
+              )}
+
+              <div class="mt-4 flex flex-wrap gap-2">
+                {p.guia && <a href={`/guias/${p.guia.id}/`} class="btn btn-primary btn-sm"><Icon name="code" class="h-4 w-4" /> Guía: {p.guia.data.titulo}</a>}
+                {p.tema && <a href={`/biblioteca/${p.tema.slug}/`} class="btn btn-secondary btn-sm">Biblioteca de {p.tema.nombre}</a>}
+              </div>
+
+              {p.recs.length > 0 && (
+                <div class="mt-5">
+                  <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Recursos gratis para este paso</p>
+                  <ul class="space-y-1.5">
+                    {p.recs.map((r) => (
+                      <li class="flex flex-wrap items-baseline gap-x-2 text-sm">
+                        <a href={r.url} rel="noopener" target="_blank" class="font-medium hover:text-accent-ink">{r.titulo}</a>
+                        <span class="text-xs text-muted">{ETIQUETAS_TIPO[r.tipo]} · {r.autor}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {(p.rts.length > 0 || p.pys.length > 0) && (
+                <div class="mt-5">
+                  <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted">Practica</p>
+                  <ul class="flex flex-wrap gap-2">
+                    {p.rts.map((r) => <li><a href={`/retos/${r.id}/`} class="chip">Reto: {r.data.titulo}</a></li>)}
+                    {p.pys.map((r) => <li><a href={`/proyectos/${r.id}/`} class="chip">Proyecto: {r.data.titulo}</a></li>)}
+                  </ul>
+                </div>
+              )}
+
+              <div class="mt-5"><ProgresoBoton id={`ruta:${e.id}:${p.i}`} textoOff="Marcar paso como completado" textoOn="Paso completado" compacto /></div>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ol>
+
+    <article class="prose mt-12">
+      <Content />
+    </article>
+
+    <div class="mt-12 flex max-w-3xl flex-wrap gap-2">
+      <a href="/rutas/" class="btn btn-secondary">Ver todas las rutas</a>
+      <a href={`${SITE.repo}/issues/new?template=nuevo-recurso.yml&title=${encodeURIComponent('[Ruta] ' + e.data.titulo + ': ')}`} rel="noopener" target="_blank" class="btn btn-ghost">Sugerir un cambio a esta ruta</a>
+    </div>
+  </div>
+</BaseLayout>
+

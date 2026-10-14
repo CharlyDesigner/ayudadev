@@ -1,0 +1,97 @@
+---
+import { getCollection } from 'astro:content';
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import FiltroChips from '@components/ui/FiltroChips.astro';
+import { temaPorSlug } from '@data/temas';
+import { normalizar } from '@lib/text';
+
+const CATEGORIAS: Record<string, string> = {
+  general: 'General',
+  programacion: 'Programación',
+  web: 'Web',
+  datos: 'Datos',
+  ia: 'IA',
+  herramientas: 'Herramientas',
+  seguridad: 'Seguridad',
+  redes: 'Redes',
+};
+const todos = (await getCollection('glosario')).map((t) => t.data).sort((a, b) => normalizar(a.termino).localeCompare(normalizar(b.termino), 'es'));
+const letraDe = (s: string) => {
+  const l = normalizar(s).charAt(0).toUpperCase();
+  return /[A-Z]/.test(l) ? l : '#';
+};
+const porLetra = new Map<string, typeof todos>();
+for (const t of todos) porLetra.set(letraDe(t.termino), [...(porLetra.get(letraDe(t.termino)) ?? []), t]);
+const letras = [...porLetra.keys()].sort();
+const porId = new Map(todos.map((t) => [t.id, t]));
+const cats = Object.keys(CATEGORIAS)
+  .map((c) => ({ valor: c, etiqueta: CATEGORIAS[c]!, conteo: todos.filter((t) => t.categoria === c).length }))
+  .filter((c) => c.conteo > 0);
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Glosario', href: '/glosario/' },
+];
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTermSet',
+  name: 'Glosario de programación de AyudaDev',
+  inLanguage: 'es-MX',
+  hasDefinedTerm: todos.slice(0, 300).map((t) => ({ '@type': 'DefinedTerm', name: t.termino, description: t.definicion, url: `https://dev.carlosnavarro.site/glosario/#${t.id}` })),
+};
+---
+
+<ListadoLayout
+  titulo="Glosario de programación"
+  descripcion="Los términos que escuchas cuando empiezas, explicados en español sencillo y con un ejemplo: API, framework, commit, token, prompt, recursión y muchos más."
+  path="/glosario/"
+  eyebrow="Referencia"
+  migas={migas}
+  total={todos.length}
+  placeholder="Busca un término: API, git, token, closure..."
+  unidad="términos"
+  jsonLd={[ld]}
+>
+  <Fragment slot="filtros">
+    <FiltroChips grupo="categoria" etiqueta="Categoría" opciones={cats} />
+  </Fragment>
+
+  {todos.length === 0 && <p class="card p-8 text-center text-muted">El glosario está en camino.</p>}
+
+  <nav aria-label="Ir a la letra" class="sticky top-16 z-20 -mx-4 mb-6 overflow-x-auto border-b border-line bg-bg/90 px-4 py-2 backdrop-blur sm:mx-0 sm:rounded-full sm:border sm:px-3">
+    <ul class="flex gap-1">
+      {letras.map((l) => <li><a href={`#letra-${l}`} class="grid h-8 min-w-8 place-items-center rounded-full px-2 text-sm font-semibold text-muted hover:bg-surface hover:text-fg">{l}</a></li>)}
+    </ul>
+  </nav>
+
+  <div class="space-y-10">
+    {letras.map((l) => (
+      <section data-chip-seccion aria-labelledby={`letra-${l}`}>
+        <h2 id={`letra-${l}`} class="mb-3 text-3xl font-bold tracking-tight text-accent-ink">{l}</h2>
+        <dl class="grid gap-3 md:grid-cols-2">
+          {porLetra.get(l)!.map((t) => {
+            const tema = t.tema ? temaPorSlug(t.tema) : undefined;
+            return (
+              <div id={t.id} class="card scroll-mt-28 p-5" data-item data-categoria={t.categoria} data-texto={`${t.termino} ${t.definicion}`}>
+                <dt class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-lg font-semibold">{t.termino}</span>
+                  <span class="badge">{CATEGORIAS[t.categoria]}</span>
+                </dt>
+                <dd class="mt-2 text-sm leading-relaxed">
+                  {t.definicion}
+                  {t.ejemplo && <span class="mt-2 block rounded-xl bg-surface-2 p-3 font-mono text-[0.8rem] leading-relaxed whitespace-pre-wrap text-muted">{t.ejemplo}</span>}
+                  {(t.relacionados.length > 0 || tema) && (
+                    <span class="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted">
+                      {t.relacionados.length > 0 && <span>Ver también:</span>}
+                      {t.relacionados.map((r) => porId.has(r) && <a href={`#${r}`} class="chip !px-2 !py-0.5 !text-xs">{porId.get(r)!.termino}</a>)}
+                      {tema && <a href={`/biblioteca/${tema.slug}/`} class="chip !px-2 !py-0.5 !text-xs">Aprender {tema.nombre}</a>}
+                    </span>
+                  )}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      </section>
+    ))}
+  </div>
+</ListadoLayout>

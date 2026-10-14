@@ -1,0 +1,259 @@
+---
+titulo: 'Vim y atajos de editor'
+descripcion: 'Cómo salir de Vim, modos, movimiento, edición, búsqueda y reemplazo, y los atajos más útiles de nano y VS Code para ser más rápido al escribir código.'
+tema: generales
+etiquetas: ['vim', 'nano', 'vscode', 'atajos', 'editor']
+publicado: 2026-10-09
+orden: 21
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Vim está en casi todos los servidores, y los atajos de VS Code te ahorran horas. Los comandos de Vim se probaron con Vim 9.2.
+
+## Vim: cómo salir
+
+| Teclas | Qué hace |
+| --- | --- |
+| `Esc` | Vuelve al modo normal (siempre pulsa esto primero) |
+| `:q` y `Enter` | Sale (si no hay cambios) |
+| `:q!` | Sale sin guardar |
+| `:w` | Guarda |
+| `:wq` o `:x` o `ZZ` | Guarda y sale |
+| `ZQ` | Sale sin guardar |
+
+<Callout tipo="tip" titulo="Atrapado en Vim">
+
+Pulsa `Esc` dos veces, escribe `:q!` y `Enter`. Eso sale sin guardar nada.
+
+</Callout>
+
+## Vim: modos
+
+| Modo | Cómo entrar | Para qué |
+| --- | --- | --- |
+| Normal | `Esc` | Moverte y dar órdenes. Es el modo por defecto |
+| Insertar | `i`, `a`, `o`... | Escribir texto |
+| Visual | `v`, `V`, `Ctrl+V` | Seleccionar (carácter, línea, bloque) |
+| Comando | `:` | Órdenes como `:w`, `:%s/a/b/g` |
+
+## Vim: entrar a modo insertar
+
+| Tecla | Dónde empieza a escribir |
+| --- | --- |
+| `i` | Antes del cursor |
+| `a` | Después del cursor |
+| `I` | Al principio de la línea |
+| `A` | Al final de la línea |
+| `o` | En una línea nueva debajo |
+| `O` | En una línea nueva arriba |
+| `cw` | Cambia desde el cursor hasta el fin de la palabra |
+
+## Vim: moverte
+
+| Tecla | Movimiento |
+| --- | --- |
+| `h` `j` `k` `l` | Izquierda, abajo, arriba, derecha |
+| `w` / `b` | Inicio de la siguiente / anterior palabra |
+| `e` | Final de la palabra |
+| `0` / `^` / `$` | Inicio de línea / primer carácter no vacío / final de línea |
+| `gg` / `G` | Inicio / final del archivo |
+| `42G` o `:42` | Ir a la línea 42 |
+| `Ctrl+D` / `Ctrl+U` | Media pantalla abajo / arriba |
+| `{` / `}` | Párrafo anterior / siguiente |
+| `%` | Salta al paréntesis o llave pareja |
+| `f,` | Salta a la siguiente coma en la línea (`;` repite) |
+| `H` `M` `L` | Parte alta, media y baja de la pantalla |
+
+Un número antes de un movimiento lo repite: `5j` baja cinco líneas, `3w` avanza tres palabras.
+
+## Vim: editar
+
+| Tecla | Qué hace |
+| --- | --- |
+| `x` | Borra el carácter bajo el cursor |
+| `dw` | Borra hasta la siguiente palabra |
+| `dd` | Borra (corta) la línea |
+| `D` | Borra hasta el final de la línea |
+| `yy` | Copia la línea |
+| `yw` | Copia una palabra |
+| `p` / `P` | Pega después / antes del cursor |
+| `u` | Deshace |
+| `Ctrl+R` | Rehace |
+| `.` | Repite el último cambio |
+| `J` | Une la línea de abajo con la actual |
+| `>>` / `<<` | Indenta / quita sangría |
+| `~` | Cambia mayúscula y minúscula del carácter |
+| `gUU` / `guu` | Línea a mayúsculas / minúsculas |
+| `ciw` | Cambia la palabra completa (donde estés dentro de ella) |
+| `ci"` | Cambia lo que hay entre comillas |
+| `di(` | Borra lo que hay entre paréntesis |
+| `xp` | Intercambia dos caracteres |
+| `ddp` | Intercambia una línea con la de abajo |
+
+### La gramática de Vim: operador más movimiento
+
+Los comandos se componen: un **operador** y un **objeto o movimiento**.
+
+| Operador | Significa |
+| --- | --- |
+| `d` | Borrar |
+| `c` | Cambiar (borra y entra a modo insertar) |
+| `y` | Copiar |
+| `>` y `<` | Indentar |
+| `gU` y `gu` | Mayúsculas y minúsculas |
+
+| Objeto | Significa |
+| --- | --- |
+| `w` | Hasta la siguiente palabra |
+| `iw` | La palabra completa |
+| `i"` / `a"` | Dentro de las comillas / con las comillas |
+| `i(` / `i{` / `i[` | Dentro de paréntesis, llaves o corchetes |
+| `ip` | El párrafo |
+| `$` | Hasta el final de la línea |
+
+Combinaciones: `dw` (borra palabra), `ci(` (cambia dentro de paréntesis), `yip` (copia el párrafo), `d$` (borra hasta el final), `3dd` (borra tres líneas).
+
+## Vim: seleccionar
+
+| Teclas | Qué hace |
+| --- | --- |
+| `v` | Selecciona por caracteres |
+| `V` | Selecciona líneas completas |
+| `Ctrl+V` | Selecciona un bloque rectangular (editar varias líneas a la vez) |
+
+Con la selección hecha: `d` borra, `y` copia, `>` indenta, `U` pasa a mayúsculas, `:` abre un comando para ese rango.
+
+Para añadir texto al final de varias líneas: `Ctrl+V`, baja con `j`, pulsa `$`, luego `A`, escribe y `Esc`.
+
+## Vim: buscar y reemplazar
+
+| Comando | Qué hace |
+| --- | --- |
+| `/texto` y `Enter` | Busca hacia adelante |
+| `?texto` | Busca hacia atrás |
+| `n` / `N` | Siguiente / anterior resultado |
+| `*` | Busca la palabra bajo el cursor |
+| `:noh` | Quita el resaltado de la búsqueda |
+| `:s/viejo/nuevo/` | Reemplaza en la línea actual (el primero) |
+| `:s/viejo/nuevo/g` | Reemplaza todos en la línea |
+| `:%s/viejo/nuevo/g` | Reemplaza en todo el archivo |
+| `:%s/viejo/nuevo/gc` | Igual, pidiendo confirmación en cada uno |
+| `:1,10s/viejo/nuevo/g` | Solo en las líneas 1 a 10 |
+| `:%s/\(\w\+\) \(\w\+\)/\2 \1/` | Intercambia dos palabras con grupos |
+
+## Vim: comandos de línea
+
+| Comando | Qué hace |
+| --- | --- |
+| `:2d` | Borra la línea 2 |
+| `:1,2d` | Borra las líneas 1 a 2 |
+| `:g/texto/d` | Borra todas las líneas que contienen `texto` |
+| `:v/texto/d` | Borra todas las que NO lo contienen |
+| `:1m$` | Mueve la línea 1 al final |
+| `:1t.` | Copia la línea 1 debajo de la actual |
+| `:sort` | Ordena las líneas (con `!`, en orden inverso) |
+| `:2,3normal Ax` | Ejecuta `Ax` (añadir una `x` al final) en las líneas 2 y 3 |
+| `:r archivo` | Inserta el contenido de un archivo |
+| `:r !comando` | Inserta la salida de un comando |
+| `:set number` | Muestra números de línea |
+| `:set paste` | Pegar sin que Vim cambie la sangría |
+| `:e archivo` | Abre otro archivo |
+
+## Vim: macros, marcas y ventanas
+
+| Teclas | Qué hace |
+| --- | --- |
+| `qa` ... `q` | Graba una macro en el registro `a` (la segunda `q` termina) |
+| `@a` | Ejecuta la macro (`@@` repite la última, `5@a` cinco veces) |
+| `ma` | Pone una marca `a` |
+| `'a` | Salta a la línea de la marca `a` |
+| `"ayy` | Copia una línea al registro `a` (`"ap` la pega) |
+| `:sp` / `:vsp` | Divide la ventana en horizontal / vertical |
+| `Ctrl+W` y `h` `j` `k` `l` | Cambia entre ventanas |
+| `Ctrl+A` / `Ctrl+X` | Suma / resta 1 al número bajo el cursor |
+
+## nano
+
+| Atajo | Qué hace |
+| --- | --- |
+| `Ctrl+O` y `Enter` | Guardar |
+| `Ctrl+X` | Salir (pregunta si hay cambios) |
+| `Ctrl+W` | Buscar |
+| `Ctrl+\` | Buscar y reemplazar |
+| `Ctrl+K` / `Ctrl+U` | Cortar línea / pegar |
+| `Ctrl+G` | Ayuda |
+| `Alt+U` / `Alt+E` | Deshacer / rehacer |
+| `Ctrl+_` | Ir a una línea |
+
+Los atajos aparecen en la parte inferior de la pantalla de nano; `^` significa `Ctrl` y `M-` significa `Alt`.
+
+## VS Code: los atajos que más ahorran
+
+En macOS, cambia `Ctrl` por `Cmd` en casi todos.
+
+| Atajo | Qué hace |
+| --- | --- |
+| `Ctrl+P` | Abrir un archivo por nombre |
+| `Ctrl+Shift+P` | Paleta de comandos: cualquier acción |
+| `Ctrl+B` | Mostrar u ocultar la barra lateral |
+| ``Ctrl+` `` | Mostrar u ocultar la terminal integrada |
+| `Ctrl+Shift+F` | Buscar en todos los archivos |
+| `Ctrl+F` / `Ctrl+H` | Buscar / reemplazar en el archivo |
+| `Ctrl+G` | Ir a una línea |
+| `Ctrl+Shift+O` | Ir a un símbolo (función, clase) del archivo |
+| `F12` | Ir a la definición |
+| `Alt+Flecha izquierda` | Volver atrás |
+| `F2` | Renombrar un símbolo en todo el proyecto |
+| `Ctrl+.` | Acciones rápidas y correcciones |
+| `Shift+Alt+F` | Formatear el documento |
+| `Ctrl+S` | Guardar |
+| `Ctrl+Z` / `Ctrl+Y` | Deshacer / rehacer |
+
+## VS Code: edición
+
+| Atajo | Qué hace |
+| --- | --- |
+| `Ctrl+D` | Selecciona la palabra y, al repetir, la siguiente coincidencia (multicursor) |
+| `Ctrl+Shift+L` | Selecciona todas las coincidencias |
+| `Alt+Clic` | Añade un cursor |
+| `Ctrl+Alt+Flecha abajo` | Añade un cursor en la línea de abajo |
+| `Alt+Flecha arriba` / `Alt+Flecha abajo` | Mueve la línea |
+| `Shift+Alt+Flecha abajo` / `Shift+Alt+Flecha arriba` | Duplica la línea |
+| `Ctrl+Shift+K` | Borra la línea |
+| `Ctrl+/` | Comenta o descomenta |
+| `Shift+Alt+A` | Comentario de bloque |
+| `Ctrl+Enter` / `Ctrl+Shift+Enter` | Nueva línea debajo / arriba sin mover el cursor |
+| `Ctrl+L` | Selecciona la línea |
+| `Ctrl+X` sin selección | Corta la línea completa |
+| `Ctrl+Flecha izquierda` / `Ctrl+Flecha derecha` | Salta de palabra en palabra |
+| `Home` / `End` | Inicio / final de la línea |
+| `Ctrl+Home` / `Ctrl+End` | Inicio / final del archivo |
+| `Tab` / `Shift+Tab` | Indenta / quita sangría |
+
+## Atajos que valen en casi todo
+
+| Atajo | Qué hace |
+| --- | --- |
+| `Ctrl+C`, `Ctrl+X`, `Ctrl+V` | Copiar, cortar, pegar |
+| `Ctrl+A` | Seleccionar todo |
+| `Ctrl+Z` | Deshacer |
+| `Ctrl+F` | Buscar |
+| `Ctrl+Shift+V` | Pegar sin formato (en muchos programas) |
+| `Alt+Tab` | Cambiar de ventana |
+
+## Conviene recordar
+
+| Haz | Por qué |
+| --- | --- |
+| Aprende 10 atajos de VS Code por semana, no todos de una vez | Se fijan con el uso |
+| Activa el modo Vim en tu editor si te gusta (extensión de VS Code) | Tienes los comandos de Vim con tu configuración habitual |
+| Usa `Ctrl+D` en vez de buscar y reemplazar para cambios pequeños | Ves el resultado mientras escribes |
+| Practica con `vimtutor` en la terminal | Es un tutorial interactivo de unos 30 minutos |
+
+## Para ir más a fondo
+
+- [Documentación de Vim](https://vimhelp.org/)
+- [Guía de usuario de Vim](https://vimhelp.org/usr_toc.txt.html)
+- Hoja de AyudaDev: [Bash y Linux, comandos de terminal](/hojas/bash-y-linux-comandos/)
+- Biblioteca: [libros y cursos de temas generales](/biblioteca/generales/)

@@ -1,0 +1,235 @@
+---
+titulo: 'Estructuras de datos básicas'
+descripcion: 'Listas, diccionarios, conjuntos, pilas, colas, árboles y grafos: qué es cada una, cuándo usarla y cuánto cuesta cada operación, con ejemplos en Python.'
+categoria: datos
+nivel: principiante
+tiempoLectura: 12
+publicado: 2026-10-09
+temas: [algoritmos, python, javascript]
+etiquetas: [listas, diccionarios, conjuntos, pilas, colas, arboles, grafos]
+orden: 25
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Tienes mil nombres de usuarios y necesitas saber si uno de ellos ya existe. Si los guardas en una lista, revisas uno por uno. Si los guardas en un conjunto, la respuesta llega casi al instante. La estructura de datos que elijas decide si tu programa es sencillo y rápido, o enredado y lento.
+
+## Qué es
+
+Una **estructura de datos** es una forma de organizar información en la memoria para poder usarla bien. Es como escoger el mueble correcto: un clóset para colgar ropa, un cajón para cosas sueltas, un archivero para papeles ordenados. Todos guardan cosas, pero cada uno es bueno para algo distinto.
+
+Para elegir te preguntas tres cosas:
+
+1. ¿Importa el **orden** de los elementos?
+2. ¿Necesito **buscar** por posición, por nombre o por valor?
+3. ¿Hay **repetidos** permitidos?
+
+Las respuestas apuntan casi siempre a una de las estructuras de este artículo. Para hablar de costos usamos la notación que viste en [Complejidad y notación Big O](/fundamentos/complejidad-y-big-o/).
+
+## Las cuatro colecciones de todos los días
+
+<Ejemplo numero={1} titulo="Lista, diccionario, conjunto y tupla" archivo="colecciones.py" ejecutar="uv run colecciones.py" salida={"manzana uva 3\nAna sin dato\n{1, 2, 3} {3} {1, 2, 3, 4}\n3 4"}>
+
+```python
+# Lista: ordenada, se puede modificar, permite repetidos
+frutas = ["manzana", "pera"]
+frutas.append("uva")
+print(frutas[0], frutas[-1], len(frutas))
+
+# Diccionario: pares clave -> valor
+usuario = {"nombre": "Ana", "edad": 28}
+usuario["ciudad"] = "Puebla"
+print(usuario["nombre"], usuario.get("telefono", "sin dato"))
+
+# Conjunto: sin orden y sin repetidos
+a = {1, 2, 3, 3, 2}
+b = {3, 4}
+print(a, a & b, a | b)   # elementos, intersección, unión
+
+# Tupla: como una lista que no se puede modificar
+punto = (3, 4)
+x, y = punto
+print(x, y)
+```
+
+El conjunto descartó los repetidos por sí solo. Con `&` obtienes lo que comparten y con `|` obtienes la unión.
+
+</Ejemplo>
+
+| Estructura | Orden | Repetidos | Buscar un elemento | Úsala para |
+| --- | --- | --- | --- | --- |
+| Lista | Sí | Sí | O(n) | Secuencias, resultados en orden |
+| Tupla | Sí | Sí | O(n) | Valores fijos que viajan juntos |
+| Diccionario | Por inserción | Claves únicas | O(1) por clave | Buscar por nombre o identificador |
+| Conjunto | No | No | O(1) | Pertenencia, quitar repetidos |
+
+La **lista** es como un tren con vagones numerados. Acceder al vagón 5 es inmediato (O(1)), pero insertar uno en medio obliga a mover todos los siguientes. El **diccionario** es como una agenda: buscas por nombre y llegas directo, sin hojear. Funciona con una **tabla hash**, que convierte la clave en una posición.
+
+En JavaScript tienes equivalentes: `Array`, objetos y `Map` para diccionarios, y `Set` para conjuntos.
+
+```js
+const mapa = new Map([["a", 1]]);
+mapa.set("b", 2);
+console.log(mapa.get("b"), mapa.size);   // 2 2
+
+const conj = new Set([1, 2, 2, 3]);
+console.log(conj, conj.has(2));          // Set(3) { 1, 2, 3 } true
+```
+
+<Callout tipo="tip" titulo="Convierte listas en diccionarios para buscar rápido">
+Si buscas muchas veces por un identificador dentro de una lista de objetos, crea un diccionario una vez (`por_id = {u["id"]: u for u in usuarios}`) y busca ahí. Pasas de recorrer toda la lista en cada búsqueda a un acceso directo.
+</Callout>
+
+## Pilas y colas
+
+Son listas con una regla estricta sobre por dónde entra y sale cada elemento.
+
+**Pila (stack):** el último en entrar es el primero en salir (LIFO). Como una pila de platos: pones y quitas desde arriba. La usa tu navegador para el botón "atrás" y el lenguaje para la pila de llamadas (la viste en [Funciones y recursión](/fundamentos/funciones-y-recursion/)).
+
+**Cola (queue):** el primero en entrar es el primero en salir (FIFO). Como la fila de una taquilla. Se usa para turnos, tareas pendientes y mensajes.
+
+<Ejemplo numero={2} titulo="Pila y cola" archivo="pila_cola.py" ejecutar="uv run pila_cola.py" salida={"c b ['a']\nprimero segundo ['tercero']"}>
+
+```python
+from collections import deque
+
+# Pila: usa una lista, append y pop trabajan al final
+pila = []
+pila.append("a"); pila.append("b"); pila.append("c")
+print(pila.pop(), pila.pop(), pila)
+
+# Cola: usa deque, que saca por la izquierda en O(1)
+cola = deque()
+cola.append("primero"); cola.append("segundo"); cola.append("tercero")
+print(cola.popleft(), cola.popleft(), list(cola))
+```
+
+Para colas usa `deque`. Una lista con `pop(0)` funciona, pero mueve todos los elementos y se vuelve lenta con datos grandes.
+
+</Ejemplo>
+
+Un uso clásico de la pila es verificar paréntesis balanceados:
+
+```python
+def balanceado(s):
+    pila = []
+    pares = {")": "(", "]": "[", "}": "{"}
+    for c in s:
+        if c in "([{":
+            pila.append(c)
+        elif c in pares:
+            if not pila or pila.pop() != pares[c]:
+                return False
+    return not pila
+
+print(balanceado("([]{})"), balanceado("([)]"))   # True False
+```
+
+## Árboles
+
+Un **árbol** es una estructura jerárquica: un nodo raíz con hijos, que a su vez tienen hijos. Tu sistema de carpetas es un árbol. También lo es el HTML de una página (el DOM) y el menú de un sitio.
+
+```text
+        1
+       / \
+      2   3
+          |
+          4
+```
+
+Como cada hijo es otro árbol más pequeño, la recursión es la herramienta natural para recorrerlos:
+
+<Ejemplo numero={3} titulo="Sumar los valores de un árbol" archivo="arbol.py" ejecutar="uv run arbol.py" salida="10">
+
+```python
+arbol = {
+    "valor": 1,
+    "hijos": [
+        {"valor": 2, "hijos": []},
+        {"valor": 3, "hijos": [{"valor": 4, "hijos": []}]},
+    ],
+}
+
+def suma(nodo):
+    return nodo["valor"] + sum(suma(h) for h in nodo["hijos"])
+
+print(suma(arbol))   # 1 + 2 + 3 + 4
+```
+
+Cada nodo suma su valor más lo que suman sus hijos. El caso base es un nodo sin hijos: `sum` de nada da 0.
+
+</Ejemplo>
+
+Un caso especial muy usado es el **árbol binario de búsqueda**: cada nodo tiene máximo dos hijos, los menores van a la izquierda y los mayores a la derecha. Si está equilibrado, buscar cuesta O(log n).
+
+## Grafos
+
+Un **grafo** es un conjunto de nodos conectados por aristas, sin jerarquía obligatoria. Piensa en un mapa de metro: estaciones (nodos) y líneas (aristas). Las redes sociales, las rutas de GPS y las páginas web enlazadas entre sí son grafos.
+
+Una forma sencilla de guardarlo es un diccionario donde cada nodo apunta a la lista de sus vecinos. Para explorarlo capa por capa (búsqueda en anchura) usas una cola:
+
+<Ejemplo numero={4} titulo="Recorrer un grafo" archivo="grafo.py" ejecutar="uv run grafo.py" salida="['A', 'B', 'C', 'D']">
+
+```python
+from collections import deque
+
+grafo = {"A": ["B", "C"], "B": ["D"], "C": ["D"], "D": []}
+
+def bfs(inicio):
+    visitados = [inicio]
+    q = deque([inicio])
+    while q:
+        nodo = q.popleft()
+        for vecino in grafo[nodo]:
+            if vecino not in visitados:
+                visitados.append(vecino)
+                q.append(vecino)
+    return visitados
+
+print(bfs("A"))
+```
+
+Marcar los nodos ya visitados evita dar vueltas infinitas cuando el grafo tiene ciclos.
+
+</Ejemplo>
+
+<Callout tipo="warning" titulo="Elegir mal la estructura se paga caro">
+Usar una lista para saber si algo "ya existe" funciona con cien elementos y te hace sufrir con un millón: cada pregunta recorre todo. También cuidado con modificar una lista mientras la recorres con `for`: puedes saltarte elementos sin recibir un error. Si necesitas filtrar, crea una lista nueva.
+</Callout>
+
+## Cómo elegir
+
+Una guía rápida:
+
+- ¿Necesitas orden y acceso por posición? **Lista**.
+- ¿Buscas por una clave o nombre? **Diccionario**.
+- ¿Solo importa si algo está o no, o quitar repetidos? **Conjunto**.
+- ¿Procesas en orden de llegada? **Cola**.
+- ¿Necesitas deshacer, volver atrás o evaluar anidados? **Pila**.
+- ¿Los datos tienen jerarquía? **Árbol**.
+- ¿Hay relaciones libres entre elementos? **Grafo**.
+
+Cuando los datos viven en una base de datos, el motor construye estructuras parecidas (índices en forma de árbol, por ejemplo). Lo verás en [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/).
+
+## Pruébalo tú
+
+1. Dada la cadena `"el perro y el gato y el pez"`, cuenta cuántas veces aparece cada palabra con un diccionario.
+2. Quita los repetidos de una lista conservando el orden. Pista: usa un conjunto auxiliar para recordar lo visto.
+3. Simula una cola de atención con `deque`: agrega cinco clientes y atiéndelos en orden.
+4. Agrega una función `profundidad(nodo)` al árbol del ejemplo que devuelva cuántos niveles tiene.
+
+## Errores y mitos comunes
+
+- **"Una lista sirve para todo."** Sirve para muchas cosas, pero buscar en ella es lento cuando crece.
+- **"Los diccionarios siempre están desordenados."** En Python moderno conservan el orden de inserción, aunque no debes depender de eso para lógica que necesite orden estricto.
+- **"Una tupla es solo una lista rara."** Su valor es comunicar que esos datos no van a cambiar.
+- **"Los grafos y árboles son solo teoría."** Los usas cada día: carpetas, el DOM, rutas, redes sociales.
+- **"`pop(0)` en una lista es lo mismo que `popleft()`."** El primero es O(n), el segundo O(1).
+
+## Qué sigue
+
+- Mide el costo de tus decisiones: [Complejidad y notación Big O](/fundamentos/complejidad-y-big-o/).
+- Aprende a organizar tu código alrededor de estos datos: [Programación orientada a objetos sin misterio](/fundamentos/programacion-orientada-a-objetos/).
+- Explora la [biblioteca de algoritmos y estructuras de datos](/biblioteca/algoritmos/) con libros gratuitos.
+- Practica con la [guía de Python](/guias/python/), el [glosario](/glosario/) y los [retos](/retos/).

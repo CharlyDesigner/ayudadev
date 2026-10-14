@@ -1,0 +1,194 @@
+---
+titulo: 'Variables, tipos y memoria'
+descripcion: 'Qué es de verdad una variable, por qué los tipos importan y qué pasa en la memoria cuando asignas, copias o comparas valores en Python y JavaScript.'
+categoria: programacion
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [python, javascript]
+etiquetas: [variables, tipos, memoria, referencias]
+orden: 20
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Escribes `b = a`, cambias `b` y de pronto `a` también cambió. O sumas `0.1 + 0.2` y obtienes un número raro. Casi todos los "bugs misteriosos" de quien empieza vienen de lo mismo: no tener claro qué es una variable, qué es un tipo y qué ocurre en la memoria. Este artículo arma ese modelo mental con ejemplos que puedes correr.
+
+## Qué es
+
+Una **variable** es un nombre que apunta a un valor guardado en la memoria de la computadora. Piensa en una etiqueta pegada a una caja, no en la caja misma. La caja (el valor) vive en un lugar de la memoria; la etiqueta (el nombre) solo te dice cuál caja es.
+
+Un **tipo** es la clase de valor que hay dentro de la caja: un número entero, un decimal, un texto, un verdadero o falso, una lista. El tipo decide qué puedes hacer con el valor. Puedes sumar dos números, pero sumar un texto con un número no tiene un resultado obvio.
+
+La **memoria** es donde viven los valores mientras tu programa corre. No necesitas conocer direcciones ni bytes para programar, pero sí necesitas saber una distinción: algunos valores se guardan "tal cual" y otros se guardan como una **referencia**, es decir, una flecha hacia el valor real.
+
+```text
+nombre ------>  "Ana"
+edad   ------>  28
+lista  ------>  [1, 2, 3]
+otra   ------^   (dos etiquetas, la misma caja)
+```
+
+## Tipos básicos
+
+Casi todos los lenguajes comparten estos tipos:
+
+| Tipo | Ejemplo | Para qué sirve |
+| --- | --- | --- |
+| Entero | `42` | Contar cosas |
+| Decimal | `3.14` | Medidas, promedios |
+| Texto | `"Ana"` | Nombres, mensajes |
+| Booleano | `True` o `true` | Decisiones de sí o no |
+| Nada | `None` o `null` | "Aquí no hay valor" |
+| Colección | `[1, 2, 3]` | Varios valores juntos |
+
+Python y JavaScript difieren en algo clave. Python es de **tipado fuerte**: no mezcla tipos a escondidas. JavaScript es de **tipado débil**: intenta convertir por ti, a veces con resultados sorprendentes.
+
+<Ejemplo numero={1} titulo="Tipos en Python" archivo="tipos.py" ejecutar="uv run tipos.py" salida={"<class 'int'> <class 'float'> <class 'str'> <class 'bool'> <class 'NoneType'> <class 'list'>\ncan only concatenate str (not \"int\") to str"}>
+
+```python
+print(type(5), type(5.0), type("5"), type(True), type(None), type([1]))
+try:
+    print("5" + 2)
+except TypeError as e:
+    print(e)
+```
+
+Python se niega a sumar un texto y un número. Te avisa con un error claro en lugar de inventar una respuesta.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Tipos en JavaScript" archivo="tipos.mjs" ejecutar="node tipos.mjs" salida={"number string boolean undefined object object object\n52\n3"}>
+
+```js
+console.log(typeof 5, typeof "5", typeof true, typeof undefined, typeof null, typeof [], typeof {});
+console.log("5" + 2);  // convierte el 2 a texto
+console.log("5" - 2);  // convierte el "5" a número
+```
+
+Aquí `"5" + 2` da `"52"` y `"5" - 2` da `3`. El mismo texto se comporta distinto según el operador. Fíjate también en que `typeof null` dice `object`: es un error histórico del lenguaje que se mantiene por compatibilidad.
+
+</Ejemplo>
+
+## Valores inmutables y mutables
+
+Aquí está la idea que más confusión evita. Hay valores que **no se pueden cambiar** una vez creados (inmutables) y otros que **sí** (mutables).
+
+- **Inmutables:** números, textos, booleanos. En Python también las tuplas.
+- **Mutables:** listas, diccionarios, conjuntos y objetos.
+
+Cuando "cambias" un valor inmutable, en realidad creas uno nuevo y mueves la etiqueta:
+
+```python
+x = 10
+y = x
+y = y + 1
+print(x, y)   # 10 11
+```
+
+`y + 1` creó un entero nuevo y `y` apunta a él. `x` sigue apuntando al `10` original. No hay sorpresa.
+
+Con un valor mutable la historia cambia. Asignar **no copia**, solo agrega otra etiqueta a la misma caja:
+
+<Ejemplo numero={3} titulo="Dos nombres, una lista" archivo="alias.py" ejecutar="uv run alias.py" salida={"[1, 2, 3, 4]\nTrue\n[1, 2, 3, 4] [1, 2, 3, 4, 5]"}>
+
+```python
+a = [1, 2, 3]
+b = a            # no copia: es la misma lista
+b.append(4)
+print(a)         # a también cambió
+print(a is b)    # True: es el mismo objeto
+
+c = a.copy()     # copia real
+c.append(5)
+print(a, c)      # a no cambió esta vez
+```
+
+`is` pregunta si dos nombres apuntan al mismo objeto, no si tienen el mismo contenido. Para comparar contenido usa `==`. Para copiar de verdad, usa `.copy()` o `list(a)`.
+
+</Ejemplo>
+
+En JavaScript pasa exactamente lo mismo con los objetos:
+
+```js
+const a = { n: 1 };
+const b = a;
+b.n = 2;
+console.log(a);          // { n: 2 }
+const c = { ...a };      // copia superficial
+c.n = 3;
+console.log(a, c);       // { n: 2 } { n: 3 }
+```
+
+<Callout tipo="tip" titulo="Regla para recordar">
+Los números, textos y booleanos se comportan como valores: lo que haces con uno no afecta a otros. Las listas y objetos se comportan como referencias: si dos nombres apuntan al mismo, cualquier cambio se ve en ambos. Ante la duda, pregúntate: "¿esto crea un valor nuevo o modifica uno existente?"
+</Callout>
+
+## Copia superficial y copia profunda
+
+`.copy()` y `{ ...a }` hacen una copia **superficial**: copian la caja de fuera, pero si dentro hay otras cajas (listas dentro de listas), esas se siguen compartiendo. Para copiar todo hacia adentro necesitas una copia **profunda**: `copy.deepcopy(a)` en Python o `structuredClone(a)` en JavaScript.
+
+```python
+import copy
+tablero = [[0, 0], [0, 0]]
+malo = tablero.copy()
+bueno = copy.deepcopy(tablero)
+tablero[0][0] = 9
+print(malo)    # [[9, 0], [0, 0]]  la fila interna se compartió
+print(bueno)   # [[0, 0], [0, 0]]
+```
+
+## Cómo se guardan los números decimales
+
+Los decimales se guardan en binario, y algunos números como `0.1` no caben exactos en binario, igual que `1/3` no cabe exacto en decimal. Por eso:
+
+<Ejemplo numero={4} titulo="El decimal que no cuadra" archivo="decimales.py" ejecutar="uv run decimales.py" salida={"0.30000000000000004\nFalse\nTrue"}>
+
+```python
+import math
+print(0.1 + 0.2)
+print(0.1 + 0.2 == 0.3)
+print(math.isclose(0.1 + 0.2, 0.3))
+```
+
+No es un error de Python: pasa en JavaScript y en casi todos los lenguajes. Para comparar decimales usa una tolerancia (`math.isclose`). Para dinero, guarda centavos como enteros o usa un tipo decimal exacto como `decimal.Decimal`.
+
+</Ejemplo>
+
+Los enteros tienen otro límite según el lenguaje. Python crece según necesites, así que `2**100` funciona. JavaScript usa decimales para todos sus números normales, así que a partir de `Number.MAX_SAFE_INTEGER` pierde precisión y necesitas `BigInt` (por ejemplo `9007199254740993n`).
+
+<Callout tipo="warning" titulo="Argumento por defecto mutable">
+En Python, `def agregar(item, lista=[])` crea la lista una sola vez, al definir la función. Cada llamada comparte esa misma lista: `agregar(1)` devuelve `[1]` y `agregar(2)` devuelve `[1, 2]`. La solución es usar `lista=None` y crear la lista dentro de la función cuando haga falta.
+</Callout>
+
+## Dónde vive cada cosa en la memoria
+
+Sin entrar en detalles de hardware, hay dos zonas que conviene imaginar:
+
+- **La pila (stack):** guarda las variables locales de cada función que está corriendo. Es rápida y se limpia sola cuando la función termina.
+- **El montón (heap):** guarda los valores grandes o que deben sobrevivir, como listas y objetos. Las variables de la pila contienen referencias hacia el montón.
+
+Python y JavaScript limpian el montón por ti con un **recolector de basura**: cuando ningún nombre apunta ya a un valor, la memoria se libera. En lenguajes como C la liberas tú, y por eso ahí un olvido causa fugas de memoria.
+
+## Pruébalo tú
+
+1. Crea una lista `a = [1, 2, 3]` y asigna `b = a`. Antes de correr el programa, escribe en papel qué imprimirá `print(a)` después de `b.append(99)`. Luego corre y compara.
+2. Haz el mismo experimento con una tupla (`a = (1, 2, 3)`) y comprueba qué pasa al intentar `a.append(99)`.
+3. En JavaScript, prueba `console.log(0.1 + 0.2 === 0.3)` y arregla la comparación con `Math.abs(a - b) < Number.EPSILON`.
+4. Escribe una función que reciba una lista y la ordene **sin modificar la original**. Pista: devuelve una copia ordenada con `sorted`.
+
+## Errores y mitos comunes
+
+- **"Una variable es una caja que contiene el valor."** Es más exacto decir que es una etiqueta que apunta a un valor. Con esa imagen entiendes los alias.
+- **"`==` e `is` son lo mismo."** `==` compara contenido, `is` compara identidad. Usa `is` casi solo con `None`.
+- **"Un error con decimales es un bug del lenguaje."** Es una limitación del formato binario, común a todos los lenguajes.
+- **"`const` hace inmutable el objeto."** En JavaScript, `const` impide reasignar el nombre, pero el objeto sigue pudiendo cambiar por dentro.
+- **"Copiar una lista es `b = a`."** Eso solo agrega un nombre. Copia con `.copy()`, `list(a)` o `copy.deepcopy(a)`.
+
+## Qué sigue
+
+- Aprende a organizar tu código en piezas reutilizables en [Funciones y recursión](/fundamentos/funciones-y-recursion/).
+- Mira cómo se guardan colecciones de datos en [Estructuras de datos básicas](/fundamentos/estructuras-de-datos-basicas/).
+- Practica en la [guía de Python](/guias/python/) o en la [guía de JavaScript](/guias/javascript/).
+- Busca términos que no conozcas en el [glosario](/glosario/) y practica con los [retos](/retos/).

@@ -1,0 +1,53 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import { temaPorSlug } from '@data/temas';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
+import { SITE } from '@data/site';
+import { guiaDeTema } from '@lib/guias';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('retos', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+  return lista.map((e, i) => ({ params: { slug: e.id }, props: { e, anterior: lista[i - 1] ?? null, siguiente: lista[i + 1] ?? null } }));
+}
+
+const { e, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(e);
+const tema = temaPorSlug(e.data.tema);
+const guiaSlug = tema ? await guiaDeTema(tema.slug) : undefined;
+const path = `/retos/${e.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Retos', href: '/retos/' },
+  { nombre: e.data.titulo, href: path },
+];
+---
+
+<ArticleLayout
+  titulo={e.data.titulo}
+  descripcion={e.data.descripcion}
+  path={path}
+  eyebrow={`Reto de ${tema?.nombre ?? e.data.tema}`}
+  logo={tema?.logo}
+  migas={migas}
+  headings={headings}
+  publicado={e.data.publicado}
+  actualizado={e.data.actualizado}
+  meta={[
+    { icono: 'school', texto: ETIQUETAS_NIVEL[e.data.nivel] },
+    { icono: 'clock', texto: `${e.data.tiempo} min` },
+  ]}
+  progId={`reto:${e.id}`}
+  sinNewsletter
+  anterior={anterior ? { titulo: anterior.data.titulo, href: `/retos/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.titulo, href: `/retos/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/retos/${e.id}.mdx`}
+>
+  {e.data.conceptos.length > 0 && (
+    <p class="not-prose mb-6 flex flex-wrap items-center gap-2 text-sm text-muted">Practicas: {e.data.conceptos.map((c) => <span class="badge">{c}</span>)}</p>
+  )}
+  <Content />
+  {guiaSlug && tema && (
+    <p class="not-prose mt-10 text-sm text-muted">¿Te atoraste? Repasa la <a href={`/guias/${guiaSlug}/`} class="link">guía de {tema.nombre}</a>.</p>
+  )}
+</ArticleLayout>

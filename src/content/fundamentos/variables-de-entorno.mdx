@@ -1,0 +1,159 @@
+---
+titulo: 'Variables de entorno y secretos'
+descripcion: 'Qué son las variables de entorno, cómo leerlas en Node y Python, cómo usar archivos .env y cómo evitar que tus claves y contraseñas se filtren.'
+categoria: herramientas
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [nodejs, python, git]
+etiquetas: [variables-de-entorno, env, secretos, seguridad, configuracion]
+orden: 48
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Tu programa necesita una clave para usar un servicio, la dirección de una base de datos o el puerto donde debe arrancar. Lo más fácil es escribirlo directo en el código. Funciona. Luego subes el proyecto a GitHub y esa clave queda a la vista de cualquiera.
+
+Para esto existen las **variables de entorno**: una forma de entregarle datos de configuración a un programa sin escribirlos dentro de su código. Es uno de los hábitos que separan un proyecto de práctica de uno que puedes publicar sin miedo.
+
+## Qué es
+
+Una **variable de entorno** es un par nombre y valor que el sistema operativo guarda para cada programa en ejecución. Por ejemplo `PORT=8080` o `API_KEY=abc123`. Los nombres suelen ir en mayúsculas con guiones bajos.
+
+Cuando abres un programa, este recibe una copia de las variables de entorno de quien lo lanzó (tu terminal, tu servidor, tu servicio de despliegue). Puede leerlas, pero lo que cambie no afecta al proceso que lo lanzó.
+
+La ventaja es separar **código** de **configuración**. El mismo código corre en tu laptop, en pruebas y en producción, con valores distintos para cada lugar, sin cambiar una línea.
+
+## Cómo ponerlas y leerlas
+
+Para una sola ejecución, las defines justo antes del comando:
+
+| Sistema | Definir y ejecutar | Ver una variable |
+|---|---|---|
+| bash o zsh (macOS, Linux, Git Bash) | `API_KEY=abc123 node app.js` | `echo $API_KEY` |
+| PowerShell | `$env:API_KEY = "abc123"` y luego `node app.js` | `echo $env:API_KEY` |
+| cmd de Windows | `set API_KEY=abc123` y luego `node app.js` | `echo %API_KEY%` |
+
+En bash, `export API_KEY=abc123` la deja disponible para todos los programas que lances desde esa terminal. En PowerShell, la variable `$env:API_KEY` dura mientras la sesión esté abierta. Para que sobrevivan entre sesiones tendrías que ponerlas en el archivo de perfil de tu shell o en la configuración del sistema, pero para proyectos es mejor usar archivos `.env`, como verás abajo.
+
+Ahora léelas desde un programa. En Node.js están en `process.env`:
+
+<Ejemplo numero={1} titulo="Leer variables de entorno en Node.js" archivo="env.mjs" ejecutar="node env.mjs" salida="Falta la variable API_KEY">
+
+```js
+// Lee variables de entorno en Node
+const clave = process.env.API_KEY;
+const puerto = Number(process.env.PORT ?? 3000);
+
+if (!clave) {
+  console.error("Falta la variable API_KEY");
+  process.exit(1);
+}
+console.log("Puerto:", puerto);
+console.log("La clave termina en:", clave.slice(-4));
+```
+
+Sin definir la variable, el programa se detiene con un mensaje claro y un código de salida distinto de cero. Eso es lo que quieres: **fallar rápido y con un mensaje útil**, no descubrirlo cuando ya estés en producción. Ahora ejecútalo así (en bash): `API_KEY=abc123xyz PORT=8080 node env.mjs` y verás `Puerto: 8080` y `La clave termina en: 3xyz`. Fíjate que el programa nunca imprime la clave completa.
+
+</Ejemplo>
+
+En Python se leen con `os.environ`:
+
+<Ejemplo numero={2} titulo="Leer variables de entorno en Python" archivo="env.py" ejecutar="python env.py" salida="Falta la variable API_KEY">
+
+```python
+import os
+
+clave = os.environ.get("API_KEY")
+if clave is None:
+    raise SystemExit("Falta la variable API_KEY")
+print("Clave cargada, termina en", clave[-4:])
+```
+
+`os.environ.get` devuelve `None` si la variable no existe. Con `os.environ["API_KEY"]` obtendrías un error, que también es válido si quieres que el programa falle de inmediato.
+
+</Ejemplo>
+
+## Archivos .env
+
+Escribir variables a mano cada vez es tedioso. La práctica común es crear un archivo llamado `.env` en la raíz del proyecto, con una variable por línea:
+
+```text
+API_KEY=secreto1234
+PORT=4000
+```
+
+Node.js puede cargarlo sin instalar nada con la opción `--env-file`:
+
+```bash
+node --env-file=.env env.mjs
+```
+
+La salida de prueba fue `Puerto: 4000` y `La clave termina en: 1234`. En Python, la librería `python-dotenv` y gestores como `uv` (con `uv run --env-file .env`) cumplen la misma función. Muchos frameworks también cargan `.env` por sí solos, revisa su documentación.
+
+La regla de oro: **el archivo `.env` nunca se sube al repositorio.** Lo que sí subes es un archivo de ejemplo, `.env.example`, con los nombres de las variables y valores falsos, para que otra persona sepa qué debe configurar:
+
+```text
+API_KEY=pon-aqui-tu-clave
+PORT=3000
+```
+
+Y en tu `.gitignore` agrega la línea `.env`.
+
+## Qué es un secreto y cómo cuidarlo
+
+Un **secreto** es cualquier dato que da acceso: claves de API, contraseñas, tokens, cadenas de conexión a bases de datos, claves privadas. No todas las variables de entorno son secretas (`PORT` no lo es), pero todos los secretos deberían vivir fuera del código.
+
+Reglas básicas:
+
+- **Nunca en el código ni en el repositorio.** Ni "temporalmente".
+- **Un secreto por entorno.** Claves de desarrollo distintas a las de producción.
+- **Permisos mínimos.** Pide claves que solo hagan lo necesario.
+- **No los imprimas en logs** ni los muestres en mensajes de error.
+- **En producción**, usa el mecanismo que tu plataforma de despliegue ofrece para guardar secretos; no subas el archivo `.env`.
+
+<Callout tipo="warning" titulo="Si subiste un secreto a Git, ya se filtró">
+
+Borrarlo en un commit nuevo no lo elimina del historial. Cualquiera que clone el repositorio, o los robots que rastrean GitHub buscando claves, pueden encontrarlo en commits anteriores. Revoca la clave de inmediato en el servicio que te la dio, genera una nueva y actualiza tus variables. Limpiar el historial es un paso extra, pero lo primero siempre es **rotar la clave**.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Las variables del frontend son públicas">
+
+Todo lo que llega al navegador puede verlo cualquiera con las herramientas de desarrollo. Muchos frameworks, como Vite o Astro, solo exponen al código del navegador las variables con un prefijo especial (por ejemplo `VITE_` o `PUBLIC_`). Eso es para valores públicos. Una clave secreta nunca debe llevar ese prefijo ni usarse en código que corre en el navegador. Los secretos se usan en el servidor.
+
+</Callout>
+
+<Callout tipo="tip" titulo="Valida al arrancar">
+
+Al inicio de tu programa, comprueba que todas las variables obligatorias existan y tengan sentido, como hace el ejemplo. Un mensaje claro tipo "Falta DATABASE_URL" te ahorra una hora de depuración.
+
+</Callout>
+
+## No pegues secretos en chats de IA
+
+Cuando pidas ayuda con un error, copia el mensaje pero borra claves, tokens, contraseñas y direcciones privadas. Lo que pegas se envía a un servicio externo. Si por accidente pegaste una clave real, trátala como filtrada y rótala.
+
+## Pruébalo tú
+
+1. Crea `env.mjs` o `env.py` con los ejemplos y córrelo sin definir nada. Comprueba el mensaje de error.
+2. Define la variable solo para esa ejecución y vuelve a correrlo.
+3. Crea un `.env` con dos variables, cárgalo con `node --env-file=.env` y agrega `.env` a tu `.gitignore`.
+4. Crea `.env.example` con valores falsos y súbelo; comprueba con `git status` que `.env` no aparece.
+5. Prueba el aislamiento: en bash, `SALUDO=hola` seguido de `bash -c 'echo [$SALUDO]'` imprime vacío, pero con `export SALUDO=hola` imprime `hola`. Así ves que solo lo exportado pasa a los programas hijos.
+
+## Errores y mitos comunes
+
+- **"El .env es seguro porque nadie lo ve."** Solo si no lo subes. Revisa tu `.gitignore` antes del primer commit.
+- **"Las variables de entorno cifran mis secretos."** No cifran nada. Solo los sacan del código.
+- **"Está bien si el repositorio es privado."** Los repositorios privados se hacen públicos, se comparten o se filtran. Trata los secretos como si fueran públicos.
+- **"Cambié la variable y no pasa nada."** Muchos programas leen las variables al arrancar. Reinicia el proceso.
+- **"En Windows se definen igual."** No: cambia la sintaxis entre PowerShell, cmd y bash.
+
+## Qué sigue
+
+- Aprende a evitar subir cosas indebidas en la [guía de Git y GitHub](/guias/git/).
+- Entiende cómo se protege el acceso en [Autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/).
+- Ve el panorama de riesgos en [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/).
+- Practica en terminal con [La terminal explicada](/fundamentos/terminal-explicada/).

@@ -1,0 +1,64 @@
+---
+/**
+ * Tarjeta genérica para listados (fundamentos, retos, proyectos, hojas, carrera, rutas...).
+ * `datos` se vuelca como atributos data-* para los filtros por chips.
+ */
+import Icon from '@components/ui/Icon.astro';
+import TemaBadge from '@components/ui/TemaBadge.astro';
+
+interface Props {
+  href: string;
+  titulo: string;
+  descripcion: string;
+  eyebrow?: string;
+  badges?: string[];
+  meta?: string;
+  /** nombres de logos en public/logos */
+  logos?: string[];
+  tema?: { abrev: string; logo?: string };
+  datos?: Record<string, string>;
+  texto?: string;
+  progId?: string;
+  class?: string;
+}
+const { href, titulo, descripcion, eyebrow, badges = [], meta, logos = [], tema, datos = {}, texto, progId, class: className = '' } = Astro.props;
+const attrs = Object.fromEntries(Object.entries(datos).map(([k, v]) => [`data-${k}`, v]));
+---
+
+<article
+  class:list={['card card-hover group relative flex flex-col gap-3 p-5', className]}
+  data-item
+  data-texto={texto ?? `${titulo} ${descripcion}`}
+  data-prog-item={progId ? '' : undefined}
+  {...attrs}
+>
+  <div class="flex items-start justify-between gap-3">
+    <div class="flex min-w-0 flex-wrap items-center gap-1.5">
+      {eyebrow && <span class="eyebrow !text-[0.68rem]">{eyebrow}</span>}
+      {badges.map((b, i) => <span class:list={['badge', i === 0 && 'badge-accent']}>{b}</span>)}
+    </div>
+    {tema && <TemaBadge tema={tema} class="h-9 w-9" />}
+  </div>
+
+  <h3 class="prog-titulo text-lg font-semibold leading-snug">
+    <a href={href} class="after:absolute after:inset-0 after:rounded-[var(--radius-card)] hover:text-accent-ink">{titulo}</a>
+  </h3>
+  <p class="text-sm leading-relaxed text-muted">{descripcion}</p>
+
+  <div class="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
+    {logos.length > 0 ? (
+      <ul class="flex items-center gap-1.5" aria-label="Tecnologías">
+        {logos.slice(0, 5).map((l) => (
+          <li class="logo-tile grid h-7 w-7 place-items-center rounded-lg p-1"><img src={`/logos/${l}.svg`} alt={l} width="20" height="20" loading="lazy" decoding="async" class="h-full w-full object-contain" /></li>
+        ))}
+      </ul>
+    ) : <span />}
+    <span class="inline-flex items-center gap-2 text-xs text-muted">
+      {meta && <span class="inline-flex items-center gap-1"><Icon name="clock" class="h-3.5 w-3.5" /> {meta}</span>}
+      {progId && (
+        <span class="relative z-10 hidden items-center gap-1 text-accent-ink group-has-[[data-prog-id][aria-pressed=true]]:inline-flex"><Icon name="check" class="h-3.5 w-3.5" /> Hecho</span>
+      )}
+    </span>
+  </div>
+  {progId && <button type="button" data-prog-id={progId} aria-pressed="false" class="visually-hidden" tabindex="-1" aria-hidden="true"><span data-prog-label></span></button>}
+</article>

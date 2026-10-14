@@ -1,0 +1,265 @@
+---
+titulo: 'TypeScript: tipos y utilidades'
+descripcion: 'Tipos básicos, interfaces, uniones, genéricos, narrowing y los tipos utilitarios de TypeScript (Partial, Pick, Omit, Record, ReturnType) con ejemplos verificados.'
+tema: typescript
+etiquetas: ['typescript', 'tipos', 'genéricos', 'utility types', 'interfaces']
+publicado: 2026-10-09
+orden: 13
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+TypeScript es JavaScript con tipos que se comprueban antes de ejecutar. Los ejemplos de esta hoja se compilaron con `tsc` 7.0 en modo `strict`.
+
+## Ejecutar y comprobar
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm i -D typescript` | Instala el compilador en el proyecto |
+| `npx tsc --init` | Crea un `tsconfig.json` |
+| `npx tsc --noEmit` | Solo comprueba tipos, sin generar archivos |
+| `npx tsc -w` | Comprueba al guardar cada cambio |
+| `node archivo.ts` | Node 24 ejecuta TypeScript quitando los tipos, sin comprobarlos |
+
+`node archivo.ts` ejecuta solo la sintaxis que se puede borrar sin más. Funciones como `enum` no funcionan sin una opción adicional. Para comprobar errores de tipos sigue usando `tsc`.
+
+## Tipos básicos
+
+```ts
+let nombre: string = "Ana";
+let edad: number = 30;
+let ok: boolean = true;
+let nada: null = null;
+let sinValor: undefined = undefined;
+let lista: number[] = [1, 2, 3];          // o Array<number>
+let tupla: [string, number] = ["a", 1];   // posiciones y tipos fijos
+let cualquiera: unknown = 5;              // desconocido: hay que comprobarlo antes de usarlo
+```
+
+| Tipo | Qué es |
+| --- | --- |
+| `string`, `number`, `boolean` | Los primitivos más comunes |
+| `bigint`, `symbol` | Números enormes, identificadores únicos |
+| `unknown` | Cualquier valor, pero obliga a comprobar antes de usarlo. Preferible a `any` |
+| `any` | Desactiva la comprobación. Evítalo |
+| `never` | Un valor que nunca ocurre (funciones que siempre lanzan error) |
+| `void` | Una función que no devuelve nada |
+| `object` | Cualquier valor que no sea primitivo |
+
+Inferencia: no hace falta anotar todo. `const n = 5` ya es `number` (o más exacto, el literal `5`).
+
+## Funciones
+
+```ts
+function suma(a: number, b = 0): number { return a + b; }
+const doble = (n: number): number => n * 2;
+const saludar = (nombre: string, saludo?: string) => `${saludo ?? "Hola"}, ${nombre}`;  // ? = opcional
+
+type Callback = (error: Error | null, dato?: string) => void;
+```
+
+## Interfaces y alias de tipo
+
+```ts
+interface Usuario {
+  id: number;
+  nombre: string;
+  email?: string;              // opcional
+  readonly rol: "admin" | "user";   // solo lectura
+}
+
+type Id = string | number;     // alias
+type Punto = { x: number; y: number };
+```
+
+| | `interface` | `type` |
+| --- | --- | --- |
+| Describir objetos | Sí | Sí |
+| Extender | `interface B extends A` | `type B = A & { ... }` |
+| Uniones, tuplas, literales | No | Sí |
+| Se puede "reabrir" y ampliar | Sí (declaration merging) | No |
+
+Regla práctica: `interface` para formas de objetos y clases; `type` para todo lo demás.
+
+## Uniones, literales e intersecciones
+
+```ts
+type Estado = "cargando" | "listo" | "error";   // unión de literales
+type Id = string | number;                       // unión
+type ConNombre = { nombre: string } & { edad: number };   // intersección: tiene ambos
+
+const colores = ["rojo", "verde"] as const;      // arreglo de solo lectura con literales
+type Color = (typeof colores)[number];           // "rojo" | "verde"
+```
+
+## Narrowing: acotar tipos
+
+```ts
+function proc(x: string | number) {
+  if (typeof x === "string") {
+    x.toUpperCase();           // aquí x es string
+  } else {
+    x.toFixed(2);              // aquí x es number
+  }
+}
+
+function esString(x: unknown): x is string {   // type guard propio
+  return typeof x === "string";
+}
+```
+
+| Técnica | Ejemplo |
+| --- | --- |
+| `typeof` | `typeof x === "string"` |
+| `instanceof` | `x instanceof Date` |
+| `in` | `"radio" in forma` |
+| Igualdad con literal | `forma.tipo === "circulo"` |
+| Comprobación de verdad | `if (x) { ... }` descarta `null` y `undefined` |
+| Type guard | `function esX(v): v is X` |
+
+### Uniones discriminadas
+
+```ts
+type Forma =
+  | { tipo: "circulo"; r: number }
+  | { tipo: "cuadrado"; l: number };
+
+function area(f: Forma) {
+  switch (f.tipo) {
+    case "circulo":  return Math.PI * f.r ** 2;
+    case "cuadrado": return f.l ** 2;
+  }
+}
+```
+
+Una propiedad común con valores literales (`tipo`) permite a TypeScript saber qué variante tienes en cada `case`.
+
+## Genéricos
+
+```ts
+function primero<T>(arr: T[]): T | undefined {
+  return arr[0];
+}
+primero([1, 2]);      // number | undefined
+primero(["a"]);       // string | undefined
+
+function longitud<T extends { length: number }>(x: T) {   // restricción
+  return x.length;
+}
+longitud("abc");
+longitud([1]);
+
+interface Caja<T> { valor: T }
+```
+
+## Tipos utilitarios
+
+Se aplican a un tipo y producen otro. Con `Usuario` de arriba:
+
+| Utilidad | Qué produce |
+| --- | --- |
+| `Partial<Usuario>` | Todas las propiedades opcionales |
+| `Required<Usuario>` | Todas obligatorias |
+| `Readonly<Usuario>` | Todas de solo lectura |
+| `Pick<Usuario, "id" \| "nombre">` | Solo esas propiedades: `{ id: number; nombre: string }` |
+| `Omit<Usuario, "email" \| "rol">` | Todas menos esas: `{ id: number; nombre: string }` |
+| `Record<"a" \| "b", number>` | `{ a: number; b: number }` |
+| `NonNullable<string \| null \| undefined>` | `string` |
+| `Exclude<"a" \| "b" \| "c", "a">` | `"b" \| "c"` |
+| `Extract<"a" \| "b" \| "c", "a" \| "z">` | `"a"` |
+| `ReturnType<typeof f>` | Tipo que devuelve la función `f` |
+| `Parameters<typeof f>` | Tupla con los tipos de los parámetros |
+| `Awaited<Promise<number>>` | `number` |
+| `InstanceType<typeof Clase>` | El tipo de las instancias de la clase |
+| `Uppercase<"ab">` | `"AB"` (también `Lowercase`, `Capitalize`, `Uncapitalize`) |
+
+```ts
+function f(a: number, b: string) { return { a, b }; }
+type Ret = ReturnType<typeof f>;       // { a: number; b: string }
+type Par = Parameters<typeof f>;       // [a: number, b: string]
+
+async function g() { return 5; }
+type Valor = Awaited<ReturnType<typeof g>>;   // number
+
+const cfg = { puerto: 3000, host: "x" };
+type Cfg = typeof cfg;                 // { puerto: number; host: string }
+type Claves = keyof Cfg;               // "puerto" | "host"
+type Valores = Cfg[keyof Cfg];         // string | number
+```
+
+## Tipos avanzados en breve
+
+```ts
+// tipo mapeado: recorre las claves de otro tipo
+type Opcionales<T> = { [K in keyof T]?: T[K] };
+
+// tipo condicional
+type Cond<T> = T extends string ? "texto" : "otro";
+type A = Cond<string>;     // "texto"
+type B = Cond<number>;     // "otro"
+
+// literal de plantilla
+type Saludo = `hola-${"a" | "b"}`;   // "hola-a" | "hola-b"
+
+// renombrar claves al mapear
+type Getters<T> = { [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K] };
+type G = Getters<{ a: number }>;     // { getA: () => number }
+```
+
+## Operadores útiles
+
+| Sintaxis | Qué hace |
+| --- | --- |
+| `x as Tipo` | Afirma el tipo (tú respondes por él; no convierte nada en ejecución) |
+| `{ a: 1 } satisfies Record<string, number>` | Comprueba que cumple el tipo y conserva el tipo exacto |
+| `x!` | Afirma que no es `null` ni `undefined`. Úsalo con cuidado |
+| `x?.y` y `x ?? z` | Acceso opcional y valor por defecto, igual que en JavaScript |
+| `as const` | Valores literales y de solo lectura |
+| `typeof valor` (en un tipo) | Extrae el tipo de un valor existente |
+| `keyof Tipo` | Unión con los nombres de sus claves |
+
+## Clases
+
+```ts
+class Cuenta {
+  constructor(
+    public titular: string,     // crea y asigna la propiedad automáticamente
+    private saldo = 0,
+    readonly id = 1,
+  ) {}
+  depositar(m: number): void { this.saldo += m; }
+}
+
+abstract class Figura {
+  abstract area(): number;      // las hijas deben implementarlo
+}
+```
+
+## Configuración recomendada
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}
+```
+
+<Callout tipo="warning" titulo="Los tipos desaparecen al ejecutar">
+
+TypeScript no valida datos en tiempo de ejecución. Una respuesta de `fetch` que anotas como `Usuario` no se comprueba en realidad: valida con una biblioteca como Zod o con comprobaciones propias.
+
+</Callout>
+
+## Para ir más a fondo
+
+- [Tipos utilitarios en el manual oficial](https://www.typescriptlang.org/docs/handbook/utility-types.html)
+- [Tipos cotidianos](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html)
+- [Genéricos](https://www.typescriptlang.org/docs/handbook/2/generics.html)
+- Guía de AyudaDev: [TypeScript desde cero](/guias/typescript/)
+- Biblioteca: [libros y cursos de TypeScript](/biblioteca/typescript/)

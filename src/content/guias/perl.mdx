@@ -1,0 +1,287 @@
+---
+titulo: 'Perl desde cero'
+descripcion: 'Qué es Perl, cómo instalarlo y tus primeros programas: variables, listas, hashes, funciones, expresiones regulares y referencias, con ejemplos que corren tal cual.'
+tema: perl
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['perl-una-introduccion-a-perl-casiano-leon', 'perl-perlintro', 'perl-modern-perl-2016', 'perl-perldoc-documentacion-oficial']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['perl', 'regex', 'scripts', 'cpan', 'texto']
+orden: 29
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Perl es un lenguaje pensado para trabajar con texto. Nació para procesar archivos, extraer datos con expresiones regulares y pegar programas entre sí, y todavía hace muy bien ese trabajo. Lo encuentras en scripts de administración de sistemas, análisis de bitácoras, conversión de datos, bioinformática y en miles de módulos de CPAN, su archivo de bibliotecas.
+
+Lo que necesitas tener claro:
+
+- **Es interpretado**: escribes un archivo `.pl` y lo corres con `perl archivo.pl`. Perl lo compila a una forma interna en memoria cada vez que arranca, sin paso de compilación aparte.
+- **El sigilo dice cómo accedes al dato**: `$x` es un escalar (un valor), `@a` es una lista, `%h` es un hash (pares clave y valor). Un elemento de la lista se escribe `$a[0]` y uno del hash `$h{clave}`, porque cada uno es un solo valor.
+- **El contexto importa**: la misma expresión da resultados distintos según se use como un valor o como una lista. `my $n = @a;` cuenta los elementos y `my ($p) = @a;` toma el primero.
+- **Hay variables implícitas**: `$_` guarda el elemento actual en muchos ciclos y funciones, y `@_` trae los argumentos de una función. Ahorran código, pero hay que aprender dónde aparecen.
+- **Las estructuras anidadas usan referencias**: una lista dentro de un hash se guarda como referencia a la lista, y se recorre con flechas o llaves.
+- **Es de tipado dinámico y flexible**: Perl convierte entre número y texto según el operador que uses (`+` suma, `.` junta cadenas), así que conviene saber qué operador pones.
+- **Tiene un lema**: "hay más de una forma de hacerlo". Es potente, pero tu código será más fácil de leer si eliges un estilo y lo mantienes.
+- **No es Raku**: Raku se llamó antes Perl 6 y es otro lenguaje, hermano de Perl. Esta guía es de Perl 5, que sigue vivo y mantenido.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Windows**: descarga e instala **Strawberry Perl** desde [strawberryperl.com](https://strawberryperl.com/). Incluye el intérprete, un compilador y el instalador de módulos. Alternativa: activa WSL con `wsl --install` y usa los pasos de Linux.
+2. **macOS**: ya trae un Perl del sistema. Abre Terminal y escribe `perl -v`. Si quieres uno más reciente, instálalo con Homebrew (`brew install perl`).
+3. **Linux**: casi todas las distribuciones lo traen. Si no, en Debian o Ubuntu escribe `sudo apt install perl`; en Fedora `sudo dnf install perl`.
+4. Comprueba con `perl -v`. Debe mostrar la versión instalada.
+5. Crea una carpeta `perl-practicas` y dentro un archivo `hola.pl` con dos líneas: `use v5.36;` y `say "Hola, mundo";`.
+6. Ejecútalo con `perl hola.pl`. Debe imprimir `Hola, mundo`. Para ver la documentación de cualquier función escribe `perldoc -f split`, y para leer una introducción completa, `perldoc perlintro`.
+
+</Pasos>
+
+Casi todos los ejemplos empiezan con `use v5.36;`. Esa línea activa de golpe `strict` (te obliga a declarar variables con `my`), `warnings` (avisos de errores comunes), `say` (imprime con salto de línea) y las firmas de funciones. Ponla siempre al inicio de tus programas nuevos.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Escalares, listas y hashes" archivo="datos.pl" ejecutar="perl datos.pl" salida="Hola, Ana. Tienes 20 años.
+Primera nota: 8
+Última nota: 10
+Hay 4 notas
+La manzana cuesta 12
+Frutas: manzana, pera, uva">
+
+```perl
+use v5.36;
+
+my $nombre = "Ana";            # escalar: un solo valor
+my $edad   = 20;
+my @notas  = (8, 9, 7, 10);    # arreglo: lista ordenada
+my %precios = (                # hash: pares clave => valor
+    manzana => 12,
+    pera    => 15,
+);
+
+say "Hola, $nombre. Tienes $edad años.";
+say "Primera nota: $notas[0]";            # un elemento usa $
+say "Última nota: $notas[-1]";
+say "Hay " . scalar(@notas) . " notas";   # scalar() cuenta elementos
+$precios{uva} = 30;                       # agrega una clave
+say "La manzana cuesta $precios{manzana}";
+say "Frutas: ", join(", ", sort keys %precios);
+```
+
+`my` declara una variable en el bloque actual. Dentro de las comillas dobles, `$nombre` se sustituye por su valor. Para leer un elemento usas `$` aunque la variable sea un arreglo o un hash, porque el resultado es un solo valor. El índice `-1` es el último. Un hash no guarda un orden fijo, por eso se usa `sort keys` cuando quieres un resultado estable.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Funciones y ciclos" archivo="subs.pl" ejecutar="perl subs.pl" salida="1 es impar y su cuadrado es 1
+2 es par y su cuadrado es 4
+3 es impar y su cuadrado es 9
+4 es par y su cuadrado es 16
+5 es impar y su cuadrado es 25
+2 a la 10 es 1024
+5! = 120">
+
+```perl
+use v5.36;
+
+# Una función con firma: $exp tiene valor por omisión
+sub potencia ($base, $exp = 2) {
+    return $base ** $exp;
+}
+
+for my $i (1 .. 5) {
+    my $tipo = $i % 2 == 0 ? "par" : "impar";
+    say "$i es $tipo y su cuadrado es ", potencia($i);
+}
+
+say "2 a la 10 es ", potencia(2, 10);
+
+my $n = 5;
+my $factorial = 1;
+while ($n > 0) {
+    $factorial *= $n;
+    $n--;
+}
+say "5! = $factorial";
+```
+
+La firma `($base, $exp = 2)` declara los parámetros y un valor por omisión; viene incluida con `use v5.36`. `1 .. 5` es un rango. El operador `? :` es un `if` en una sola expresión. `**` eleva a una potencia y `%` da el residuo. Las llaves son obligatorias en `if`, `for` y `while`, aunque el bloque tenga una sola línea.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="map, grep, sort y contexto" archivo="listas.pl" ejecutar="perl listas.pl" salida="Pares: 8 4 6
+Dobles: 6 16 2 18 8 12
+Ordenados: 1 3 4 6 8 9
+Suma: 31, máximo: 9
+Cuántos: 6, primero: 3">
+
+```perl
+use v5.36;
+use List::Util qw(sum0 max);
+
+my @numeros = (3, 8, 1, 9, 4, 6);
+
+my @pares     = grep { $_ % 2 == 0 } @numeros;   # filtra
+my @dobles    = map  { $_ * 2 } @numeros;        # transforma
+my @ordenados = sort { $a <=> $b } @numeros;     # orden numérico
+
+say "Pares: @pares";
+say "Dobles: @dobles";
+say "Ordenados: @ordenados";
+say "Suma: ", sum0(@numeros), ", máximo: ", max(@numeros);
+
+# El contexto cambia el resultado
+my $cuantos = @numeros;        # contexto escalar: cuenta
+my ($primero) = @numeros;      # contexto de lista: primer elemento
+say "Cuántos: $cuantos, primero: $primero";
+```
+
+Dentro de `grep` y `map`, `$_` es el elemento actual. `sort` compara con `$a` y `$b`; el operador `<=>` compara números y `cmp` compara texto. `List::Util` viene con Perl y trae funciones como `sum0` y `max`. Fíjate en las dos últimas líneas: `my $cuantos = @numeros` pide un escalar y cuenta, mientras `my ($primero) = @numeros` pide una lista y toma el primer valor. Ese es el contexto.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Expresiones regulares" archivo="regex.pl" ejecutar="perl regex.pl" salida="Fecha:   2026-10-09
+Nivel:   ERROR
+Mensaje: No se pudo abrir el archivo
+[mucho espacio sobra]
+Números: 1 22 333">
+
+```perl
+use v5.36;
+
+my $linea = "2026-10-09 ERROR No se pudo abrir el archivo";
+
+if ($linea =~ /^(?<fecha>\d{4}-\d{2}-\d{2}) \s+ (?<nivel>ERROR|WARN) \s+ (?<mensaje>.+)$/x) {
+    say "Fecha:   $+{fecha}";
+    say "Nivel:   $+{nivel}";
+    say "Mensaje: $+{mensaje}";
+}
+
+my $texto = "  mucho   espacio   sobra  ";
+(my $limpio = $texto) =~ s/^\s+|\s+$//g;   # quita espacios en los extremos
+$limpio =~ s/\s+/ /g;                      # junta los espacios internos
+say "[$limpio]";
+
+my @numeros = "a1 b22 c333" =~ /(\d+)/g;   # todas las coincidencias
+say "Números: @numeros";
+```
+
+`=~` aplica una expresión regular a una cadena. Con `(?<nombre>...)` las capturas se llaman por nombre y quedan en `%+`. La bandera `/x` permite espacios y saltos dentro del patrón para que se lea mejor. `s/viejo/nuevo/g` sustituye en toda la cadena. Si la expresión se usa en contexto de lista con `/g`, devuelve todas las coincidencias. Las regex son el motivo por el que mucha gente aprende Perl.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Contar palabras con un hash" archivo="palabras.pl" ejecutar="perl palabras.pl" salida="texto: 4
+es: 2
+perl: 2">
+
+```perl
+use v5.36;
+use utf8;
+use open qw(:std :encoding(UTF-8));
+
+my %cuenta;
+while (my $linea = <DATA>) {
+    chomp $linea;
+    $cuenta{lc $1}++ while $linea =~ /(\w+)/g;
+}
+
+my @claves = sort { $cuenta{$b} <=> $cuenta{$a} || $a cmp $b } keys %cuenta;
+for my $palabra (@claves[0 .. 2]) {
+    say "$palabra: $cuenta{$palabra}";
+}
+
+__DATA__
+Perl es práctico. Perl es rápido para texto.
+Texto, texto y más texto.
+```
+
+Lo que está después de `__DATA__` se puede leer como si fuera un archivo con `<DATA>`; para un archivo real usarías `open`. `chomp` quita el salto de línea. `$cuenta{lc $1}++` suma uno a la palabra encontrada, y si no existía, la crea con cero. Ordenamos por cantidad de mayor a menor y, si empatan, por orden alfabético. `use utf8` permite acentos en el código y `use open` configura la entrada y salida en UTF-8.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Referencias y estructuras anidadas" archivo="refs.pl" ejecutar="perl refs.pl" salida="Primera nota: 8
+Ciudad: Puebla
+Notas: 8 9 10 7, total 34
+Cantidad: 4">
+
+```perl
+use v5.36;
+
+my %alumno = (
+    nombre => "Ana",
+    notas  => [8, 9, 10],             # referencia a un arreglo
+    datos  => { ciudad => "Puebla" }, # referencia a un hash
+);
+
+say "Primera nota: $alumno{notas}[0]";
+say "Ciudad: $alumno{datos}{ciudad}";
+
+push @{ $alumno{notas} }, 7;          # agrega a la lista dentro del hash
+my $total = 0;
+$total += $_ for @{ $alumno{notas} };
+say "Notas: @{ $alumno{notas} }, total $total";
+
+my $ref = \@{ $alumno{notas} };
+say "Cantidad: ", scalar(@$ref);
+```
+
+Un hash o una lista solo guardan valores escalares, así que para anidar se guarda una referencia: corchetes `[...]` crean una referencia a una lista y llaves `{...}` crean una referencia a un hash. Entre elementos anidados se pueden omitir las flechas. Para trabajar con la lista completa se desreferencia con `@{ ... }`. La barra invertida `\` toma la referencia de una variable existente. Con referencias construyes datos tan complejos como un JSON.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Escribir sin use strict ni warnings">
+
+Sin `use strict` y `use warnings`, un error de dedo en el nombre de una variable crea otra variable vacía y el programa sigue como si nada. Con `use v5.36;` (o superior) ambos quedan activos. Si trabajas con código viejo, escribe `use strict; use warnings;` al inicio de cada archivo.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Comparar texto con == o números con eq">
+
+`==` y `<=>` comparan números; `eq` y `cmp` comparan texto. Si usas `==` con cadenas, Perl las convierte a número y te avisa con `Argument "abc" isn't numeric`. Elige el operador según el tipo de dato que comparas.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar el contexto">
+
+`my $x = @lista;` da el número de elementos, mientras `my ($x) = @lista;` da el primero. Una función que devuelve una lista se comporta distinto si la llamas esperando un escalar. Cuando un resultado te sorprenda, pregúntate si Perl lo está evaluando como valor o como lista.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Acentos que se ven mal">
+
+Si imprimes texto con acentos y ves símbolos raros, o aparece `Wide character in print`, Perl no sabe en qué codificación hablas. Pon `use utf8;` si escribes acentos en el código y `use open qw(:std :encoding(UTF-8));` para la entrada y salida. Al abrir archivos usa `'<:encoding(UTF-8)'`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="No quitar el salto de línea al leer">
+
+Cuando lees con `<$fh>` cada línea trae su `\n` al final. Si la comparas o la imprimes sin quitarlo, verás saltos extra o comparaciones que fallan. Usa `chomp $linea;` justo después de leer.
+
+</Callout>
+
+## Buenas prácticas
+
+- Empieza cada programa con `use v5.36;`, o con `use strict; use warnings;` si usas una versión anterior.
+- Declara cada variable con `my` en el bloque más pequeño donde se use.
+- Abre archivos con tres argumentos y comprueba el resultado: `open(my $fh, '<:encoding(UTF-8)', $ruta) or die "No pude abrir $ruta: $!";`.
+- Usa `List::Util` y `map`, `grep` y `sort` en lugar de ciclos manuales cuando la intención sea transformar o filtrar.
+- Escribe expresiones regulares largas con la bandera `/x` y capturas con nombre.
+- Busca primero en CPAN ([metacpan.org](https://metacpan.org/)) antes de escribir algo que ya existe; instala módulos con `cpanm`.
+- Consulta la documentación con `perldoc`: `perldoc -f nombre` para funciones y `perldoc -q palabra` para preguntas frecuentes.
+- Escribe pruebas con `Test::More` y córrelas con `prove`.
+
+## Siguiente paso
+
+Con escalares, listas, hashes, funciones, regex y referencias ya puedes automatizar tareas reales: un analizador de bitácoras, un renombrador de archivos o un conversor de CSV a JSON. Después aprende a leer y escribir archivos, a usar módulos de CPAN con `cpanm`, a escribir pruebas con `Test::More` y a crear tus propios módulos `.pm`. Para programación orientada a objetos moderna mira Moo y, como lectura más profunda, el libro Modern Perl.
+
+Si te interesa ver cómo se reimaginó la familia, prueba [Raku](/biblioteca/raku/), hermano de Perl con gramáticas y concurrencia incluidas. Guarda tus ejercicios en un repositorio con [Git y GitHub desde cero](/guias/git/). Todos los recursos están en [la biblioteca de Perl](/biblioteca/perl/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

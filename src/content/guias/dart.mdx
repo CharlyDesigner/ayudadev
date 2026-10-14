@@ -1,0 +1,395 @@
+---
+titulo: 'Dart desde cero'
+descripcion: 'Qué es Dart, cómo instalarlo y tus primeros programas: variables, nulos, funciones, clases, records y async, con ejemplos que puedes copiar y ejecutar.'
+tema: dart
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['dart-introduccion-al-lenguaje-oficial', 'dart-aprende-dart-codelabs-oficial', 'dart-curso-introduccion-fernando-herrera', 'dart-aprendiendo-dart-alxgcrz']
+requisitos: ['Saber abrir una terminal y crear archivos de texto']
+etiquetas: ['dart', 'flutter', 'null-safety', 'async', 'records']
+orden: 20
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Dart es un lenguaje creado por Google y es la base de Flutter, el marco con el que se hacen apps móviles, web y de escritorio con un solo código. También sirve para scripts, herramientas de terminal y servidores. Si tu meta es Flutter, aprender Dart primero te ahorra muchos tropiezos.
+
+Lo que necesitas tener claro:
+
+- **Tipado estático con inferencia**: cada variable tiene un tipo conocido al compilar, pero con `var` y `final` casi nunca lo escribes.
+- **Seguridad ante nulos**: un `String` nunca vale `null`; un `String?` sí puede. El compilador te obliga a manejar los dos casos.
+- **Dos formas de ejecutarse**: durante el desarrollo corre con una máquina virtual (por eso Flutter tiene recarga en caliente) y para producción se compila a código nativo. También puede compilar a JavaScript y WebAssembly para la web.
+- **Todo es un objeto**: hasta los números y las funciones. Las clases, los mixins y las extensiones son parte central del lenguaje.
+- **Dart 3 trae patrones**: records, `switch` como expresión, patrones y clases `sealed` para modelar datos con menos código.
+- **Asincronía con `Future` y `Stream`**: `async` y `await` hacen que esperar una respuesta se lea como código normal.
+- **Concurrencia con isolates**: cada isolate tiene su propia memoria y no comparte estado con otros. No los necesitas al empezar.
+- **Un punto de entrada**: el programa empieza en la función `main`.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Sin instalar nada**: abre [DartPad](https://dartpad.dev/), pega el código de un ejemplo y pulsa el botón de ejecutar. Sirve para probar todos los ejemplos de esta guía.
+2. **Windows**: en PowerShell escribe `winget install --id=Google.DartSDK -e`.
+3. **macOS**: con Homebrew, `brew tap dart-lang/dart` y luego `brew install dart`. Si Homebrew te pide un paso extra de confianza para el repositorio, sigue lo que indica la página oficial.
+4. **Linux**: en Debian y Ubuntu hay que agregar el repositorio oficial de Dart antes de ejecutar `sudo apt-get install dart`. Copia los pasos exactos desde [dart.dev/get-dart](https://dart.dev/get-dart).
+5. Cierra y vuelve a abrir la terminal. Comprueba con `dart --version`; debe mostrar una versión 3 o superior.
+6. Crea una carpeta `dart-practicas` y dentro un archivo `hola.dart` con el contenido del ejemplo 1. Córrelo con `dart run hola.dart`.
+
+</Pasos>
+
+Si luego instalas Flutter, su SDK ya incluye Dart. Un editor con buen soporte, como VS Code con la extensión de Dart, te marca los errores mientras escribes. Para proyectos con dependencias usarás `dart create` y el archivo `pubspec.yaml`.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo, variables y tipos" archivo="hola.dart" ejecutar="dart run hola.dart" salida="Hola, mundo
+Ana tiene 21 años
+Activa: true
+Precio con IVA: 23.19
+7 ~/ 2 = 3
+7 % 2 = 1
+7 / 2 = 3.5">
+
+```dart
+void main() {
+  print('Hola, mundo');
+
+  final nombre = 'Ana';     // final: se asigna una sola vez
+  var edad = 20;            // var: infiere int y puede cambiar
+  edad += 1;
+  const iva = 0.16;         // const: constante conocida al compilar
+  double precio = 19.99;
+  bool activa = true;
+
+  // Dentro del texto: $variable o ${expresion}
+  print('$nombre tiene $edad años');
+  print('Activa: $activa');
+
+  // Redondeo a dos decimales sin depender del idioma del sistema
+  final conIva = (precio * (1 + iva) * 100).round() / 100;
+  print('Precio con IVA: $conIva');
+
+  print('7 ~/ 2 = ${7 ~/ 2}');   // división entera
+  print('7 % 2 = ${7 % 2}');     // residuo
+  print('7 / 2 = ${7 / 2}');     // la división normal siempre da double
+}
+```
+
+`main` es el punto de entrada y `print` imprime una línea. Usa `final` para valores que no cambian y `var` para los que sí. A diferencia de otros lenguajes, en Dart `/` siempre da un número decimal; para la división entera existe `~/`.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Condiciones, ciclos y switch" archivo="control.dart" ejecutar="dart run control.dart" salida="0 es cero
+1 es impar
+2 es par
+3 es impar
+4 es par
+5 es impar
+Cuenta regresiva: 3
+Cuenta regresiva: 2
+Cuenta regresiva: 1
+Despegue
+[10, 7, 4, 1]">
+
+```dart
+// switch como expresión (Dart 3): devuelve un valor
+String clasificar(int n) => switch (n) {
+      0 => 'cero',
+      _ when n.isEven => 'par',
+      _ => 'impar',
+    };
+
+void main() {
+  for (var i = 0; i <= 5; i++) {
+    print('$i es ${clasificar(i)}');
+  }
+
+  var cuenta = 3;
+  while (cuenta > 0) {
+    print('Cuenta regresiva: $cuenta');
+    cuenta--;
+  }
+  print('Despegue');
+
+  // Una lista construida con un for dentro de los corchetes
+  print([for (var i = 10; i >= 1; i -= 3) i]);
+}
+```
+
+En el `switch` cada caso usa `=>` y el guion bajo `_` significa "cualquier otro valor". La palabra `when` agrega una condición extra a un caso. El `for` dentro de los corchetes es una *collection for*: construye la lista mientras la declaras.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Seguridad ante nulos" archivo="nulos.dart" ejecutar="dart run nulos.dart" salida="4
+0
+DART
+vacío
+null
+sin valor
+9">
+
+```dart
+// El signo ? en el tipo indica que el valor puede ser null
+int largo(String? texto) => texto?.length ?? 0;
+
+String mayusculas(String? texto) => texto?.toUpperCase() ?? 'vacío';
+
+void imprimirLargo(String? texto) {
+  if (texto != null) {
+    print(texto.length);   // aquí Dart ya sabe que no es null
+  }
+}
+
+void main() {
+  print(largo('Dart'));        // 4
+  print(largo(null));          // 0
+  print(mayusculas('Dart'));   // DART
+  print(mayusculas(null));     // vacío
+
+  String? nombre;              // sin valor inicial: es null
+  print(nombre);
+  nombre ??= 'sin valor';      // asigna solo si estaba en null
+  print(nombre);
+  imprimirLargo(nombre);
+}
+```
+
+`?.` llama al método solo si el valor existe; si es `null`, todo el resultado es `null`. `??` da un valor alternativo y `??=` asigna solo cuando la variable está vacía. Tras comprobar `texto != null`, Dart promueve la variable a `String` normal dentro del `if`. Así casi nunca necesitas el operador `!`.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Funciones, extensiones y colecciones" archivo="funciones.dart" ejecutar="dart run funciones.dart" salida="Hola, Ana
+Buenas, Luis
+true
+false
+Promedio: 8.5
+Mayor: 10
+[80, 90, 100]">
+
+```dart
+// Parámetro con nombre y valor por defecto, entre llaves
+String saludar(String nombre, {String saludo = 'Hola'}) => '$saludo, $nombre';
+
+// Extensión: agrega un getter a String sin heredar de ella
+extension on String {
+  bool get esPalindromo {
+    final limpio = toLowerCase().replaceAll(RegExp(r'[^a-záéíóúñ]'), '');
+    return limpio == limpio.split('').reversed.join();
+  }
+}
+
+void main() {
+  print(saludar('Ana'));
+  print(saludar('Luis', saludo: 'Buenas'));
+  print('Anita lava la tina'.esPalindromo);
+  print('Dart'.esPalindromo);
+
+  final notas = [8, 9, 7, 10];
+  final suma = notas.reduce((a, b) => a + b);
+  print('Promedio: ${suma / notas.length}');
+  print('Mayor: ${notas.reduce((a, b) => a > b ? a : b)}');
+
+  // where filtra y map transforma; toList() materializa el resultado
+  final resultado = notas.where((n) => n >= 8).map((n) => n * 10).toList();
+  print(resultado);
+}
+```
+
+Los parámetros entre llaves se pasan por nombre y son opcionales; con `required` los vuelves obligatorios. Una extensión agrega métodos o getters a un tipo existente. Las colecciones traen `where`, `map` y `reduce`, que reciben funciones anónimas con la forma `(parametro) => expresion`. Fíjate que `where` y `map` son perezosos: por eso se cierra con `toList()`.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Clases, records y sealed" archivo="clases.dart" ejecutar="dart run clases.dart" salida="Ana: 150.0
+Retiro de 500: false
+Retiro de 30: true
+Ana: 120.0
+Luis cumple 26 el próximo año
+Área del rectángulo: 12.0
+Área del cuadrado: 25.0">
+
+```dart
+class Cuenta {
+  // El constructor asigna el titular y deja _saldo para la lista de inicialización
+  Cuenta(this.titular, double saldoInicial) : _saldo = saldoInicial;
+
+  final String titular;
+  double _saldo;                       // el guion bajo lo hace privado al archivo
+
+  double get saldo => _saldo;          // getter: solo lectura desde fuera
+
+  void depositar(double monto) {
+    if (monto <= 0) {
+      throw ArgumentError('El monto debe ser positivo');
+    }
+    _saldo += monto;
+  }
+
+  bool retirar(double monto) {
+    if (monto > _saldo) return false;
+    _saldo -= monto;
+    return true;
+  }
+
+  @override
+  String toString() => '$titular: $_saldo';
+}
+
+// Record: un grupo de valores sin crear una clase
+(String, int) persona() => ('Luis', 25);
+
+// sealed: un conjunto cerrado de variantes
+sealed class Forma {}
+
+class Rectangulo extends Forma {
+  Rectangulo(this.ancho, this.alto);
+  final double ancho;
+  final double alto;
+}
+
+class Cuadrado extends Forma {
+  Cuadrado(this.lado);
+  final double lado;
+}
+
+// El switch sobre un sealed no necesita caso por defecto
+double area(Forma f) => switch (f) {
+      Rectangulo(:final ancho, :final alto) => ancho * alto,
+      Cuadrado(:final lado) => lado * lado,
+    };
+
+void main() {
+  final cuenta = Cuenta('Ana', 100);
+  cuenta.depositar(50);
+  print(cuenta);
+  print('Retiro de 500: ${cuenta.retirar(500)}');
+  print('Retiro de 30: ${cuenta.retirar(30)}');
+  print(cuenta);
+
+  final (nombre, edad) = persona();   // desestructura el record
+  print('$nombre cumple ${edad + 1} el próximo año');
+
+  print('Área del rectángulo: ${area(Rectangulo(3, 4))}');
+  print('Área del cuadrado: ${area(Cuadrado(5))}');
+}
+```
+
+El constructor `Cuenta(this.titular, ...)` asigna el parámetro directo al campo. Un nombre que empieza con guion bajo es privado a su archivo, y `get saldo` lo expone solo para lectura. Un *record* como `(String, int)` devuelve varios valores sin crear una clase. Con `sealed`, el `switch` te avisa si olvidas una variante. Y como `100` se acepta donde se espera un `double`, `Cuenta('Ana', 100)` funciona.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Futures, async y streams" archivo="asincrono.dart" ejecutar="dart run asincrono.dart" salida="Inicio
+Datos de Ana
+[Datos de Luis, Datos de Beto]
+Tick 1
+Tick 2
+Tick 3
+Falló: Exception: No se puede dividir entre cero
+Fin">
+
+```dart
+// Un Future representa un valor que llegará después
+Future<String> pedirDato(String nombre, int milisegundos) async {
+  await Future.delayed(Duration(milliseconds: milisegundos));
+  return 'Datos de $nombre';
+}
+
+// Un Stream entrega varios valores a lo largo del tiempo
+Stream<int> contar(int hasta) async* {
+  for (var i = 1; i <= hasta; i++) {
+    await Future.delayed(Duration(milliseconds: 10));
+    yield i;
+  }
+}
+
+Future<int> dividir(int a, int b) async {
+  if (b == 0) {
+    throw Exception('No se puede dividir entre cero');
+  }
+  return a ~/ b;
+}
+
+Future<void> main() async {
+  print('Inicio');
+
+  print(await pedirDato('Ana', 50));
+
+  // Future.wait lanza ambas peticiones a la vez y espera las dos
+  final resultados = await Future.wait([
+    pedirDato('Luis', 30),
+    pedirDato('Beto', 10),
+  ]);
+  print(resultados);
+
+  await for (final n in contar(3)) {
+    print('Tick $n');
+  }
+
+  try {
+    await dividir(1, 0);
+  } catch (e) {
+    print('Falló: $e');
+  }
+  print('Fin');
+}
+```
+
+`async` marca una función que devuelve un `Future` y `await` espera el resultado sin bloquear el programa. `Future.wait` ejecuta varias tareas en paralelo y devuelve los resultados en el mismo orden en que las pasaste, aunque una termine antes. `async*` con `yield` crea un `Stream`, y `await for` lo recorre. Los errores dentro de una función `async` se atrapan con `try` y `catch`, igual que en código normal.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Olvidar await">
+
+Si llamas a una función `async` sin `await`, no obtienes el valor sino el `Future`: al imprimirlo verás algo como `Instance of 'Future<String>'`. Además, el programa sigue sin esperar y los errores pueden perderse. Pon `await` (dentro de una función `async`) o usa `then`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Llenar el código de signos de exclamación">
+
+`valor!` le dice a Dart que confíes en que no es `null`; si falla, ves `Null check operator used on a null value`. Úsalo poco. Mejor aprovecha `?.`, `??`, `if (x != null)` y la promoción de tipos, que te dan el mismo resultado de forma segura.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Asignar una división a un int">
+
+`int mitad = 7 / 2;` no compila: `/` devuelve un `double` y no cabe en un `int`. Usa `7 ~/ 2` para la división entera, o `(7 / 2).toInt()` si quieres truncar un decimal. Es el error de tipos más frecuente al empezar.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Usar late sin inicializar">
+
+`late` promete que le darás valor antes de usarla. Si la lees antes, el programa falla con `LateInitializationError`. Úsala solo cuando de verdad inicializas antes de leer; si el valor puede faltar, mejor declara la variable con `?`.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Confundir final con const">
+
+`final` se asigna una vez, pero en tiempo de ejecución. `const` exige un valor conocido al compilar. Por eso `const ahora = DateTime.now();` da error, mientras que `final ahora = DateTime.now();` funciona. Si dudas, usa `final`.
+
+</Callout>
+
+## Buenas prácticas
+
+- Usa `final` por defecto; `var` solo cuando el valor cambie.
+- Nombres en `lowerCamelCase` para variables y funciones, `UpperCamelCase` para clases y `snake_case` para nombres de archivo.
+- Evita `!` y `late` salvo que estés seguro; prefiere tipos que expresen si el valor puede faltar.
+- Usa parámetros con nombre cuando una función tenga más de dos argumentos, para que las llamadas se lean solas.
+- Declara el tipo de retorno de tus funciones públicas.
+- Usa `async` y `await` en lugar de cadenas largas de `then`.
+- Corre `dart format .` y `dart analyze` con frecuencia; el analizador te señala problemas antes de ejecutar.
+- Lee la guía oficial Effective Dart cuando ya tengas práctica.
+
+## Siguiente paso
+
+Ya conoces los tipos, los nulos, las clases, los records y la asincronía. Sigue con colecciones a fondo (`Map` y `Set`), herencia, mixins, genéricos y el manejo de archivos con `dart:io`. Después crea un proyecto con `dart create` y escribe pruebas con el paquete `test`.
+
+Con esa base ya puedes empezar Flutter con la [ruta oficial](https://docs.flutter.dev/get-started/learn-flutter). Si vienes de otros lenguajes, compara con [Kotlin desde cero](/guias/kotlin/) o [TypeScript desde cero](/guias/typescript/), que se parecen en tipos y nulos. Guarda cada ejercicio en un repositorio con [Git y GitHub desde cero](/guias/git/). Todos los recursos están en [la biblioteca de Dart](/biblioteca/dart/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

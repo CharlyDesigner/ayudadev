@@ -1,0 +1,103 @@
+---
+titulo: 'Editor, IDE y terminal: qué usar'
+descripcion: 'Qué diferencia hay entre un editor de código, un IDE y la terminal, qué hace cada uno y cómo elegir tus herramientas sin perder semanas comparando.'
+categoria: herramientas
+nivel: principiante
+tiempoLectura: 8
+publicado: 2026-10-09
+temas: [generales, git, linux]
+etiquetas: [editor, ide, vscode, terminal, herramientas]
+orden: 47
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Quieres empezar a programar y la primera pregunta es: ¿qué programa uso? Buscas y encuentras Visual Studio Code, Visual Studio, PyCharm, IntelliJ, Vim, Sublime, Cursor, Notepad++... Cada foro dice que el suyo es el mejor. Terminas leyendo comparaciones en lugar de escribir código.
+
+Aquí va la versión corta: casi cualquier opción sirve para empezar. Lo importante es entender qué hace cada tipo de herramienta, para que elijas con criterio y puedas cambiar sin drama.
+
+## Qué es
+
+Un **editor de código** es un programa para escribir archivos de texto con ayudas pensadas para programar. Un **IDE** (*Integrated Development Environment*, entorno de desarrollo integrado) es una herramienta más completa que junta muchas cosas en una sola ventana. La **terminal** es la ventana donde ejecutas comandos. Las tres se complementan.
+
+| Herramienta | Qué hace | Piensa en... |
+|---|---|---|
+| Editor de texto simple | Edita texto plano, sin ayudas | Un cuaderno en blanco |
+| Editor de código | Resalta sintaxis, autocompleta, busca en carpetas, se amplía con extensiones | Un cuaderno con reglas y atajos |
+| IDE | Editor más depurador, pruebas, refactorización y gestión del proyecto integrados | Una cocina completa |
+| Terminal | Ejecuta comandos y programas | La línea de mando |
+
+La frontera entre editor e IDE es difusa. Un editor con muchas extensiones se comporta como un IDE, y algunos IDE son muy ligeros.
+
+## Qué te da un buen entorno de programación
+
+Sin importar el nombre, busca estas capacidades:
+
+- **Resaltado de sintaxis.** Colorea el código para que lo leas más rápido y veas errores de escritura.
+- **Autocompletado.** Te sugiere nombres de funciones y variables. Ahorra tiempo y errores.
+- **Errores en vivo.** Subraya problemas mientras escribes, gracias a un *linter* o al servidor de lenguaje.
+- **Navegación.** Ir a la definición de una función, ver dónde se usa, buscar en todo el proyecto.
+- **Formateo.** Un formateador deja el código con estilo uniforme al guardar.
+- **Depurador.** Pausa el programa y te deja inspeccionar variables. Lo verás en el artículo de depuración.
+- **Terminal integrada.** Una terminal dentro de la ventana, en la carpeta de tu proyecto.
+- **Integración con Git.** Ver qué cambió, preparar y hacer commits sin salir del programa.
+
+Muchas de esas funciones vienen del **Language Server Protocol (LSP)**, un estándar que permite que un servidor por lenguaje dé autocompletado y diagnósticos a cualquier editor compatible. Por eso tantos editores se sienten parecidos.
+
+## Editor frente a IDE
+
+**Un editor ligero** abre rápido, funciona con casi cualquier lenguaje y lo personalizas con extensiones. Es buen punto de partida si quieres probar varios lenguajes o trabajar en web. Visual Studio Code es el ejemplo más conocido y gratuito; los editores de terminal como Vim, Neovim o Nano también entran aquí.
+
+**Un IDE completo** viene configurado para un ecosistema y suele ofrecer más herramientas sin que instales nada: refactorizaciones seguras, depuración avanzada, perfiles de rendimiento, asistentes de proyecto. Ejemplos: la familia de JetBrains (IntelliJ IDEA, PyCharm, WebStorm), Visual Studio para .NET y C++, Android Studio para Android y Xcode para apps de Apple. Algunos tienen ediciones gratuitas y otras de pago, así que revisa las condiciones en el sitio oficial.
+
+Una regla práctica: si trabajas en un solo ecosistema grande (Java, .NET, Android, iOS), un IDE especializado casi siempre vale la pena. Si saltas entre lenguajes o haces desarrollo web, un editor extensible suele bastar.
+
+<Callout tipo="tip" titulo="Elige uno y quédate tres meses">
+
+El mejor editor es el que dominas. Elige uno que sea popular para tu lenguaje, instala solo las extensiones que necesites, y aprende sus atajos básicos: buscar, ir a un archivo, comentar una línea, mover líneas y abrir la terminal. Cambiar de editor cada semana te hace más lento que usar uno regular.
+
+</Callout>
+
+## Y los asistentes de IA
+
+Muchos editores ofrecen asistentes de IA integrados: sugerencias mientras escribes, un chat que ve tu proyecto o incluso agentes que editan archivos. Pueden ayudarte mucho, y también hacerte dependiente si los usas sin pensar. Úsalos como un tutor y revisa cada cambio, no como un piloto automático. En el sitio hay guías para aprender a usarlos bien.
+
+## La terminal sigue siendo necesaria
+
+Aunque tu IDE tenga botones para correr y probar, la terminal es la herramienta común a todos los entornos. Ahí instalas dependencias, corres scripts, usas Git, ejecutas pruebas y despliegas. Si sabes lo básico de la terminal, puedes trabajar igual en tu laptop, en un servidor o en un contenedor. La mayoría de los editores traen una terminal integrada, que se abre en la carpeta del proyecto.
+
+<Callout tipo="warning" titulo="Cuidado con instalar extensiones de más">
+
+Las extensiones pueden leer tus archivos y ejecutar código en tu máquina. Instala solo las de autores confiables, revisa cuánta gente las usa y qué permisos piden, y desinstala las que no uses. Una extensión desconocida con acceso a tu código y tus variables de entorno es un riesgo real.
+
+</Callout>
+
+## Cómo elegir sin parálisis
+
+1. **¿Qué lenguaje vas a aprender?** Busca qué usa la gente en ese ecosistema.
+2. **¿Es gratis y se mantiene activo?** Revisa el sitio oficial y su documentación.
+3. **¿Tiene la comunidad y las extensiones que necesitas?** Te ahorrará configuración.
+4. **¿Lo puedes instalar y abrir hoy?** Si te cuesta más de 30 minutos, elige otro.
+5. **Prueba una semana.** Si algo te estorba, cambia. Si no, sigue.
+
+## Pruébalo tú
+
+1. Instala un editor o IDE desde su sitio oficial y abre una carpeta con un archivo de tu lenguaje.
+2. Escribe una línea con un error a propósito (una comilla sin cerrar) y observa cómo te avisa.
+3. Abre la terminal integrada, escribe `pwd` o `Get-Location` y comprueba que estás dentro de la carpeta del proyecto.
+4. Aprende cinco atajos: abrir archivo por nombre, buscar en todo el proyecto, comentar línea, mover línea arriba o abajo y abrir terminal. Anótalos y úsalos una semana.
+
+## Errores y mitos comunes
+
+- **"Los profesionales solo usan Vim."** Los profesionales usan lo que les rinde. Hay gente excelente con cada herramienta.
+- **"Un IDE hace el trabajo por mí."** Te ayuda, pero tienes que entender el código.
+- **"Necesito la configuración más avanzada desde el día uno."** No. Configura lo mínimo y agrega cosas cuando te falten.
+- **"Si uso IA, ya no necesito saber la terminal."** La terminal sigue siendo la base de casi todo el flujo de trabajo.
+- **"Debo pagar para programar en serio."** Hay herramientas gratuitas excelentes. Paga solo si algo te resuelve un problema real.
+
+## Qué sigue
+
+- Domina la ventana de comandos con [La terminal explicada](/fundamentos/terminal-explicada/).
+- Guarda tu trabajo con la [guía de Git y GitHub](/guias/git/).
+- Aprende a encontrar errores en [Depuración: DevTools, breakpoints y logs](/fundamentos/depuracion-con-devtools-y-debugger/).
+- Si te interesa usar IA mientras programas, lee [Revisar y depurar con IA](/ia/aprende/revisar-y-depurar-con-ia/).

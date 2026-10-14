@@ -42,6 +42,7 @@ import Icon from '@components/ui/Icon.astro';
     url: string;
     sub?: string;
     tags?: string;
+    logo?: string;
   }
 
   const palette = document.querySelector<HTMLElement>('[data-command-palette]');
@@ -53,20 +54,31 @@ import Icon from '@components/ui/Icon.astro';
       accion: 'Acciones',
       pagina: 'Páginas',
       tema: 'Temas',
+      ruta: 'Rutas de estudio',
       guia: 'Guías',
       ia: 'IA',
-      recurso: 'Recursos',
+      fundamento: 'Fundamentos',
+      hoja: 'Hojas de referencia',
+      reto: 'Retos',
+      proyecto: 'Proyectos',
+      recurso: 'Recursos gratis',
+      termino: 'Glosario',
+      herramienta: 'Herramientas',
+      comunidad: 'Comunidad',
+      carrera: 'Carrera',
       noticia: 'Noticias',
       prompt: 'Prompts',
     };
     const ORDEN = Object.keys(GRUPOS);
     const ACCIONES: Item[] = [
+      { tipo: 'accion', titulo: 'Empieza aquí: encuentra tu ruta', url: '/empieza-aqui/' },
       { tipo: 'accion', titulo: 'Cambiar tema claro u oscuro', url: '#tema' },
       { tipo: 'accion', titulo: 'Ver mis favoritos', url: '/biblioteca/favoritos/' },
+      { tipo: 'accion', titulo: 'Ver mi progreso', url: '/progreso/' },
       { tipo: 'accion', titulo: 'Enviar un recurso', url: '/enviar-recurso/' },
-      { tipo: 'accion', titulo: 'Apoyar el proyecto', url: '/apoya/' },
     ];
 
+    const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
     let indice: Item[] | null = null;
     let cargando: Promise<Item[]> | null = null;
     let activo = 0;
@@ -117,7 +129,8 @@ import Icon from '@components/ui/Icon.astro';
           a.dataset.commandItem = '';
           a.dataset.index = String(n++);
           a.className = 'flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm hover:bg-surface-2 aria-selected:bg-surface-2';
-          a.innerHTML = `<span class="min-w-0"><span class="block truncate font-medium">${escapar(it.titulo)}</span>${it.sub ? `<span class="block truncate text-xs text-muted">${escapar(it.sub)}</span>` : ''}</span><span class="text-muted">↵</span>`;
+          const logo = it.logo ? `<span class="logo-tile grid h-8 w-8 shrink-0 place-items-center rounded-lg p-1.5"><img src="/logos/${escapar(it.logo)}.svg" alt="" width="20" height="20" class="h-full w-full object-contain" /></span>` : '';
+          a.innerHTML = `<span class="flex min-w-0 items-center gap-3">${logo}<span class="min-w-0"><span class="block truncate font-medium">${escapar(it.titulo)}</span>${it.sub ? `<span class="block truncate text-xs text-muted">${escapar(it.sub)}</span>` : ''}</span></span><span class="text-muted">↵</span>`;
           if (it.url === '#tema') {
             a.addEventListener('click', (e) => {
               e.preventDefault();
@@ -130,8 +143,6 @@ import Icon from '@components/ui/Icon.astro';
       }
       seleccionar(0);
     };
-
-    const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
 
     const items = () => [...list.querySelectorAll<HTMLAnchorElement>('[data-command-item]')];
     const seleccionar = (i: number) => {

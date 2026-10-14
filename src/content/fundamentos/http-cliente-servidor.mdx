@@ -1,0 +1,203 @@
+---
+titulo: 'HTTP: cómo hablan el cliente y el servidor'
+descripcion: 'Métodos, códigos de estado y encabezados de HTTP explicados con una petición real hecha con curl, para que entiendas qué pasa cada vez que abres una página.'
+categoria: internet
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [javascript, nodejs, linux]
+etiquetas: [http, curl, headers, status-codes, api]
+orden: 2
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cuando tu navegador pide una página, o tu app del teléfono pide tus mensajes, no hay magia: hay un texto que sale y otro texto que regresa. Ese texto sigue un formato llamado **HTTP**. Si lo entiendes, puedes leer errores de red, probar una API sin escribir código y saber por qué un `404` no es lo mismo que un `500`.
+
+## Qué es
+
+HTTP (HyperText Transfer Protocol) es el idioma con el que hablan los clientes y los servidores web. Funciona con un esquema muy simple: el cliente manda una **petición** (request) y el servidor devuelve una **respuesta** (response). Una por una, como preguntar y contestar.
+
+Una analogía: pedir en un restaurante.
+
+| En el restaurante | En HTTP |
+| --- | --- |
+| "Quiero ver el menú" | Petición `GET` |
+| "Quiero hacer un pedido nuevo" | Petición `POST` |
+| "Cambia mi pedido por este otro" | Petición `PUT` o `PATCH` |
+| "Cancela mi pedido" | Petición `DELETE` |
+| "Aquí tiene" | Código `200` |
+| "No tenemos ese platillo" | Código `404` |
+| "La cocina se descompuso" | Código `500` |
+
+Otra característica importante: HTTP **no guarda memoria** entre peticiones. Cada una llega como si fuera la primera. Por eso existen las cookies y los tokens, que veremos en el artículo de [cookies, sesiones y tokens](/fundamentos/cookies-sesiones-y-tokens/).
+
+## Anatomía de una petición
+
+Una petición tiene cuatro partes:
+
+```text
+GET /todos/1 HTTP/1.1              <-- línea inicial: método, ruta, versión
+Host: jsonplaceholder.typicode.com <-- encabezados: datos sobre la petición
+Accept: application/json
+                                   <-- línea vacía
+(cuerpo opcional)                  <-- datos que envías (en POST, PUT, PATCH)
+```
+
+- **Método:** qué quieres hacer.
+- **Ruta:** sobre qué recurso (`/todos/1`).
+- **Encabezados:** pares nombre y valor con información extra (a quién preguntas, qué formato aceptas, quién eres).
+- **Cuerpo:** el contenido que envías, por ejemplo un JSON.
+
+Una URL completa como `https://jsonplaceholder.typicode.com/todos?userId=1` se divide en esquema (`https`), host, ruta (`/todos`) y **parámetros de consulta** (`?userId=1`), que sirven para filtrar o paginar.
+
+## Los métodos principales
+
+| Método | Para qué sirve | ¿Lleva cuerpo? |
+| --- | --- | --- |
+| `GET` | Leer un recurso. No debe cambiar nada en el servidor. | No |
+| `POST` | Crear un recurso nuevo o ejecutar una acción. | Sí |
+| `PUT` | Reemplazar un recurso completo. | Sí |
+| `PATCH` | Modificar solo algunos campos. | Sí |
+| `DELETE` | Borrar un recurso. | Normalmente no |
+
+Dos ideas que debes conocer:
+
+- Un método es **seguro** si no cambia datos (`GET`). Por eso el navegador puede repetirlo sin avisarte.
+- Un método es **idempotente** si repetirlo da el mismo resultado que hacerlo una vez. `DELETE` y `PUT` lo son; `POST` normalmente no (dos `POST` pueden crear dos recursos).
+
+## Los códigos de estado
+
+La primera línea de la respuesta trae un número de tres cifras. La primera cifra te dice la familia:
+
+| Rango | Significa | Ejemplos |
+| --- | --- | --- |
+| `1xx` | Información | `101` cambio de protocolo |
+| `2xx` | Todo salió bien | `200` OK, `201` creado, `204` sin contenido |
+| `3xx` | Redirección | `301` movido para siempre, `304` no ha cambiado |
+| `4xx` | Error del cliente (tú pediste mal) | `400` petición inválida, `401` sin identificar, `403` prohibido, `404` no existe, `429` demasiadas peticiones |
+| `5xx` | Error del servidor (ellos fallaron) | `500` error interno, `502` mala puerta de enlace, `503` no disponible |
+
+Regla práctica: si ves un `4xx`, revisa tu petición. Si ves un `5xx`, probablemente el problema no es tuyo, aunque a veces un dato raro tuyo lo dispara.
+
+## Una petición real con curl
+
+`curl` es una herramienta de terminal para hacer peticiones HTTP. Viene en Windows 10 y 11, macOS y la mayoría de distribuciones de Linux. Vamos a pedir una tarea a JSONPlaceholder, una API pública de prueba que no necesita llave. La opción `-i` muestra los encabezados de la respuesta.
+
+```bash
+curl -i https://jsonplaceholder.typicode.com/todos/1
+```
+
+La respuesta tiene esta forma (te dejo los encabezados más importantes; el servidor envía algunos más):
+
+```text
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 83
+cache-control: max-age=43200
+etag: W/"53-hfEnumeNh6YirfjyjaujcOPPT+s"
+
+{
+  "userId": 1,
+  "id": 1,
+  "title": "delectus aut autem",
+  "completed": false
+}
+```
+
+Lee de arriba abajo: primero la **línea de estado** (`200 OK`), luego los **encabezados de respuesta**, una línea vacía y al final el **cuerpo**. `Content-Type` te dice cómo interpretar el cuerpo (aquí, JSON). `cache-control` le indica al cliente cuánto tiempo puede reutilizar la respuesta sin volver a preguntar.
+
+Ahora crea algo con `POST`. Esta API de prueba finge guardar el dato y responde como si lo hubiera hecho:
+
+```bash
+curl -i -X POST https://jsonplaceholder.typicode.com/todos \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Aprender HTTP","completed":false,"userId":1}'
+```
+
+```text
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+location: https://jsonplaceholder.typicode.com/todos/201
+
+{
+  "title": "Aprender HTTP",
+  "completed": false,
+  "userId": 1,
+  "id": 201
+}
+```
+
+Observa tres cosas: el código es `201` (creado), el encabezado `location` apunta al recurso nuevo y el servidor le asignó un `id`. El valor del `id` puede cambiar en tu prueba.
+
+Y un recurso que no existe:
+
+```bash
+curl -i https://jsonplaceholder.typicode.com/todos/99999
+```
+
+```text
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+
+{}
+```
+
+## Encabezados que verás todo el tiempo
+
+| Encabezado | Dirección | Qué hace |
+| --- | --- | --- |
+| `Host` | petición | A qué dominio va (un mismo servidor puede alojar muchos sitios) |
+| `Accept` | petición | Qué formatos entiendes |
+| `Content-Type` | ambos | Formato del cuerpo (`application/json`, `text/html`) |
+| `Authorization` | petición | Credenciales o token para identificarte |
+| `Cookie` y `Set-Cookie` | petición y respuesta | Guardar y devolver pequeños datos de sesión |
+| `Cache-Control` | respuesta | Cuánto tiempo se puede guardar la respuesta |
+| `Location` | respuesta | A dónde ir tras una redirección o una creación |
+| `User-Agent` | petición | Qué programa hace la petición |
+
+<Callout tipo="tip" titulo="Usa -v para ver todo">
+`curl -v` muestra las líneas de la petición con `>` y las de la respuesta con `<`. Es la forma más rápida de ver qué envió de verdad tu cliente y qué contestó el servidor cuando algo no funciona.
+</Callout>
+
+## Lo mismo desde JavaScript
+
+Con `fetch` (disponible en navegadores y en Node.js) la misma petición se ve así:
+
+```js
+const res = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+console.log(res.status, res.ok);            // 200 true
+console.log(res.headers.get('content-type')); // application/json; charset=utf-8
+const tarea = await res.json();
+console.log(tarea.title);                   // delectus aut autem
+```
+
+<Callout tipo="warning" titulo="fetch no falla con un 404">
+`fetch` solo lanza error si no hubo red. Un `404` o un `500` es una respuesta válida para HTTP, así que debes revisar `res.ok` (o `res.status`) tú mismo antes de leer el cuerpo.
+</Callout>
+
+## Pruébalo tú
+
+1. Abre tu terminal ([aquí aprendes lo básico](/fundamentos/terminal-explicada/)).
+2. Ejecuta `curl -i https://jsonplaceholder.typicode.com/todos/1` y encuentra la línea de estado, el `Content-Type` y el cuerpo.
+3. Cambia el `1` por `2`, y luego por `99999`. ¿Qué código ves en cada caso?
+4. Prueba `curl -s -o /dev/null -w "%{http_code}\n" https://jsonplaceholder.typicode.com/todos/1`. En PowerShell reemplaza `/dev/null` por `NUL`, y escribe `curl.exe` en lugar de `curl` para evitar un alias. Solo imprime el código de estado.
+5. Prueba `curl "https://jsonplaceholder.typicode.com/todos?userId=1&_limit=2"` y observa cómo los parámetros de consulta filtran la lista a dos elementos.
+
+## Errores y mitos comunes
+
+- **"Un 200 significa que todo salió bien en mi app."** Significa que la petición se atendió. Algunas APIs devuelven `200` con un campo de error dentro del cuerpo. Lee la documentación.
+- **"Usar GET para borrar o modificar datos está bien."** No. Un `GET` debe ser seguro, porque navegadores, buscadores y cachés lo repiten sin preguntar.
+- **"Poner datos secretos en la URL es lo mismo que ponerlos en el cuerpo."** No. Las URL quedan en historiales, registros de servidores y enlaces compartidos. Las contraseñas y los tokens nunca van en la URL.
+- **"401 y 403 son iguales."** `401` dice "no sé quién eres". `403` dice "sé quién eres, pero no tienes permiso".
+- **"HTTP y HTTPS son protocolos distintos."** HTTPS es HTTP dentro de una conexión cifrada. El formato de petición y respuesta es el mismo.
+- **"Cada petición recuerda a la anterior."** No: HTTP no tiene memoria. Lo que parece memoria son cookies, tokens o datos guardados en el servidor.
+
+## Qué sigue
+
+- [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/): usar HTTP desde tu código.
+- [REST y GraphQL](/fundamentos/rest-y-graphql/): estilos para diseñar APIs encima de HTTP.
+- [Cookies, sesiones y tokens](/fundamentos/cookies-sesiones-y-tokens/): cómo se recuerda a un usuario si HTTP olvida todo.
+- [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/)
+- [Guía de JavaScript](/guias/javascript/) para practicar `fetch` y `async/await`.
+- [Glosario](/glosario/) y [biblioteca de Node.js](/biblioteca/nodejs/).

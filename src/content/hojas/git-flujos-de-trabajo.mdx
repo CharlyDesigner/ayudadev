@@ -1,0 +1,218 @@
+---
+titulo: 'Git: flujos de trabajo en equipo'
+descripcion: 'Ramas, pull requests, merge frente a rebase, conflictos, cherry-pick, bisect y cómo recuperarte de errores. Los flujos de Git para trabajar con otras personas.'
+tema: git
+etiquetas: ['git', 'github', 'ramas', 'rebase', 'pull requests']
+publicado: 2026-10-09
+orden: 2
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cómo se usa Git cuando trabajas con más gente: ramas, revisión, integración y rescate. Para los comandos básicos, mira la hoja de [comandos esenciales](/hojas/git-comandos-esenciales/).
+
+## Flujo de rama corta (GitHub flow)
+
+El más común y el más simple: `main` siempre funciona y cada cambio viaja en su propia rama.
+
+```bash
+git switch main
+git pull                          # parte de lo último
+git switch -c fix/login-bug       # una rama por tarea
+# ...edita, prueba...
+git add -p                        # revisa qué entra
+git commit -m "Corrige el error de login con correo en mayúsculas"
+git push -u origin fix/login-bug  # sube y enlaza
+# abre el pull request en GitHub, espera revisión y fusiona
+git switch main && git pull       # trae el resultado
+git branch -d fix/login-bug       # borra la rama local
+```
+
+| Paso | Regla práctica |
+| --- | --- |
+| Nombre de rama | `tipo/descripcion-corta`: `feat/carrito`, `fix/login-bug`, `docs/readme` |
+| Tamaño | Cambios pequeños, que se revisen en minutos |
+| `main` | Protegida: solo entra código por pull request |
+| Vida de la rama | Días, no semanas. Entre más vive, más conflictos |
+
+## Otros modelos
+
+| Modelo | Idea |
+| --- | --- |
+| Trunk-based | Ramas de horas o un día, integración continua a `main`, funciones incompletas ocultas con banderas |
+| Git Flow | Ramas largas `develop`, `release` y `hotfix` además de `main`. Útil con versiones numeradas; pesado para web |
+| Fork y pull request | Copias el repositorio ajeno a tu cuenta y propones cambios desde tu copia (típico en código abierto) |
+
+## Fork: mantenerte al día con el original
+
+```bash
+git remote add upstream https://github.com/ORIGINAL/proyecto.git
+git remote -v                     # origin = tu fork, upstream = el original
+git fetch upstream
+git switch main
+git merge upstream/main           # o: git rebase upstream/main
+git push origin main
+```
+
+## Merge o rebase
+
+| | `merge` | `rebase` |
+| --- | --- | --- |
+| Qué hace | Une dos líneas con un commit de unión | Reaplica tus commits encima de otra rama |
+| Historial | Fiel a lo ocurrido, con bifurcaciones | Lineal y limpio |
+| Hashes | No cambia los existentes | Crea commits nuevos con otros hashes |
+| Úsalo para | Integrar una rama terminada en `main` | Poner tu rama al día con `main` antes del pull request |
+
+```bash
+# poner tu rama al día con main
+git switch feat/carrito
+git fetch origin
+git rebase origin/main            # reaplica tus commits encima
+
+# fusionar conservando un commit de unión
+git switch main
+git merge --no-ff feat/carrito
+
+# fusionar todo en un solo commit
+git merge --squash feat/carrito   # deja los cambios preparados
+git commit -m "Agrega carrito de compras"
+```
+
+<Callout tipo="warning" titulo="Regla de oro del rebase">
+
+No hagas rebase de commits que otras personas ya descargaron. Reescribir historia compartida obliga a todos a rehacer su trabajo. En tu rama personal, sí.
+
+</Callout>
+
+## Subir después de reescribir historia
+
+Tras un rebase o un `--amend`, `git push` normal es rechazado porque el historial cambió. En tu propia rama:
+
+```bash
+git push --force-with-lease       # fuerza solo si nadie subió algo nuevo que no has visto
+```
+
+Prefiere `--force-with-lease` a `--force`: el segundo pisa lo que otra persona haya subido.
+
+## Resolver conflictos
+
+Un conflicto aparece cuando dos ramas cambiaron las mismas líneas. Git marca el archivo así:
+
+```text
+<<<<<<< HEAD
+tu versión (la rama donde estás)
+=======
+la versión que llega (la rama que fusionas)
+>>>>>>> feat/carrito
+```
+
+| Paso | Comando |
+| --- | --- |
+| Ver archivos en conflicto | `git status` (sección `Unmerged paths`) |
+| Editar | Deja el resultado final y borra las tres líneas de marcas |
+| Marcar como resuelto | `git add archivo` |
+| Terminar un merge | `git commit` |
+| Terminar un rebase | `git rebase --continue` |
+| Cancelar un merge | `git merge --abort` |
+| Cancelar un rebase | `git rebase --abort` |
+| Quedarte con una versión completa | `git checkout --ours archivo` o `git checkout --theirs archivo` |
+
+Durante un rebase, `--ours` y `--theirs` se invierten: `ours` es la rama sobre la que reaplicas y `theirs` son tus commits.
+
+## Limpiar commits antes de compartir
+
+`git rebase -i HEAD~4` abre un editor con los últimos 4 commits. Cambia la primera palabra de cada línea:
+
+| Palabra | Efecto |
+| --- | --- |
+| `pick` | Conserva el commit tal cual |
+| `reword` | Conserva el cambio, edita el mensaje |
+| `edit` | Se detiene para que modifiques el commit |
+| `squash` | Lo une al anterior y combina los mensajes |
+| `fixup` | Lo une al anterior y descarta su mensaje |
+| `drop` | Elimina el commit |
+
+También puedes reordenar las líneas para reordenar los commits.
+
+## Traer un commit suelto
+
+```bash
+git cherry-pick abc1234           # copia ese commit a la rama actual
+git cherry-pick abc1234 def5678   # varios
+git cherry-pick --abort           # cancela si hay conflicto
+```
+
+## Encontrar qué commit rompió algo
+
+```bash
+git bisect start
+git bisect bad                    # el commit actual está roto
+git bisect good v1.0              # esta versión funcionaba
+# Git te deja en un commit intermedio: prueba y responde
+git bisect good                   # o: git bisect bad
+# repite hasta que Git señale el primer commit malo
+git bisect reset                  # vuelve a donde estabas
+```
+
+Si tienes un script que sale con 0 cuando todo va bien y con otro valor cuando falla, automatízalo con `git bisect run ./prueba.sh`.
+
+## Trabajar en dos ramas a la vez
+
+```bash
+git worktree add ../mi-hotfix hotfix/pago   # segunda carpeta con otra rama
+git worktree list
+git worktree remove ../mi-hotfix
+```
+
+Cada rama solo puede estar abierta en una carpeta a la vez.
+
+## Cambio urgente sin perder lo que tienes
+
+```bash
+git stash -u                      # guarda todo, incluso archivos nuevos
+git switch -c hotfix/pago main    # arregla y publica lo urgente
+# ...commit, push, pull request...
+git switch feat/carrito
+git stash pop                     # recupera tu trabajo
+```
+
+## Recuperarte de errores
+
+| Situación | Solución |
+| --- | --- |
+| Commit en la rama equivocada | `git switch rama-correcta`, `git cherry-pick HASH`, luego en la equivocada `git reset --hard HEAD~1` |
+| Commit hecho antes de crear la rama | `git switch -c nueva-rama` (se lleva el commit) y en `main` `git reset --hard origin/main` |
+| Ya publicaste un commit malo | `git revert HASH` (no reescribe historia) |
+| Revertir un merge | `git revert -m 1 HASH_DEL_MERGE` |
+| Borraste una rama sin fusionar | `git reflog`, busca el último commit de esa rama y `git switch -c rama HASH` |
+| `reset --hard` de más | `git reflog` y `git reset --hard HEAD@{1}` |
+
+`git revert HASH` sobre un merge falla con `is a merge but no -m option was given`: añade `-m 1` para elegir el padre que se conserva.
+
+## Mensajes de commit
+
+| Convención | Ejemplo |
+| --- | --- |
+| Primera línea corta, en imperativo | `Agrega validación de correo` |
+| Prefijo de tipo (Conventional Commits) | `feat: agrega carrito`, `fix: corrige redondeo`, `docs: actualiza README` |
+| Cuerpo opcional tras una línea en blanco | Explica el porqué, no el qué |
+| Referencia a una incidencia | `Cierra #42` |
+
+## GitHub CLI (opcional)
+
+Si instalas la herramienta `gh`:
+
+| Comando | Qué hace |
+| --- | --- |
+| `gh pr create --fill` | Abre un pull request con el título y la descripción tomados de tus commits |
+| `gh pr create --draft` | Lo abre como borrador |
+| `gh pr checkout 42` | Descarga el pull request número 42 para probarlo |
+| `gh pr merge --squash --delete-branch` | Fusiona en un solo commit y borra la rama |
+
+## Para ir más a fondo
+
+- [git-rebase en la referencia oficial](https://git-scm.com/docs/git-rebase)
+- [Pro Git en español](https://git-scm.com/book/es/v2)
+- [Manual de GitHub CLI](https://cli.github.com/manual/gh_pr_create)
+- Guía de AyudaDev: [Git y GitHub desde cero](/guias/git/)
+- Biblioteca: [libros y cursos de Git](/biblioteca/git/)

@@ -1,0 +1,222 @@
+---
+titulo: 'npm y package.json'
+descripcion: 'Comandos de npm para instalar, actualizar y ejecutar scripts, campos de package.json, rangos de versiones semver, package-lock, npx y equivalencias con pnpm y yarn.'
+tema: nodejs
+etiquetas: ['npm', 'package.json', 'nodejs', 'semver', 'dependencias']
+publicado: 2026-10-09
+orden: 22
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+`npm` instala paquetes de JavaScript y ejecuta los scripts de tu proyecto. Los comandos se probaron con npm 11 y Node 24.
+
+## Empezar un proyecto
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm init -y` | Crea un `package.json` con valores por defecto |
+| `npm init` | Lo crea preguntándote cada dato |
+| `node -v` y `npm -v` | Versiones instaladas |
+| `npm install` (o `npm i`) | Instala todo lo que dice `package.json` |
+| `npm ci` | Instala exactamente lo del `package-lock.json` (para CI y despliegues) |
+| `npm ci --omit=dev` | Igual, sin dependencias de desarrollo |
+
+## Instalar y quitar paquetes
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm i express` | Instala y lo añade a `dependencies` |
+| `npm i -D prettier` | Lo añade a `devDependencies` (herramientas de desarrollo) |
+| `npm i express@4` | Una versión mayor concreta |
+| `npm i express@4.21.2` | Una versión exacta |
+| `npm i -E express` | Guarda la versión exacta, sin `^` |
+| `npm i -g typescript` | Instalación global (poco recomendable; prefiere `npx`) |
+| `npm uninstall express` | Lo quita |
+| `npm update` | Actualiza dentro de los rangos permitidos por `package.json` |
+| `npm outdated` | Lista los paquetes con versiones más nuevas |
+| `npm ls` | Árbol de dependencias instaladas |
+| `npm ls --depth=0` | Solo las directas |
+| `npm explain paquete` | Por qué está instalado un paquete |
+| `npm view paquete version` | Última versión publicada |
+| `npm view paquete versions` | Todas las versiones |
+| `npm audit` | Revisa vulnerabilidades conocidas |
+| `npm audit fix` | Intenta corregirlas con actualizaciones compatibles |
+
+`dependencies` es lo que tu app necesita para funcionar; `devDependencies`, lo que solo usas al desarrollar (pruebas, formateo, compilación).
+
+## Ejecutar scripts
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "test": "node --test",
+    "lint": "eslint ."
+  }
+}
+```
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm run dev` | Ejecuta el script `dev` |
+| `npm run` | Lista los scripts disponibles |
+| `npm test` (o `npm t`) | Atajo de `npm run test` |
+| `npm start` | Atajo de `npm run start` (si no existe y hay `server.js`, ejecuta `node server.js`) |
+| `npm run build -- --watch` | Pasa argumentos extra al script (lo que va después de `--`) |
+| `npm run -s dev` | Sin el ruido de npm (`--silent`) |
+| `node --run dev` | Ejecuta el script con Node directamente, sin npm (Node 22 o posterior) |
+
+Los scripts `pre` y `post` se ejecutan solos: `prebuild` corre antes de `build` y `postbuild` después. Los binarios de `node_modules/.bin` están disponibles por su nombre dentro de los scripts, sin instalar nada global.
+
+## npx: ejecutar sin instalar
+
+| Comando | Qué hace |
+| --- | --- |
+| `npx prettier --version` | Ejecuta la herramienta local del proyecto |
+| `npx create-vite@latest` | Descarga y ejecuta un paquete de una sola vez |
+| `npx --yes paquete` | No pregunta antes de descargar |
+| `npx --no-install paquete` | Solo si ya está instalado; si no, falla |
+| `npm exec -- prettier --version` | Lo mismo que `npx`, con la sintaxis de npm |
+
+## Modificar package.json desde la terminal
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm pkg get version` | Lee un campo |
+| `npm pkg set scripts.hola="echo hola"` | Crea o cambia un script |
+| `npm pkg set type=module` | Activa los módulos ES |
+| `npm pkg delete scripts.hola` | Borra un campo |
+| `npm version patch` | Sube de `1.0.0` a `1.0.1` y crea un commit y una etiqueta de Git (si hay repositorio) |
+| `npm version minor` y `npm version major` | Sube la versión menor o la mayor |
+
+## Campos de package.json
+
+```json
+{
+  "name": "mi-paquete",
+  "version": "1.0.0",
+  "description": "Qué hace",
+  "type": "module",
+  "main": "index.js",
+  "exports": "./index.js",
+  "bin": { "micli": "./cli.js" },
+  "scripts": { "test": "node --test" },
+  "dependencies": { "express": "^4.21.2" },
+  "devDependencies": { "prettier": "^3.3.3" },
+  "engines": { "node": ">=22" },
+  "files": ["index.js", "cli.js"],
+  "license": "MIT",
+  "private": true
+}
+```
+
+| Campo | Para qué |
+| --- | --- |
+| `name`, `version` | Identifican el paquete. `name` en minúsculas, sin espacios |
+| `description`, `keywords` | Texto para buscadores de paquetes |
+| `type` | `"module"` hace que los `.js` usen `import`/`export`. `"commonjs"` usa `require` |
+| `main` | Punto de entrada clásico |
+| `exports` | Punto de entrada moderno; limita qué archivos pueden importarse |
+| `bin` | Comandos que se instalan en el PATH (`micli`) |
+| `scripts` | Comandos que se ejecutan con `npm run` |
+| `dependencies` | Lo necesario en producción |
+| `devDependencies` | Lo necesario solo para desarrollar |
+| `peerDependencies` | Paquetes que quien te usa debe instalar (típico en plugins) |
+| `optionalDependencies` | Si fallan al instalar, no detienen la instalación |
+| `engines` | Versiones de Node admitidas (npm avisa si no se cumplen) |
+| `files` | Qué archivos se publican en el paquete |
+| `repository`, `homepage`, `bugs` | Enlaces del proyecto |
+| `license` | Licencia (`MIT`, `Apache-2.0`...) |
+| `private` | `true` impide publicar el paquete por accidente |
+| `workspaces` | Carpetas de un monorepo |
+
+## Rangos de versiones (semver)
+
+Una versión es `MAYOR.MENOR.PARCHE`: `2.4.1`. Parche, correcciones; menor, funciones nuevas compatibles; mayor, cambios que pueden romper.
+
+| Rango | Acepta | Ejemplo con `^1.2.3`, `~1.2.3` |
+| --- | --- | --- |
+| `1.2.3` | Solo esa versión | |
+| `^1.2.3` | Desde `1.2.3` hasta antes de `2.0.0` | `1.9.0` sí, `2.0.0` no |
+| `~1.2.3` | Desde `1.2.3` hasta antes de `1.3.0` | `1.2.9` sí, `1.3.0` no |
+| `^0.2.3` | Desde `0.2.3` hasta antes de `0.3.0` (en `0.x` el menor manda) | |
+| `>=1.2.3 <2.0.0` | Un intervalo explícito | |
+| `1.x` | Cualquier `1.*.*` | |
+| `*` o `latest` | Cualquier versión (evítalo) | |
+
+`npm i paquete` guarda por defecto el rango con `^`.
+
+## package-lock.json
+
+| Hecho | Detalle |
+| --- | --- |
+| Qué es | Registro exacto de cada versión instalada, incluidas las dependencias de tus dependencias |
+| Quién lo edita | npm. No lo modifiques a mano |
+| ¿Se sube a Git? | Sí, siempre |
+| `npm install` | Respeta el lock y lo actualiza si cambias `package.json` |
+| `npm ci` | Falla si el lock y `package.json` no coinciden; ideal para CI |
+| `node_modules/` | Nunca va a Git: ponla en `.gitignore` |
+
+<Callout tipo="warning" titulo="Conflictos en package-lock.json">
+
+Si Git marca un conflicto en `package-lock.json`, no lo resuelvas a mano: toma la versión de la otra rama, ejecuta `npm install` y guarda el resultado.
+
+</Callout>
+
+## Variables de entorno y Node
+
+| Comando | Qué hace |
+| --- | --- |
+| `node --env-file=.env app.js` | Carga variables desde `.env` sin instalar nada |
+| `node --watch app.js` | Reinicia al guardar un archivo |
+| `node --test` | Ejecuta las pruebas con el ejecutor integrado |
+| `node -p "process.version"` | Evalúa una expresión y la imprime |
+| `process.env.NOMBRE` | Lee una variable dentro del código |
+
+## Configuración con .npmrc
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm config get registry` | Registro actual (`https://registry.npmjs.org/` por defecto) |
+| `npm config set save-exact true` | Guarda siempre versiones exactas |
+| `npm config list` | Muestra la configuración |
+| `npm cache verify` | Comprueba la caché local |
+
+Un archivo `.npmrc` en el proyecto aplica la configuración solo a ese proyecto. No guardes tokens en un `.npmrc` que subas a Git.
+
+## Equivalencias con pnpm y yarn
+
+| npm | pnpm | yarn (2 o posterior) |
+| --- | --- | --- |
+| `npm install` | `pnpm install` | `yarn install` |
+| `npm i paquete` | `pnpm add paquete` | `yarn add paquete` |
+| `npm i -D paquete` | `pnpm add -D paquete` | `yarn add -D paquete` |
+| `npm uninstall paquete` | `pnpm remove paquete` | `yarn remove paquete` |
+| `npm run dev` | `pnpm dev` | `yarn dev` |
+| `npx paquete` | `pnpm dlx paquete` | `yarn dlx paquete` |
+| `npm ci` | `pnpm install --frozen-lockfile` | `yarn install --immutable` |
+
+Cada gestor usa su propio archivo de bloqueo (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`). Usa solo uno por proyecto.
+
+## Problemas frecuentes
+
+| Síntoma | Qué probar |
+| --- | --- |
+| `Cannot find module` | Falta ejecutar `npm install`, o el paquete no está en `package.json` |
+| `Missing script: "start"` | El script no existe en `scripts` |
+| `EACCES` al instalar globalmente | No uses `sudo`; prefiere `npx` o configura una carpeta global propia |
+| Cambios raros tras `npm install` | Borra `node_modules` y ejecuta `npm ci` |
+| `ERESOLVE` (conflicto de dependencias) | Dos paquetes piden versiones incompatibles; revisa con `npm explain` |
+| Un paquete no se actualiza | `npm update` respeta el rango. Para saltar a otra versión mayor: `npm i paquete@latest` |
+| `npm audit` marca avisos | Mira si afectan a producción; usa `npm audit fix` y no el modo forzado sin revisar |
+
+## Para ir más a fondo
+
+- [Documentación de package.json](https://docs.npmjs.com/cli/v11/configuring-npm/package-json)
+- [Lista de comandos de npm](https://docs.npmjs.com/cli/v11/commands)
+- [Scripts de npm](https://docs.npmjs.com/cli/v11/using-npm/scripts)
+- [API de Node.js](https://nodejs.org/docs/latest/api/)
+- Hoja de AyudaDev: [Git, comandos esenciales](/hojas/git-comandos-esenciales/)
+- Biblioteca: [libros y cursos de Node.js](/biblioteca/nodejs/)

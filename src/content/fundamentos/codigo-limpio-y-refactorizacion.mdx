@@ -1,0 +1,192 @@
+---
+titulo: 'Código limpio y refactorización'
+descripcion: 'Aprende a escribir código que otros (y tú en seis meses) puedan leer, y a mejorar el que ya existe sin cambiar lo que hace, con ejemplos de antes y después.'
+categoria: calidad
+nivel: intermedio
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [python, generales]
+etiquetas: [codigo-limpio, refactorizacion, legibilidad, buenas-practicas]
+orden: 29
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Abres un archivo que escribiste hace medio año y no entiendes qué hace. Las variables se llaman `x`, `l`, `t`, y la función tiene cuarenta líneas con cinco `if` anidados. Te tomaría una hora cambiar algo que debería tomar cinco minutos. Escribir código limpio es la inversión para que eso no te pase.
+
+## Qué es
+
+**Código limpio** es código que se entiende rápido. No es código bonito ni corto ni "inteligente": es código que otra persona puede leer, cambiar y probar sin miedo. Esa otra persona puede ser tú dentro de seis meses.
+
+La **refactorización** es mejorar la estructura interna del código **sin cambiar lo que hace por fuera**. Es como reorganizar tu cocina: los mismos platillos salen al final, pero ahora encuentras todo y cocinas más rápido.
+
+Una regla mantiene sana la refactorización: **nunca cambies el comportamiento y la estructura a la vez**. Si cambias la estructura, el resultado debe ser idéntico. Para comprobarlo necesitas [pruebas automáticas](/fundamentos/pruebas-automaticas/): son tu red de seguridad.
+
+## Principio 1: los nombres cuentan la historia
+
+Un buen nombre responde "qué es esto" sin que abras el código. Compara:
+
+| Antes | Después | Por qué mejora |
+| --- | --- | --- |
+| `d` | `dias_desde_registro` | Dice qué mide |
+| `lista2` | `usuarios_activos` | Dice qué contiene |
+| `proc()` | `enviar_correo_de_bienvenida()` | Dice qué hace |
+| `flag` | `esta_verificado` | Un booleano se lee como pregunta |
+
+Reglas rápidas: usa verbos para funciones, sustantivos para datos, y evita abreviaturas que solo entiendes tú. Un nombre largo y claro vale más que uno corto y críptico.
+
+## Principio 2: funciones pequeñas con un solo trabajo
+
+Si una función hace validar, calcular, guardar y avisar, es cuatro funciones disfrazadas. Divídela. Así cada una se prueba sola y puedes reutilizarla.
+
+## Principio 3: sin números mágicos ni condiciones enredadas
+
+Veamos un caso real de antes y después. Esta función calcula el total de un pedido con descuento según el tipo de cliente:
+
+<Ejemplo numero={1} titulo="Antes y después de refactorizar" archivo="pedido.py" ejecutar="uv run pedido.py" salida={"a 225.0 225.0\nb 200.0 200.0\nx 250 250"}>
+
+```python
+# ANTES: ¿qué es p? ¿l? ¿t? ¿por qué 0.9?
+def p(l, t):
+    r = 0
+    for i in l:
+        if t == "a":
+            r = r + i["p"] * i["c"] * 0.9
+        elif t == "b":
+            r = r + i["p"] * i["c"] * 0.8
+        else:
+            r = r + i["p"] * i["c"]
+    return r
+
+
+# DESPUÉS: mismo resultado, se lee como una frase
+DESCUENTO_POR_TIPO = {"a": 0.10, "b": 0.20}
+
+def total_del_pedido(articulos, tipo_cliente):
+    descuento = DESCUENTO_POR_TIPO.get(tipo_cliente, 0)
+    subtotal = sum(a["precio"] * a["cantidad"] for a in articulos)
+    return subtotal * (1 - descuento)
+
+
+# Comprobación: la refactorización no debe cambiar el resultado
+viejo = [{"p": 100, "c": 2}, {"p": 50, "c": 1}]
+nuevo = [{"precio": 100, "cantidad": 2}, {"precio": 50, "cantidad": 1}]
+for tipo in ("a", "b", "x"):
+    print(tipo, p(viejo, tipo), total_del_pedido(nuevo, tipo))
+```
+
+Cada fila de la salida muestra el tipo de cliente y el total de la versión vieja y la nueva: coinciden. Qué cambió:
+
+- Nombres claros: `articulos`, `tipo_cliente`, `precio`, `cantidad`.
+- El `0.9` y el `0.8` ahora son datos con significado (`DESCUENTO_POR_TIPO`), no números mágicos.
+- Agregar un nuevo tipo de cliente es una línea en el diccionario, no otro `elif`.
+- `sum` con una expresión reemplaza el acumulador manual.
+
+</Ejemplo>
+
+## Principio 4: sal temprano en vez de anidar
+
+Muchos `if` anidados forman una escalera difícil de seguir. Una técnica sencilla son las **cláusulas de guarda**: revisa primero los casos que descartan y retorna enseguida.
+
+<Ejemplo numero={2} titulo="Cláusulas de guarda" archivo="guardas.py" ejecutar="uv run guardas.py" salida={"sin usuario sin usuario\ninactivo inactivo\nmenor menor\npermitido permitido"}>
+
+```python
+# ANTES: cuatro niveles de anidación
+def acceso_antes(usuario):
+    if usuario is not None:
+        if usuario["activo"]:
+            if usuario["edad"] >= 18:
+                return "permitido"
+            else:
+                return "menor"
+        else:
+            return "inactivo"
+    else:
+        return "sin usuario"
+
+
+# DESPUÉS: una línea por regla, el camino feliz al final
+def acceso_despues(usuario):
+    if usuario is None:
+        return "sin usuario"
+    if not usuario["activo"]:
+        return "inactivo"
+    if usuario["edad"] < 18:
+        return "menor"
+    return "permitido"
+
+
+casos = [
+    None,
+    {"activo": False, "edad": 30},
+    {"activo": True, "edad": 10},
+    {"activo": True, "edad": 30},
+]
+for u in casos:
+    print(acceso_antes(u), acceso_despues(u))
+```
+
+Las dos versiones hacen exactamente lo mismo. La segunda se lee de arriba abajo como una lista de reglas, sin sangrías profundas.
+
+</Ejemplo>
+
+<Callout tipo="tip" titulo="El truco de leer en voz alta">
+Si al leer una función en voz alta tienes que explicar "bueno, aquí en realidad...", ese comentario debería ser un nombre. En vez de `# revisa si es mayor de edad` antes de una condición enredada, crea una variable o función llamada `es_mayor_de_edad`. El mejor comentario es el que no necesitas escribir.
+</Callout>
+
+## Principio 5: no te repitas (DRY), pero sin obsesión
+
+Si copiaste el mismo bloque de código tres veces, extráelo a una función. Así corriges un error en un solo lugar. Pero ojo: dos fragmentos que se parecen **por casualidad** no siempre deben unirse. Si evolucionan por razones distintas, forzarlos a compartir código genera una función llena de parámetros y condiciones. Espera a ver tres repeticiones reales antes de abstraer.
+
+## Cómo refactorizar sin romper nada
+
+<Pasos>
+
+1. **Asegura que existan pruebas** de lo que vas a tocar. Si no existen, escribe unas primero que describan el comportamiento actual.
+2. **Haz un cambio pequeño**, por ejemplo renombrar una variable o extraer una función.
+3. **Corre las pruebas.** Si pasan, sigue. Si fallan, deshaz el cambio y entiende por qué.
+4. **Guarda tu progreso con un commit** después de cada paso que funcione, para poder volver atrás con facilidad.
+5. **Repite** en pasos pequeños. Nunca mezcles una refactorización grande con una nueva funcionalidad en el mismo cambio.
+
+</Pasos>
+
+Refactorizaciones comunes que casi nunca fallan: renombrar para que algo diga lo que es, extraer una función de un bloque largo, reemplazar un número mágico por una constante con nombre, y simplificar condiciones con cláusulas de guarda.
+
+## Señales de que hace falta limpiar
+
+- Una función no cabe en una pantalla.
+- Tienes que desplazarte horizontalmente para leer una línea.
+- Hay un comentario largo explicando algo confuso.
+- Al cambiar una cosa tienes que cambiar la misma lógica en cuatro lugares.
+- Das tres parámetros booleanos seguidos en una llamada: `hacer(True, False, True)`.
+- Tienes miedo de tocar un archivo.
+
+Muchas de estas señales están ligadas a diseño: las clases de la [programación orientada a objetos](/fundamentos/programacion-orientada-a-objetos/) y los [patrones de diseño](/fundamentos/patrones-de-diseno/) dan formas conocidas de ordenar el código cuando crece.
+
+<Callout tipo="warning" titulo="Limpiar no es reescribir todo">
+La tentación más peligrosa es decir "este código es un desastre, lo reescribo desde cero". Casi siempre toma más de lo previsto, pierde correcciones de errores que el código viejo ya tenía y deja el proyecto detenido. Mejor refactoriza poco a poco, con pruebas, y siempre dejando el código un poco mejor de como lo encontraste. Tampoco refactorices por gusto lo que nadie va a volver a tocar.
+</Callout>
+
+## Pruébalo tú
+
+1. Toma una función tuya de hace meses (o esta): `def f(a, b): return a if a > b else b`. Dale un nombre honesto y nombres claros a los parámetros.
+2. Busca en tu código una cadena de `if` y `elif` que compare un valor contra varias constantes. Conviértela en un diccionario como el del ejemplo.
+3. Toma la función `acceso_antes` y agrega una regla nueva ("bloqueado"). Haz el cambio en las dos versiones y compara cuánto cuesta en cada una.
+4. Escribe una prueba para `total_del_pedido`, luego cambia su implementación por un bucle `for` y verifica que la prueba sigue pasando.
+
+## Errores y mitos comunes
+
+- **"Código limpio es código con muchos comentarios."** Muchos comentarios suelen indicar código confuso. Prefiere nombres claros, y deja comentarios para el porqué, no para el qué.
+- **"Corto es mejor."** Una línea ingeniosa que nadie entiende es peor que tres líneas claras.
+- **"Refactorizar es perder tiempo."** Se paga solo: cada cambio futuro es más barato.
+- **"Hay que aplicar todas las reglas siempre."** Son guías. En un script desechable de diez líneas no hace falta tanto.
+- **"Mi código es mío, no importa cómo se lea."** Tú también eres un lector futuro de tu propio código.
+
+## Qué sigue
+
+- Aprende a escribir las pruebas que protegen tus refactorizaciones: [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+- Revisa las ideas de composición y funciones sin efectos: [Programación funcional: la idea central](/fundamentos/programacion-funcional/).
+- Conoce soluciones comunes a problemas de diseño: [Patrones de diseño que sí vas a usar](/fundamentos/patrones-de-diseno/).
+- Consulta la [biblioteca de generales](/biblioteca/generales/) para libros sobre buenas prácticas, el [glosario](/glosario/) y los [retos](/retos/).

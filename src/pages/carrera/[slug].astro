@@ -1,0 +1,37 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '@layouts/ArticleLayout.astro';
+import { SITE } from '@data/site';
+
+export async function getStaticPaths() {
+  const lista = (await getCollection('carrera', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+  return lista.map((e, i) => ({ params: { slug: e.id }, props: { e, anterior: lista[i - 1] ?? null, siguiente: lista[i + 1] ?? null } }));
+}
+
+const { e, anterior, siguiente } = Astro.props;
+const { Content, headings } = await render(e);
+const path = `/carrera/${e.id}/`;
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Carrera', href: '/carrera/' },
+  { nombre: e.data.titulo, href: path },
+];
+---
+
+<ArticleLayout
+  titulo={e.data.titulo}
+  descripcion={e.data.descripcion}
+  path={path}
+  eyebrow="Carrera"
+  migas={migas}
+  headings={headings}
+  publicado={e.data.publicado}
+  actualizado={e.data.actualizado}
+  meta={e.data.tiempoLectura ? [{ icono: 'clock', texto: `${e.data.tiempoLectura} min de lectura` }] : []}
+  progId={`carrera:${e.id}`}
+  anterior={anterior ? { titulo: anterior.data.titulo, href: `/carrera/${anterior.id}/` } : undefined}
+  siguiente={siguiente ? { titulo: siguiente.data.titulo, href: `/carrera/${siguiente.id}/` } : undefined}
+  editarUrl={`${SITE.repo}/edit/main/src/content/carrera/${e.id}.mdx`}
+>
+  <Content />
+</ArticleLayout>

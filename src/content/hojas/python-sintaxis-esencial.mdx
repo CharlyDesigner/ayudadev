@@ -1,0 +1,274 @@
+---
+titulo: 'Python: sintaxis esencial'
+descripcion: 'Variables, tipos, operadores, f-strings, condicionales, bucles, funciones, clases, excepciones y archivos en Python 3, con ejemplos que puedes ejecutar tal cual.'
+tema: python
+etiquetas: ['python', 'sintaxis', 'funciones', 'clases', 'f-strings']
+publicado: 2026-10-09
+orden: 9
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+La sintaxis de Python que más usas, lista para copiar. Probada con Python 3.13 y 3.14.
+
+## Ejecutar
+
+| Comando | Qué hace |
+| --- | --- |
+| `python archivo.py` | Ejecuta un script (en Windows también `py archivo.py`) |
+| `python` | Abre el intérprete interactivo (`exit()` sale) |
+| `python -m venv .venv` | Crea un entorno virtual |
+| `pip install requests` | Instala un paquete |
+| `uv run archivo.py` | Ejecuta con `uv`, que gestiona versión y dependencias |
+| `python --version` | Versión instalada |
+
+Python usa sangría (4 espacios) para delimitar bloques. No hay llaves ni punto y coma.
+
+## Variables y tipos
+
+```python
+x = 5               # int
+pi = 3.14           # float
+nombre = "Ana"      # str
+ok = True           # bool
+nada = None         # NoneType
+a, b = 1, 2         # asignación múltiple
+a, b = b, a         # intercambio: a=2, b=1
+PI = 3.14159        # por convención, MAYÚSCULAS = constante
+```
+
+| Tipo | Ejemplo | Mutable |
+| --- | --- | --- |
+| `int` | `42`, `1_000_000` | No |
+| `float` | `3.14`, `1e-3` | No |
+| `str` | `"hola"`, `'hola'` | No |
+| `bool` | `True`, `False` | No |
+| `None` | `None` | No |
+| `list` | `[1, 2, 3]` | Sí |
+| `tuple` | `(1, 2)` | No |
+| `dict` | `{"a": 1}` | Sí |
+| `set` | `{1, 2}` | Sí |
+
+| Función | Qué hace |
+| --- | --- |
+| `type(x)` | Tipo del valor |
+| `int("42")`, `float("3.5")`, `str(10)` | Convertir tipos |
+| `int(3.9)` | `3` (trunca, no redondea) |
+| `isinstance(5, int)` | `True` |
+| `len(x)` | Longitud |
+| `print(a, b, sep=", ", end="")` | Imprimir con separador y final |
+| `input("Nombre: ")` | Leer texto del usuario (siempre devuelve `str`) |
+
+Son falsos: `0`, `0.0`, `""`, `[]`, `{}`, `set()`, `None` y `False`. Todo lo demás es verdadero, incluido el texto `"0"`.
+
+## Operadores
+
+| Operador | Resultado |
+| --- | --- |
+| `7 / 2` | `3.5` (siempre `float`) |
+| `7 // 2` | `3` (división entera) |
+| `-7 // 2` | `-4` (redondea hacia abajo) |
+| `7 % 2` | `1` (residuo) |
+| `2 ** 10` | `1024` (potencia) |
+| `divmod(7, 2)` | `(3, 1)` |
+| `round(2.5)`, `round(3.5)` | `2`, `4` (redondea al par más cercano) |
+| `a == b`, `a != b` | Igualdad de valor |
+| `a is b`, `a is None` | Misma identidad (úsalo con `None`) |
+| `1 < x < 3` | Comparación encadenada |
+| `and`, `or`, `not` | Lógicos |
+| `"a" in "casa"`, `3 in [1, 3]` | Pertenencia |
+| `x += 1` | Incremento (no existe `x++`) |
+| `x if cond else y` | Operador ternario |
+
+## Cadenas
+
+```python
+nombre, x, pi = "Ana", 5, 3.14
+f"Hola {nombre}, {x * 2}"     # 'Hola Ana, 10'
+f"{pi:.1f}"                   # '3.1'  (1 decimal)
+f"{1234567:,}"                # '1,234,567'
+f"{0.256:.1%}"                # '25.6%'
+f"{x:03d}"                    # '005'
+f"{nombre!r}"                 # "'Ana'"
+f"{x=}"                       # 'x=5'  (útil para depurar)
+```
+
+| Método | Resultado |
+| --- | --- |
+| `"hola"[1:3]` | `'ol'` (rebanada) |
+| `"hola"[::-1]` | `'aloh'` (invertir) |
+| `"a,b".split(",")` | `['a', 'b']` |
+| `"-".join(["a", "b"])` | `'a-b'` |
+| `" x ".strip()` | `'x'` |
+| `"hola".upper()`, `.lower()`, `.capitalize()` | Mayúsculas, minúsculas, primera en mayúscula |
+| `"hola".replace("o", "0")` | `'h0la'` |
+| `"hola".startswith("ho")` | `True` |
+| `"hola".find("l")` | `2` (o `-1` si no está) |
+
+Las cadenas son inmutables: los métodos devuelven una cadena nueva.
+
+## Condicionales
+
+```python
+if x > 10:
+    print("grande")
+elif x > 3:
+    print("mediano")
+else:
+    print("chico")
+
+match x:                  # Python 3.10 o posterior
+    case 1 | 2:
+        print("chico")
+    case 5:
+        print("cinco")
+    case _:
+        print("otro")
+```
+
+## Bucles
+
+```python
+for i in range(3):            # 0, 1, 2
+    print(i)
+
+for i in range(0, 10, 3):     # 0, 3, 6, 9
+    pass
+
+for i, c in enumerate("ab", start=1):   # (1, 'a'), (2, 'b')
+    print(i, c)
+
+for a, b in zip([1, 2], "xy"):          # (1, 'x'), (2, 'y')
+    print(a, b)
+
+n = 0
+while True:
+    n += 1
+    if n == 3:
+        break                 # sale del bucle (continue salta a la siguiente vuelta)
+```
+
+`for` y `while` aceptan un `else` que se ejecuta si el bucle terminó sin `break`.
+
+## Funciones
+
+```python
+def suma(a, b=0, *args, **kwargs):
+    # b tiene valor por defecto; args es una tupla; kwargs es un diccionario
+    return a + b + sum(args), kwargs
+
+suma(1)                       # (1, {})
+suma(1, 2, 3, 4, z=1)         # (10, {'z': 1})
+
+def f(a, /, b, *, c):         # a solo posicional, c solo por nombre
+    return a + b + c
+f(1, 2, c=3)                  # 6
+
+cuadrado = lambda n: n * n    # función anónima
+list(map(cuadrado, range(4))) # [0, 1, 4, 9]
+```
+
+<Callout tipo="warning" titulo="No uses una lista como valor por defecto">
+
+`def f(x, lista=[])` comparte la misma lista entre todas las llamadas. Usa `lista=None` y dentro `if lista is None: lista = []`.
+
+</Callout>
+
+## Excepciones
+
+```python
+try:
+    n = int("x")
+except ValueError as e:
+    print("ValueError:", e)     # invalid literal for int() with base 10: 'x'
+else:
+    print("sin error")          # solo si no hubo excepción
+finally:
+    print("siempre")            # se ejecuta en cualquier caso
+
+raise ValueError("mensaje")     # lanzar una excepción
+```
+
+| Excepción | Cuándo ocurre |
+| --- | --- |
+| `ValueError` | Valor inadecuado: `int("x")` |
+| `TypeError` | Tipo incorrecto: `"a" + 1` |
+| `KeyError` | Clave inexistente en un `dict` |
+| `IndexError` | Índice fuera de rango en una lista |
+| `FileNotFoundError` | El archivo no existe |
+| `ZeroDivisionError` | División entre cero |
+
+## Clases
+
+```python
+class Punto:
+    def __init__(self, x, y):      # constructor
+        self.x, self.y = x, y
+    def __repr__(self):            # cómo se imprime
+        return f"Punto({self.x}, {self.y})"
+    def dist(self):
+        return (self.x ** 2 + self.y ** 2) ** 0.5
+
+p = Punto(3, 4)
+print(p, p.dist())                 # Punto(3, 4) 5.0
+
+from dataclasses import dataclass
+
+@dataclass                         # genera __init__, __repr__ y ==
+class P:
+    x: int
+    y: int = 0
+
+P(1)                               # P(x=1, y=0)
+P(1) == P(1)                       # True
+```
+
+## Archivos y JSON
+
+```python
+with open("datos.txt", "w", encoding="utf-8") as f:   # "w" escribe, "a" añade, "r" lee
+    f.write("hola\n")
+
+with open("datos.txt", encoding="utf-8") as f:
+    for linea in f:
+        print(linea.strip())
+
+import json
+json.dumps({"a": 1})               # '{"a": 1}'
+json.loads('{"b": [1]}')           # {'b': [1]}
+```
+
+`with` cierra el archivo solo, incluso si hay un error. Indica siempre `encoding="utf-8"`.
+
+## Módulos y scripts
+
+| Sintaxis | Qué hace |
+| --- | --- |
+| `import math` | Importa un módulo (`math.sqrt(4)`) |
+| `from math import sqrt` | Importa un nombre concreto |
+| `import numpy as np` | Importa con alias |
+| `if __name__ == "__main__":` | Código que solo corre al ejecutar el archivo directamente |
+| `sys.argv` | Argumentos de la línea de comandos |
+| `help(len)` | Ayuda integrada |
+| `dir(obj)` | Atributos y métodos de un objeto |
+
+## Útiles de siempre
+
+| Expresión | Resultado |
+| --- | --- |
+| `max(3, 9)`, `min([4, 2])` | `9`, `2` |
+| `sum([1, 2])` | `3` |
+| `sorted([3, 1, 2], reverse=True)` | `[3, 2, 1]` |
+| `any([0, 1])`, `all([1, 0])` | `True`, `False` |
+| `[n * n for n in range(5) if n % 2]` | `[1, 9]` |
+| `a, *resto = [1, 2, 3]` | `a = 1`, `resto = [2, 3]` |
+| `(y := 10)` | Asigna y devuelve el valor (operador morsa) |
+
+## Para ir más a fondo
+
+- [Tutorial oficial de Python](https://docs.python.org/es/3/tutorial/index.html)
+- [Funciones integradas](https://docs.python.org/es/3/library/functions.html)
+- [Tipos integrados](https://docs.python.org/es/3/library/stdtypes.html)
+- Hoja de AyudaDev: [Python, estructuras de datos](/hojas/python-estructuras-de-datos/)
+- Guía de AyudaDev: [Python desde cero](/guias/python/)
+- Biblioteca: [libros y cursos de Python](/biblioteca/python/)

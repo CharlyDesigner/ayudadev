@@ -1,7 +1,9 @@
 ---
 import Icon from '@components/ui/Icon.astro';
+import TemaBadge from '@components/ui/TemaBadge.astro';
 import type { Tema } from '@lib/schemas';
 import { plural } from '@lib/text';
+import { guiaDeTema } from '@lib/guias';
 
 interface Props {
   tema: Tema;
@@ -9,16 +11,14 @@ interface Props {
   compacto?: boolean;
 }
 const { tema, conteo, compacto = false } = Astro.props;
-const icono = (tema.icono ?? 'book') as Parameters<typeof Icon>[0]['name'];
+const guia = await guiaDeTema(tema.slug);
 ---
 
 <a href={`/biblioteca/${tema.slug}/`} class:list={['card card-hover group flex items-center gap-4', compacto ? 'p-3.5' : 'p-5']}>
-  <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-surface-2 text-accent-ink transition-colors group-hover:bg-accent group-hover:text-on-accent">
-    <Icon name={icono} class="h-5 w-5" />
-  </span>
+  <TemaBadge tema={tema} class="h-11 w-11" />
   <span class="min-w-0 flex-1">
     <span class="block truncate font-semibold">{tema.nombre}</span>
-    <span class="block text-xs text-muted">{plural(conteo, 'recurso', 'recursos')}{tema.guia ? ' · guía con ejemplos' : ''}</span>
+    <span class="block text-xs text-muted">{plural(conteo, 'recurso', 'recursos')}{guia ? ' · con guía' : ''}</span>
   </span>
   <Icon name="chevron-right" class="h-4 w-4 text-muted transition-transform group-hover:translate-x-0.5" />
 </a>

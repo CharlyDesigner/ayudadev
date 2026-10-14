@@ -1,0 +1,157 @@
+---
+titulo: 'Trabajo remoto y colaboración en equipo'
+descripcion: 'Cómo comunicarte de forma asíncrona, escribir buenos pull requests, hacer code review con respeto y manejar zonas horarias al trabajar en equipos remotos.'
+tiempoLectura: 10
+publicado: 2026-10-09
+etiquetas: ['remoto', 'code review', 'comunicación', 'equipos']
+orden: 9
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Trabajar en remoto cambia las reglas. Ya no puedes asomarte al escritorio de alguien para preguntar algo en dos minutos. Todo pasa por mensajes, documentos y código. Quien escribe claro, avisa a tiempo y revisa con respeto se vuelve alguien con quien da gusto trabajar, esté donde esté.
+
+## Comunicación asíncrona: la base
+
+Asíncrono significa que la otra persona no responde al instante. Puede estar en otra zona horaria, en otra tarea o simplemente descansando. Por eso tu mensaje debe poder entenderse solo.
+
+Principios:
+
+- **Escribe mensajes completos**, no solo "hola". Pon el saludo y la pregunta en el mismo mensaje.
+- **Da contexto**: qué intentas, qué ya probaste, qué esperabas y qué pasó.
+- **Sé específico** con enlaces, capturas, mensajes de error y pasos para reproducir.
+- **Indica la urgencia** con honestidad. No todo es para ya.
+- **Facilita la respuesta.** Si puedes plantear opciones, mejor que una pregunta abierta.
+
+```text
+Mal:
+"Hola, ¿tienes un minuto? No me funciona el login."
+
+Bien:
+"Hola, estoy en la tarea del login. Al enviar el formulario recibo un error 401.
+Ya revisé que el correo y la contraseña lleguen bien y probé con otro usuario.
+Adjunto captura y el enlace al PR. ¿Sabes si cambió la ruta de la API?
+No es urgente, puedo avanzar con la pantalla de perfil mientras tanto."
+```
+
+El segundo mensaje se puede contestar sin una llamada.
+
+## Cuándo usar mensaje, cuándo llamada
+
+- **Mensaje o documento**: dudas con respuesta clara, decisiones que deben quedar registradas, avisos.
+- **Llamada corta**: cuando llevas varios mensajes sin entenderte o el tema es delicado.
+- **Reunión**: para decidir entre varias personas o coordinar algo complejo.
+
+Después de una llamada, deja un resumen por escrito con las decisiones. Quien no estuvo lo agradecerá.
+
+## Disponibilidad y límites
+
+En remoto es fácil mezclar casa y trabajo. Cuida tu rutina:
+
+- Define un horario y avísalo al equipo.
+- Marca tu estado cuando estés ocupado o fuera.
+- Haz pausas reales.
+- No necesitas responder a toda hora, pero sí cumplir lo acordado.
+
+Si tienes dudas sobre cómo sostener un buen ritmo, lee [Aprender sin quemarte](/carrera/aprender-sin-quemarte/).
+
+## Pull requests que da gusto revisar
+
+El pull request es tu forma principal de colaborar en código. Un buen PR:
+
+- **Es pequeño**: un cambio con un propósito. Los PRs enormes se revisan mal.
+- **Tiene un título claro** que explique qué cambia.
+- **Explica el porqué**, no solo el qué.
+- **Indica cómo probarlo.**
+- **Incluye capturas** si cambia la interfaz.
+- **Está revisado por ti mismo primero.** Léelo como si fuera de otra persona antes de pedir revisión.
+
+```text
+Título: Agrega filtro por categoría en la lista de gastos
+
+Qué cambia
+- Se agrega un selector de categoría sobre la lista.
+- Se actualiza la consulta para filtrar los resultados.
+
+Por qué
+El equipo de finanzas necesita ver los gastos por categoría.
+
+Cómo probarlo
+1. Abre la pantalla de gastos.
+2. Elige "Transporte" en el selector.
+3. Solo deben aparecer gastos de transporte.
+
+Notas
+No incluí paginación; irá en otro PR.
+```
+
+## Code review con respeto
+
+La revisión de código mejora el código, y también te enseña. No es un examen ni un ataque.
+
+**Cuando revisas:**
+
+- Empieza por lo bueno si hay algo que destacar.
+- Critica el código, no a la persona. Di "esta función podría simplificarse", no "escribes mal".
+- Explica el porqué de tu comentario.
+- Haz preguntas en vez de órdenes cuando no estés seguro: "¿qué pasa si la lista está vacía?".
+- Distingue lo obligatorio de lo opcional. Puedes marcar los detalles menores como sugerencia.
+- Revisa pronto. Un PR olvidado frena al equipo.
+
+```text
+Ejemplos de comentarios:
+- "Gracias por agregar pruebas. Una duda: ¿qué pasa si el usuario no tiene correo?"
+- "Sugerencia (opcional): podríamos extraer esto a una función para reutilizarlo."
+- "Esto parece romper el caso de lista vacía. ¿Puedes revisarlo?"
+```
+
+**Cuando te revisan:**
+
+- No lo tomes personal. Los comentarios son sobre el código.
+- Agradece y responde a cada comentario: lo arreglaste, no estás de acuerdo (explica por qué), o necesitas aclaración.
+- Pregunta si algo no queda claro. Es normal.
+- Si sientes que un comentario fue duro, respira, vuelve más tarde y responde con calma. Si se repite, habla con alguien de confianza.
+
+## Zonas horarias
+
+Cuando el equipo está repartido, el tiempo se vuelve parte del trabajo.
+
+- **Escribe horarios con su zona**, por ejemplo "10:00 hora del centro de México", o usa una herramienta para convertirlas.
+- **Define horas de traslape**: pocas horas en las que todos coinciden para reuniones.
+- **Documenta los acuerdos** para que quien no estuvo conectado pueda seguir.
+- **Evita convocar a última hora.** Avisa con tiempo.
+- **Termina el día dejando contexto**: qué hiciste, qué sigue y qué te bloquea.
+
+```text
+Resumen de fin de día
+Hecho: terminé el formulario de registro y abrí el PR.
+Siguiente: voy a conectar el formulario con la API.
+Bloqueos: necesito saber si el correo es obligatorio. Le pregunté a Marta.
+```
+
+## Trabajar para empresas o clientes de otros países
+
+Es posible, pero implica detalles propios: idioma, contratos, pagos y facturación. Cada situación es distinta y depende de las leyes de tu país y del del cliente. Consulta a una persona contadora o abogada para saber cómo cobrar y declarar, y revisa [Freelance: tus primeros clientes](/carrera/freelance-primeros-clientes/) y [Inglés técnico para programar](/carrera/ingles-tecnico/).
+
+## Checklist de buen colaborador remoto
+
+- Mis mensajes incluyen contexto y se entienden solos.
+- Avisé mi horario y mi disponibilidad.
+- Mis PRs son pequeños, con título, explicación y forma de probarlos.
+- Reviso el código de otras personas pronto y con respeto.
+- Respondo a cada comentario de mis revisiones.
+- Documento las decisiones tomadas en llamadas.
+- Cierro el día con un resumen breve.
+- Pido ayuda cuando llevo un rato atorado, no horas.
+
+<Callout tipo="tip" titulo="La regla de los 30 minutos para pedir ayuda">
+Intenta resolver solo durante un tiempo razonable, anota lo que probaste y luego pregunta. Ni te atores horas en silencio ni preguntes en cuanto algo se complica. Puedes ajustar el tiempo según la urgencia y tu nivel.
+</Callout>
+
+<Callout tipo="warning" titulo="Cuidado con el tono escrito">
+Sin voz ni gestos, un mensaje seco puede sonar a enojo. Revisa antes de enviar, usa un saludo y un agradecimiento, y no supongas mala intención en lo que lees. Ante la duda, pregunta o propón una llamada corta.
+</Callout>
+
+## Tu siguiente paso
+
+Elige un hábito para esta semana: por ejemplo, escribir mejor tus mensajes de ayuda o abrir un PR con título, explicación y pasos de prueba. Practica en un proyecto propio o en la [comunidad](/comunidad/). Si necesitas repasar herramientas, mira [Herramientas](/herramientas/) y las [guías](/guias/).

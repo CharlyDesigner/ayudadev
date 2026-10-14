@@ -26,6 +26,7 @@ const PLAN: Record<string, string> = { si: 'Tiene plan gratis', limitado: 'Grati
   descripcion={h.data.descripcion}
   path={path}
   eyebrow={`${h.data.empresa} · ficha de herramienta`}
+  logo={h.data.logo ? `ia/${h.data.logo}` : undefined}
   migas={migas}
   headings={headings}
   publicado={h.data.publicado}

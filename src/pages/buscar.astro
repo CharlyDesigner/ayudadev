@@ -22,12 +22,12 @@ import Icon from '@components/ui/Icon.astro';
 
 <script>
   import { normalizar } from '@/lib/text';
-  interface Item { tipo: string; titulo: string; url: string; sub?: string; tags?: string }
+  interface Item { tipo: string; titulo: string; url: string; sub?: string; tags?: string; logo?: string }
   const form = document.querySelector<HTMLFormElement>('[data-buscar]');
   const input = form?.querySelector<HTMLInputElement>('input[name="q"]');
   const list = document.querySelector<HTMLElement>('[data-buscar-list]');
   const status = document.querySelector<HTMLElement>('[data-buscar-status]');
-  const TIPOS: Record<string, string> = { pagina: 'Página', tema: 'Tema', recurso: 'Recurso', guia: 'Guía', ia: 'IA', noticia: 'Noticia', prompt: 'Prompt' };
+  const TIPOS: Record<string, string> = { pagina: 'Página', tema: 'Tema', ruta: 'Ruta', recurso: 'Recurso', guia: 'Guía', ia: 'IA', fundamento: 'Fundamento', hoja: 'Hoja', reto: 'Reto', proyecto: 'Proyecto', carrera: 'Carrera', herramienta: 'Herramienta', comunidad: 'Comunidad', termino: 'Glosario', noticia: 'Noticia', prompt: 'Prompt' };
   const escapar = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c);
   let indice: Item[] = [];
 
@@ -35,9 +35,9 @@ import Icon from '@components/ui/Icon.astro';
     if (!list || !status) return;
     const palabras = normalizar(q).split(/\s+/).filter(Boolean);
     if (!palabras.length) { list.innerHTML = ''; status.textContent = ''; return; }
-    const res = indice.filter((it) => { const pajar = normalizar(`${it.titulo} ${it.sub ?? ''} ${it.tags ?? ''}`); return palabras.every((p) => pajar.includes(p)); }).slice(0, 60);
+    const res = indice.filter((it) => { const pajar = normalizar(`${it.titulo} ${it.sub ?? ''} ${it.tags ?? ''}`); return palabras.every((p) => pajar.includes(p)); }).slice(0, 80);
     status.textContent = res.length ? `${res.length} resultados para "${q}"` : `Sin resultados para "${q}"`;
-    list.innerHTML = res.map((it) => `<a href="${escapar(it.url)}" class="card card-hover flex flex-col gap-1 p-4"><span class="badge self-start">${TIPOS[it.tipo] ?? it.tipo}</span><span class="font-semibold">${escapar(it.titulo)}</span>${it.sub ? `<span class="text-sm text-muted">${escapar(it.sub)}</span>` : ''}</a>`).join('');
+    list.innerHTML = res.map((it) => `<a href="${escapar(it.url)}" class="card card-hover flex flex-col gap-1 p-4"><span class="flex items-center gap-2">${it.logo ? `<span class="logo-tile grid h-6 w-6 place-items-center rounded-md p-1"><img src="/logos/${escapar(it.logo)}.svg" alt="" width="16" height="16" class="h-full w-full object-contain" /></span>` : ''}<span class="badge self-start">${TIPOS[it.tipo] ?? it.tipo}</span></span><span class="font-semibold">${escapar(it.titulo)}</span>${it.sub ? `<span class="text-sm text-muted">${escapar(it.sub)}</span>` : ''}</a>`).join('');
     history.replaceState(null, '', `?q=${encodeURIComponent(q)}`);
   };
 

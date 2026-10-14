@@ -1,0 +1,145 @@
+---
+titulo: 'Tu perfil de GitHub como currículum'
+descripcion: 'Cómo ordenar tu perfil de GitHub: README de perfil, repositorios fijados, commits claros, contribuciones y una lista para revisar cada README.'
+tiempoLectura: 9
+publicado: 2026-10-09
+etiquetas: ['github', 'perfil', 'README', 'commits']
+orden: 3
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cuando alguien quiere saber cómo programas, lo más probable es que abra tu GitHub. No hace falta que sea perfecto, pero sí que se vea cuidado. En diez minutos de revisión, tu perfil puede decir mucho: que terminas lo que empiezas, que explicas lo que haces y que trabajas con orden.
+
+## Qué ve una persona al abrir tu perfil
+
+En pocos segundos mira cuatro cosas:
+
+- Tu foto, nombre y descripción corta.
+- El README de tu perfil, si lo tienes.
+- Los repositorios fijados arriba.
+- La actividad reciente.
+
+Todo lo demás es secundario. Prepara esas cuatro cosas primero.
+
+## Completa lo básico
+
+- Usa una foto clara y un nombre real o profesional.
+- En la biografía, escribe en una línea qué haces y qué estás aprendiendo.
+- Agrega tu ubicación general y un enlace a tu portafolio o LinkedIn.
+- Usa un nombre de usuario que puedas poner en un CV sin pena.
+
+Si aún no dominas Git, repasa las [guías](/guias/) y busca la de Git y GitHub desde cero.
+
+## El README de perfil
+
+GitHub permite crear un repositorio con el mismo nombre que tu usuario. Si le agregas un archivo `README.md`, su contenido aparece en tu perfil. Es tu carta de presentación.
+
+Qué incluir:
+
+- Una presentación breve de dos o tres líneas.
+- Lo que estás aprendiendo ahora.
+- Tecnologías con las que trabajas.
+- Enlaces a tus proyectos más importantes y a cómo contactarte.
+
+Qué evitar: montones de insignias, estadísticas decorativas y frases vacías. Menos es más.
+
+```markdown
+# Hola, soy Ana
+
+Estudio desarrollo web y construyo proyectos pequeños con JavaScript.
+Busco mi primera oportunidad como desarrolladora frontend.
+
+## Ahora estoy aprendiendo
+
+- React y manejo de estado
+- Pruebas automáticas
+- Inglés técnico
+
+## Proyectos destacados
+
+- [Control de gastos](https://github.com/usuario/control-gastos): app web con datos guardados
+- [Clima del día](https://github.com/usuario/clima): consumo de una API pública
+
+## Contacto
+
+[LinkedIn](https://www.linkedin.com/) | correo@ejemplo.com
+```
+
+Cambia los nombres y enlaces por los tuyos.
+
+## Repositorios fijados
+
+GitHub te deja fijar hasta seis repositorios. Úsalos como vitrina.
+
+- Fija solo los que quieras que alguien abra primero.
+- Elige proyectos terminados, con README y demo.
+- Ordénalos de mayor a menor orgullo, no por fecha.
+- Los repositorios de prácticas pueden quedar sin fijar o archivados.
+
+Si tienes repos vacíos, con nombres como "prueba2" o "test", ponlos en privado o bórralos. Un perfil con pocos repositorios claros se ve mejor que uno con cien confusos.
+
+## Commits: la historia de tu trabajo
+
+El historial de commits muestra cómo trabajas. Mensajes como "cambios" o "asdf" no dicen nada. Escribe mensajes que expliquen qué hiciste.
+
+```text
+Mal:   arreglos
+Mal:   asdf
+Bien:  Corrige validación del formulario de registro
+Bien:  Agrega filtro por categoría en la lista de gastos
+```
+
+Hábitos útiles:
+
+- Commits pequeños y frecuentes, cada uno con un propósito.
+- Un mensaje corto, con el mismo estilo en todo el proyecto.
+- Ramas para funciones nuevas cuando el proyecto crezca.
+
+Esto también te prepara para el trabajo en equipo. Lo vemos en [Trabajo remoto y colaboración](/carrera/trabajo-remoto-y-colaboracion/).
+
+## Contribuciones y actividad
+
+La gráfica de cuadritos verdes muestra tus contribuciones. No la persigas como meta. Hacer commits sin sentido solo para llenarla no engaña a nadie con experiencia. Lo que sí vale es:
+
+- Constancia razonable: algo de actividad con el tiempo.
+- Proyectos que evolucionan, no se abandonan a las dos semanas.
+- Contribuciones a otros repositorios: reportar un error con claridad, mejorar documentación o corregir un detalle pequeño.
+
+Si quieres empezar con código abierto, busca proyectos que se declaren amigables con quien empieza y lee su guía de contribución antes de abrir un pull request.
+
+## Checklist de un buen README de repositorio
+
+- Dice en una frase qué hace el proyecto.
+- Incluye captura, GIF o enlace a una demo.
+- Lista las tecnologías usadas.
+- Explica cómo instalarlo y ejecutarlo, y esos pasos funcionan.
+- Cuenta qué decisiones tomaste o qué aprendiste.
+- Indica qué falta o qué mejorarías.
+- Tiene una licencia si quieres que otros lo reutilicen.
+- No contiene claves ni datos personales.
+- Está escrito sin faltas de ortografía.
+
+Para una plantilla completa de README, mira [Un portafolio que sí convence](/carrera/portafolio-que-contrata/).
+
+<Callout tipo="tip" titulo="Revisa tu perfil como si fueras otra persona">
+Abre tu perfil en una ventana de incógnito. Mira solo los primeros diez segundos. ¿Se entiende quién eres y qué sabes hacer? Si no, ajusta el README de perfil y los repositorios fijados.
+</Callout>
+
+## Seguridad: lo que nunca debe subirse
+
+Antes de hacer público un repositorio, revisa que no tenga:
+
+- Contraseñas, tokens o claves de API.
+- Archivos `.env` con credenciales.
+- Datos personales de otras personas.
+
+Usa un archivo `.gitignore` para excluir esos archivos desde el inicio.
+
+<Callout tipo="warning" titulo="Una clave subida por error ya está expuesta">
+Si subiste una clave o token, borrar el archivo no basta, porque queda en el historial. Revócala o cámbiala en el servicio donde la creaste y luego limpia el repositorio. Asume que cualquiera pudo copiarla.
+</Callout>
+
+## Tu siguiente paso
+
+Hoy mismo haz tres cosas: completa tu biografía, crea el repositorio con el README de perfil y fija tus mejores proyectos. Luego pasa a [CV y LinkedIn para programadores](/carrera/cv-y-linkedin-para-programadores/). Si necesitas repasar Git, tienes las [guías](/guias/) y las [herramientas recomendadas](/herramientas/).

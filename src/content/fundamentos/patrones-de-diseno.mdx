@@ -1,0 +1,218 @@
+---
+titulo: 'Patrones de diseño que sí vas a usar'
+descripcion: 'Strategy, Observer, Factory, Decorator y Adapter explicados con ejemplos cortos en Python, más una advertencia sobre el Singleton y el exceso de patrones.'
+categoria: arquitectura
+nivel: avanzado
+tiempoLectura: 12
+publicado: 2026-10-09
+temas: [python, java, generales]
+etiquetas: [patrones, diseno, strategy, observer, factory, decorator, adapter]
+orden: 33
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Escribes un cálculo de envíos con un `if` por cada paquetería. Llega una paquetería nueva y agregas otro `if`. Llega otra, y otro más. A los seis meses tocar esa función da miedo. Alguien más ya resolvió este problema muchas veces y le puso nombre a la solución. Eso es un patrón de diseño.
+
+## Qué es
+
+Un **patrón de diseño** es una solución conocida y reutilizable a un problema que se repite al organizar código. No es una biblioteca que instalas ni código que copias: es una **receta** que adaptas a tu caso. Es como el "plano de una escalera" que arquitectos de todo el mundo reconocen y que no tienen que reinventar.
+
+Los patrones se popularizaron con un libro de 1994 de cuatro autores, conocidos como "la banda de los cuatro", que catalogó veintitrés. No necesitas conocerlos todos. Con cinco o seis resuelves la mayoría de los casos. Además, su valor principal es el **vocabulario**: decir "aquí uso un Observer" comunica en una frase lo que de otro modo requeriría un párrafo.
+
+Los patrones se apoyan en las ideas de [Programación orientada a objetos sin misterio](/fundamentos/programacion-orientada-a-objetos/): interfaces, composición y polimorfismo. En Python y JavaScript, donde las funciones son valores, varios de ellos se simplifican mucho.
+
+## Strategy: cambiar el algoritmo sin cambiar el código que lo usa
+
+**Problema:** una parte del código puede hacerse de varias maneras y no quieres una cadena de `if`.
+
+**Idea:** cada manera es una pieza intercambiable (una estrategia), y el código principal recibe la que necesite. Piensa en navegar con un GPS: puedes elegir ruta rápida, corta o sin peajes, y el GPS funciona igual.
+
+<Ejemplo numero={1} titulo="Strategy con funciones" archivo="strategy.py" ejecutar="uv run strategy.py" salida="570 670">
+
+```python
+def envio_estandar(peso):
+    return 50 + peso * 10
+
+def envio_express(peso):
+    return 120 + peso * 25
+
+def calcular_total(subtotal, peso, estrategia_envio):
+    return subtotal + estrategia_envio(peso)
+
+print(calcular_total(500, 2, envio_estandar), calcular_total(500, 2, envio_express))
+```
+
+En lenguajes con clases estrictas, como Java, cada estrategia sería una clase con la misma interfaz. En Python basta con funciones. Para agregar una paquetería nueva escribes otra función, sin tocar `calcular_total`.
+
+</Ejemplo>
+
+## Observer: avisar a quien le interese
+
+**Problema:** cuando algo ocurre (se crea un pedido), varias partes deben reaccionar (enviar correo, descontar inventario), y no quieres que el código del pedido las conozca todas.
+
+**Idea:** quien emite el evento mantiene una lista de interesados y los avisa. Es como un canal de YouTube: el canal no sabe quién lo ve, solo notifica a los suscriptores.
+
+<Ejemplo numero={2} titulo="Un evento con suscriptores" archivo="observer.py" ejecutar="uv run observer.py" salida={"Correo enviado por el pedido 101\nInventario actualizado por el pedido 101"}>
+
+```python
+class Evento:
+    def __init__(self):
+        self._suscriptores = []
+
+    def suscribir(self, funcion):
+        self._suscriptores.append(funcion)
+
+    def emitir(self, *args):
+        for funcion in self._suscriptores:
+            funcion(*args)
+
+pedido_creado = Evento()
+pedido_creado.suscribir(lambda p: print(f"Correo enviado por el pedido {p}"))
+pedido_creado.suscribir(lambda p: print(f"Inventario actualizado por el pedido {p}"))
+
+pedido_creado.emitir(101)
+```
+
+Si mañana quieres además registrar una estadística, agregas un suscriptor más, y el código que crea pedidos no cambia. Lo reconoces en `addEventListener` del navegador y en casi todos los sistemas de eventos.
+
+</Ejemplo>
+
+## Factory: crear objetos sin acoplarte a su clase
+
+**Problema:** necesitas crear objetos distintos según una condición (un exportador a JSON o a CSV), y no quieres que esa decisión se disperse por todo el programa.
+
+**Idea:** concentra la creación en un solo lugar. Es como pedir "un café" en una cafetería: no te importa cómo se prepara, solo recibes el resultado.
+
+<Ejemplo numero={3} titulo="Una fábrica de exportadores" archivo="factory.py" ejecutar="uv run factory.py" salida={"CSV:[1, 2]\nFormato no soportado: xml"}>
+
+```python
+class Json:
+    def guardar(self, datos):
+        return f"JSON:{datos}"
+
+class Csv:
+    def guardar(self, datos):
+        return f"CSV:{datos}"
+
+def crear_exportador(formato):
+    exportadores = {"json": Json, "csv": Csv}
+    if formato not in exportadores:
+        raise ValueError(f"Formato no soportado: {formato}")
+    return exportadores[formato]()
+
+print(crear_exportador("csv").guardar([1, 2]))
+try:
+    crear_exportador("xml")
+except ValueError as e:
+    print(e)
+```
+
+El resto del programa pide `crear_exportador("csv")` y usa el resultado sin saber qué clase es. Si agregas un formato, solo cambias la fábrica. Y un formato desconocido falla en un solo lugar y con un mensaje claro.
+
+</Ejemplo>
+
+<Callout tipo="tip" titulo="En Python muchos patrones ya vienen en el lenguaje">
+Un diccionario de funciones reemplaza muchas jerarquías de clases, y las funciones como valores simplifican Strategy y Observer. Antes de crear tres clases y una interfaz, pregúntate si una función o un diccionario hace el mismo trabajo con menos código. Esto conecta con [Funciones y recursión](/fundamentos/funciones-y-recursion/).
+</Callout>
+
+## Decorator: añadir comportamiento sin modificar el original
+
+**Problema:** quieres agregar algo extra (medir tiempo, registrar llamadas, verificar permisos) a varias funciones sin llenarlas de código repetido.
+
+**Idea:** envuelves la función original con otra que hace algo antes o después. Es como poner un estuche a tu teléfono: sigue siendo el mismo teléfono, con una capa adicional.
+
+<Ejemplo numero={4} titulo="Un decorador de Python" archivo="decorator.py" ejecutar="uv run decorator.py" salida={"sumar terminó\n5"}>
+
+```python
+import functools
+
+def avisar_al_terminar(funcion):
+    @functools.wraps(funcion)           # conserva el nombre de la función original
+    def envoltura(*args, **kwargs):
+        resultado = funcion(*args, **kwargs)
+        print(f"{funcion.__name__} terminó")
+        return resultado
+    return envoltura
+
+@avisar_al_terminar
+def sumar(a, b):
+    return a + b
+
+print(sumar(2, 3))
+```
+
+La línea `@avisar_al_terminar` es una forma corta de escribir `sumar = avisar_al_terminar(sumar)`. Con este mecanismo funcionan muchas herramientas de frameworks: rutas web, caché y control de permisos. Ojo: el patrón Decorator del libro clásico y los decoradores de Python se parecen en la idea, pero no son exactamente lo mismo.
+
+</Ejemplo>
+
+## Adapter: hacer que dos piezas incompatibles trabajen juntas
+
+**Problema:** tienes una biblioteca o servicio con una interfaz que no coincide con la que tu código espera, y no puedes modificarla.
+
+**Idea:** escribes una pieza intermedia que traduce. Es el adaptador de enchufe que usas al viajar: no cambia la pared ni el cargador, solo los conecta.
+
+```python
+class ProveedorViejo:
+    def get_temp_fahrenheit(self):
+        return 98.6
+
+class AdaptadorCelsius:
+    def __init__(self, viejo):
+        self.viejo = viejo
+
+    def temperatura_celsius(self):
+        return round((self.viejo.get_temp_fahrenheit() - 32) * 5 / 9, 1)
+
+print(AdaptadorCelsius(ProveedorViejo()).temperatura_celsius())   # 37.0
+```
+
+Tu aplicación habla solo con `temperatura_celsius()`. Si cambias de proveedor, escribes otro adaptador y el resto no se entera. Es muy útil al integrar servicios externos, tema que se relaciona con [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/).
+
+## Singleton: el patrón que más se abusa
+
+**Idea:** garantizar que una clase tenga una sola instancia y darle acceso global (por ejemplo, la configuración de la aplicación o una conexión).
+
+<Callout tipo="warning" titulo="Cuidado con el Singleton y con los patrones por moda">
+El Singleton es básicamente una variable global con buena reputación: dificulta las pruebas, esconde dependencias y causa problemas con hilos. Muchas veces es mejor crear el objeto una vez y pasarlo a quien lo necesita. Y en general, no uses un patrón solo porque existe. Cada uno agrega clases y capas que alguien tendrá que leer. Si un `if` simple resuelve tu problema y no vas a tener cinco casos, déjalo así. Primero siente el dolor del problema, luego aplica el patrón.
+</Callout>
+
+## Cuándo aplicar un patrón
+
+Una guía práctica:
+
+1. Escribe la solución simple primero.
+2. Cuando notes que el mismo problema se repite (el tercer `if`, la tercera copia), busca si hay un patrón con nombre.
+3. Aplica el patrón en la medida mínima que resuelva ese dolor.
+4. Verifica con [pruebas automáticas](/fundamentos/pruebas-automaticas/) que el comportamiento no cambió. Este proceso es justo la [refactorización](/fundamentos/codigo-limpio-y-refactorizacion/).
+
+| Si tu problema es... | Considera |
+| --- | --- |
+| Varias formas de hacer lo mismo | Strategy |
+| Notificar a varios interesados | Observer |
+| Crear objetos según una condición | Factory |
+| Añadir comportamiento a funciones o clases | Decorator |
+| Conectar interfaces incompatibles | Adapter |
+
+## Pruébalo tú
+
+1. Agrega una tercera forma de envío (`envio_gratis`) al ejemplo de Strategy sin modificar `calcular_total`.
+2. Agrega un tercer suscriptor al evento del Observer que sume los pedidos recibidos en un contador.
+3. Escribe un decorador `contar_llamadas` que lleve la cuenta de cuántas veces se llamó una función.
+4. Amplía la fábrica con un formato `"txt"` y observa cuántas partes del código tuviste que tocar. Debería ser una.
+
+## Errores y mitos comunes
+
+- **"Hay que memorizar los veintitrés patrones."** Entiende cinco o seis; el resto los consultas cuando los necesites.
+- **"Más patrones significa mejor diseño."** El mejor diseño es el más simple que resuelve el problema.
+- **"Los patrones son para Java y C#."** Aplican a cualquier lenguaje, aunque en algunos se expresan con menos código.
+- **"Un patrón es código que copias."** Es una idea que adaptas.
+- **"Singleton es una buena forma de compartir datos."** Casi siempre hay una alternativa más limpia.
+
+## Qué sigue
+
+- Revisa la base de clases y composición: [Programación orientada a objetos sin misterio](/fundamentos/programacion-orientada-a-objetos/).
+- Aprende a mejorar código existente sin romperlo: [Código limpio y refactorización](/fundamentos/codigo-limpio-y-refactorizacion/).
+- Piensa en el diseño a escala de sistema: [Monolito o microservicios](/fundamentos/monolito-vs-microservicios/).
+- Consulta la [guía de Java](/guias/java/), el [glosario](/glosario/) y los [retos](/retos/).

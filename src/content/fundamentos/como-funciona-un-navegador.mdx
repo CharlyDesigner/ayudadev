@@ -1,0 +1,161 @@
+---
+titulo: 'Cómo funciona un navegador: de la URL a la pantalla'
+descripcion: 'Qué hace tu navegador desde que escribes una URL hasta que ves la página: red, HTML, DOM, CSS, JavaScript y pintado. Con un script para medir cada etapa.'
+categoria: internet
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [html-css, javascript]
+etiquetas: [navegador, dom, css, render, rendimiento]
+orden: 8
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Un navegador parece solo una ventana con una barra de direcciones. En realidad es uno de los programas más complejos que usas: descarga archivos, entiende tres lenguajes, ejecuta código ajeno de forma aislada y dibuja millones de píxeles por segundo. Saber lo que hace por dentro te ayuda a escribir páginas más rápidas y a entender por qué a veces algo "parpadea" o tarda.
+
+## Qué es
+
+Un navegador es un **cliente HTTP con un motor de dibujo**. Pide recursos a un servidor, los interpreta y los convierte en una página con la que puedes interactuar. Los más usados son Chrome, Safari, Firefox y Edge. Cada uno incluye varios componentes:
+
+| Componente | Qué hace |
+| --- | --- |
+| Interfaz | Barra de direcciones, pestañas, botones |
+| Motor de red | Hace las peticiones HTTP y gestiona la caché |
+| Motor de renderizado | Convierte HTML y CSS en una imagen (por ejemplo Blink, WebKit o Gecko) |
+| Motor de JavaScript | Ejecuta el código (por ejemplo V8, JavaScriptCore o SpiderMonkey) |
+| Almacenamiento | Cookies, `localStorage`, caché |
+
+La analogía: el navegador es como un **arquitecto con una cuadrilla**. Recibe los planos (HTML), la guía de acabados (CSS) y las instrucciones de automatización (JavaScript), y construye algo que puedes recorrer.
+
+## Paso 1: de la URL al HTML
+
+Cuando escribes `https://ejemplo.com/curso` y presionas Enter:
+
+1. El navegador analiza la URL: esquema (`https`), dominio (`ejemplo.com`) y ruta (`/curso`).
+2. Revisa si ya tiene una copia guardada (**caché**) que siga siendo válida.
+3. Si no, resuelve el dominio con [DNS](/fundamentos/dns-y-dominios/), abre la conexión y negocia el cifrado, como cuenta [Cómo funciona internet](/fundamentos/como-funciona-internet/).
+4. Envía la petición [HTTP](/fundamentos/http-cliente-servidor/) y recibe el HTML.
+
+El HTML llega **por trozos**. El navegador no espera el archivo completo: empieza a trabajar con lo que ya tiene.
+
+## Paso 2: del HTML al DOM
+
+El navegador lee el HTML y construye el **DOM** (Document Object Model): un árbol de objetos donde cada etiqueta es un nodo. Con este HTML:
+
+```html
+<body>
+  <h1>Hola</h1>
+  <p>Texto con <b>negritas</b></p>
+</body>
+```
+
+el árbol queda así:
+
+```text
+body
+ +-- h1
+ |    +-- "Hola"
+ +-- p
+      +-- "Texto con "
+      +-- b
+           +-- "negritas"
+```
+
+JavaScript no manipula el texto del HTML, manipula este árbol. Por eso `document.querySelector('h1')` te devuelve un objeto con el que puedes trabajar.
+
+Mientras lee, el navegador encuentra más recursos (hojas de estilo, imágenes, scripts) y los pide también. Y aquí hay un detalle que importa: un `<script>` normal **detiene la lectura del HTML** hasta que se descarga y se ejecuta, porque podría modificar el documento. Por eso se usan los atributos `defer` o `type="module"`, que permiten seguir construyendo la página mientras el script se descarga.
+
+## Paso 3: CSS y el árbol de renderizado
+
+Al mismo tiempo, el navegador lee el CSS y construye el **CSSOM**, una estructura con las reglas de estilo. Después combina el DOM con el CSSOM para obtener el **árbol de renderizado**: solo los elementos visibles, cada uno con sus estilos finales. Un elemento con `display: none` no entra.
+
+El CSS **bloquea el pintado**: el navegador prefiere esperar a tener los estilos antes de dibujar, para no mostrar una página fea que luego cambia de golpe.
+
+## Paso 4: layout, pintado y composición
+
+Con el árbol de renderizado, el navegador hace tres tareas:
+
+- **Layout (o reflow):** calcula el tamaño y la posición de cada elemento. ¿Cuánto mide este párrafo en una pantalla de este ancho?
+- **Pintado:** decide los colores y dibuja textos, bordes y fondos en capas.
+- **Composición:** junta las capas y las envía a la pantalla, usando muchas veces la tarjeta gráfica.
+
+```text
+HTML --> DOM -----+
+                  +--> árbol de renderizado --> layout --> pintado --> composición --> pantalla
+CSS  --> CSSOM ---+
+                           ^
+JavaScript puede cambiar DOM y CSSOM, lo que vuelve a disparar parte del proceso
+```
+
+Cuando JavaScript cambia el DOM o los estilos, el navegador repite parte de este ciclo. Algunas operaciones son baratas (cambiar `opacity` o `transform`) y otras costosas (cambiar el ancho de un elemento obliga a recalcular el layout de los que lo rodean).
+
+## JavaScript: el hilo principal
+
+El navegador ejecuta tu JavaScript en el **hilo principal**, el mismo que se encarga de reaccionar a clics y pintar. Si tu código tarda mucho, la página se **congela**: no puede dibujar ni atender eventos mientras tanto. Por eso las tareas largas deben dividirse o delegarse, y se usa código asíncrono. Lo exploramos en [concurrencia y asincronía](/fundamentos/concurrencia-y-asincronia/).
+
+## Seguridad: cada sitio en su caja
+
+Un navegador ejecuta código de sitios desconocidos, así que los aísla:
+
+- **Política del mismo origen:** una página no puede leer libremente datos de otro dominio.
+- **Procesos separados:** los navegadores modernos suelen usar procesos distintos para pestañas y sitios, de modo que el fallo de uno no tire todo.
+- **HTTPS y certificados:** garantizan que hablas con el dominio que ves.
+
+Para profundizar, mira [seguridad web y OWASP](/fundamentos/seguridad-web-owasp/).
+
+## Pruébalo tú
+
+Abre cualquier página, presiona F12 para abrir las herramientas de desarrollo y ve a la pestaña **Consola**. Pega este código:
+
+```js
+// Mide las etapas de la carga de esta página
+const n = performance.getEntriesByType('navigation')[0];
+console.table({
+  'DNS': Math.round(n.domainLookupEnd - n.domainLookupStart),
+  'Conexión': Math.round(n.connectEnd - n.connectStart),
+  'Espera al servidor': Math.round(n.responseStart - n.requestStart),
+  'Descarga del HTML': Math.round(n.responseEnd - n.responseStart),
+  'DOM listo (ms desde el inicio)': Math.round(n.domContentLoadedEventEnd),
+  'Carga completa (ms desde el inicio)': Math.round(n.loadEventEnd),
+});
+```
+
+Obtendrás una tabla con una columna de valores en milisegundos. En una prueba contra `example.com` se vio un resultado de este orden (el tuyo será distinto):
+
+```text
+DNS: 12   Conexión: 51   Espera al servidor: 53   Descarga del HTML: 1
+DOM listo: 203   Carga completa: 204
+```
+
+Algunas cifras pueden salir en cero si el navegador reutilizó una conexión o la caché. Ahora prueba lo siguiente:
+
+1. Ve a la pestaña **Red** (Network) y recarga. Cada fila es una petición. Observa qué recursos pidió la página después del HTML.
+2. En la pestaña **Elementos** (Elements) verás el DOM actual. Haz doble clic en un texto y edítalo: cambiaste el DOM, no el archivo del servidor. Al recargar, vuelve el original.
+3. En la consola escribe `document.body.style.background = 'lightyellow'` y mira cómo se repinta.
+4. En la pestaña **Rendimiento** (Performance) graba una recarga y busca las etapas de layout y pintado.
+
+<Callout tipo="tip" titulo="Ver código fuente no es ver el DOM">
+"Ver código fuente" (`Ctrl + U`) muestra el HTML que mandó el servidor. La pestaña Elementos muestra el DOM **actual**, ya modificado por JavaScript. Si una página arma su contenido con JavaScript, el código fuente puede verse casi vacío aunque en pantalla haya mucho.
+</Callout>
+
+<Callout tipo="warning" titulo="No pegues código que no entiendes en la consola">
+Si alguien te pide pegar un código en la consola del navegador "para desbloquear algo", desconfía. Ese código corre con tus permisos en la página abierta y puede robar sesiones. Pega solo código que hayas leído y entendido.
+</Callout>
+
+## Errores y mitos comunes
+
+- **"Todos los navegadores muestran exactamente lo mismo."** Casi, pero hay diferencias en funciones nuevas y en detalles. Consulta la compatibilidad de lo que uses en la documentación de MDN.
+- **"El navegador ejecuta el HTML."** El HTML no se ejecuta, se **interpreta** para construir el DOM. Lo que se ejecuta es JavaScript.
+- **"Poner más scripts no afecta la velocidad."** Cada script se descarga, se interpreta y se ejecuta en el hilo principal. Tiene costo.
+- **"Si mi página es lenta, el servidor es el culpable."** Muchas veces el cuello de botella está en el navegador: imágenes enormes, scripts pesados o layouts recalculados sin parar.
+- **"Borrar la caché arregla todo."** Ayuda a descartar versiones viejas, pero no resuelve errores del código.
+- **"El modo incógnito me hace anónimo."** Solo evita que se guarde historial y cookies en tu equipo. Tu proveedor de internet y los sitios siguen viendo tu conexión.
+
+## Qué sigue
+
+- [Frontend, backend y fullstack](/fundamentos/frontend-backend-y-fullstack/): el papel del navegador dentro de una aplicación.
+- [Cookies, sesiones y tokens](/fundamentos/cookies-sesiones-y-tokens/): qué guarda el navegador de ti.
+- [Guía de HTML y CSS](/guias/html-css/) y [guía de JavaScript](/guias/javascript/) para construir lo que el navegador dibuja.
+- [Accesibilidad en la biblioteca](/biblioteca/accesibilidad/): cómo hacer que todos puedan usar lo que construyes.
+- [Glosario](/glosario/).

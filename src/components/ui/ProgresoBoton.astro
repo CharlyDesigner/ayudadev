@@ -1,0 +1,28 @@
+---
+import Icon from '@components/ui/Icon.astro';
+interface Props {
+  id: string;
+  textoOff?: string;
+  textoOn?: string;
+  class?: string;
+  compacto?: boolean;
+}
+const { id, textoOff = 'Marcar como completado', textoOn = 'Completado', class: className = '', compacto = false } = Astro.props;
+---
+
+<button
+  type="button"
+  data-prog-id={id}
+  data-label-off={textoOff}
+  data-label-on={textoOn}
+  aria-pressed="false"
+  class:list={[
+    'inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium text-fg transition-colors hover:border-fg',
+    'aria-pressed:border-accent aria-pressed:bg-accent aria-pressed:text-on-accent',
+    compacto && 'px-3 py-1.5 text-xs',
+    className,
+  ]}
+>
+  <Icon name="check" class="h-4 w-4" />
+  <span data-prog-label>{textoOff}</span>
+</button>

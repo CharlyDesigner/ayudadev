@@ -29,13 +29,14 @@ for (const file of pages) {
   const rel = relative(root, file).replaceAll('\\', '/');
   const visible = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
   if (/\/\/ src\/(?:components|layouts|pages)\/[\w/.-]+\.astro/.test(visible)) errors.push(`${rel}: se filtró un comentario de código`);
-  if (visible.includes('localhost:43')) errors.push(`${rel}: contiene enlaces a localhost`);
+  const sinCodigo = visible.replace(/<(code|pre)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+  if (sinCodigo.includes('localhost:43')) errors.push(`${rel}: contiene enlaces a localhost`);
 
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
   const repetidos = ids.filter((id, i) => ids.indexOf(id) !== i);
   if (repetidos.length) errors.push(`${rel}: ids repetidos (${[...new Set(repetidos)].join(', ')})`);
 
-  for (const match of html.matchAll(/(?:href|src|poster|action)="([^"<>]+)"/g)) {
+  for (const match of visible.matchAll(/(?:href|src|poster|action)="([^"<>]+)"/g)) {
     const value = match[1].replaceAll('&amp;', '&');
     if (!value.startsWith('/') && !value.startsWith('#')) continue;
     if (value.startsWith('/api/')) continue; // PHP, no existe en dist como página

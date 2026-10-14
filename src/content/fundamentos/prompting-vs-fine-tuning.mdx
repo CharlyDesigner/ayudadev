@@ -1,0 +1,122 @@
+---
+titulo: 'Prompting, RAG o fine-tuning: qué elegir'
+descripcion: 'Tres formas de adaptar un modelo de IA a tu problema, cuándo sirve cada una y en qué orden probarlas para no gastar tiempo y dinero de más.'
+categoria: ia
+nivel: intermedio
+tiempoLectura: 9
+publicado: 2026-10-09
+temas: [inteligencia-artificial, python]
+etiquetas: [prompting, rag, fine-tuning, evaluacion, llm]
+orden: 43
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Tienes una idea: un asistente que conteste dudas sobre tu producto, un clasificador de correos, un generador de textos con el tono de tu marca. Lees que existen el prompting, RAG y el fine-tuning, y no sabes por dónde empezar. Mucha gente salta directo a lo más complicado y se arrepiente.
+
+La buena noticia es que hay un orden natural: de lo más barato y rápido a lo más pesado. Casi siempre ganas más probando bien lo simple primero.
+
+## Qué es
+
+Son tres palancas para que un modelo haga lo que tú quieres:
+
+- **Prompting**: le explicas la tarea en el mensaje. Instrucciones, ejemplos, formato de salida. El modelo no cambia.
+- **RAG**: antes de preguntar, buscas información relevante en tus documentos y la pegas en el mensaje. El modelo tampoco cambia, pero ahora tiene datos que no conocía.
+- **Fine-tuning** (ajuste fino): continúas el entrenamiento de un modelo con tus propios ejemplos. Aquí sí cambian los parámetros del modelo.
+
+La pregunta clave para elegir es: **¿qué le falta al modelo?** ¿Instrucciones claras? ¿Información? ¿Un comportamiento consistente?
+
+## Primero, el prompting
+
+Un buen prompt resuelve más de lo que esperas. Antes de pensar en cualquier otra cosa, mejora el mensaje:
+
+- Di la tarea, el público y el formato de salida.
+- Da dos o tres ejemplos buenos (esto se llama *few-shot*).
+- Separa con claridad instrucciones de datos.
+- Pide que diga "no sé" cuando falte información.
+
+```text
+Eres un asistente que clasifica correos de soporte.
+Responde SOLO con una etiqueta: facturacion, tecnico u otro.
+
+Correo: "No me llega el recibo de este mes"
+Etiqueta: facturacion
+
+Correo: "La app se cierra al abrir mi perfil"
+Etiqueta: tecnico
+
+Correo: "{CORREO_NUEVO}"
+Etiqueta:
+```
+
+**Ventajas**: rápido, barato, fácil de cambiar, no requiere datos de entrenamiento. **Límites**: el prompt gasta contexto en cada petición y no puede contener todo tu conocimiento.
+
+## Luego, RAG
+
+Usa RAG cuando el problema es de **conocimiento**: el modelo no sabe cosas que están en tus documentos, o esas cosas cambian seguido (precios, políticas, documentación). Es la opción natural para "un asistente que conteste con base en mi contenido".
+
+**Ventajas**: puedes actualizar el conocimiento cambiando documentos, sin reentrenar; puedes mostrar de qué fragmento salió cada respuesta. **Límites**: tienes que construir y mantener la recuperación, y si recupera mal, responde mal. Los detalles están en el artículo de [Embeddings y RAG](/fundamentos/embeddings-y-rag/).
+
+## Al final, fine-tuning
+
+El fine-tuning es útil cuando el problema es de **comportamiento**: quieres un estilo muy específico, un formato rígido que el prompt no logra mantener, o resultados consistentes en una tarea muy repetitiva y bien definida. También puede ayudar a que un modelo más pequeño haga bien una tarea concreta, de modo que sea más rápido y barato de ejecutar.
+
+**Ventajas**: prompts más cortos, comportamiento más uniforme. **Límites importantes**:
+
+- Necesitas muchos ejemplos buenos y bien revisados. Datos malos entrenan malos hábitos.
+- Cuesta tiempo y dinero (consulta la documentación y precios oficiales del proveedor).
+- Cuando el modelo base cambia o se retira, tu ajuste puede quedar obsoleto y hay que repetirlo.
+- **No es la mejor forma de enseñarle hechos nuevos.** Para datos que cambian, RAG suele funcionar mejor.
+- Algunos servicios no ofrecen fine-tuning para todos sus modelos. Revisa qué existe hoy.
+
+## Cuadro de decisión
+
+| Si el problema es... | Empieza con | Por qué |
+|---|---|---|
+| El modelo no entiende qué quieres | Mejor prompt y ejemplos | Es lo más barato de iterar |
+| El modelo no conoce tus datos | RAG | Los datos viven fuera y se actualizan fácil |
+| Los datos cambian seguido | RAG | No hay que reentrenar |
+| Necesitas citar fuentes | RAG | Sabes qué fragmento usaste |
+| Estilo o formato muy específico y constante | Prompt con ejemplos, luego fine-tuning | Si el prompt no basta, ajusta |
+| Tarea repetitiva a gran escala | Fine-tuning de un modelo pequeño | Puede bajar costo y latencia |
+| Respuestas con tono de marca | Prompt con ejemplos primero | Muchas veces ya alcanza |
+
+Las tres cosas se pueden combinar. Un sistema real suele ser: buen prompt, más RAG para el conocimiento y, solo si hace falta, un modelo ajustado.
+
+## Lo que más se olvida: medir
+
+Sin evaluación, cualquier cambio es una corazonada. Arma una lista de casos de prueba (entre 20 y 50 al principio ya te dice mucho) con la respuesta esperada, y úsala cada vez que cambies el prompt, la recuperación o el modelo. Si no puedes medir mejoras, no sabes si el fine-tuning valió la pena.
+
+<Callout tipo="tip" titulo="Regla de oro">
+
+Resuelve el problema con la técnica más simple que funcione. Agrega complejidad solo cuando puedas mostrar con tus casos de prueba que la simple no alcanza.
+
+</Callout>
+
+<Callout tipo="warning" titulo="No pongas datos sensibles en entrenamientos o prompts sin revisar">
+
+Si entrenas o ajustas con correos reales, tickets o datos de clientes, revisa permisos, privacidad y la política de datos del proveedor. Un modelo ajustado puede repetir fragmentos de lo que vio. Anonimiza y reduce al mínimo lo que usas.
+
+</Callout>
+
+## Pruébalo tú
+
+1. Elige una tarea pequeña: clasificar mensajes, resumir notas, reformular textos. Escribe 10 casos de prueba con la respuesta esperada.
+2. Prueba un prompt simple. Anota cuántos casos acierta de los 10.
+3. Mejora el prompt con dos ejemplos y formato de salida. Vuelve a medir.
+4. Pregúntate: ¿lo que falla es por falta de instrucciones, falta de información o falta de consistencia? La respuesta te dice qué herramienta toca probar.
+
+## Errores y mitos comunes
+
+- **"Fine-tuning es entrenar al modelo con mis documentos para que los sepa."** Rara vez es la mejor idea. Para conocimiento, RAG. Para comportamiento, fine-tuning.
+- **"Un prompt largo es un prompt bueno."** Un prompt claro con ejemplos pesa más que uno extenso y desordenado.
+- **"RAG y fine-tuning compiten."** Resuelven problemas distintos y se pueden usar juntos.
+- **"Si falla, necesito un modelo más grande."** A veces sí, pero primero revisa tu prompt, tus datos y tu recuperación.
+- **"Con pocos ejemplos no puedo evaluar."** Veinte casos bien pensados ya detectan la mayoría de los problemas.
+
+## Qué sigue
+
+- Lee [Cómo funcionan los modelos de lenguaje](/fundamentos/como-funcionan-los-llm/) para entender por qué el prompt influye tanto.
+- Revisa [Tokens y ventana de contexto](/fundamentos/tokens-y-ventana-de-contexto/) para saber cuánto espacio tienes.
+- Practica pedir mejor con [Aprende sin copiar](/ia/aprende/aprender-sin-copiar/).
+- Explora la [biblioteca de Inteligencia artificial](/biblioteca/inteligencia-artificial/).

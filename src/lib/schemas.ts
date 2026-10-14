@@ -45,6 +45,10 @@ export const temaSchema = z.object({
   area: z.enum(AREAS),
   descripcion: z.string().min(10).max(200),
   icono: z.string().optional(),
+  /** Monograma corto (1 a 4 caracteres): se muestra si el tema no tiene logo. */
+  abrev: z.string().min(1).max(4),
+  /** Nombre del archivo en public/logos (sin extensión). */
+  logo: z.string().optional(),
   /** Slug de la guía en src/content/guias, si existe. */
   guia: z.string().optional(),
   /** Slug equivalente en librosgratis.dev para el enlace "ver más". */

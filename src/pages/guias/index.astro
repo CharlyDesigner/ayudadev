@@ -1,13 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '@layouts/BaseLayout.astro';
-import SectionHeader from '@components/ui/SectionHeader.astro';
-import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import FiltroChips from '@components/ui/FiltroChips.astro';
+import TemaBadge from '@components/ui/TemaBadge.astro';
 import Icon from '@components/ui/Icon.astro';
 import { TEMAS } from '@data/temas';
 import { AREAS_INFO } from '@data/areas';
 import { ETIQUETAS_NIVEL } from '@lib/schemas';
-import { coleccionLd, migasLd } from '@lib/seo';
+import { coleccionLd } from '@lib/seo';
 import { SITE } from '@data/site';
 
 const guias = (await getCollection('guias', (g) => !g.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
@@ -17,41 +17,69 @@ const migas = [
   { nombre: 'Inicio', href: '/' },
   { nombre: 'Guías', href: '/guias/' },
 ];
-const porArea = AREAS_INFO.map((a) => ({ area: a, guias: guias.filter((g) => TEMAS.find((t) => t.slug === g.data.tema)?.area === a.id) })).filter((x) => x.guias.length);
+const areaDe = (slug: string) => TEMAS.find((t) => t.slug === slug)?.area;
+const porArea = AREAS_INFO.map((a) => ({ area: a, guias: guias.filter((g) => areaDe(g.data.tema) === a.id) })).filter((x) => x.guias.length);
+const areas = porArea.map((x) => ({ valor: x.area.id, etiqueta: x.area.nombre, conteo: x.guias.length }));
 ---
 
-<BaseLayout title={titulo} description={descripcion} path="/guias/" image="/og/guias.png" jsonLd={[migasLd(migas), coleccionLd({ nombre: titulo, descripcion, path: '/guias/', items: guias.map((g) => ({ nombre: g.data.titulo, url: `${SITE.url}/guias/${g.id}/` })) })]}>
-  <div class="container-site py-10 sm:py-14">
-    <Breadcrumbs migas={migas} class="mb-6" />
-    <SectionHeader nivel="h1" eyebrow="Guías" titulo={titulo} descripcion={descripcion} />
+<ListadoLayout
+  titulo={titulo}
+  descripcion={descripcion}
+  path="/guias/"
+  eyebrow="Guías"
+  migas={migas}
+  total={guias.length}
+  placeholder="Busca una guía: Python, Git, SQL, Docker..."
+  unidad="guías"
+  image="/og/guias.png"
+  enlace={{ href: '/rutas/', label: 'Ver rutas de estudio' }}
+  jsonLd={[coleccionLd({ nombre: titulo, descripcion, path: '/guias/', items: guias.map((g) => ({ nombre: g.data.titulo, url: `${SITE.url}/guias/${g.id}/` })) })]}
+>
+  <Fragment slot="intro">
+    <p class="mt-6 text-sm text-muted">Completadas: <strong class="text-fg" data-prog-count="guia:">0</strong> de {guias.length}. Tu progreso se guarda solo en este navegador.</p>
+  </Fragment>
+  <Fragment slot="filtros">
+    <FiltroChips grupo="area" etiqueta="Área" opciones={areas} />
+    <FiltroChips grupo="nivel" etiqueta="Nivel" opciones={['principiante', 'intermedio', 'avanzado'].map((n) => ({ valor: n, etiqueta: ETIQUETAS_NIVEL[n as keyof typeof ETIQUETAS_NIVEL] }))} />
+  </Fragment>
 
-    {guias.length === 0 && <p class="card mt-10 p-8 text-center text-muted">Las primeras guías están en camino.</p>}
+  {guias.length === 0 && <p class="card p-8 text-center text-muted">Las primeras guías están en camino.</p>}
 
-    <div class="mt-10 space-y-12">
-      {porArea.map(({ area, guias: lista }) => (
-        <section aria-labelledby={`area-${area.id}`}>
-          <h2 id={`area-${area.id}`} class="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted"><Icon name={area.icono as any} class="h-4 w-4 text-accent-ink" /> {area.nombre}</h2>
-          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {lista.map((g) => {
-              const tema = TEMAS.find((t) => t.slug === g.data.tema);
-              return (
-                <a href={`/guias/${g.id}/`} class="card card-hover group flex flex-col gap-3 p-5">
-                  <div class="flex items-center justify-between gap-3">
-                    <span class="grid h-10 w-10 place-items-center rounded-2xl bg-surface-2 text-accent-ink transition-colors group-hover:bg-accent group-hover:text-on-accent"><Icon name={(tema?.icono ?? 'code') as any} class="h-5 w-5" /></span>
-                    <span class="flex gap-1.5">
-                      <span class="badge">{ETIQUETAS_NIVEL[g.data.nivel]}</span>
-                      {g.data.tiempoLectura && <span class="badge">{g.data.tiempoLectura} min</span>}
-                    </span>
-                  </div>
-                  <h3 class="text-lg font-semibold leading-snug">{g.data.titulo}</h3>
-                  <p class="text-sm text-muted">{g.data.descripcion}</p>
-                  <span class="mt-auto inline-flex items-center gap-1 text-sm font-medium text-accent-ink">Leer la guía <Icon name="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
-                </a>
-              );
-            })}
-          </div>
-        </section>
-      ))}
-    </div>
+  <div class="space-y-12">
+    {porArea.map(({ area, guias: lista }) => (
+      <section data-chip-seccion aria-labelledby={`area-${area.id}`}>
+        <h2 id={`area-${area.id}`} class="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted"><Icon name={area.icono as any} class="h-4 w-4 text-accent-ink" /> {area.nombre}</h2>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {lista.map((g) => {
+            const tema = TEMAS.find((t) => t.slug === g.data.tema);
+            return (
+              <article
+                class="card card-hover group relative flex flex-col gap-3 p-5"
+                data-item
+                data-prog-item
+                data-area={area.id}
+                data-nivel={g.data.nivel}
+                data-texto={`${g.data.titulo} ${g.data.descripcion} ${g.data.etiquetas.join(' ')} ${tema?.nombre ?? ''}`}
+              >
+                <div class="flex items-center justify-between gap-3">
+                  {tema && <TemaBadge tema={tema} class="h-11 w-11 group-hover:scale-105 transition-transform" />}
+                  <span class="flex gap-1.5">
+                    <span class="badge">{ETIQUETAS_NIVEL[g.data.nivel]}</span>
+                    {g.data.tiempoLectura && <span class="badge">{g.data.tiempoLectura} min</span>}
+                  </span>
+                </div>
+                <h3 class="prog-titulo text-lg font-semibold leading-snug"><a href={`/guias/${g.id}/`} class="after:absolute after:inset-0 after:rounded-[var(--radius-card)] hover:text-accent-ink">{g.data.titulo}</a></h3>
+                <p class="text-sm leading-relaxed text-muted">{g.data.descripcion}</p>
+                <div class="mt-auto flex items-center justify-between text-sm">
+                  <span class="inline-flex items-center gap-1 font-medium text-accent-ink">Leer la guía <Icon name="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+                  <button type="button" data-prog-id={`guia:${g.id}`} aria-pressed="false" tabindex="-1" aria-hidden="true" class="visually-hidden"><span data-prog-label></span></button>
+                  <span class="hidden items-center gap-1 text-xs text-accent-ink [[data-hecho]_&]:inline-flex"><Icon name="check" class="h-3.5 w-3.5" /> Hecha</span>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    ))}
   </div>
-</BaseLayout>
+</ListadoLayout>

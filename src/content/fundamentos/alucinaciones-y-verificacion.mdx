@@ -1,0 +1,96 @@
+---
+titulo: 'Alucinaciones: por qué pasan y cómo verificar'
+descripcion: 'Por qué una IA inventa funciones, datos y citas con total seguridad, y un método práctico para comprobar sus respuestas antes de usarlas.'
+categoria: ia
+nivel: principiante
+tiempoLectura: 9
+publicado: 2026-10-09
+temas: [inteligencia-artificial, python]
+etiquetas: [alucinaciones, verificacion, ia, codigo, seguridad]
+orden: 45
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Le pides a una IA que te ayude con una librería. Te da un código limpio, con una función llamada `procesar_datos_rapido()`. Lo pegas y falla: esa función no existe. Nunca existió. La IA se la inventó y la presentó con la misma seguridad que una real.
+
+A esto se le llama **alucinación**. No es un fallo raro ni un descuido ocasional. Es una consecuencia de cómo funcionan estos modelos. Saberlo te permite usar la IA sin que te cueste caro.
+
+## Qué es
+
+Una alucinación es una respuesta que **suena correcta pero es falsa o no tiene respaldo**: una función inexistente, una cita que nadie escribió, un dato inventado, una explicación de un error que no es la causa real.
+
+La razón de fondo: un modelo de lenguaje produce el texto más plausible, no el más verdadero. Si en su entrenamiento vio muchas funciones con nombres parecidos, puede componer una que "suena bien". No tiene un mecanismo interno que le avise "esto no lo sé". Por defecto, siempre contesta.
+
+## Por qué pasan
+
+- **Plausible no es verdadero.** El modelo completa patrones. Si el patrón encaja, lo completa, exista o no.
+- **Datos incompletos.** Si algo es poco común, muy reciente o específico de tu proyecto, el modelo tiene poca o ninguna información y rellena el hueco.
+- **Fecha de corte.** No conoce lo que pasó después de su entrenamiento: versiones nuevas, funciones renombradas, cambios en APIs.
+- **Presión por responder.** Si tu pregunta asume algo falso ("¿cómo uso la función X de la librería Y?"), el modelo tiende a seguirte la corriente en lugar de corregirte.
+- **Contexto confuso.** Un prompt ambiguo o una conversación larga y enredada aumentan los errores.
+
+## Dónde aparecen más al programar
+
+| Tipo de alucinación | Cómo se ve | Cómo detectarla |
+|---|---|---|
+| Función o método inventado | Un nombre creíble que no existe | Búscalo en la documentación oficial o ejecuta |
+| Parámetros equivocados | La función existe, pero con otros argumentos | Lee la firma en la documentación |
+| API de otra versión | Código que funcionaba antes y ya no | Revisa la versión instalada y el changelog |
+| Paquete inventado | Te dice `pip install` de algo que no existe | Búscalo en el registro oficial antes de instalar |
+| Explicación falsa de un error | Causa que suena lógica pero no es | Reproduce, aísla y prueba la hipótesis |
+| Citas y enlaces falsos | Libros, artículos o URL inventados | Abre el enlace y confirma que dice lo que dicen que dice |
+
+<Callout tipo="warning" titulo="Cuidado con los paquetes inventados">
+
+Si la IA te dice que instales un paquete y no lo conoces, no lo instales a ciegas. Un nombre inventado por el modelo podría existir en el registro porque alguien lo registró a propósito para meter código malicioso. Busca el paquete en la página oficial del registro, revisa quién lo mantiene, desde cuándo existe y si lo menciona la documentación del proyecto.
+
+</Callout>
+
+## Un método para verificar
+
+No hace falta desconfiar de todo. Hace falta una rutina corta. Cuando la respuesta importe, haz esto:
+
+1. **Ejecuta el código.** Es la verificación más barata y más honesta. Si falla, ya sabes. Si funciona, no estás a salvo del todo, pero avanzas.
+2. **Contrasta con la fuente oficial.** Busca la función o el comando en la documentación del proyecto. Si no aparece, sospecha.
+3. **Revisa la versión.** Comprueba que lo sugerido corresponde a la versión que tienes instalada.
+4. **Prueba con casos simples y casos raros.** Entradas normales, vacías, negativas, muy grandes. Los errores de la IA suelen esconderse en los bordes.
+5. **Escribe una prueba automática** para lo importante. Una prueba escrita por ti es más confiable que cualquier promesa del modelo.
+6. **Pregunta distinto.** Hazle la misma pregunta de otra forma, o pídele que revise su propia respuesta buscando errores. No es prueba definitiva, pero a veces destapa fallas.
+7. **Compara con otra fuente.** Si es un dato, busca una segunda fuente independiente.
+
+<Callout tipo="tip" titulo="Pide que muestre el camino, no solo el resultado">
+
+Dile: "Si no estás seguro de algo, dilo. Marca qué partes son suposiciones y qué partes sé que están en la documentación." No elimina las alucinaciones, pero reduce las respuestas inventadas con falsa seguridad y te dice dónde mirar primero. También ayuda pedir "responde solo con base en el texto que te pego".
+
+</Callout>
+
+## Cómo reducirlas desde el prompt
+
+- **Da el contexto real.** Pega el error completo, la versión de la librería y el fragmento de código relevante.
+- **Pide fuentes verificables** (nombre de la función, sección de la documentación) y luego compruébalas tú.
+- **Permite el "no sé".** Incluye en el prompt: "Si no tienes información suficiente, dilo en lugar de adivinar."
+- **Usa herramientas.** Si tu IA puede buscar en la web o ejecutar código, aprovecha: una respuesta apoyada en una ejecución real es mejor que una respuesta de memoria.
+- **Divide el problema.** Tareas pequeñas y claras tienen menos errores que una petición enorme y vaga.
+
+## Pruébalo tú
+
+1. Pídele a una IA: "Dame la función de Python para ordenar una lista por la segunda letra de cada palabra." Ejecuta lo que te dé. ¿Funciona? ¿La explicación coincide con lo que hace?
+2. Hazle una pregunta con una premisa falsa, por ejemplo: "¿Cómo uso el método `lista.ordenar_rapido()` de Python?" ¿Te corrige o se inventa una respuesta?
+3. Pídele tres fuentes sobre un tema y abre cada enlace. Anota cuántos existen y cuántos dicen lo que afirmó.
+4. Toma un código que te dio una IA y escribe tres casos de prueba, incluyendo uno extraño, antes de usarlo.
+
+## Errores y mitos comunes
+
+- **"Los modelos nuevos ya no alucinan."** Mejoran, pero nadie debería prometerte cero alucinaciones. Verifica siempre lo que importe.
+- **"Si da una fuente, es verdad."** Los enlaces y títulos también se inventan. Ábrelos.
+- **"Si el código corre, está bien."** Correr no es lo mismo que ser correcto. Puede dar resultados erróneos sin fallar.
+- **"Si insisto, me dice la verdad."** Insistir puede hacer que cambie de respuesta para complacerte, sea mejor o no.
+- **"Es culpa mía por preguntar mal."** A veces un mejor prompt ayuda, pero el fallo es del sistema. Tu trabajo es verificar.
+
+## Qué sigue
+
+- Aprende la rutina completa en [Revisar y depurar con IA](/ia/aprende/revisar-y-depurar-con-ia/).
+- Practica sin depender de la IA con [Aprende sin copiar](/ia/aprende/aprender-sin-copiar/).
+- Escribe tus propias comprobaciones con [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+- Entiende mejor de dónde sale el problema en [Cómo funcionan los modelos de lenguaje](/fundamentos/como-funcionan-los-llm/).

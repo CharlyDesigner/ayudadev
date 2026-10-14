@@ -1,0 +1,13 @@
+import type { HerramientaInput } from '../herramientas';
+
+const herramientas: HerramientaInput[] = [
+  { id: 'freecodecamp-espanol', nombre: 'freeCodeCamp en español', categoria: 'aprendizaje', descripcion: 'Currículo gratuito y práctico para aprender desarrollo web y más, con ejercicios en el navegador y proyectos para tu portafolio.', url: 'https://www.freecodecamp.org/espanol/', gratis: 'si', sistemas: ['web'], idioma: 'es', destacado: true, verificado: '2026-10-09' },
+  { id: 'exercism', nombre: 'Exercism', categoria: 'aprendizaje', descripcion: 'Ejercicios de programación en decenas de lenguajes con mentoría opcional de voluntarios. Sirve para practicar un lenguaje nuevo con calma.', url: 'https://exercism.org/', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: true, verificado: '2026-10-09' },
+  { id: 'the-odin-project', nombre: 'The Odin Project', categoria: 'aprendizaje', descripcion: 'Ruta gratuita y de código abierto para ser desarrollador web full stack, centrada en construir proyectos reales desde el principio.', url: 'https://www.theodinproject.com/', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'roadmap-sh', nombre: 'roadmap.sh', categoria: 'aprendizaje', descripcion: 'Mapas visuales con lo que conviene aprender y en qué orden para frontend, backend, DevOps y otras áreas. Útil para no perderte.', url: 'https://roadmap.sh/', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'advent-of-code', nombre: 'Advent of Code', categoria: 'aprendizaje', descripcion: 'Calendario anual de acertijos de programación que puedes resolver en el lenguaje que quieras. Buen reto para afinar tu lógica.', url: 'https://adventofcode.com/', gratis: 'si', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'leetcode', nombre: 'LeetCode', categoria: 'aprendizaje', descripcion: 'Miles de problemas de algoritmos y estructuras de datos para practicar entrevistas técnicas, con soluciones y discusión de la comunidad.', url: 'https://leetcode.com/', gratis: 'limitado', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+  { id: 'frontend-mentor', nombre: 'Frontend Mentor', categoria: 'aprendizaje', descripcion: 'Retos de maquetación con diseños listos para convertir en HTML, CSS y JavaScript. Practica con proyectos parecidos a los de trabajo.', url: 'https://www.frontendmentor.io/', gratis: 'limitado', sistemas: ['web'], idioma: 'en', destacado: false, verificado: '2026-10-09' },
+];
+
+export default herramientas;

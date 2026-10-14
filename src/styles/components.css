@@ -1,3 +1,4 @@
+@layer components {
 /* Componentes compartidos de AyudaDev */
 
 .btn {
@@ -132,4 +133,42 @@ kbd {
   .reveal-delay-2 { animation-delay: 0.16s; }
   .reveal-delay-3 { animation-delay: 0.24s; }
   @keyframes reveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+}
+
+/* Tarjeta clara para logos de marca: contraste garantizado en ambos temas. */
+.logo-tile {
+  background: #f6f6f3;
+  border: 1px solid rgb(14 14 16 / 0.1);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.6) inset;
+}
+
+/* Toast de avisos breves */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 5.5rem;
+  z-index: 70;
+  transform: translate(-50%, 12px);
+  opacity: 0;
+  pointer-events: none;
+  max-width: calc(100vw - 2rem);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--ad-line);
+  background: var(--ad-fg);
+  color: var(--ad-bg);
+  padding: 0.6rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.3);
+  transition: opacity 0.2s var(--ease-out-expo), transform 0.2s var(--ease-out-expo);
+}
+#toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 768px) { #toast { bottom: 1.5rem; } }
+
+/* Elementos marcados como hechos */
+[data-prog-item][data-hecho] .prog-titulo { text-decoration: line-through; text-decoration-color: color-mix(in oklab, var(--ad-fg) 35%, transparent); color: var(--ad-muted); }
+
+/* Barra de progreso */
+.progress-track { height: 0.5rem; border-radius: 999px; background: var(--ad-surface-2); overflow: hidden; }
+.progress-fill { height: 100%; width: 0; border-radius: 999px; background: var(--ad-accent); transition: width 0.4s var(--ease-out-expo); }
 }

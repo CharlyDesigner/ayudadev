@@ -1,0 +1,191 @@
+---
+titulo: 'Autenticación y autorización'
+descripcion: 'La diferencia entre saber quién eres y saber qué puedes hacer, cómo guardar contraseñas con hash y sal, cómo funcionan sesiones y tokens, y cómo definir permisos.'
+categoria: seguridad
+nivel: intermedio
+tiempoLectura: 12
+publicado: 2026-10-09
+temas: [python, javascript, nodejs]
+etiquetas: [autenticacion, autorizacion, contraseñas, sesiones, jwt, roles]
+orden: 31
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Un usuario inicia sesión y, tres clics después, ve los pedidos de otra persona cambiando un número en la dirección del navegador. Entró correctamente, pero tu aplicación nunca revisó qué podía ver. Ese fallo se origina en confundir dos preguntas distintas: quién eres y qué puedes hacer.
+
+## Qué es
+
+- **Autenticación (authn):** verificar **quién eres**. Es mostrar tu identificación en la puerta del edificio.
+- **Autorización (authz):** decidir **qué puedes hacer** una vez adentro. Es la llave que abre tu oficina pero no la del director.
+
+```text
+Petición  -->  ¿Quién eres?  -->  ¿Puedes hacer esto?  -->  Acción
+              (autenticación)       (autorización)
+              falla: 401            falla: 403
+```
+
+Los códigos HTTP lo reflejan: **401** significa "no sé quién eres" (falta autenticarte) y **403** significa "sé quién eres, pero no tienes permiso". Si te hace falta repasar cómo viajan estas respuestas, mira [HTTP, cliente y servidor](/fundamentos/http-cliente-servidor/).
+
+## Cómo guardar contraseñas
+
+La regla más importante: **nunca guardes contraseñas en texto plano**, ni siquiera cifradas de forma reversible. Si alguien roba tu base de datos, tendría las claves de todos tus usuarios, y como mucha gente reutiliza contraseñas, también de otros servicios.
+
+En su lugar guardas un **hash**: el resultado de una función matemática de un solo sentido. Del hash no se puede recuperar la contraseña original, pero sí puedes comprobar si una contraseña dada produce el mismo hash.
+
+Pero con hash solo no basta. Dos usuarios con la misma contraseña tendrían el mismo hash, y un atacante podría usar tablas de hashes precalculados. Por eso se añade una **sal** (salt): un valor aleatorio único por usuario que se mezcla con la contraseña antes de hacer el hash. Y se usan funciones diseñadas para ser **lentas a propósito** (scrypt, bcrypt, Argon2), para que probar millones de combinaciones sea carísimo.
+
+<Ejemplo numero={1} titulo="Hash con sal usando solo la biblioteca estándar" archivo="claves.py" ejecutar="uv run claves.py" salida={"False\nTrue\nFalse"}>
+
+```python
+import hashlib
+import hmac
+import os
+
+def crear_hash(clave: str) -> str:
+    sal = os.urandom(16)   # sal aleatoria, distinta para cada usuario
+    h = hashlib.scrypt(clave.encode(), salt=sal, n=2**14, r=8, p=1)
+    return sal.hex() + ":" + h.hex()
+
+def verificar(clave: str, guardado: str) -> bool:
+    sal_hex, hash_hex = guardado.split(":")
+    h = hashlib.scrypt(clave.encode(), salt=bytes.fromhex(sal_hex), n=2**14, r=8, p=1)
+    return hmac.compare_digest(h.hex(), hash_hex)   # comparación segura
+
+g1 = crear_hash("mi-clave-secreta")
+g2 = crear_hash("mi-clave-secreta")
+print(g1 == g2)                              # False: la sal es distinta
+print(verificar("mi-clave-secreta", g1))     # True
+print(verificar("otra-clave", g1))           # False
+```
+
+La misma contraseña produce dos hashes distintos gracias a la sal, y aun así `verificar` funciona porque la sal queda guardada junto al hash. `hmac.compare_digest` compara sin revelar información por el tiempo que tarda.
+
+</Ejemplo>
+
+<Callout tipo="tip" titulo="No inventes tu propio sistema de contraseñas">
+Este ejemplo sirve para entender la idea. En un proyecto real usa lo que trae tu framework (Django, Laravel y Rails ya lo hacen bien) o una biblioteca mantenida de Argon2 o bcrypt. Revisa las recomendaciones vigentes de OWASP para los parámetros de costo: cambian con el tiempo. Y valora si necesitas gestionar contraseñas en absoluto: delegar el inicio de sesión en un proveedor de identidad confiable puede ser más seguro que hacerlo tú.
+</Callout>
+
+## Cómo recuerda el servidor quién eres
+
+HTTP no tiene memoria: cada petición llega como si fuera la primera. Después de verificar tu contraseña, el servidor te da una "pulsera de entrada" para que no tengas que mostrar tu identificación en cada petición. Hay dos enfoques.
+
+### Sesiones en el servidor
+
+El servidor genera un identificador aleatorio largo, lo guarda en una tabla asociado a tu usuario, y lo envía en una cookie. En cada petición, la cookie llega, el servidor la busca en su tabla y sabe quién eres.
+
+```python
+import secrets
+
+sesiones = {}   # en la vida real: una base de datos o Redis
+
+def iniciar_sesion(usuario):
+    token = secrets.token_urlsafe(32)   # aleatorio e imposible de adivinar
+    sesiones[token] = usuario
+    return token
+
+t = iniciar_sesion("ana")
+print(sesiones.get(t), sesiones.get("token-falso"))   # ana None
+```
+
+Ventaja: puedes cerrar una sesión en cualquier momento borrándola de la tabla. Desventaja: el servidor debe guardar el estado.
+
+### Tokens firmados (JWT)
+
+Un **JWT** (JSON Web Token) es un texto que contiene datos del usuario y una **firma** hecha con una clave secreta del servidor. El servidor no guarda nada: al recibir el token verifica la firma, y si es válida, confía en los datos.
+
+Un detalle que sorprende a muchos: el contenido de un JWT está codificado, no cifrado. Cualquiera puede leerlo.
+
+<Ejemplo numero={2} titulo="El contenido de un token se puede leer" archivo="token.mjs" ejecutar="node token.mjs" salida={"eyJzdWIiOiI0MiIsInJvbCI6ImxlY3RvciJ9\n{ sub: '42', rol: 'lector' }"}>
+
+```js
+const payload = { sub: "42", rol: "lector" };
+const aBase64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
+
+const cuerpo = aBase64(payload);
+console.log(cuerpo);
+console.log(JSON.parse(Buffer.from(cuerpo, "base64url").toString()));
+```
+
+Cualquier persona que vea el token puede decodificar su contenido. La firma impide **modificarlo** sin que se note, pero no lo oculta. Por eso nunca debes poner secretos (contraseñas, datos sensibles) dentro de un JWT.
+
+</Ejemplo>
+
+| | Sesión en servidor | Token firmado (JWT) |
+| --- | --- | --- |
+| Dónde está el estado | En el servidor | En el token |
+| Cerrar sesión de inmediato | Fácil | Más difícil (hay que mantener una lista o usar vida corta) |
+| Escala a muchos servidores | Necesita almacén compartido | Natural |
+| Riesgo típico | Robo de la cookie | Token robado válido hasta que expire |
+
+Ninguno es mejor para todo. Para un sitio web tradicional, las sesiones con cookies `HttpOnly`, `Secure` y `SameSite` son una opción sencilla y sólida. Para APIs que consumen varios clientes, los tokens son comunes. Y si prefieres no gestionar nada de esto tú mismo, protocolos como OAuth 2.0 y OpenID Connect permiten "iniciar sesión con" otro proveedor.
+
+## Autorización: qué puedes hacer
+
+Una vez que sabes quién es la persona, comprueba **en el servidor, en cada petición**, si tiene permiso. Hay dos modelos básicos:
+
+1. **Por roles (RBAC):** cada usuario tiene un rol (admin, editor, lector) y cada rol tiene permisos.
+2. **Por propiedad del recurso:** puedes editar solo lo que es tuyo.
+
+```python
+PERMISOS = {
+    "admin":  {"leer", "editar", "borrar"},
+    "editor": {"leer", "editar"},
+    "lector": {"leer"},
+}
+
+def puede(rol, accion):
+    return accion in PERMISOS.get(rol, set())   # rol desconocido: sin permisos
+
+print(puede("editor", "editar"), puede("editor", "borrar"), puede("desconocido", "leer"))
+# True False False
+
+class Documento:
+    def __init__(self, dueño):
+        self.dueño = dueño
+
+def puede_editar(usuario, doc):
+    return usuario == doc.dueño
+
+print(puede_editar("ana", Documento("ana")), puede_editar("luis", Documento("ana")))
+# True False
+```
+
+Fíjate en el diseño: lo que no está permitido explícitamente se **niega por defecto**. Un rol desconocido no recibe ningún permiso.
+
+<Callout tipo="warning" titulo="El error clásico: confiar en lo que manda el cliente">
+Ocultar un botón de "borrar" en la interfaz no protege nada: cualquiera puede mandar la petición a mano. Revisa siempre los permisos en el servidor. Y cuidado con las rutas como `/pedidos/123`: si solo compruebas que el usuario inició sesión pero no que el pedido 123 sea suyo, cualquiera puede ver los de los demás cambiando el número. Este fallo se conoce como control de acceso roto, y figura entre los riesgos más habituales según OWASP. Lee más en [Seguridad web: las vulnerabilidades más comunes](/fundamentos/seguridad-web-owasp/).
+</Callout>
+
+## Más capas de protección
+
+- **Verificación en dos pasos (2FA):** pedir algo que sabes (contraseña) más algo que tienes (una app de códigos o una llave física).
+- **Límites de intentos:** bloquea o frena tras varios inicios de sesión fallidos para impedir ataques de fuerza bruta.
+- **Mensajes genéricos:** responde "usuario o contraseña incorrectos", sin revelar cuál de los dos falló.
+- **Sesiones con caducidad** y cierre de sesión que realmente invalide la sesión.
+- **Mínimo privilegio:** da a cada usuario y servicio solo el acceso que necesita.
+
+## Pruébalo tú
+
+1. Corre el ejemplo de hash. Crea tres hashes de la misma clave y confirma que los tres son distintos pero los tres se verifican bien.
+2. Agrega un rol nuevo `moderador` al diccionario de permisos, que pueda leer y borrar pero no editar. Comprueba con `puede`.
+3. Decodifica el token del ejemplo en JavaScript, cambia `"lector"` por `"admin"` y razona: ¿por qué un servidor que verifica la firma lo rechazaría?
+4. Dibuja en papel el recorrido de una petición a `/perfil` desde que llega hasta que se responde 200, 401 o 403.
+
+## Errores y mitos comunes
+
+- **"Autenticación y autorización son lo mismo."** Una responde quién eres, la otra qué puedes hacer.
+- **"Mi hash tiene SHA-256, está bien."** Las funciones rápidas de propósito general no son adecuadas para contraseñas. Usa scrypt, bcrypt o Argon2.
+- **"Un JWT está cifrado."** Está firmado y codificado; su contenido es legible.
+- **"Basta con ocultar los botones."** Los permisos se revisan en el servidor siempre.
+- **"Voy a crear mi propio sistema de login, será más seguro."** Casi nunca. Usa componentes probados.
+
+## Qué sigue
+
+- Mira el panorama general de riesgos: [Seguridad web: las vulnerabilidades más comunes](/fundamentos/seguridad-web-owasp/).
+- Entiende cómo se pasan las claves de configuración: [Variables de entorno](/fundamentos/variables-de-entorno/).
+- Repasa cómo funcionan las APIs: [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/).
+- Profundiza en cookies y tokens: [Cookies, sesiones y tokens](/fundamentos/cookies-sesiones-y-tokens/).
+- Consulta el [glosario](/glosario/), la [biblioteca de Node.js](/biblioteca/nodejs/) y los [retos](/retos/).

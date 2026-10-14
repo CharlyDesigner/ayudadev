@@ -1,0 +1,235 @@
+---
+titulo: 'Lisp desde cero (Common Lisp)'
+descripcion: 'Qué es Lisp, cómo instalar SBCL y tus primeros programas en Common Lisp con ejemplos que puedes copiar y ejecutar. Incluye el mapa de la familia: Racket y Clojure.'
+tema: lisp
+nivel: principiante
+tiempoLectura: 32
+publicado: 2026-10-09
+libros: ['lisp-practical-common-lisp', 'lisp-preplai-scheme-programacion-funcional', 'lisp-don-clojure-de-la-mancha', 'lisp-common-lisp-cookbook']
+requisitos: ['Saber usar una terminal básica', 'Haber programado algo en cualquier lenguaje ayuda']
+etiquetas: ['common-lisp', 'sbcl', 'repl', 'macros', 'racket', 'clojure']
+orden: 28
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Lisp no es un solo lenguaje, es una familia: Common Lisp, Scheme, Racket, Clojure y Emacs Lisp, entre otros. Es de las familias más antiguas de la programación y sigue influyendo en lenguajes modernos. En esta guía usamos **Common Lisp** con la implementación SBCL, porque es estable, rápida y gratuita. Lo que aprendas aquí te sirve para leer cualquier otro Lisp.
+
+- **Código como datos**: un programa Lisp es una lista entre paréntesis, como `(+ 1 2)`. Esa uniformidad es lo que hace posibles los macros.
+- **Notación prefija**: el operador va primero: `(+ 1 2)`, `(* 3 (+ 1 2))`. No hay precedencia que memorizar, porque los paréntesis lo dicen todo.
+- **REPL**: trabajas en un bucle de leer, evaluar e imprimir. Defines funciones y las pruebas al instante, sin salir del programa.
+- **Dinámico y compilado**: SBCL compila a código nativo, aunque puedes escribir como en un lenguaje interpretado. Los tipos se revisan al ejecutar.
+- **Multiparadigma**: funciones de orden superior, programación imperativa y orientación a objetos con CLOS.
+- **Macros**: puedes escribir código que genera código y ampliar el lenguaje con tus propias estructuras de control.
+- **Listas por todos lados**: la lista enlazada es la estructura básica, con `first` y `rest` para recorrerla, y `cons` para construirla.
+- **Dos mundos para funciones y variables**: Common Lisp tiene espacios de nombres separados para ambas (Lisp-2), un detalle que lo distingue de Scheme, Racket y Clojure.
+
+La familia, en corto: **Racket** es el más amable para aprender y enseñar, con el editor DrRacket. **Clojure** corre en la JVM y apuesta por datos inmutables. **Scheme** es minimalista y es el de SICP. **Emacs Lisp** sirve para extender el editor Emacs. En la biblioteca de Lisp hay recursos de todos.
+
+## Instálalo y corre tu primer archivo
+
+SBCL (Steel Bank Common Lisp) es la implementación libre más usada de Common Lisp.
+
+<Pasos>
+
+1. **Windows**: entra a [sbcl.org/getting.html](https://www.sbcl.org/getting.html) y descarga el instalador para Windows. Ejecútalo.
+2. **macOS**: con Homebrew, `brew install sbcl`.
+3. **Linux**: instala el paquete de tu distribución, por ejemplo `sudo apt install sbcl` en Debian o Ubuntu.
+4. Abre una terminal y comprueba con `sbcl --version`.
+5. Escribe `sbcl` para entrar al REPL. Verás el símbolo `*`. Prueba `(+ 2 3)` y presiona Enter. Para salir, escribe `(exit)`.
+6. Crea un archivo `hola.lisp` con el código del primer ejemplo y córrelo con `sbcl --script hola.lisp`.
+7. Más adelante, para instalar bibliotecas de terceros usa [Quicklisp](https://www.quicklisp.org/beta/), el gestor de paquetes de Common Lisp.
+
+</Pasos>
+
+Cada ejemplo de esta guía va en un archivo `.lisp` y se ejecuta con `sbcl --script`. Para escribir código con comodidad, la combinación clásica es Emacs con SLIME o Sly, que te da un REPL conectado al editor. Pero cualquier editor sirve para empezar, con el REPL en otra terminal.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Hola, mundo" archivo="hola.lisp" ejecutar="sbcl --script hola.lisp" salida="Hola, mundo">
+
+```lisp
+;; format imprime con directivas: t es la salida estándar, ~% es el salto de línea
+(format t "Hola, mundo~%")
+```
+
+Todo en Lisp es una expresión entre paréntesis: el primer elemento es la función, y el resto son sus argumentos. Los comentarios empiezan con punto y coma.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Variables y funciones" archivo="funciones.lisp" ejecutar="sbcl --script funciones.lisp" salida={"Ana tiene 30 de edad\n49\n(1 4 9 16)"}>
+
+```lisp
+;; defparameter crea una variable global; por convención va entre asteriscos
+(defparameter *nombre* "Ana")
+
+;; let crea variables locales
+(let ((edad 29))
+  (format t "~a tiene ~a de edad~%" *nombre* (+ edad 1)))
+
+;; defun define una función: nombre, lista de parámetros y cuerpo
+(defun cuadrado (n)
+  (* n n))
+
+(format t "~a~%" (cuadrado 7))
+
+;; #'cuadrado es la función como valor; mapcar la aplica a cada elemento
+(format t "~a~%" (mapcar #'cuadrado '(1 2 3 4)))
+```
+
+`~a` en `format` inserta un valor de forma legible. La comilla simple `'(1 2 3 4)` evita que Lisp intente ejecutar la lista como una llamada a función: la trata como datos. El valor de una función es el de su última expresión.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Listas y recursión" archivo="listas.lisp" ejecutar="sbcl --script listas.lisp" salida={"55\n2432902008176640000\n(2 4 6 8 10)\n15\n(0 1 2 3)"}>
+
+```lisp
+;; first devuelve la cabeza de la lista; rest devuelve todo lo demás
+(defun suma (lista)
+  (if (null lista)
+      0
+      (+ (first lista) (suma (rest lista)))))
+
+(defun factorial (n)
+  (if (<= n 1)
+      1
+      (* n (factorial (- n 1)))))
+
+(format t "~a~%" (suma '(1 2 3 4 5 6 7 8 9 10)))
+(format t "~a~%" (factorial 20))
+
+;; remove-if-not se queda con los elementos que cumplen el predicado
+(format t "~a~%" (remove-if-not #'evenp '(1 2 3 4 5 6 7 8 9 10)))
+
+;; reduce combina todos los elementos con una función
+(format t "~a~%" (reduce #'+ '(1 2 3 4 5)))
+
+;; cons agrega un elemento al frente
+(format t "~a~%" (cons 0 '(1 2 3)))
+```
+
+No hay bucle en `suma`: la recursión descompone la lista en cabeza y resto, hasta llegar a la lista vacía. Los enteros de Common Lisp crecen sin límite, así que el factorial de 20 funciona sin desbordarse.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Lambda y loop" archivo="loop.lisp" ejecutar="sbcl --script loop.lisp" salida={"(20 40 60)\nPrecio: 10\nPrecio: 20\nPrecio: 30\n60"}>
+
+```lisp
+(let ((precios '(10 20 30)))
+  ;; lambda crea una función sin nombre
+  (format t "~a~%" (mapcar (lambda (p) (* p 2)) precios))
+
+  ;; loop es un mini lenguaje para iteraciones
+  (loop for p in precios
+        do (format t "Precio: ~a~%" p))
+
+  ;; el mismo loop puede acumular un resultado
+  (format t "~a~%" (loop for p in precios sum p)))
+```
+
+`loop` tiene su propia sintaxis casi en inglés: `for ... in`, `do`, `sum`, `collect`. Es muy usado en Common Lisp. Si prefieres un estilo más funcional, `mapcar`, `reduce` y `remove-if-not` hacen lo mismo.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Estructuras y tablas hash" archivo="datos.lisp" ejecutar="sbcl --script datos.lisp" salida={"Ana tiene 30 de edad\nAhora tiene 31\n30\nNIL"}>
+
+```lisp
+;; defstruct crea un tipo con campos y genera make-persona, persona-nombre, etc.
+(defstruct persona nombre edad)
+
+(let ((p (make-persona :nombre "Ana" :edad 30)))
+  (format t "~a tiene ~a de edad~%" (persona-nombre p) (persona-edad p))
+  ;; setf modifica un campo
+  (setf (persona-edad p) 31)
+  (format t "Ahora tiene ~a~%" (persona-edad p)))
+
+;; una tabla hash; :test 'equal permite usar cadenas como clave
+(let ((tabla (make-hash-table :test 'equal)))
+  (setf (gethash "Ana" tabla) 30)
+  (setf (gethash "Luis" tabla) 34)
+  (format t "~a~%" (gethash "Ana" tabla))
+  ;; si la clave no existe, gethash devuelve NIL
+  (format t "~a~%" (gethash "Pedro" tabla)))
+```
+
+`defstruct` te da una estructura con campos con nombre, sin escribir las funciones de acceso. `NIL` es el valor que significa "nada", "falso" y "lista vacía" a la vez. Mira el error común sobre eso más abajo.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Tu primer macro" archivo="macros.lisp" ejecutar="sbcl --script macros.lisp" salida={'Hola\nHola\nHola\n1 no es mayor que 2\n(IF (> 1 2) NIL (PROGN (FORMAT T "hola")))'}>
+
+```lisp
+;; Un macro recibe código sin evaluar y devuelve el código que se ejecutará
+;; La comilla invertida arma una plantilla; la coma inserta un valor
+;; y ,@ inserta el contenido de una lista
+(defmacro repetir (n &body cuerpo)
+  `(loop repeat ,n do (progn ,@cuerpo)))
+
+(repetir 3 (format t "Hola~%"))
+
+(defmacro mi-unless (condicion &body cuerpo)
+  `(if ,condicion nil (progn ,@cuerpo)))
+
+(mi-unless (> 1 2) (format t "1 no es mayor que 2~%"))
+
+;; macroexpand-1 muestra el código que genera el macro
+(format t "~s~%" (macroexpand-1 '(mi-unless (> 1 2) (format t "hola"))))
+```
+
+Un macro no recibe el valor de sus argumentos, sino el código tal como lo escribiste, y puede reorganizarlo antes de que se ejecute. Así se crean nuevas formas del lenguaje, como `repetir`. `~s` imprime el valor tal como se escribiría, y por eso se ven las comillas del texto.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Paréntesis desbalanceados">
+El error más frecuente al empezar. Un paréntesis de más o de menos cambia el significado del código, o el lector se queda esperando más entrada. No los cuentes a mano: usa un editor que resalte los pares y reindente solo, y escribe con la sangría que te marque la herramienta. Los programadores de Lisp leen la sangría, no los paréntesis del final.
+</Callout>
+
+<Callout tipo="warning" titulo="Modificar una lista literal">
+Una lista escrita con comilla, como `'(1 2 3)`, es una constante del programa. Modificarla con `setf` o funciones destructivas tiene un comportamiento indefinido. Si necesitas una lista que vas a cambiar, créala con `(list 1 2 3)` o copia la constante con `copy-list`.
+</Callout>
+
+<Callout tipo="warning" titulo="Elegir mal el predicado de igualdad">
+`eq` compara identidad, `eql` compara identidad y números del mismo tipo, `equal` compara estructura de listas y cadenas, y `=` solo funciona con números. Si usas `eq` con cadenas, el resultado puede ser falso aunque se vean iguales. Para cadenas, `string=` o `equal`; para claves de una tabla hash con cadenas, `:test 'equal`.
+</Callout>
+
+<Callout tipo="warning" titulo="Olvidar el #' o funcall">
+En Common Lisp las funciones y las variables viven en espacios separados. Para pasar una función como argumento escribe `#'nombre`, y para llamar a una función guardada en una variable usa `funcall`. Si vienes de Scheme, Racket o Clojure, esto es una diferencia que sorprende al principio.
+</Callout>
+
+<Callout tipo="warning" titulo="NIL es falso y también la lista vacía">
+En Common Lisp, `nil` representa tanto "falso" como la lista vacía `()`. Eso es práctico, pero puede confundir: una función que devuelve `nil` no te dice si falló o si la respuesta es una lista vacía. En Scheme y Racket, en cambio, `#f` y `'()` son distintos. Ten esto presente al leer código de otro dialecto.
+</Callout>
+
+## Buenas prácticas
+
+- Trabaja siempre con el REPL abierto: define una función, pruébala y ajústala sin reiniciar todo.
+- Deja que el editor indente. La sangría estándar es parte del estilo de Lisp.
+- Escribe funciones pequeñas con nombres claros en minúsculas separadas por guiones, como `calcular-total`.
+- Marca las variables globales con asteriscos, como `*nombre*`, y las constantes con signos de más, como `+limite+`.
+- Documenta tus funciones con una cadena como primera línea del cuerpo, que luego se consulta con `documentation`.
+- Prefiere funciones sin efectos secundarios y deja los cambios con `setf` para cuando sean necesarios.
+- No uses un macro cuando basta una función. Los macros son para ampliar la sintaxis, no para ahorrar teclas.
+- Cuando tu programa crezca, organízalo con un sistema ASDF y bibliotecas de Quicklisp.
+
+## Siguiente paso
+
+Ya sabes funciones, listas, estructuras y un macro. Para seguir:
+
+- **Common Lisp a fondo**: Practical Common Lisp, de Seibel, combina teoría con proyectos reales, y el Common Lisp Cookbook reúne recetas para tareas concretas.
+- **Racket para aprender con calma**: PrePLAI, en español, usa Racket y DrRacket y enseña diseño de funciones con recursión.
+- **Clojure**: el libro Don Clojure de la Mancha, en español, te lleva de la instalación a macros y concurrencia en la JVM.
+- **SICP**: el clásico del MIT para aprender a pensar con abstracciones, con Scheme.
+- **Condiciones y CLOS**: el sistema de errores con restarts y el sistema de objetos son dos de las partes más originales de Common Lisp.
+- **Comparar con otros enfoques**: [Python](/guias/python/) para ver las mismas ideas con otra sintaxis, o [JavaScript](/guias/javascript/) si quieres ver las funciones de orden superior en acción.
+- **Control de versiones**: guarda tu progreso con la [guía de Git](/guias/git/).
+
+Explora más libros y cursos gratis en la [biblioteca de Lisp](/biblioteca/lisp/).
+
+<LibrosRecomendados ids={frontmatter.libros} />

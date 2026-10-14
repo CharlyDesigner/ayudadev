@@ -1,0 +1,187 @@
+---
+titulo: 'REST y GraphQL: qué son y cuándo usar cada uno'
+descripcion: 'Dos formas de diseñar una API web. Aprende cómo piensa cada una, compara una petición REST con una consulta GraphQL real y decide cuál te conviene.'
+categoria: arquitectura
+nivel: intermedio
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [javascript, nodejs]
+etiquetas: [rest, graphql, api, http, arquitectura]
+orden: 5
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Ya sabes que una API es una puerta para que un programa hable con otro. Ahora aparece la pregunta de diseño: ¿cómo organizas esa puerta? Hay dos estilos muy usados, **REST** y **GraphQL**. Ninguno es mejor en todo. Cada uno resuelve problemas distintos, y conocer ambos te evita elegir por moda.
+
+## Qué es
+
+Ambos son **formas de diseñar una API web**, no programas ni librerías. Si no tienes claro qué es una API, empieza por [Qué es una API y cómo se usa](/fundamentos/que-es-una-api/).
+
+La diferencia, en una analogía de restaurante:
+
+- **REST** es un menú con platillos fijos y cada platillo tiene su propia ventanilla. Si quieres entrada, plato fuerte y postre, vas a tres ventanillas. Cada una te da el platillo completo, con todo lo que trae.
+- **GraphQL** es una sola ventanilla donde entregas una nota con exactamente lo que quieres: "del plato fuerte solo la carne y la salsa, y del postre solo el nombre". Recibes un único paquete a tu medida.
+
+## REST
+
+REST (Representational State Transfer) organiza la API alrededor de **recursos**, cosas con nombre como usuarios, publicaciones o comentarios. Cada recurso tiene una URL, y usas los **métodos HTTP** para decir qué hacer. Los métodos y los códigos de estado se explican en [HTTP: cómo hablan el cliente y el servidor](/fundamentos/http-cliente-servidor/).
+
+```text
+GET    /posts           lista las publicaciones
+GET    /posts/1         trae la publicación 1
+POST   /posts           crea una publicación
+PUT    /posts/1         reemplaza la publicación 1
+PATCH  /posts/1         modifica campos de la publicación 1
+DELETE /posts/1         borra la publicación 1
+GET    /posts/1/comments  lista los comentarios de la publicación 1
+```
+
+Reglas que la mayoría de equipos sigue:
+
+- Las URL usan **sustantivos en plural** (`/posts`), no verbos (`/obtenerPosts`). El verbo lo pone el método HTTP.
+- Cada petición es **independiente**: el servidor no guarda en memoria lo anterior. Cada petición trae lo necesario, como un token.
+- Los códigos de estado comunican el resultado: `200`, `201`, `404`, etcétera.
+- La respuesta suele ser JSON.
+
+Una petición REST real. Ejecútala en tu terminal:
+
+```bash
+curl https://jsonplaceholder.typicode.com/posts/1
+```
+
+Recibes **toda** la publicación, con los campos que el servidor decidió incluir: `userId`, `id`, `title` y `body`. Si solo querías el título, igual recibes lo demás.
+
+**Ventajas:** es sencillo de entender, aprovecha la caché de HTTP (una `GET` a la misma URL se puede reutilizar), funciona con cualquier cliente y tiene herramientas por todos lados.
+
+**Dificultades:**
+
+- **Sobreobtención (over-fetching):** recibes más datos de los que necesitas.
+- **Subobtención (under-fetching):** necesitas varias peticiones para armar una pantalla. Para una publicación con sus comentarios, hay que llamar a `/posts/1` y a `/posts/1/comments`.
+
+## GraphQL
+
+GraphQL es un **lenguaje de consultas** para APIs. En lugar de muchas URLs, hay normalmente **un solo endpoint**, y el cliente envía una consulta que describe la forma exacta de los datos que quiere. El servidor define un **esquema**: el catálogo de tipos y campos que existen y cómo se relacionan.
+
+Una consulta pide campos concretos, y la respuesta repite esa misma forma:
+
+```graphql
+query {
+  country(code: "MX") {
+    name
+    capital
+  }
+}
+```
+
+Casi siempre se envía con `POST` a un solo endpoint y el cuerpo en JSON. Este script llama a una API pública de países que no necesita llave. Guárdalo como `gql.mjs` y ejecútalo con `node gql.mjs`:
+
+```js
+// Una sola petición POST; tú decides qué campos quieres
+const consulta = `
+  query Pais($codigo: ID!) {
+    country(code: $codigo) {
+      name
+      capital
+      languages { name }
+    }
+  }
+`;
+
+const res = await fetch('https://countries.trevorblades.com/graphql', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ query: consulta, variables: { codigo: 'MX' } }),
+});
+
+const { data, errors } = await res.json();
+if (errors) throw new Error(errors[0].message);
+console.log(JSON.stringify(data, null, 2));
+```
+
+Resultado real:
+
+```json
+{
+  "country": {
+    "capital": "Mexico City",
+    "languages": [
+      {
+        "name": "Spanish"
+      }
+    ],
+    "name": "Mexico"
+  }
+}
+```
+
+Pedimos `name`, `capital` y los nombres de los idiomas. Recibimos solo eso, y los datos relacionados (idiomas) llegaron en la **misma petición**.
+
+Esa API es un servicio comunitario de práctica, así que podría cambiar o dejar de estar disponible. Si no responde, busca otra API pública de GraphQL y adapta la URL y la consulta.
+
+Hay otro detalle: GraphQL suele responder `200` incluso cuando hay un error. Los errores viajan dentro del JSON, en el campo `errors`, por eso el código revisa ese campo y no `res.ok` únicamente.
+
+Además de `query` (leer), GraphQL tiene `mutation` (crear, cambiar o borrar) y `subscription` (recibir datos en tiempo real).
+
+**Ventajas:** pides solo lo que necesitas, obtienes datos relacionados en una sola ida, y el esquema sirve como documentación que las herramientas pueden explorar.
+
+**Dificultades:** la caché es más difícil que en REST (casi todo es un `POST` al mismo endpoint), el servidor necesita más trabajo para evitar consultas demasiado profundas o costosas, y tiene una curva de aprendizaje mayor.
+
+## Comparación rápida
+
+| Aspecto | REST | GraphQL |
+| --- | --- | --- |
+| Puntos de entrada | Muchas URLs, una por recurso | Normalmente un solo endpoint |
+| Quién decide la forma de la respuesta | El servidor | El cliente |
+| Datos relacionados | Varias peticiones o URLs anidadas | Una consulta con campos anidados |
+| Caché | Muy buena con HTTP | Requiere más trabajo |
+| Códigos de estado | Significan algo (`404`, `201`) | Suele devolver `200` y errores en el cuerpo |
+| Documentación | Externa (por ejemplo OpenAPI) | Esquema integrado y explorable |
+| Curva de aprendizaje | Baja | Media |
+
+## Cuándo elegir cada uno
+
+**REST suele ser buena idea cuando:**
+
+- Tu API es sencilla o va a ser consumida por muchos clientes distintos.
+- Quieres aprovechar la caché del navegador y de los intermediarios.
+- Estás empezando. Es el estilo más enseñado y con más ejemplos.
+
+**GraphQL suele ser buena idea cuando:**
+
+- Tienes varios clientes (web, móvil) con necesidades de datos distintas.
+- Las pantallas combinan muchos datos relacionados y las idas y vueltas son un problema.
+- El equipo puede mantener un esquema y vigilar el costo de las consultas.
+
+<Callout tipo="tip" titulo="Empieza simple">
+Si dudas, empieza con REST. Es más fácil de depurar con `curl`, y puedes añadir GraphQL después, aun conviviendo con tu API REST. Cambiar de estilo solo porque está de moda cuesta tiempo real.
+</Callout>
+
+<Callout tipo="warning" titulo="No todo lo que dice REST lo es del todo">
+Muchas APIs se llaman REST pero solo usan JSON sobre HTTP con URL bonitas. Cumplir REST al pie de la letra incluye más ideas (como enlaces entre recursos). En el día a día, lo que importa es que tu API sea consistente: mismos nombres, mismos códigos, mismos formatos de error.
+</Callout>
+
+## Pruébalo tú
+
+1. Ejecuta `curl https://jsonplaceholder.typicode.com/posts/1` y cuenta los campos que llegan.
+2. Ejecuta también `curl https://jsonplaceholder.typicode.com/posts/1/comments`. Esa es la segunda petición de REST para tener los datos relacionados.
+3. Corre `node gql.mjs`. Cambia el código `'MX'` por otro código de país de dos letras.
+4. Agrega el campo `currency` dentro de `country` y vuelve a ejecutar.
+5. Pide un campo que no existe, como `nombre`. La respuesta trae `errors` y un mensaje que te sugiere el campo correcto, porque GraphQL valida tu consulta contra el esquema.
+
+## Errores y mitos comunes
+
+- **"GraphQL reemplaza a REST."** No. Son opciones distintas, y muchos productos usan las dos.
+- **"GraphQL es más rápido siempre."** Reduce peticiones y datos inútiles, pero una consulta mal hecha puede ser muy lenta. El rendimiento depende del servidor.
+- **"REST es una librería."** Es un estilo de diseño sobre HTTP, no una herramienta que instalas.
+- **"En REST, `POST` sirve para todo."** Usa el método que corresponde: leer con `GET`, crear con `POST`, y así con los demás.
+- **"Con GraphQL no necesito pensar la seguridad."** Sí necesitas: autenticación, permisos por campo y límites de profundidad y costo. Ve [autenticación y autorización](/fundamentos/autenticacion-y-autorizacion/).
+- **"Si es una API pública, no hace falta versionar."** Cambiar campos rompe a los clientes. REST suele usar `/v1/` en la URL. GraphQL prefiere evolucionar el esquema añadiendo campos y marcando los viejos como obsoletos.
+
+## Qué sigue
+
+- [JSON, CSV, XML y YAML](/fundamentos/json-y-formatos-de-datos/): los formatos de las respuestas.
+- [Frontend, backend y fullstack](/fundamentos/frontend-backend-y-fullstack/): quién consume y quién construye la API.
+- [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/): riesgos comunes en APIs.
+- [Guía de JavaScript](/guias/javascript/) y [biblioteca de Node.js](/biblioteca/nodejs/) para construir una.
+- [Glosario](/glosario/) y [retos](/retos/) para practicar.

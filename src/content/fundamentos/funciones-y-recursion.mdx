@@ -1,0 +1,206 @@
+---
+titulo: 'Funciones y recursión'
+descripcion: 'Aprende qué es una función, cómo se apilan las llamadas en memoria y cuándo conviene que una función se llame a sí misma, con ejemplos en Python y JavaScript.'
+categoria: programacion
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [python, javascript]
+etiquetas: [funciones, recursion, pila, closures]
+orden: 21
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Estás escribiendo un programa y notas que copiaste el mismo bloque de código cinco veces. Cuando encuentras un error en una copia, tienes que arreglarlo en las otras cuatro. Las funciones existen para que eso no pase. Y la recursión es una forma elegante de usarlas cuando un problema se parece a sí mismo en versión más pequeña.
+
+## Qué es
+
+Una **función** es un bloque de código con nombre que recibe datos de entrada (parámetros), hace algo y puede devolver un resultado. Es como una receta: le das los ingredientes, sigue los pasos y te entrega el platillo. Puedes usar la receta mil veces sin reescribirla.
+
+```text
+entrada(s)  --->  [ función ]  --->  salida
+ (argumentos)      (cuerpo)         (return)
+```
+
+Una función bien hecha tiene un solo trabajo, un nombre que lo describe y, de preferencia, no depende de nada fuera de sus parámetros.
+
+```python
+def saludar(nombre, saludo="Hola"):
+    return f"{saludo}, {nombre}"
+
+print(saludar("Ana"))                       # Hola, Ana
+print(saludar("Luis", saludo="Qué tal"))   # Qué tal, Luis
+```
+
+Los **parámetros** son los nombres que aparecen al definir la función (`nombre`, `saludo`). Los **argumentos** son los valores reales con los que la llamas (`"Ana"`). El parámetro `saludo` tiene un **valor por defecto**, así que puedes omitirlo.
+
+## Funciones como valores
+
+En Python y JavaScript una función es un valor más. Puedes guardarla en una variable, pasarla a otra función o devolverla. Eso abre la puerta a patrones muy útiles:
+
+```js
+const doble = (x) => x * 2;          // función flecha
+console.log([1, 2, 3].map(doble));   // [ 2, 4, 6 ]
+```
+
+Aquí `map` recibe una función y la aplica a cada elemento. A las funciones que reciben o devuelven otras funciones se les llama de **orden superior**. Las verás de nuevo en [Programación funcional: la idea central](/fundamentos/programacion-funcional/).
+
+También puedes crear funciones que "recuerdan" datos. Eso se llama **clausura** (closure): la función interna conserva acceso a las variables de la función que la creó.
+
+<Ejemplo numero={1} titulo="Una clausura que cuenta" archivo="contador.py" ejecutar="uv run contador.py" salida="1 2 3">
+
+```python
+def contador():
+    cuenta = 0
+    def sumar():
+        nonlocal cuenta   # permite modificar la variable de afuera
+        cuenta += 1
+        return cuenta
+    return sumar
+
+c = contador()
+print(c(), c(), c())
+```
+
+Cada vez que llamas a `c()` la variable `cuenta` sigue viva, aunque `contador` ya terminó. Cada llamada a `contador()` crea su propia cuenta independiente.
+
+</Ejemplo>
+
+## La pila de llamadas
+
+Cuando una función llama a otra, la computadora debe recordar dónde quedó la primera. Lo hace con la **pila de llamadas** (call stack): una pila de platos donde cada plato es una llamada pendiente. La última llamada en entrar es la primera en salir.
+
+```text
+factorial(3)  espera a  factorial(2)
+factorial(2)  espera a  factorial(1)
+factorial(1)  espera a  factorial(0)
+factorial(0)  devuelve 1   <- tope de la pila
+```
+
+Cuando `factorial(0)` termina, su plato se quita y `factorial(1)` puede continuar. Esto se repite hasta vaciar la pila. Entender este dibujo te ayuda a leer errores y a depurar, tema que se trata en [Depuración con DevTools y debugger](/fundamentos/depuracion-con-devtools-y-debugger/).
+
+## Qué es la recursión
+
+Una función es **recursiva** cuando se llama a sí misma. Funciona si cumples dos reglas:
+
+1. **Caso base:** una situación tan simple que se resuelve sin llamarte de nuevo. Es la salida de emergencia.
+2. **Caso recursivo:** el problema se reduce a una versión más pequeña de sí mismo, y cada llamada se acerca al caso base.
+
+El ejemplo clásico es el factorial: `5! = 5 * 4 * 3 * 2 * 1`. Fíjate en que `5! = 5 * 4!`, o sea, el problema contiene una copia más chica de sí mismo.
+
+<Ejemplo numero={2} titulo="Factorial recursivo" archivo="factorial.py" ejecutar="uv run factorial.py" salida="120">
+
+```python
+def factorial(n):
+    if n == 0:          # caso base
+        return 1
+    return n * factorial(n - 1)   # caso recursivo
+
+print(factorial(5))
+```
+
+`factorial(5)` pide `factorial(4)`, que pide `factorial(3)`, y así hasta llegar a `factorial(0)`. Ahí empieza el camino de regreso multiplicando.
+
+</Ejemplo>
+
+La recursión brilla cuando los datos tienen forma de árbol, como carpetas dentro de carpetas o listas dentro de listas:
+
+```python
+def aplanar(lista):
+    resultado = []
+    for x in lista:
+        if isinstance(x, list):
+            resultado.extend(aplanar(x))   # la lista anidada se resuelve igual
+        else:
+            resultado.append(x)
+    return resultado
+
+print(aplanar([1, [2, [3, 4]], 5]))   # [1, 2, 3, 4, 5]
+```
+
+Aquí no sabes cuántos niveles hay. Un bucle simple no alcanza, pero la recursión lo maneja sin esfuerzo.
+
+<Callout tipo="tip" titulo="Cómo pensar recursivamente">
+No intentes seguir toda la pila en tu cabeza. Haz un acto de fe: supón que la función ya funciona para el caso más pequeño, y solo escribe qué hacer con un paso extra. Primero escribe el caso base, después el caso recursivo.
+</Callout>
+
+## Cuando la recursión sale mal
+
+Hay dos problemas típicos.
+
+**Sin caso base, o que nunca se alcanza.** La pila crece sin parar hasta que el lenguaje la corta con un error:
+
+```python
+def sin_caso_base(n):
+    return sin_caso_base(n + 1)
+
+sin_caso_base(0)   # RecursionError: maximum recursion depth exceeded
+```
+
+En JavaScript el equivalente es `RangeError: Maximum call stack size exceeded`. Python y JavaScript ponen un tope a la pila para que un error tuyo no consuma toda la memoria.
+
+**Repetir trabajo.** El ejemplo clásico es Fibonacci. Cada número es la suma de los dos anteriores, y la versión directa recalcula los mismos valores una y otra vez:
+
+<Ejemplo numero={3} titulo="Fibonacci ingenuo vs con memoria" archivo="fib.py" ejecutar="uv run fib.py" salida={"6765 21891\n23416728348467685"}>
+
+```python
+from functools import lru_cache
+
+llamadas = 0
+def fib_contado(n):
+    global llamadas
+    llamadas += 1
+    if n < 2:
+        return n
+    return fib_contado(n - 1) + fib_contado(n - 2)
+
+print(fib_contado(20), llamadas)
+
+@lru_cache(maxsize=None)   # guarda resultados ya calculados
+def fib_memo(n):
+    if n < 2:
+        return n
+    return fib_memo(n - 1) + fib_memo(n - 2)
+
+print(fib_memo(80))
+```
+
+Para calcular `fib(20)` la versión ingenua hizo 21891 llamadas, y el número crece muy rápido con cada paso. La versión con **memoización** (guardar lo ya calculado) responde `fib(80)` al instante porque cada valor se calcula una sola vez. Más sobre cómo crece el costo en [Complejidad y notación Big O](/fundamentos/complejidad-y-big-o/).
+
+</Ejemplo>
+
+<Callout tipo="warning" titulo="No uses recursión por moda">
+Para recorrer una lista simple o sumar números, un bucle es más claro y no gasta pila. Python tampoco optimiza la recursión de cola, así que una recursión muy profunda fallará aunque el código sea correcto. Usa recursión cuando el problema sea de naturaleza recursiva: árboles, carpetas, estructuras anidadas, "divide y vencerás".
+</Callout>
+
+## Buenas prácticas con funciones
+
+- **Un trabajo por función.** Si necesitas la palabra "y" para describir lo que hace, probablemente son dos funciones.
+- **Nombres con verbo.** `calcular_total`, `validar_correo`, no `datos` o `proceso`.
+- **Pocos parámetros.** Con más de tres o cuatro, considera agrupar datos en un objeto.
+- **Devuelve valores en vez de imprimir.** Una función que devuelve un resultado se puede probar y reutilizar. Una que solo imprime no.
+- **Evita efectos escondidos.** Modificar variables globales o la lista que te pasaron hace difícil entender el programa.
+
+## Pruébalo tú
+
+1. Escribe una función recursiva `suma_lista(xs)` que sume los elementos de una lista. Caso base: la lista vacía suma 0. Caso recursivo: primer elemento más la suma del resto.
+2. Escribe `potencia(base, exponente)` de forma recursiva, sin usar el operador de potencia.
+3. Agrega un contador de llamadas a tu versión de Fibonacci y compara `fib(25)` con y sin `lru_cache`.
+4. En JavaScript, provoca a propósito el error de pila infinita y lee el mensaje que te da el navegador o Node.
+
+## Errores y mitos comunes
+
+- **"La recursión siempre es más lenta."** No siempre, pero sí puede repetir trabajo y gastar pila. Depende del problema.
+- **"Una función con `return` y una sin `return` hacen lo mismo."** Sin `return`, Python devuelve `None` y JavaScript devuelve `undefined`. Muchos errores de "me salió None" vienen de olvidar el `return`.
+- **"Los parámetros y los argumentos son lo mismo."** No: los parámetros se definen, los argumentos se pasan.
+- **"Si funciona con 5, funciona con 5000."** La recursión puede fallar con entradas grandes por el límite de la pila.
+- **"Hay que escribir funciones enormes para ahorrar tiempo."** Las funciones pequeñas se leen, se prueban y se reutilizan mejor.
+
+## Qué sigue
+
+- Cómo se guardan los datos que manejan tus funciones: [Variables, tipos y memoria](/fundamentos/variables-tipos-y-memoria/).
+- Agrupa funciones y datos juntos: [Programación orientada a objetos sin misterio](/fundamentos/programacion-orientada-a-objetos/).
+- Mide el costo de tus algoritmos: [Complejidad y notación Big O](/fundamentos/complejidad-y-big-o/).
+- Practica en la [guía de Python](/guias/python/), consulta el [glosario](/glosario/) y prueba los [retos](/retos/).

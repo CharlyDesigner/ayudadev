@@ -1,0 +1,169 @@
+---
+titulo: 'Gestores de paquetes y dependencias'
+descripcion: 'Qué hacen npm, pip, uv y cargo, qué es una dependencia, para qué sirve un lockfile y cómo instalar librerías de otros sin que tu proyecto se rompa.'
+categoria: herramientas
+nivel: principiante
+tiempoLectura: 11
+publicado: 2026-10-09
+temas: [nodejs, python, rust]
+etiquetas: [npm, pip, uv, cargo, dependencias, lockfile]
+orden: 49
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Quieres mostrar un calendario en tu página, leer un archivo Excel desde Python o generar números aleatorios en Rust. Podrías escribirlo todo desde cero, pero alguien ya lo hizo y lo compartió. Instalar su código y usarlo es lo normal. El programa que hace ese trabajo se llama **gestor de paquetes**.
+
+Es la herramienta que usarás en todos tus proyectos. Entender cómo piensa te ahorra los clásicos "en mi máquina sí funciona".
+
+## Qué es
+
+Un **paquete** (o librería) es código de otra persona, empaquetado para reutilizarse. Una **dependencia** es un paquete que tu proyecto necesita para funcionar. Un **gestor de paquetes** descarga las dependencias, las guarda en el lugar correcto y anota cuáles y en qué versión usa tu proyecto.
+
+Cada lenguaje tiene los suyos:
+
+| Lenguaje | Gestor | Registro (de dónde baja) | Archivo de dependencias | Archivo de bloqueo |
+|---|---|---|---|---|
+| JavaScript y Node.js | npm (también pnpm y yarn) | npm registry | `package.json` | `package-lock.json` |
+| Python | pip o uv | PyPI | `pyproject.toml` o `requirements.txt` | `uv.lock` (con uv) |
+| Rust | cargo | crates.io | `Cargo.toml` | `Cargo.lock` |
+
+El patrón es siempre igual: un archivo donde **tú declaras** qué quieres y un archivo de bloqueo donde la herramienta **registra** exactamente qué se instaló.
+
+## Declarar y bloquear
+
+Mira lo que pasa al instalar un paquete con npm:
+
+<Ejemplo numero={1} titulo="Instalar una dependencia con npm" archivo="terminal" ejecutar="npm init -y && npm install is-odd" salida="added 2 packages, and audited 3 packages in 1s
+
+found 0 vulnerabilities">
+
+```bash
+# Crea un proyecto nuevo con un package.json básico
+npm init -y
+
+# Instala un paquete y lo anota en package.json
+npm install is-odd
+
+# Mira el árbol de dependencias
+npm ls
+```
+
+Después de instalar, `package.json` contiene:
+
+```json
+"dependencies": {
+  "is-odd": "^3.0.1"
+}
+```
+
+Y aparecen dos cosas más: una carpeta `node_modules` con el código descargado y un archivo `package-lock.json`. Instalaste **un** paquete pero npm dice `added 2 packages`. Eso se debe a que `is-odd` a su vez depende de otro. Las dependencias de tus dependencias se llaman **transitivas**, y también entran a tu proyecto. Con `npm ls` ves el árbol. Las versiones que veas en tu máquina serán más recientes que las de este ejemplo.
+
+</Ejemplo>
+
+La diferencia entre los dos archivos importa:
+
+- **`package.json`** guarda lo que tú pediste, normalmente con un **rango** de versiones (`^3.0.1` significa "3.0.1 o una versión posterior compatible", como verás en el artículo de SemVer).
+- **`package-lock.json`** guarda la versión **exacta** de cada paquete instalado, incluidas las transitivas, y una huella de integridad para comprobar que el contenido no cambió.
+
+Gracias al archivo de bloqueo, otra persona que clone tu proyecto instala **exactamente lo mismo** que tú, aunque hayan salido versiones nuevas. Por eso el lockfile **sí se sube a Git**.
+
+## Lo mismo en Python y Rust
+
+Con `uv` en Python, un proyecto se ve así:
+
+```bash
+# Crea un proyecto con pyproject.toml
+uv init mi-proyecto
+cd mi-proyecto
+
+# Agrega una dependencia: la anota y crea uv.lock
+uv add requests
+
+# Corre tu código dentro del entorno del proyecto
+uv run main.py
+```
+
+`uv add` añadió en `pyproject.toml` una línea como `"requests>=2.34.2"` y creó `uv.lock`. Con `pip`, el flujo clásico usa un entorno virtual y un archivo `requirements.txt`:
+
+```bash
+python -m venv .venv
+# Activa el entorno: .venv\Scripts\activate en Windows, source .venv/bin/activate en macOS y Linux
+pip install requests
+pip freeze > requirements.txt
+```
+
+En Rust, `cargo` lo hace casi todo por ti:
+
+```bash
+cargo new mi-app
+cd mi-app
+cargo add rand
+cargo run
+```
+
+`cargo add rand` agrega una línea a `[dependencies]` en `Cargo.toml` y `Cargo.lock` registra versiones exactas. Un detalle: en Cargo, escribir `rand = "0.10.3"` ya significa un rango compatible, no una versión fija.
+
+## Entornos virtuales y carpetas de dependencias
+
+Cada proyecto debería tener sus propias dependencias aisladas, para que un proyecto no rompa a otro.
+
+- En **Node**, las dependencias viven en `node_modules` dentro del proyecto. No la subas a Git (va en `.gitignore`); se regenera con `npm install`.
+- En **Python**, usa un **entorno virtual** (`.venv`). `uv` lo crea y gestiona solo. Instalar paquetes "global" con pip sin entorno virtual es receta para conflictos.
+- En **Rust**, `cargo` guarda los artefactos en la carpeta `target`, que tampoco se sube.
+
+## Instalar de forma reproducible
+
+Hay dos formas de instalar y conviene distinguirlas:
+
+| Comando | Qué hace | Cuándo |
+|---|---|---|
+| `npm install` | Instala según `package.json` y puede actualizar el lockfile | Mientras desarrollas |
+| `npm ci` | Instala exactamente lo que dice el lockfile y falla si no coincide con `package.json` | En pruebas automáticas y despliegues |
+
+El equivalente en `uv` es `uv sync`, que deja el entorno igual al lockfile. En cargo, `cargo build --locked` falla si el lockfile necesitaría cambios.
+
+<Callout tipo="tip" titulo="Mantén pocas dependencias y revísalas">
+
+Cada dependencia es código que no escribiste ni revisaste pero que corre con los permisos de tu programa. Antes de agregar una, pregúntate si de verdad la necesitas, si está mantenida (última actualización, issues abiertos), si mucha gente la usa y qué licencia tiene. Un paquete pequeño que hace algo que resuelves en cinco líneas quizá no valga la pena.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Instalar paquetes es ejecutar código ajeno">
+
+Algunos paquetes pueden ejecutar scripts durante la instalación, y los atacantes publican paquetes con nombres casi idénticos a los populares (por ejemplo, una letra cambiada) esperando que te equivoques al escribir. Revisa el nombre exacto, el autor y la página oficial antes de instalar. Si una IA te sugirió un paquete que no conoces, compruébalo: a veces inventa nombres. Y corre `npm audit` o la herramienta equivalente de vez en cuando para ver vulnerabilidades conocidas.
+
+</Callout>
+
+## Actualizar sin romper
+
+Actualizar es parte del trabajo: los paquetes corrigen errores de seguridad y agregan mejoras. Lo seguro es hacerlo con método.
+
+1. Asegúrate de que tu proyecto tenga pruebas o, al menos, de poder probarlo a mano.
+2. Revisa qué paquetes están desactualizados (`npm outdated`, `uv pip list --outdated`, `cargo update --dry-run`).
+3. Actualiza de a poco y lee las notas de cambios (*changelog*) si el salto es de versión mayor.
+4. Ejecuta tus pruebas, revisa el cambio del lockfile con `git diff` y haz commit.
+
+## Pruébalo tú
+
+1. Crea una carpeta nueva y ejecuta `npm init -y` y `npm install is-odd`. Abre `package.json` y `package-lock.json` y localiza el nombre y la versión.
+2. Borra la carpeta `node_modules` y ejecuta `npm ci`. Comprueba que regresa igual.
+3. Ejecuta `npm ls` y cuenta cuántos paquetes realmente instalaste por una sola línea.
+4. Si usas Python, haz lo mismo con `uv init` y `uv add requests`, y abre `pyproject.toml`.
+5. Crea un `.gitignore` con `node_modules/` y comprueba con `git status` que ya no aparece.
+
+## Errores y mitos comunes
+
+- **"El lockfile estorba, lo borro."** Es lo que garantiza instalaciones iguales. Súbelo a Git.
+- **"Subo `node_modules` para que funcione."** Es enorme y se regenera con un comando. Va en `.gitignore`.
+- **"Instalo todo global."** Globales solo para herramientas de línea de comandos. Las librerías de un proyecto van en el proyecto.
+- **"Actualizo todo de golpe y listo."** Si algo se rompe no sabrás cuál fue la causa. Actualiza en pasos pequeños.
+- **"Si tiene muchas descargas, es seguro."** Es una buena señal, no una garantía. Revisa de todas formas.
+
+## Qué sigue
+
+- Entiende qué significan los números de versión en [Versionado semántico (SemVer)](/fundamentos/versionado-semantico/).
+- Usa Node en la [guía de JavaScript](/guias/javascript/) y Python en la [guía de Python](/guias/python/); Rust tiene su [guía de Rust](/guias/rust/).
+- Cuida tus claves con [Variables de entorno y secretos](/fundamentos/variables-de-entorno/).
+- Sigue con las [pruebas automáticas](/fundamentos/pruebas-automaticas/) para actualizar con confianza.

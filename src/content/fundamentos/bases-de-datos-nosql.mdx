@@ -1,0 +1,177 @@
+---
+titulo: 'Bases de datos NoSQL: cuándo conviene usarlas'
+descripcion: 'Los cuatro tipos de bases NoSQL (documentos, clave-valor, columnas y grafos), qué problemas resuelven, sus costos y cómo elegir entre NoSQL y relacional.'
+categoria: datos
+nivel: intermedio
+tiempoLectura: 10
+publicado: 2026-10-09
+temas: [nosql, nodejs]
+etiquetas: [nosql, mongodb, redis, documentos, clave-valor, grafos]
+orden: 10
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+En algún punto escucharás: "esto lo haríamos mejor en Mongo" o "pon eso en Redis". NoSQL suena a una alternativa moderna que reemplaza a SQL, pero no es eso. Es un conjunto de herramientas pensadas para problemas donde las tablas con filas fijas no son la mejor forma de guardar o leer los datos. Este artículo te ayuda a saber qué es cada una y cuándo conviene.
+
+## Qué es
+
+**NoSQL** suele leerse como "Not only SQL" (no solo SQL). Es un nombre paraguas para bases de datos que **no usan el modelo de tablas relacionadas** como idea central. Cada familia guarda los datos de otra manera.
+
+La analogía: una base relacional es un archivero con cajones y fichas del mismo formato. Las NoSQL son otros muebles: una libreta de claves rápidas, un fólder de documentos completos, o un mapa de conexiones. Cada mueble es mejor para cierto trabajo.
+
+Si aún no conoces el modelo de tablas, empieza por [bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/), porque NoSQL se entiende mejor en comparación.
+
+## Los cuatro tipos principales
+
+| Tipo | Cómo guarda los datos | Ejemplos de motores | Ideal para |
+| --- | --- | --- | --- |
+| Documentos | Documentos tipo JSON con estructura anidada | MongoDB, CouchDB | Catálogos, perfiles, contenido |
+| Clave-valor | Una clave que apunta a un valor | Redis, Valkey, DynamoDB | Caché, sesiones, contadores |
+| Columnas anchas | Filas con columnas flexibles, distribuidas en muchos servidores | Cassandra, HBase | Volúmenes enormes de escritura |
+| Grafos | Nodos y relaciones entre ellos | Neo4j | Redes sociales, recomendaciones, rutas |
+
+### Documentos
+
+Cada registro es un **documento** autocontenido, parecido a un JSON. Los datos relacionados se guardan **dentro** del mismo documento en lugar de repartirse en tablas.
+
+```json
+{
+  "_id": 2,
+  "cliente": { "nombre": "Luis" },
+  "productos": [
+    { "nombre": "Pan", "cantidad": 1 },
+    { "nombre": "Leche", "cantidad": 3 }
+  ],
+  "total": 119
+}
+```
+
+En una base relacional este pedido necesitaría tres tablas y un `JOIN`. Aquí, **una sola lectura** trae todo. Además, los documentos de una misma colección pueden tener campos distintos, lo que facilita cambiar la forma de los datos sobre la marcha.
+
+En MongoDB, con su consola `mongosh`, se vería así (necesitas tener MongoDB instalado o una instancia a la que conectarte):
+
+```js
+db.pedidos.insertOne({ cliente: { nombre: 'Ana' }, total: 240 });
+db.pedidos.find({ 'cliente.nombre': 'Ana' });
+```
+
+### Clave-valor
+
+Es lo más simple: guardas un valor bajo una clave y lo recuperas por esa clave. Es extremadamente rápido porque hace pocas cosas. Se usa mucho como **caché** (guardar un resultado costoso para no recalcularlo) y para **sesiones** y contadores. Con Redis:
+
+```text
+SET sesion:abc123 ana EX 3600    # guarda la sesión y caduca en 3600 segundos
+GET sesion:abc123                # devuelve ana
+INCR visitas                     # suma 1 a un contador
+```
+
+Lo que va después de `#` son notas para ti, no lo escribas en la consola.
+
+La limitación: solo puedes buscar bien **por la clave**. Preguntar "todas las sesiones de usuarios de Jalisco" no es lo suyo.
+
+### Columnas anchas
+
+Pensadas para repartir cantidades enormes de datos entre muchos servidores y soportar muchísimas escrituras, por ejemplo registros de eventos o mediciones de sensores. Exigen diseñar las tablas según las consultas que vas a hacer. No las necesitarás al empezar.
+
+### Grafos
+
+Guardan **nodos** (personas, lugares) y **relaciones** (es amigo de, compró). Son muy buenos cuando la pregunta es sobre conexiones: "¿quiénes son amigos de mis amigos?". Esa consulta en tablas requiere varios `JOIN` encadenados que se vuelven lentos.
+
+## Ejemplo ejecutable sin instalar nada
+
+Este script de Node.js imita los tres modelos con estructuras de JavaScript. No es una base de datos real, pero te deja ver cómo cambia la forma de pensar. Guárdalo como `nosql.mjs` y ejecuta `node nosql.mjs`:
+
+```js
+// Tres modelos NoSQL en miniatura, solo con JavaScript
+
+// 1. Clave-valor: buscar por clave, muy rápido (como Redis en lo básico)
+const cache = new Map();
+cache.set('sesion:abc123', { usuario: 'ana' });
+console.log(cache.get('sesion:abc123'));
+
+// 2. Documentos: cada pedido guarda sus datos anidados (como MongoDB)
+const pedidos = [
+  { _id: 1, cliente: { nombre: 'Ana' },  productos: [{ nombre: 'Café', cantidad: 2 }], total: 240 },
+  { _id: 2, cliente: { nombre: 'Luis' }, productos: [{ nombre: 'Pan', cantidad: 1 }, { nombre: 'Leche', cantidad: 3 }], total: 119 },
+];
+// Una sola lectura trae todo el pedido, sin JOIN
+console.log(pedidos.find((p) => p._id === 2));
+
+// Los documentos de una misma colección pueden tener campos distintos
+pedidos.push({ _id: 3, cliente: { nombre: 'Marta' }, productos: [], total: 0, notaEspecial: 'Regalo' });
+console.log(pedidos.filter((p) => p.notaEspecial).map((p) => p.cliente.nombre));
+
+// 3. Grafo: nodos y relaciones (como Neo4j)
+const amistades = { ana: ['luis', 'marta'], luis: ['ana'], marta: ['ana', 'sofia'], sofia: ['marta'] };
+const amigosDeAmigos = new Set(amistades.ana.flatMap((a) => amistades[a]));
+amigosDeAmigos.delete('ana');
+console.log([...amigosDeAmigos]);
+```
+
+Salida real:
+
+```text
+{ usuario: 'ana' }
+{
+  _id: 2,
+  cliente: { nombre: 'Luis' },
+  productos: [ { nombre: 'Pan', cantidad: 1 }, { nombre: 'Leche', cantidad: 3 } ],
+  total: 119
+}
+[ 'Marta' ]
+[ 'sofia' ]
+```
+
+## Los costos que nadie te cuenta
+
+Elegir NoSQL cambia el trato. Entiende lo que cedes:
+
+- **Menos garantías automáticas.** Muchas bases relacionales hacen cumplir llaves foráneas y transacciones entre varias tablas. En NoSQL, mantener la consistencia entre documentos relacionados suele ser trabajo de tu código. Algunos motores sí ofrecen transacciones, con límites distintos según el producto.
+- **Datos duplicados.** Si guardas el nombre del cliente dentro de cada pedido y el cliente cambia de nombre, debes decidir qué pasa con los pedidos viejos.
+- **Consultas menos flexibles.** Un diseño pensado para una consulta se vuelve incómodo para otra que no previste.
+- **Consistencia eventual.** En sistemas distribuidos, a veces una lectura inmediata después de una escritura puede mostrar el dato anterior. Algunos motores permiten ajustar esto.
+
+## Cómo elegir
+
+| Pregunta | Si la respuesta es sí, considera |
+| --- | --- |
+| ¿Tus datos son tabulares y se relacionan mucho (clientes, pedidos, facturas)? | Relacional |
+| ¿Necesitas transacciones y reglas estrictas, como en dinero? | Relacional |
+| ¿Guardas objetos con forma cambiante y los lees completos? | Documentos |
+| ¿Necesitas respuestas en milisegundos para datos temporales? | Clave-valor |
+| ¿Tu pregunta principal es "quién está conectado con quién"? | Grafos |
+| ¿Tienes volúmenes enormes repartidos en muchos servidores? | Columnas anchas |
+
+<Callout tipo="tip" titulo="Usar varias bases es normal">
+Muchas aplicaciones combinan: una base relacional como fuente principal de verdad, un clave-valor como caché y a veces un motor de búsqueda aparte. No tienes que elegir una para todo. Muchas bases relacionales modernas también guardan columnas JSON, lo que cubre parte de los casos de documentos.
+</Callout>
+
+<Callout tipo="warning" titulo="No elijas NoSQL solo para evitar aprender SQL">
+Para la mayoría de aplicaciones que empiezan (usuarios, productos, pedidos), una base relacional es la opción más segura y flexible. Si eliges NoSQL por moda, es fácil terminar reimplementando a mano los `JOIN` y la consistencia que la relacional te daba gratis.
+</Callout>
+
+## Pruébalo tú
+
+1. Ejecuta `node nosql.mjs` y lee la salida.
+2. Agrega al script un tercer pedido con un campo nuevo distinto de `notaEspecial` y comprueba que los demás documentos no se ven afectados.
+3. Cambia el nombre de Luis en el pedido 2. Luego imagina que Luis tiene diez pedidos: ¿en cuántos lugares tendrías que cambiarlo? Compara con la base relacional, donde el nombre vive en una sola fila.
+4. Añade un nuevo amigo a `amistades` y calcula los "amigos de amigos" de otra persona.
+5. Si quieres practicar con motores reales, instala MongoDB o Redis siguiendo su documentación oficial y repite los comandos de este artículo.
+
+## Errores y mitos comunes
+
+- **"NoSQL significa que no hay esquema."** Siempre hay un esquema, aunque sea implícito en tu código. Que la base no lo exija no significa que no importe.
+- **"NoSQL es más rápido que SQL."** Depende del caso de uso. Un clave-valor lee por clave muy rápido. Una consulta compleja puede ir mejor en una base relacional con buenos índices.
+- **"NoSQL escala y SQL no."** Ambas pueden escalar, con técnicas distintas. La mayoría de proyectos nunca necesita ese tipo de escala.
+- **"NoSQL reemplaza a SQL."** Conviven. Cada una tiene su lugar.
+- **"Mi base NoSQL es segura por ser rara."** Muchas bases se han filtrado por dejar un puerto abierto sin contraseña. Siempre configura autenticación y no expongas la base a internet. Ve [seguridad web y OWASP](/fundamentos/seguridad-web-owasp/).
+- **"Todos los NoSQL son iguales."** Un documento, un clave-valor y un grafo se parecen tan poco entre sí como a una tabla.
+
+## Qué sigue
+
+- [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/): para comparar con el modelo de tablas.
+- [JSON, CSV, XML y YAML](/fundamentos/json-y-formatos-de-datos/): el formato en que se parecen los documentos.
+- [Biblioteca de NoSQL](/biblioteca/nosql/) y [de SQL](/biblioteca/sql/): libros y cursos gratuitos.
+- [Variables de entorno](/fundamentos/variables-de-entorno/): dónde guardar la cadena de conexión y las contraseñas de tu base.
+- [Glosario](/glosario/).

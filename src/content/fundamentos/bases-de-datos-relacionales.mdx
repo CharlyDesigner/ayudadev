@@ -1,0 +1,240 @@
+---
+titulo: 'Bases de datos relacionales: tablas, llaves y relaciones'
+descripcion: 'Aprende cómo se organizan los datos en tablas, qué son las llaves primarias y foráneas, cómo se relacionan y cómo consultarlos con SQL. Ejemplos que corren en SQLite.'
+categoria: datos
+nivel: principiante
+tiempoLectura: 12
+publicado: 2026-10-09
+temas: [sql, python]
+etiquetas: [sql, sqlite, tablas, llaves, joins, normalizacion]
+orden: 9
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Si guardas los datos de una tienda en una hoja de cálculo, tarde o temprano pasa lo mismo: el nombre de un cliente aparece escrito de tres formas, cambias un correo en una fila y se te olvida en otra, y dos personas editan a la vez. Una **base de datos relacional** resuelve eso con reglas: cada dato vive en un solo lugar y las tablas se conectan entre sí.
+
+## Qué es
+
+Una base de datos relacional guarda la información en **tablas**. Una tabla se parece a una hoja de cálculo, con una diferencia importante: todas las filas tienen las mismas columnas y cada columna tiene un tipo de dato.
+
+| Término | Qué es | En una hoja de cálculo |
+| --- | --- | --- |
+| Tabla | Un conjunto de datos sobre un tipo de cosa (clientes, pedidos) | Una hoja |
+| Fila (registro) | Un elemento concreto de la tabla | Una fila |
+| Columna (campo) | Un atributo con tipo (nombre, total) | Una columna |
+| Esquema | La definición de tablas, columnas y reglas | El formato de la hoja |
+
+Se llaman **relacionales** porque las tablas se **relacionan** mediante llaves. Para consultarlas se usa un lenguaje llamado **SQL**. Existen muchos motores (PostgreSQL, MySQL, MariaDB, SQLite, SQL Server). Lo básico es muy parecido entre ellos, y los ejemplos de este artículo corren en SQLite.
+
+La analogía: un archivero de una oficina. Un cajón para clientes, otro para pedidos. En cada pedido no copias los datos del cliente, solo anotas su **número de cliente**. Si el cliente cambia de correo, se corrige en un solo lugar.
+
+## Llaves: cómo se identifican y se conectan las filas
+
+- **Llave primaria (primary key):** una columna que identifica cada fila de forma única. No se repite ni queda vacía. Suele ser un número, como `id`.
+- **Llave foránea (foreign key):** una columna que guarda la llave primaria de otra tabla. Así se crea la relación.
+
+```text
+clientes                          pedidos
++----+-------+------------------+   +----+------------+--------+------------+
+| id | nombre| correo           |   | id | cliente_id | total  | fecha      |
++----+-------+------------------+   +----+------------+--------+------------+
+|  1 | Ana   | ana@ejemplo.com  |<--|  1 |     1      | 250.00 | 2026-10-01 |
+|  2 | Luis  | luis@ejemplo.com |<--|  2 |     1      |  80.50 | 2026-10-03 |
+|  3 | Marta | marta@ejemplo.com|   |  3 |     2      | 120.00 | 2026-10-02 |
++----+-------+------------------+   +----+------------+--------+------------+
+ llave primaria: id                  llave foránea: cliente_id apunta a clientes.id
+```
+
+Ana tiene dos pedidos y Marta ninguno. Esa es una relación **uno a muchos**: un cliente puede tener muchos pedidos, y cada pedido pertenece a un solo cliente.
+
+## Tipos de relaciones
+
+| Relación | Ejemplo | Cómo se modela |
+| --- | --- | --- |
+| Uno a muchos | Un cliente tiene muchos pedidos | La tabla "muchos" lleva la llave foránea |
+| Muchos a muchos | Un estudiante toma muchos cursos y un curso tiene muchos estudiantes | Una **tabla intermedia** con las dos llaves foráneas |
+| Uno a uno | Un usuario tiene un perfil | Una llave foránea única, o se guarda todo en la misma tabla |
+
+Para muchos a muchos, la tabla intermedia (por ejemplo `inscripciones`) tiene una fila por cada combinación: `(estudiante_id, curso_id)`.
+
+## Tu primera base de datos
+
+Guarda esto como `tienda.sql`. Crea las dos tablas, inserta datos y consulta:
+
+```sql
+PRAGMA foreign_keys = ON;  -- SQLite lo necesita para vigilar las llaves foráneas
+
+CREATE TABLE clientes (
+  id     INTEGER PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  correo TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE pedidos (
+  id         INTEGER PRIMARY KEY,
+  cliente_id INTEGER NOT NULL REFERENCES clientes(id),
+  total      REAL NOT NULL,
+  fecha      TEXT NOT NULL
+);
+
+INSERT INTO clientes (nombre, correo) VALUES
+  ('Ana',  'ana@ejemplo.com'),
+  ('Luis', 'luis@ejemplo.com'),
+  ('Marta','marta@ejemplo.com');
+
+INSERT INTO pedidos (cliente_id, total, fecha) VALUES
+  (1, 250.00, '2026-10-01'),
+  (1,  80.50, '2026-10-03'),
+  (2, 120.00, '2026-10-02');
+```
+
+Lo que dicen las reglas: `PRIMARY KEY` identifica la fila, `NOT NULL` obliga a que haya valor, `UNIQUE` evita correos repetidos y `REFERENCES clientes(id)` obliga a que el `cliente_id` exista de verdad en la tabla de clientes.
+
+## Consultar con JOIN
+
+Un `JOIN` junta filas de dos tablas usando la relación:
+
+```sql
+SELECT c.nombre, p.total, p.fecha
+FROM pedidos p
+JOIN clientes c ON c.id = p.cliente_id
+ORDER BY p.fecha;
+```
+
+Resultado:
+
+```text
+nombre  total  fecha
+Ana     250.0  2026-10-01
+Luis    120.0  2026-10-02
+Ana     80.5   2026-10-03
+```
+
+`JOIN` solo devuelve filas que tienen pareja en ambos lados. Marta no aparece porque no tiene pedidos. Para incluir a todos los clientes aunque no tengan pedidos usa `LEFT JOIN`, y para resumir usa `GROUP BY` con funciones como `COUNT` y `SUM`:
+
+```sql
+SELECT c.nombre, COUNT(p.id) AS pedidos, COALESCE(SUM(p.total), 0) AS gastado
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id
+GROUP BY c.id
+ORDER BY gastado DESC;
+```
+
+Resultado:
+
+```text
+Ana    2  330.5
+Luis   1  120.0
+Marta  0  0
+```
+
+`COALESCE` reemplaza el valor vacío (`NULL`) de Marta por `0`. Si quieres aprender más consultas, la [guía de SQL](/guias/sql/) tiene ejemplos paso a paso.
+
+## Las reglas protegen tus datos
+
+Intenta insertar un pedido para un cliente que no existe:
+
+```sql
+INSERT INTO pedidos (cliente_id, total, fecha) VALUES (99, 10, '2026-10-05');
+```
+
+La base de datos lo rechaza:
+
+```text
+Error: FOREIGN KEY constraint failed
+```
+
+Eso es **integridad referencial**: la base de datos garantiza que no haya pedidos "huérfanos". Tu código puede tener errores, pero las reglas del esquema son la última línea de defensa.
+
+## Normalización: no repitas datos
+
+**Normalizar** es organizar las tablas para que cada dato viva en un solo lugar. Si en cada pedido guardaras el nombre y correo del cliente, tendrías copias que se desincronizan. La regla informal: **un hecho, un lugar**. Separa las cosas en tablas distintas y conéctalas con llaves.
+
+A veces se **desnormaliza** a propósito para ganar velocidad de lectura, pero eso se hace después de entender el costo.
+
+## Índices y transacciones
+
+Dos ideas extra que conviene conocer pronto:
+
+- **Índice:** una estructura que acelera las búsquedas por una columna, como el índice al final de un libro. Sin índice, la base revisa fila por fila. Con índice, salta directo. En SQLite puedes comprobarlo con `EXPLAIN QUERY PLAN`:
+
+```sql
+EXPLAIN QUERY PLAN SELECT * FROM pedidos WHERE cliente_id = 1;
+-- antes: SCAN pedidos
+CREATE INDEX idx_pedidos_cliente ON pedidos(cliente_id);
+EXPLAIN QUERY PLAN SELECT * FROM pedidos WHERE cliente_id = 1;
+-- después: SEARCH pedidos USING INDEX idx_pedidos_cliente (cliente_id=?)
+```
+
+- **Transacción:** un grupo de operaciones que se aplican **todas o ninguna**. Si transfieres dinero, restar de una cuenta y sumar a otra debe ocurrir junto. Se escribe con `BEGIN`, y luego `COMMIT` para confirmar o `ROLLBACK` para deshacer.
+
+Estas garantías (atomicidad, consistencia, aislamiento y durabilidad) se conocen como **ACID**, y son la gran fortaleza de las bases relacionales.
+
+<Callout tipo="tip" titulo="Un índice no es gratis">
+Cada índice acelera lecturas pero hace más lentas las escrituras y ocupa espacio. Crea índices para las columnas que usas en `WHERE`, `JOIN` y `ORDER BY` con frecuencia, no para todas.
+</Callout>
+
+<Callout tipo="warning" titulo="Nunca armes SQL pegando texto del usuario">
+Si construyes una consulta concatenando lo que escribe una persona, puedes sufrir una **inyección SQL**, un ataque donde el texto se interpreta como parte del comando. Usa siempre **consultas parametrizadas**, donde los valores van separados del SQL. Es uno de los temas de [seguridad web y OWASP](/fundamentos/seguridad-web-owasp/).
+</Callout>
+
+## Pruébalo tú
+
+No necesitas instalar un servidor. SQLite viene incluido con Python. Guarda esto como `corre.py` junto a `tienda.sql` y ejecútalo con `python corre.py` (o `uv run python corre.py`):
+
+```python
+# Ejecuta tienda.sql en una base de datos SQLite en memoria
+import sqlite3
+
+db = sqlite3.connect(":memory:")
+db.executescript(open("tienda.sql", encoding="utf-8").read())
+
+consulta = """
+SELECT c.nombre, COUNT(p.id) AS pedidos, COALESCE(SUM(p.total), 0) AS gastado
+FROM clientes c
+LEFT JOIN pedidos p ON p.cliente_id = c.id
+GROUP BY c.id
+ORDER BY gastado DESC
+"""
+for fila in db.execute(consulta):
+    print(fila)
+
+try:
+    db.execute("INSERT INTO pedidos (cliente_id, total, fecha) VALUES (99, 10, '2026-10-05')")
+except sqlite3.IntegrityError as error:
+    print("Error:", error)
+```
+
+Salida real:
+
+```text
+('Ana', 2, 330.5)
+('Luis', 1, 120.0)
+('Marta', 0, 0)
+Error: FOREIGN KEY constraint failed
+```
+
+Después prueba tú:
+
+1. Agrega un cuarto cliente y dale un pedido.
+2. Crea una tabla `productos` y una tabla intermedia `pedido_productos` (con `pedido_id`, `producto_id` y `cantidad`) para modelar una relación muchos a muchos.
+3. Cambia el `LEFT JOIN` por `JOIN` y observa qué cliente desaparece.
+4. Si tienes el programa `sqlite3` instalado, ejecuta `sqlite3 tienda.db < tienda.sql` y consulta con `sqlite3 tienda.db "SELECT * FROM clientes;"`.
+
+## Errores y mitos comunes
+
+- **"Una base de datos es lo mismo que Excel."** Excel no hace cumplir reglas, ni maneja bien el acceso de muchas personas a la vez. Una base de datos sí.
+- **"Guardo todo en una sola tabla gigante y listo."** Funciona al principio y se vuelve un caos por los datos repetidos y las inconsistencias.
+- **"SQL es lo mismo en todos los motores."** El núcleo es igual, pero hay diferencias en tipos de datos, funciones y sintaxis avanzada. Revisa la documentación de tu motor.
+- **"Los números de dinero van en REAL."** Los decimales de punto flotante pueden redondear mal. Para dinero real usa tipos exactos de tu motor o guarda centavos como enteros. Aquí usamos `REAL` solo por simplicidad.
+- **"Las llaves foráneas ralentizan todo, mejor sin ellas."** Cuestan poco y evitan errores de datos difíciles de reparar.
+- **"SQLite no sirve en serio."** Es una base excelente para apps pequeñas, móviles, herramientas locales y pruebas. Para muchos usuarios escribiendo a la vez por red, se suelen elegir motores cliente-servidor.
+
+## Qué sigue
+
+- [Bases de datos NoSQL: cuándo conviene usarlas](/fundamentos/bases-de-datos-nosql/): la otra familia.
+- [Guía de SQL](/guias/sql/) y la [biblioteca de SQL](/biblioteca/sql/): consultas en profundidad.
+- [JSON, CSV, XML y YAML](/fundamentos/json-y-formatos-de-datos/): cómo viajan los datos fuera de la base.
+- [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/): inyección SQL y otros riesgos.
+- [Glosario](/glosario/) y [retos](/retos/).

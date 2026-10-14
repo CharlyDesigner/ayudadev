@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import ListadoLayout from '@layouts/ListadoLayout.astro';
+import CardContenido from '@components/ui/CardContenido.astro';
+import FiltroChips from '@components/ui/FiltroChips.astro';
+import { ETIQUETAS_NIVEL } from '@lib/schemas';
+import { temaPorSlug } from '@data/temas';
+
+const lista = (await getCollection('proyectos', (e) => !e.data.borrador)).sort((a, b) => a.data.orden - b.data.orden || a.data.titulo.localeCompare(b.data.titulo, 'es'));
+const tecs = [...new Set(lista.flatMap((p) => p.data.temas))]
+  .map((s) => ({ valor: s, etiqueta: temaPorSlug(s)?.nombre ?? s, conteo: lista.filter((p) => p.data.temas.includes(s)).length }))
+  .sort((a, b) => b.conteo - a.conteo)
+  .slice(0, 14);
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Proyectos', href: '/proyectos/' },
+];
+---
+
+<ListadoLayout
+  titulo="Proyectos para practicar"
+  descripcion="Ideas de proyectos con objetivo, requisitos, pasos sugeridos y retos extra. Cada uno te deja algo que puedes mostrar en tu portafolio."
+  path="/proyectos/"
+  eyebrow="Practica"
+  migas={migas}
+  total={lista.length}
+  placeholder="Busca: calculadora, API, juego, blog..."
+  unidad="proyectos"
+>
+  <Fragment slot="filtros">
+    <FiltroChips grupo="nivel" etiqueta="Nivel" opciones={['principiante', 'intermedio', 'avanzado'].map((n) => ({ valor: n, etiqueta: ETIQUETAS_NIVEL[n as keyof typeof ETIQUETAS_NIVEL] }))} />
+    {tecs.length > 1 && <FiltroChips grupo="temas" etiqueta="Tecnología" opciones={tecs} />}
+  </Fragment>
+
+  {lista.length === 0 && <p class="card p-8 text-center text-muted">Los primeros proyectos están en camino.</p>}
+  <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {lista.map((p) => (
+      <CardContenido
+        href={`/proyectos/${p.id}/`}
+        titulo={p.data.titulo}
+        descripcion={p.data.descripcion}
+        badges={[ETIQUETAS_NIVEL[p.data.nivel]]}
+        meta={p.data.tiempo}
+        logos={p.data.tecnologias}
+        progId={`proyecto:${p.id}`}
+        datos={{ nivel: p.data.nivel, temas: p.data.temas.join(' ') }}
+        texto={`${p.data.titulo} ${p.data.descripcion} ${p.data.habilidades.join(' ')} ${p.data.tecnologias.join(' ')}`}
+      />
+    ))}
+  </div>
+</ListadoLayout>

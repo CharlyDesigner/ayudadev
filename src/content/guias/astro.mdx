@@ -1,0 +1,325 @@
+---
+titulo: 'Astro desde cero'
+descripcion: 'Qué es Astro, cómo crear un sitio y construir un blog con layouts, componentes, colecciones de contenido, rutas dinámicas y un endpoint JSON.'
+tema: astro
+nivel: principiante
+tiempoLectura: 30
+publicado: 2026-10-09
+libros: ['astro-documentacion-oficial', 'astro-tutorial-construye-tu-primer-blog', 'astro-colecciones-de-contenido', 'astro-por-que-astro']
+requisitos: ['Saber HTML y lo básico de JavaScript', 'Tener Node.js instalado y saber usar la terminal']
+etiquetas: ['astro', 'sitios-estaticos', 'markdown', 'colecciones', 'rendimiento']
+orden: 53
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+Astro es un framework para crear sitios web centrados en contenido: blogs, documentación, portafolios, páginas de empresas. Por defecto genera HTML y no envía JavaScript al navegador, así que sus páginas cargan muy rápido. Este mismo sitio está hecho con Astro. En esta guía construyes un blog pequeño de principio a fin.
+
+## Qué es y para qué sirve
+
+Este es el modelo mental de Astro:
+
+- **HTML primero.** Astro convierte tus páginas en HTML durante la compilación (o en el servidor, si lo configuras así). Lo que llega al navegador es HTML y CSS, y solo agrega JavaScript donde tú lo pides.
+- **Archivos `.astro`.** Un componente de Astro tiene dos partes: arriba, entre dos líneas de guiones (`---`), un bloque de JavaScript o TypeScript que corre al compilar; debajo, una plantilla parecida a HTML con expresiones entre llaves. Ese bloque superior nunca llega al navegador.
+- **Rutas por archivos.** Cada archivo de `src/pages` se convierte en una página. `src/pages/blog/index.astro` es `/blog/`, y un nombre entre corchetes como `[id].astro` crea rutas dinámicas.
+- **Componentes y layouts.** Reutilizas piezas con componentes que reciben props, y envuelves páginas con layouts que usan `slot` para colocar el contenido.
+- **Colecciones de contenido.** Organizas Markdown, MDX o datos en carpetas, validas su encabezado con un esquema y los consultas con funciones del propio Astro.
+- **Arquitectura de islas.** Si necesitas interactividad, usas una isla: un componente (de React, Vue, Svelte u otros) que se carga y se activa solo donde lo indicas, con directivas `client:*`. El resto de la página sigue siendo HTML estático.
+- **Estático o con servidor.** Lo normal es generar un sitio estático que subes a cualquier hosting. Cuando necesitas páginas bajo demanda, agregas un adaptador de servidor.
+- **Integrado con Vite.** Astro usa Vite por debajo, así que tienes TypeScript, CSS y recarga en caliente sin configurar nada.
+
+## Instálalo y corre tu primer archivo
+
+<Pasos>
+
+1. **Instala Node.js (versión LTS)** desde [nodejs.org](https://nodejs.org/). En **Windows** también sirve `winget install OpenJS.NodeJS.LTS`; en **macOS**, `brew install node`; en **Linux**, [nvm](https://github.com/nvm-sh/nvm) con `nvm install --lts`. Comprueba con `node -v`. La plantilla actual de Astro pide Node 22.12 o superior, y su `package.json` lo indica en `engines`.
+2. **Crea el proyecto.** Ejecuta `npm create astro@latest mi-sitio -- --template minimal --yes --no-git --install`. Eso crea la carpeta `mi-sitio` con la plantilla mínima, acepta las opciones por defecto, no inicia un repositorio Git e instala las dependencias. Si prefieres responder las preguntas una por una, ejecuta solo `npm create astro@latest`.
+3. **Entra a la carpeta** con `cd mi-sitio`.
+4. **Arranca el servidor de desarrollo** con `npm run dev`. La terminal muestra la dirección local, normalmente `http://localhost:4321`. Ábrela en el navegador.
+5. **Edita `src/pages/index.astro`** con el código del ejemplo 1 y guarda. La página se actualiza sola.
+6. **Compila para producción** con `npm run build`. El resultado queda en la carpeta `dist`, lista para subirse a un hosting.
+
+</Pasos>
+
+Estructura que usarás: `src/pages` (las páginas), `src/layouts` y `src/components` (piezas reutilizables), `src/content` (tu contenido en Markdown) y `src/content.config.ts` (la definición de tus colecciones).
+
+## Ejemplos paso a paso
+
+Vas a construir un blog. Cada ejemplo agrega una pieza y puedes comprobarlo con `npm run build`: el HTML que se muestra como salida es el que Astro deja en la carpeta `dist`.
+
+<Ejemplo numero={1} titulo="Tu primera página" archivo="src/pages/index.astro" ejecutar="npm run build" salida={'dist/index.html contiene:\n<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Inicio</title></head><body><h1>Hola desde AyudaDev</h1><ul><li>HTML</li><li>CSS</li><li>JavaScript</li></ul></body></html>'}>
+
+```astro
+---
+// Esta parte (entre las rayas) corre al compilar, nunca en el navegador
+const nombre = 'AyudaDev';
+const temas = ['HTML', 'CSS', 'JavaScript'];
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inicio</title>
+  </head>
+  <body>
+    <h1>Hola desde {nombre}</h1>
+    <ul>
+      {temas.map((tema) => <li>{tema}</li>)}
+    </ul>
+  </body>
+</html>
+```
+
+Entre las dos líneas de guiones escribes JavaScript normal. Debajo, las llaves insertan valores y `map` genera un `<li>` por tema. Astro evalúa todo al compilar, así que el navegador recibe HTML ya resuelto, sin rastro de `nombre` ni de `temas`. Si abres `dist/index.html` verás lo mismo que muestra la salida.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="Layout, componente y props" archivo="src/layouts/Base.astro, src/components/Tarjeta.astro y src/pages/index.astro" ejecutar="npm run build" salida={'dist/index.html contiene dentro de main: un h1 "Hola desde AyudaDev", la lista de temas y dos tarjetas. La segunda muestra "Sin resumen" porque no se pasó el resumen.'}>
+
+El layout, `src/layouts/Base.astro`, define la estructura común:
+
+```astro
+---
+interface Props {
+  titulo: string;
+}
+const { titulo } = Astro.props;
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{titulo} | Mi sitio</title>
+  </head>
+  <body>
+    <header><a href="/">Inicio</a> · <a href="/blog/">Blog</a></header>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
+```
+
+El componente `src/components/Tarjeta.astro` recibe props y tiene un valor por defecto:
+
+```astro
+---
+interface Props {
+  titulo: string;
+  href: string;
+  resumen?: string;
+}
+const { titulo, href, resumen = 'Sin resumen' } = Astro.props;
+---
+
+<article>
+  <h2><a href={href}>{titulo}</a></h2>
+  <p>{resumen}</p>
+</article>
+```
+
+Y la página los usa. Reemplaza `src/pages/index.astro`:
+
+```astro
+---
+import Base from '../layouts/Base.astro';
+import Tarjeta from '../components/Tarjeta.astro';
+
+const nombre = 'AyudaDev';
+const temas = ['HTML', 'CSS', 'JavaScript'];
+---
+
+<Base titulo="Inicio">
+  <h1>Hola desde {nombre}</h1>
+  <ul>
+    {temas.map((tema) => <li>{tema}</li>)}
+  </ul>
+  <Tarjeta titulo="Lee el blog" href="/blog/" resumen="Mis notas de aprendizaje" />
+  <Tarjeta titulo="Sin resumen" href="/otra/" />
+</Base>
+```
+
+Las props se leen de `Astro.props`, y la interfaz `Props` las documenta y las valida si usas TypeScript. `<slot />` marca dónde se coloca lo que escribes entre las etiquetas `<Base>`. Con un layout cambias el encabezado de todo el sitio en un solo archivo. En un atributo, las llaves insertan el valor sin comillas (`href={href}`).
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Una colección de contenido en Markdown" archivo="src/content.config.ts, src/content/blog/*.md y src/pages/blog/index.astro" ejecutar="npm run build" salida={'dist/blog/index.html contiene una lista con dos entradas, de la más nueva a la más vieja: "Colecciones de contenido" (5 de octubre de 2026) y "Mi primer día con Astro" (1 de octubre de 2026). La entrada marcada como borrador no aparece.'}>
+
+Define la colección en `src/content.config.ts`:
+
+```ts
+import { defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
+
+const blog = defineCollection({
+  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+  schema: z.object({
+    titulo: z.string(),
+    fecha: z.coerce.date(),
+    borrador: z.boolean().default(false),
+  }),
+});
+
+export const collections = { blog };
+```
+
+Crea tres entradas en `src/content/blog`. Por ejemplo `primer-dia.md`:
+
+```md
+---
+titulo: 'Mi primer día con Astro'
+fecha: 2026-10-01
+---
+
+Hoy instalé **Astro** y publiqué mi primera página.
+```
+
+`colecciones.md` tiene `titulo: 'Colecciones de contenido'` y `fecha: 2026-10-05`. Una tercera, `idea-pendiente.md`, lleva `titulo: 'Idea pendiente'`, `fecha: 2026-10-08` y `borrador: true`. Y esta es la página que las lista, `src/pages/blog/index.astro`:
+
+```astro
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+// Trae las entradas y descarta los borradores
+const entradas = (await getCollection('blog', ({ data }) => !data.borrador)).sort(
+  (a, b) => b.data.fecha.valueOf() - a.data.fecha.valueOf()
+);
+---
+
+<Base titulo="Blog">
+  <h1>Blog</h1>
+  <ul>
+    {
+      entradas.map((entrada) => (
+        <li>
+          <a href={`/blog/${entrada.id}/`}>{entrada.data.titulo}</a>
+          <time datetime={entrada.data.fecha.toISOString()}>
+            {entrada.data.fecha.toLocaleDateString('es-MX', { dateStyle: 'long', timeZone: 'UTC' })}
+          </time>
+        </li>
+      ))
+    }
+  </ul>
+</Base>
+```
+
+El esquema con Zod valida el encabezado de cada archivo al compilar, y `z.coerce.date()` convierte el texto de la fecha en un objeto `Date`. `getCollection` acepta un filtro, que aquí oculta los borradores. El `id` de cada entrada sale del nombre del archivo. Los enlaces aún no funcionan: se completan en el siguiente ejemplo.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Una página por cada entrada: rutas dinámicas" archivo="src/pages/blog/[id].astro" ejecutar="npm run build" salida={'Astro lista las rutas generadas: /blog/colecciones/index.html, /blog/primer-dia/index.html, /blog/index.html y /index.html. dist/blog/primer-dia/index.html contiene un h1 con "Mi primer día con Astro" y el párrafo con Astro en negritas.'}>
+
+```astro
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+// Una página estática por cada entrada publicada
+export async function getStaticPaths() {
+  const entradas = await getCollection('blog', ({ data }) => !data.borrador);
+  return entradas.map((entrada) => ({ params: { id: entrada.id }, props: { entrada } }));
+}
+
+const { entrada } = Astro.props;
+const { Content } = await render(entrada);
+---
+
+<Base titulo={entrada.data.titulo}>
+  <h1>{entrada.data.titulo}</h1>
+  <Content />
+</Base>
+```
+
+El nombre `[id]` entre corchetes dice que esa parte de la URL es variable. En un sitio estático Astro necesita saber de antemano qué páginas crear, y `getStaticPaths` se lo dice: devuelve un parámetro `id` por cada entrada y le pasa la entrada completa como prop. `render` convierte el Markdown en un componente `Content` que colocas donde quieras. Ahora los enlaces del ejemplo 3 llevan a una página real.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Un poco de JavaScript en el navegador" archivo="src/components/Contador.astro" ejecutar="npm run dev" salida={'Aparece un botón con el texto "Clics: 0". Cada clic suma uno al número.'}>
+
+```astro
+<button id="sumar">Clics: <span id="cuenta">0</span></button>
+
+<script>
+  // Este JavaScript sí llega al navegador (Astro lo empaqueta)
+  const boton = document.querySelector('#sumar');
+  const cuenta = document.querySelector('#cuenta');
+  let valor = 0;
+  boton?.addEventListener('click', () => {
+    valor += 1;
+    if (cuenta) cuenta.textContent = String(valor);
+  });
+</script>
+```
+
+Importa el componente en `index.astro` (`import Contador from '../components/Contador.astro';`) y colócalo con `<Contador />` dentro del layout. Una etiqueta `<script>` dentro de un componente de Astro se procesa y se agrega a la página como módulo, y aunque uses el componente varias veces, el script se incluye una sola vez. Esa es la forma más ligera de agregar interactividad: no necesitas ningún framework. Cuando la interactividad crezca, usas una isla: agregas un componente de React, Vue o Svelte con `npx astro add react` (o el framework que elijas) y lo cargas con una directiva como `client:load` o `client:visible`.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un endpoint JSON" archivo="src/pages/api/entradas.json.ts" ejecutar="npm run build" salida={'dist/api/entradas.json contiene:\n[{"id":"colecciones","titulo":"Colecciones de contenido"},{"id":"primer-dia","titulo":"Mi primer día con Astro"}]'}>
+
+```ts
+import { getCollection } from 'astro:content';
+
+// Un endpoint estático: se genera como archivo JSON en el build
+export async function GET() {
+  const entradas = await getCollection('blog', ({ data }) => !data.borrador);
+  const cuerpo = entradas.map((e) => ({ id: e.id, titulo: e.data.titulo }));
+  return Response.json(cuerpo);
+}
+```
+
+Un archivo `.ts` dentro de `src/pages` es un endpoint: exporta una función con el nombre del método HTTP y devuelve una `Response`. En un sitio estático la función corre al compilar y su resultado se guarda como un archivo, aquí `/api/entradas.json`. Sirve para exponer tus datos a otras aplicaciones o a tu propio JavaScript del navegador. Si más adelante añades un adaptador de servidor, el mismo código puede responder bajo demanda.
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="InvalidContentEntryDataError: la entrada no coincide con el esquema">
+Si a un archivo Markdown le falta un campo obligatorio o lo escribiste mal, la compilación se detiene con "data does not match collection schema" y te dice qué campo falló (por ejemplo, la fecha, con `Expected type "date"`). Corrige el encabezado del archivo, o marca el campo como opcional con `.optional()` o con un valor por defecto con `.default()` en el esquema.
+</Callout>
+
+<Callout tipo="warning" titulo="ReferenceError: document is not defined">
+El bloque entre guiones se ejecuta al compilar o en el servidor, no en el navegador, así que no existen `document`, `window` ni `localStorage`. Si necesitas esas APIs, ponlas en una etiqueta `<script>` del componente, que sí corre en el navegador.
+</Callout>
+
+<Callout tipo="warning" titulo="GetStaticPathsRequired en una ruta dinámica">
+Una página como `[slug].astro` en un sitio estático necesita exportar `getStaticPaths()` para indicar qué rutas generar; si no, el build falla con ese error. Si la ruta debe resolverse en el servidor a la hora de la petición, debes usar un adaptador y marcar la página con `export const prerender = false`.
+</Callout>
+
+<Callout tipo="warning" titulo="El componente de React no responde a los clics">
+Un componente de framework dentro de Astro se renderiza solo como HTML, sin JavaScript, a menos que le pongas una directiva de cliente: `client:load` (al cargar), `client:visible` (cuando se vea en pantalla), `client:idle` o `client:only`. Es la causa más común de "mi botón no hace nada". Usa la directiva menos agresiva que cubra tu caso para no perder las ventajas de rendimiento.
+</Callout>
+
+<Callout tipo="warning" titulo="Variables de entorno que no llegan al navegador (o llegan de más)">
+En el código del navegador solo existen las variables de `import.meta.env` que empiezan con `PUBLIC_`. El resto se queda en el servidor o en el build. Eso es bueno: nunca pongas una clave secreta en una variable `PUBLIC_`, porque terminará escrita en el código que descarga cualquier visitante.
+</Callout>
+
+## Buenas prácticas
+
+- Empieza con HTML y componentes de Astro, y agrega JavaScript solo donde de verdad haga falta.
+- Define esquemas para tus colecciones. Un error de fecha o de título se detecta al compilar, no cuando tus lectores ya lo ven.
+- Usa un layout común para el `<head>`, la navegación y los metadatos, y pásale el título por props.
+- Escribe `lang` en tu etiqueta `html` y un `title` distinto en cada página.
+- Elige la directiva `client:*` más ligera que resuelva tu caso.
+- Genera solo las rutas que necesitas con `getStaticPaths` y excluye los borradores del build.
+- Usa `npm run build` antes de publicar y revisa los mensajes: Astro avisa de errores de contenido y de rutas.
+- Si tu proyecto crece, usa TypeScript y revisa los tipos de tus archivos `.astro` con el comando `astro check`; la documentación oficial explica cómo instalarlo.
+
+## Siguiente paso
+
+Tienes un blog estático con contenido validado. Lo que sigue:
+
+- **Sigue el tutorial oficial.** [Construye tu primer blog con Astro](https://docs.astro.build/es/tutorial/0-introduction/) cubre estilos, interactividad y publicación.
+- **Mejora los estilos.** Aprende lo esencial en [HTML y CSS desde cero](/guias/html-css/) para diseñar tu layout.
+- **Agrega tipos.** [TypeScript desde cero](/guias/typescript/) te ayuda con las props de tus componentes y los esquemas de tus colecciones.
+- **Prueba una isla.** Instala [React](/guias/react/) con `npx astro add react` y carga un componente con `client:visible`.
+- **Publica tu sitio.** La [guía de despliegue](https://docs.astro.build/es/guides/deploy/) explica cómo subirlo a distintas plataformas. Para guardar tu progreso usa [Git y GitHub](/guias/git/).
+- **Explora la biblioteca.** Todos los recursos de [Astro](/biblioteca/astro/) son gratuitos y varios están en español.
+
+<LibrosRecomendados ids={frontmatter.libros} />

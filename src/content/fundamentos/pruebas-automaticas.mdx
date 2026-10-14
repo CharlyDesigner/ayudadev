@@ -1,0 +1,206 @@
+---
+titulo: 'Pruebas automáticas: unitarias, de integración y E2E'
+descripcion: 'Qué son las pruebas automáticas, cómo escribir una con pytest, en qué se diferencian las unitarias, de integración y E2E, y cuántas necesitas de cada tipo.'
+categoria: calidad
+nivel: intermedio
+tiempoLectura: 12
+publicado: 2026-10-09
+temas: [python, javascript, metodologias-desarrollo]
+etiquetas: [pruebas, tests, pytest, tdd, e2e, calidad]
+orden: 27
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Cambias una línea para arreglar un error y, sin darte cuenta, rompes otra cosa que funcionaba. Lo descubres días después, porque un usuario te avisa. Las pruebas automáticas existen para que lo descubras en segundos, antes de que nadie más lo vea.
+
+## Qué es
+
+Una **prueba automática** es un programa pequeño que ejecuta tu código con datos conocidos y verifica que el resultado sea el esperado. Si todo coincide, pasa. Si no, falla y te dice dónde.
+
+Es como el control de calidad de una fábrica: en lugar de que una persona revise cada pieza a mano, hay una máquina que revisa todas, siempre igual, en segundos.
+
+Una prueba tiene tres partes, conocidas como **Arrange, Act, Assert** (preparar, actuar, comprobar):
+
+1. **Preparar:** crear los datos de entrada.
+2. **Actuar:** llamar al código que quieres probar.
+3. **Comprobar:** verificar que el resultado sea el esperado.
+
+## Tu primera prueba con pytest
+
+Empecemos con una función que aplica un descuento:
+
+```python
+# precios.py
+def aplicar_descuento(precio, porcentaje):
+    """Devuelve el precio con descuento. El porcentaje va de 0 a 100."""
+    if porcentaje < 0 or porcentaje > 100:
+        raise ValueError("El porcentaje debe estar entre 0 y 100")
+    return round(precio * (100 - porcentaje) / 100, 2)
+```
+
+Y sus pruebas, en un archivo cuyo nombre empieza con `test_`:
+
+<Ejemplo numero={1} titulo="Pruebas unitarias con pytest" archivo="test_precios.py" ejecutar="uv run --with pytest pytest -v" salida={"test_precios.py::test_descuento_normal PASSED\ntest_precios.py::test_sin_descuento PASSED\ntest_precios.py::test_varios_casos[100-50-50] PASSED\ntest_precios.py::test_varios_casos[100-100-0] PASSED\ntest_precios.py::test_varios_casos[80-25-60] PASSED\ntest_precios.py::test_porcentaje_invalido PASSED\n6 passed"}>
+
+```python
+import pytest
+from precios import aplicar_descuento
+
+
+def test_descuento_normal():
+    assert aplicar_descuento(200, 10) == 180
+
+
+def test_sin_descuento():
+    assert aplicar_descuento(99.99, 0) == 99.99
+
+
+@pytest.mark.parametrize("precio, porcentaje, esperado", [
+    (100, 50, 50),
+    (100, 100, 0),
+    (80, 25, 60),
+])
+def test_varios_casos(precio, porcentaje, esperado):
+    assert aplicar_descuento(precio, porcentaje) == esperado
+
+
+def test_porcentaje_invalido():
+    with pytest.raises(ValueError):
+        aplicar_descuento(100, 120)
+```
+
+Cada función `test_...` es una prueba. `assert` verifica una condición. `parametrize` ejecuta la misma prueba con varios datos sin copiar y pegar. `pytest.raises` comprueba que el código falle como debe con una entrada inválida. Pytest encuentra y corre todo solo. Verás una línea de resumen similar a `6 passed`.
+
+</Ejemplo>
+
+Si una prueba falla, pytest te muestra qué esperabas y qué obtuviste. Por ejemplo, si escribes `assert aplicar_descuento(200, 10) == 190` te dirá `assert 180.0 == 190`: sabes qué llamada falló y con qué valor. Eso es lo que hace útil una prueba: te lleva directo al problema.
+
+En JavaScript, Node ya incluye un ejecutor de pruebas sin instalar nada:
+
+```js
+// suma.test.mjs   (se ejecuta con: node --test)
+import { test } from "node:test";
+import assert from "node:assert/strict";
+
+const sumar = (a, b) => a + b;
+
+test("suma dos números", () => {
+  assert.equal(sumar(2, 3), 5);
+});
+```
+
+Proyectos más grandes suelen usar Vitest o Jest, con la misma idea de fondo.
+
+## Los tres niveles de pruebas
+
+Piensa en probar un coche. Puedes probar cada pieza suelta, probar que las piezas funcionan juntas, o probar el coche entero en la carretera.
+
+| Nivel | Qué prueba | Velocidad | Ejemplo |
+| --- | --- | --- | --- |
+| Unitaria | Una función o clase, aislada | Milisegundos | `aplicar_descuento` |
+| Integración | Varias piezas juntas (código y base de datos, o dos módulos) | Rápida a media | Guardar y leer un usuario |
+| E2E (de extremo a extremo) | Todo el sistema como lo usa una persona | Lenta | Abrir la página, iniciar sesión y comprar |
+
+### Pruebas de integración
+
+Una prueba de integración verifica que varias piezas colaboren bien. Aquí probamos que un repositorio guarda y lee de una base de datos real (SQLite en memoria, que no deja archivos y es rapidísima):
+
+```python
+# test_repo.py
+import sqlite3
+from repo import RepoUsuarios
+
+
+def test_guardar_y_leer_usuario():
+    repo = RepoUsuarios(sqlite3.connect(":memory:"))
+    id_nuevo = repo.agregar("Ana")
+    assert repo.buscar(id_nuevo) == "Ana"
+
+
+def test_usuario_inexistente():
+    repo = RepoUsuarios(sqlite3.connect(":memory:"))
+    assert repo.buscar(999) is None
+```
+
+Esta prueba no se puede escribir como unitaria: lo que importa es que el SQL funcione de verdad. Más sobre eso en [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/).
+
+### Pruebas E2E
+
+Las pruebas **E2E** controlan un navegador real, como lo haría una persona. Herramientas como Playwright o Cypress abren la página, escriben en los campos y hacen clic. Un ejemplo con Playwright:
+
+```js
+import { test, expect } from "@playwright/test";
+
+test("una persona puede iniciar sesión", async ({ page }) => {
+  await page.goto("http://localhost:3000/login");
+  await page.getByLabel("Correo").fill("ana@example.com");
+  await page.getByLabel("Contraseña").fill("clave-de-prueba");
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await expect(page.getByText("Bienvenida")).toBeVisible();
+});
+```
+
+Dan mucha confianza porque prueban todo junto, pero son lentas y frágiles: un cambio visual menor puede romperlas. Úsalas solo para los caminos críticos, como registrarse o pagar.
+
+## La pirámide de pruebas
+
+Una guía muy usada es tener **muchas** pruebas unitarias, **algunas** de integración y **pocas** E2E:
+
+```text
+        /\
+       /E2E\          pocas, lentas, mucha confianza
+      /------\
+     / Integr.\       algunas
+    /----------\
+   /  Unitarias \     muchas, rápidas, baratas
+  /--------------\
+```
+
+Las de abajo son baratas y rápidas, así que puedes ejecutarlas cada vez que guardas. Las de arriba cuestan más, así que se reservan para lo esencial. No es una ley, pero es un buen punto de partida.
+
+<Callout tipo="tip" titulo="Escribe una prueba cuando encuentres un bug">
+Cada vez que arregles un error, primero escribe una prueba que lo reproduzca (debe fallar), luego corrige el código hasta que pase. Así el mismo bug no vuelve a aparecer sin que lo notes. Esa disciplina de escribir la prueba antes que el código se llama TDD (desarrollo guiado por pruebas), y vale la pena probarla.
+</Callout>
+
+## Cómo escribir buenas pruebas
+
+<Pasos>
+
+1. **Una idea por prueba.** Si falla, debes saber de inmediato qué se rompió.
+2. **Nombres que cuenten una historia.** `test_porcentaje_invalido` explica el caso sin abrir el código.
+3. **Prueba bordes, no solo el camino feliz.** Cero, vacío, negativos, el máximo permitido, datos inválidos.
+4. **Que sean independientes.** Una prueba no debe depender de que otra haya corrido antes.
+5. **Que sean rápidas y repetibles.** Mismo resultado en tu computadora y en la de tu equipo.
+
+</Pasos>
+
+Las pruebas son más fáciles de escribir cuando el código tiene funciones pequeñas y sin efectos escondidos, como en la [programación funcional](/fundamentos/programacion-funcional/). Además se vuelven aún más valiosas cuando las ejecuta una máquina en cada cambio, algo que veremos en [CI/CD explicado con GitHub Actions](/fundamentos/integracion-continua-y-despliegue-continuo/).
+
+<Callout tipo="warning" titulo="Cuidado con las pruebas que no prueban nada">
+Una prueba que siempre pasa es peor que no tener ninguna, porque da una falsa seguridad. Nunca la dejes sin un `assert`, y si copias una prueba, cambia lo que verifica. Además, no persigas el 100 por ciento de cobertura como meta: puedes ejecutar todas las líneas sin comprobar nada importante. Cubre primero lo que más duele si falla.
+</Callout>
+
+## Pruébalo tú
+
+1. Crea `precios.py` y `test_precios.py` con el código de este artículo. Instala pytest con `uv run --with pytest pytest` y confirma que pasan.
+2. Cambia el `== 180` por `== 190` y observa el mensaje de error. Luego corrígelo.
+3. Agrega una función `es_par(n)` y escribe cuatro pruebas: un par, un impar, cero y un negativo.
+4. Escribe primero una prueba para una función `invertir_texto("hola")` que devuelva `"aloh"`. Verás que falla, y entonces implementas la función hasta que pase. Eso es TDD.
+
+## Errores y mitos comunes
+
+- **"Probar es perder el tiempo."** Cada prueba te ahorra horas de depuración futura.
+- **"Si todas pasan, no hay bugs."** Solo significa que no hay bugs en lo que probaste.
+- **"Las pruebas son solo para equipos grandes."** Sirven también en proyectos personales: te permiten cambiar código sin miedo.
+- **"Las E2E reemplazan a las unitarias."** Son lentas y difíciles de diagnosticar. Se complementan.
+- **"Probar es tarea de otra persona."** Quien escribe el código es quien mejor sabe cómo puede fallar.
+
+## Qué sigue
+
+- Automatiza la ejecución en cada cambio: [CI/CD explicado con GitHub Actions](/fundamentos/integracion-continua-y-despliegue-continuo/).
+- Escribe código fácil de probar: [Código limpio y refactorización](/fundamentos/codigo-limpio-y-refactorizacion/).
+- Encuentra errores cuando una prueba falla: [Depuración con DevTools y debugger](/fundamentos/depuracion-con-devtools-y-debugger/).
+- Practica con la [guía de Python](/guias/python/), consulta el [glosario](/glosario/) y prueba los [retos](/retos/).

@@ -1,0 +1,237 @@
+---
+titulo: 'Python: estructuras de datos'
+descripcion: 'Listas, tuplas, diccionarios y conjuntos en Python: métodos, rebanadas, comprensiones, ordenar, copiar y los módulos collections e itertools más útiles.'
+tema: python
+etiquetas: ['python', 'listas', 'diccionarios', 'conjuntos', 'collections']
+publicado: 2026-10-09
+orden: 10
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cuál usar y cómo manejar cada estructura. Probado con Python 3.14.
+
+| Estructura | Sintaxis | Ordenada | Mutable | Repetidos | Úsala para |
+| --- | --- | --- | --- | --- | --- |
+| `list` | `[1, 2]` | Sí | Sí | Sí | Colecciones que crecen y cambian |
+| `tuple` | `(1, 2)` | Sí | No | Sí | Datos fijos, claves compuestas |
+| `dict` | `{"a": 1}` | Sí (por inserción) | Sí | Claves únicas | Buscar valor por clave |
+| `set` | `{1, 2}` | No | Sí | No | Quitar repetidos, pertenencia rápida |
+
+## Listas
+
+```python
+l = [3, 1, 2]
+l.append(4)             # [3, 1, 2, 4]
+l.extend([5, 6])        # [3, 1, 2, 4, 5, 6]
+l.insert(0, 9)          # [9, 3, 1, 2, 4, 5, 6]
+```
+
+| Método o expresión | Qué hace |
+| --- | --- |
+| `l.append(x)` | Añade al final |
+| `l.extend(otra)` | Añade todos los elementos de otra lista |
+| `l.insert(i, x)` | Inserta en la posición `i` |
+| `l.pop()` | Quita y devuelve el último |
+| `l.pop(0)` | Quita y devuelve el primero |
+| `l.remove(x)` | Quita la primera aparición de `x` (error si no está) |
+| `del l[i]` | Borra por posición |
+| `l.index(x)` | Posición de `x` |
+| `l.count(x)` | Cuántas veces aparece |
+| `l.sort()` | Ordena en el sitio (devuelve `None`) |
+| `l.sort(reverse=True)` | Orden descendente |
+| `l.reverse()` | Invierte en el sitio |
+| `sorted(l)` | Devuelve una lista nueva ordenada |
+| `l.copy()` o `l[:]` | Copia superficial |
+| `l.clear()` | Vacía la lista |
+| `len(l)`, `x in l` | Longitud, pertenencia |
+
+### Índices y rebanadas
+
+| Expresión | Sobre `[2, 3, 4, 5]` |
+| --- | --- |
+| `l[0]` | `2` (primero) |
+| `l[-1]` | `5` (último) |
+| `l[1:3]` | `[3, 4]` (del 1 al 3, sin incluir el 3) |
+| `l[::2]` | `[2, 4]` (de dos en dos) |
+| `l[::-1]` | `[5, 4, 3, 2]` (invertida) |
+| `l[:2]`, `l[2:]` | `[2, 3]`, `[4, 5]` |
+
+### Ordenar con una clave
+
+```python
+sorted(["b", "A", "c"], key=str.lower)         # ['A', 'b', 'c']
+sorted([(2, "b"), (1, "z")], key=lambda t: t[1])  # [(2, 'b'), (1, 'z')]
+sorted(["pera", "kiwi", "fresa"], key=len)     # ['pera', 'kiwi', 'fresa']
+max(["pera", "kiwi", "fresa"], key=len)        # 'fresa'
+```
+
+`sort` y `sorted` son estables: los empates conservan su orden original.
+
+### Listas de listas
+
+```python
+m = [[0] * 2 for _ in range(2)]
+m[0][0] = 1
+print(m)        # [[1, 0], [0, 0]]  correcto
+
+mal = [[0] * 2] * 2
+mal[0][0] = 1
+print(mal)      # [[1, 0], [1, 0]]  las dos filas son la misma lista
+```
+
+<Callout tipo="warning" titulo="[[0] * 2] * 2 repite la misma lista">
+
+`*` repite la referencia a la lista interior, no la copia. Para matrices usa la comprensión `[[0] * 2 for _ in range(2)]`.
+
+</Callout>
+
+## Tuplas
+
+```python
+t = (1, 2)
+t[0]            # 1
+t + (3,)        # (1, 2, 3)
+(5,)            # tupla de un elemento: la coma es obligatoria
+x, y = t        # desempaquetado
+```
+
+No se pueden modificar. Sirven como claves de diccionario y como retorno múltiple de funciones.
+
+## Diccionarios
+
+```python
+d = {"a": 1, "b": 2}
+d["c"] = 3                       # añade o reemplaza
+d.get("z")                       # None (no falla)
+d.get("z", 0)                    # 0 (valor por defecto)
+"a" in d                         # True (busca en claves)
+```
+
+| Método o expresión | Qué hace |
+| --- | --- |
+| `d[k]` | Valor de `k` (lanza `KeyError` si no existe) |
+| `d.get(k, defecto)` | Valor o el defecto |
+| `d[k] = v` | Añade o cambia |
+| `d.pop(k)` | Quita y devuelve el valor |
+| `del d[k]` | Borra la clave |
+| `d.setdefault(k, v)` | Si `k` no existe la crea con `v`; devuelve el valor |
+| `d.update(otro)` | Mezcla otro diccionario |
+| `d.keys()`, `d.values()`, `d.items()` | Vistas de claves, valores y pares |
+| `d \| otro` | Diccionario nuevo con la mezcla (Python 3.9 o posterior) |
+| `{**d, "a": 0}` | Copia con un valor cambiado |
+| `dict(zip("ab", [1, 2]))` | `{'a': 1, 'b': 2}` |
+| `dict.fromkeys("ab", 0)` | `{'a': 0, 'b': 0}` |
+
+```python
+for k, v in d.items():
+    print(k, v)
+
+{k: v * 2 for k, v in d.items()}     # comprensión de diccionario
+sorted(d.items())                    # lista de pares ordenada por clave
+```
+
+Las claves deben ser inmutables (texto, números, tuplas). Una lista no puede ser clave.
+
+## Conjuntos
+
+```python
+s = {1, 2, 3}
+s.add(4)
+s.discard(9)            # no falla si no existe (remove sí falla)
+set([1, 1, 2])          # {1, 2}
+set()                   # conjunto vacío; {} es un diccionario vacío
+```
+
+| Operación | Resultado con `{1, 2}` y `{2, 3}` |
+| --- | --- |
+| `a \| b` | `{1, 2, 3}` unión |
+| `a & b` | `{2}` intersección |
+| `a - b` | `{1}` diferencia |
+| `a ^ b` | `{1, 3}` en uno solo de los dos |
+| `a <= b` | Subconjunto |
+| `x in s` | Pertenencia, muy rápida |
+
+Quitar repetidos conservando el orden: `list(dict.fromkeys([3, 1, 3, 2]))` da `[3, 1, 2]`.
+
+## Comprensiones y generadores
+
+| Sintaxis | Resultado |
+| --- | --- |
+| `[x * x for x in range(5) if x % 2]` | `[1, 9]` |
+| `{x % 3 for x in range(10)}` | `{0, 1, 2}` |
+| `{k: len(k) for k in ["aa", "b"]}` | `{'aa': 2, 'b': 1}` |
+| `(x * x for x in range(3))` | Generador: calcula bajo demanda |
+| `sum(x for x in range(4))` | `6`, sin construir la lista |
+
+## Funciones para recorrer
+
+| Función | Ejemplo |
+| --- | --- |
+| `enumerate` | `list(enumerate("ab"))` da `[(0, 'a'), (1, 'b')]` |
+| `zip` | `list(zip("ab", [1, 2]))` da `[('a', 1), ('b', 2)]` |
+| `map` | `list(map(str, [1, 2]))` da `['1', '2']` |
+| `filter` | `list(filter(None, [0, 1, 2]))` da `[1, 2]` |
+| `reversed` | `list(reversed([1, 2, 3]))` da `[3, 2, 1]` |
+| `any`, `all` | Alguno o todos son verdaderos |
+
+## Copiar
+
+```python
+import copy
+
+a = [[1], [2]]
+b = copy.copy(a)        # copia superficial: las listas interiores se comparten
+c = copy.deepcopy(a)    # copia profunda: todo es independiente
+a[0].append(9)
+print(b)                # [[1, 9], [2]]
+print(c)                # [[1], [2]]
+```
+
+`l.copy()`, `l[:]` y `list(l)` son copias superficiales.
+
+## El módulo collections
+
+```python
+from collections import Counter, defaultdict, deque
+
+Counter("abracadabra").most_common(2)   # [('a', 5), ('b', 2)]
+
+dd = defaultdict(list)                  # clave nueva = lista vacía
+dd["x"].append(1)
+dict(dd)                                # {'x': [1]}
+
+q = deque([1, 2])                       # cola con extremos rápidos
+q.appendleft(0)
+q.append(3)
+q.popleft()                             # 0
+q.pop()                                 # 3
+```
+
+| Tipo | Para qué sirve |
+| --- | --- |
+| `Counter` | Contar apariciones |
+| `defaultdict` | Diccionario con valor inicial automático |
+| `deque` | Cola o pila con inserción y extracción rápidas en ambos extremos |
+| `namedtuple` | Tupla con campos con nombre |
+
+Para buscar una posición en una lista ordenada, `bisect.bisect([1, 3, 5], 4)` da `2`.
+
+## Elegir la estructura
+
+| Necesitas | Usa |
+| --- | --- |
+| Una secuencia que cambia | `list` |
+| Un registro fijo de campos | `tuple`, `dataclass` o `namedtuple` |
+| Buscar por nombre o id | `dict` |
+| Saber si algo ya está o quitar repetidos | `set` |
+| Cola o pila | `deque` |
+| Contar | `Counter` |
+
+## Para ir más a fondo
+
+- [Estructuras de datos en el tutorial oficial](https://docs.python.org/es/3/tutorial/datastructures.html)
+- [Tipos integrados](https://docs.python.org/es/3/library/stdtypes.html)
+- Hoja de AyudaDev: [Python, sintaxis esencial](/hojas/python-sintaxis-esencial/)
+- Guía de AyudaDev: [Python desde cero](/guias/python/)
+- Biblioteca: [libros y cursos de Python](/biblioteca/python/)

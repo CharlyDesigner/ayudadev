@@ -6,7 +6,7 @@ import { recursoSchema, type Recurso } from '@lib/schemas';
 import { recursosPorTema as porTema, contarPorTema, destacados as destacar, ordenRecursos } from '@lib/catalog';
 import { TEMAS } from './temas';
 
-const modulos = import.meta.glob<{ default: unknown[] }>('./recursos/*.ts', { eager: true });
+const modulos = import.meta.glob<{ default: unknown[] }>('./recursos/**/*.ts', { eager: true });
 
 const crudos = Object.values(modulos).flatMap((m) => m.default);
 

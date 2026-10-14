@@ -1,0 +1,346 @@
+---
+titulo: 'Accesibilidad web desde cero'
+descripcion: 'Qué es la accesibilidad, cómo preparar tus herramientas de auditoría y cómo corregir una página real con axe, contraste, formularios y teclado.'
+tema: accesibilidad
+nivel: principiante
+tiempoLectura: 35
+publicado: 2026-10-09
+libros: ['accesibilidad-mdn-aprende-accesibilidad', 'accesibilidad-wai-principios', 'accesibilidad-web-dev-learn', 'accesibilidad-wcag-2-2-de-forma-sencilla']
+requisitos: ['Saber HTML y CSS básicos', 'Tener Node.js instalado para los ejemplos con axe']
+etiquetas: ['accesibilidad', 'wcag', 'aria', 'axe', 'lighthouse', 'teclado']
+orden: 42
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+import LibrosRecomendados from '@components/guias/LibrosRecomendados.astro';
+
+## Qué es y para qué sirve
+
+Un sitio accesible es uno que puede usar cualquier persona: quien no ve la pantalla y usa un lector de pantalla, quien no puede usar el mouse, quien tiene baja visión, sordera, dislexia o un brazo enyesado, y también quien está bajo el sol con el celular. Hacerlo bien es mejor para todas las personas, y en muchos países es además una obligación legal.
+
+El modelo mental que necesitas:
+
+- **WCAG** (Web Content Accessibility Guidelines) es el estándar del W3C. Esta guía se apoya en WCAG 2.2. Los criterios tienen tres niveles de conformidad: A, AA y AAA. El nivel que suelen exigir las leyes y los clientes es **AA**.
+- **Cuatro principios (POUR)**: lo que ofreces debe ser Perceptible, Operable, Comprensible y Robusto.
+- **El HTML semántico resuelve buena parte del trabajo**: un `button` real ya es enfocable con Tab, se activa con Enter y Espacio y lo anuncia el lector de pantalla. Un `div` con un clic no hace nada de eso.
+- **Árbol de accesibilidad**: el navegador convierte tu HTML en un árbol con nombre, rol y estado de cada elemento. Los lectores de pantalla leen ese árbol, no tu diseño visual.
+- **ARIA** son atributos que completan lo que el HTML no puede expresar. La regla número uno: si existe un elemento HTML nativo para lo que quieres, úsalo en lugar de ARIA.
+- **Nombre accesible**: todo control necesita un nombre que se pueda leer (texto del botón, `label` de un campo, `alt` de una imagen).
+- **Las herramientas automáticas no bastan**: detectan solo una parte de los problemas. Hay que probar también con teclado, con zoom y con un lector de pantalla.
+- **Se hace desde el diseño**: corregir al final cuesta más que hacerlo bien desde el principio.
+
+## Prepara tu entorno
+
+Para auditar necesitas tres cosas: herramientas automáticas, un teclado y un lector de pantalla.
+
+<Pasos>
+
+1. **Una carpeta de pruebas con axe-core**. Instala Node.js y en una carpeta nueva ejecuta `npm init -y`, luego `npm pkg set type=module` y por último `npm install axe-core jsdom`. Así podrás auditar archivos HTML desde la terminal, como en los ejemplos.
+2. **Lighthouse**, ya incluido en Chrome: abre DevTools con `F12`, entra a la pestaña **Lighthouse**, marca la categoría Accessibility y pulsa el botón para analizar la página. La [documentación oficial](https://developer.chrome.com/docs/lighthouse/overview) explica cómo leer el reporte.
+3. **axe DevTools** y **WAVE**: extensiones y servicios que marcan problemas directamente sobre la página. Encuentra axe en [deque.com/axe](https://www.deque.com/axe/) y WAVE en [wave.webaim.org](https://wave.webaim.org/).
+4. **Un lector de pantalla**. En Windows, [NVDA](https://www.nvaccess.org/) es gratuito y de código abierto. En macOS e iOS viene VoiceOver (actívalo con `Cmd+F5` en Mac). En Linux existe Orca y en Android, TalkBack.
+5. **Tu teclado**. Desconecta el mouse un rato y recorre tu página con `Tab`, `Shift+Tab`, `Enter`, `Espacio`, `Esc` y las flechas.
+6. **Zoom**. Amplía la página al 200 por ciento y revisa que nada se corte ni se superponga.
+
+</Pasos>
+
+Ahora crea un archivo llamado `auditar.mjs` en tu carpeta de pruebas. Lo usarás en casi todos los ejemplos; lo explico en el primero.
+
+## Ejemplos paso a paso
+
+<Ejemplo numero={1} titulo="Audita una página con axe-core" archivo="auditar.mjs" ejecutar="node auditar.mjs pagina-mala.html" salida={"html-has-lang (serious): 1 elemento(s)\nimage-alt (critical): 1 elemento(s)\nlink-name (serious): 1 elemento(s)\nregion (moderate): 6 elemento(s)"}>
+
+Este es el script que carga un archivo HTML, le inyecta axe-core y muestra las violaciones:
+
+```js
+import { readFileSync } from 'node:fs';
+import { JSDOM } from 'jsdom';
+import axe from 'axe-core';
+
+const archivo = process.argv[2];
+const dom = new JSDOM(readFileSync(archivo, 'utf8'), { runScripts: 'outside-only' });
+dom.window.eval(axe.source);
+
+// jsdom no calcula estilos reales, así que el contraste se revisa aparte
+const resultado = await dom.window.axe.run(dom.window.document, {
+  rules: { 'color-contrast': { enabled: false } },
+});
+
+if (resultado.violations.length === 0) {
+  console.log('Sin violaciones automáticas');
+} else {
+  for (const v of resultado.violations) {
+    console.log(`${v.id} (${v.impact}): ${v.nodes.length} elemento(s)`);
+  }
+  process.exitCode = 1;
+}
+```
+
+Y esta es una página con problemas típicos, guardada como `pagina-mala.html`:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tienda</title>
+</head>
+<body>
+  <div class="titulo">Mi tienda</div>
+  <img src="logo.png">
+  <input type="text" placeholder="Correo">
+  <div onclick="comprar()">Comprar</div>
+  <a href="/oferta">Haz clic aquí</a>
+  <a href="/envios"></a>
+  <h3>Ofertas</h3>
+</body>
+</html>
+```
+
+Cada línea del resultado es una regla de axe, su gravedad y cuántos elementos la incumplen. Falta el idioma de la página (`html-has-lang`), la imagen no tiene `alt`, hay un enlace sin texto y el contenido no está dentro de regiones como `main` o `header`. Los resultados pueden variar un poco según la versión de axe-core. Ojo: axe no detecta todo. Este ejemplo también tiene un `div` que hace de botón, un campo que solo usa `placeholder` como etiqueta, un encabezado `h3` sin `h1`, y un texto de enlace que no dice nada ("Haz clic aquí"). Esos los ves tú, probando con el teclado y leyendo el código.
+
+</Ejemplo>
+
+<Ejemplo numero={2} titulo="La misma página, corregida" archivo="pagina-buena.html" ejecutar="node auditar.mjs pagina-buena.html" salida="Sin violaciones automáticas">
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi tienda: ofertas de la semana</title>
+</head>
+<body>
+  <!-- Primer elemento enfocable: permite saltar la navegación con el teclado -->
+  <a href="#contenido" class="saltar">Saltar al contenido</a>
+  <header>
+    <img src="logo.png" alt="Mi tienda">
+    <nav aria-label="Principal">
+      <a href="/ofertas">Ofertas</a>
+      <a href="/envios">Información de envíos</a>
+    </nav>
+  </header>
+  <main id="contenido">
+    <h1>Mi tienda</h1>
+    <h2>Ofertas</h2>
+    <form>
+      <label for="correo">Correo electrónico</label>
+      <input id="correo" type="email" autocomplete="email">
+      <button type="submit">Suscribirme</button>
+    </form>
+    <p><a href="/oferta">Ver la oferta de la semana</a></p>
+  </main>
+</body>
+</html>
+```
+
+Qué cambió: `lang="es"` para que el lector use la pronunciación correcta; un `alt` que dice qué es la imagen; enlaces con texto que se entiende fuera de contexto; regiones (`header`, `nav`, `main`) para saltar entre secciones; un `h1` y encabezados en orden; un `label` real en el campo; un `button` real en lugar del `div`; y un enlace para saltar al contenido. Que axe no encuentre nada no significa que la página sea perfecta: solo que pasó las comprobaciones que una máquina puede hacer.
+
+</Ejemplo>
+
+<Ejemplo numero={3} titulo="Calcula el contraste de color" archivo="contraste.mjs" ejecutar="node contraste.mjs" salida={"#777777 sobre #ffffff: 4.48:1 NO cumple AA\n#767676 sobre #ffffff: 4.54:1 cumple AA\n#0b5fff sobre #ffffff: 5.13:1 cumple AA\n#999999 sobre #ffffff: 2.85:1 NO cumple AA"}>
+
+```js
+// Luminancia relativa y razón de contraste según WCAG 2
+const canal = (c) => {
+  const s = c / 255;
+  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+};
+const luminancia = (hex) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b);
+};
+const contraste = (a, b) => {
+  const [claro, oscuro] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
+  return (claro + 0.05) / (oscuro + 0.05);
+};
+
+for (const [texto, fondo] of [['#777777', '#ffffff'], ['#767676', '#ffffff'], ['#0b5fff', '#ffffff'], ['#999999', '#ffffff']]) {
+  const razon = contraste(texto, fondo);
+  const veredicto = razon >= 4.5 ? 'cumple AA' : 'NO cumple AA';
+  console.log(`${texto} sobre ${fondo}: ${razon.toFixed(2)}:1 ${veredicto}`);
+}
+```
+
+El criterio WCAG de contraste mínimo (nivel AA) pide una razón de al menos 4.5 a 1 para texto normal. Un gris muy usado como `#777` se queda en 4.48 y falla por muy poco; `#767676` es el gris más claro sobre blanco que ya cumple. Revisa también los estados de foco, los bordes de los campos y los íconos: los componentes de interfaz tienen su propio mínimo. Y nunca uses solo el color para comunicar algo (como "los campos en rojo tienen error"): agrega un texto o un ícono. Para revisar colores sin escribir código existen verificadores de contraste en línea y el panel de DevTools.
+
+</Ejemplo>
+
+<Ejemplo numero={4} titulo="Botones con nombre: el caso del ícono" archivo="botones-malos.html" ejecutar="node auditar.mjs botones-malos.html" salida="button-name (critical): 1 elemento(s)">
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Botones</title>
+</head>
+<body>
+  <main>
+    <h1>Mi carrito</h1>
+
+    <!-- MAL: solo tiene un ícono, el lector dice solo "botón" -->
+    <button type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16"><path d="M2 2l12 12M14 2L2 14"/></svg>
+    </button>
+
+    <!-- BIEN: el ícono se oculta y el texto lo leen los lectores de pantalla -->
+    <button type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+      <span class="solo-lectores">Quitar del carrito</span>
+    </button>
+  </main>
+</body>
+</html>
+```
+
+Y el CSS que oculta el texto a la vista sin esconderlo de los lectores de pantalla:
+
+```css
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+```
+
+axe marca el primer botón (`button-name`) y deja pasar el segundo. Otra opción es poner `aria-label="Quitar del carrito"` en el botón; usa la que se ajuste mejor a tu caso. No uses `display: none` ni `hidden` para esto: también esconden el texto de los lectores de pantalla.
+
+</Ejemplo>
+
+<Ejemplo numero={5} titulo="Formularios con etiqueta, ayuda y error" archivo="formulario-bueno.html" ejecutar="node auditar.mjs formulario-malo.html; node auditar.mjs formulario-bueno.html" salida={"label (critical): 1 elemento(s)\nselect-name (critical): 1 elemento(s)\nSin violaciones automáticas"}>
+
+El formulario malo (`formulario-malo.html`) tiene un `input` y un `select` sin nada que los nombre:
+
+```html
+<form>
+  <input type="email">
+  <select>
+    <option>México</option>
+    <option>Colombia</option>
+  </select>
+  <button type="submit">Enviar</button>
+</form>
+```
+
+La versión corregida, dentro de `main` y con un título de página, se ve así:
+
+```html
+<form novalidate>
+  <label for="correo">Correo electrónico</label>
+  <input id="correo" type="email" autocomplete="email" required
+         aria-describedby="ayuda-correo error-correo" aria-invalid="true">
+  <p id="ayuda-correo">Te enviaremos un enlace de confirmación.</p>
+  <p id="error-correo" role="alert">Escribe un correo con el formato nombre@dominio.com</p>
+
+  <label for="pais">País</label>
+  <select id="pais" name="pais">
+    <option>México</option>
+    <option>Colombia</option>
+  </select>
+
+  <button type="submit">Crear cuenta</button>
+</form>
+```
+
+`label for` ligado al `id` del campo le da nombre y agranda el área donde puedes hacer clic. `aria-describedby` hace que el lector lea la ayuda y el error junto con el campo. `aria-invalid` marca el campo como inválido y `role="alert"` anuncia el mensaje cuando aparece. `autocomplete` permite que el navegador rellene datos conocidos. El `aria-invalid="true"` y el mensaje de error deben aparecer solo después de que el campo falle la validación; aquí se muestran fijos para que el ejemplo sea corto. Para correr el comando, guarda cada formulario dentro de la misma plantilla de página (con `doctype`, `lang`, `charset`, `title`, y un `main` con su `h1`) como `formulario-malo.html` y `formulario-bueno.html`.
+
+</Ejemplo>
+
+<Ejemplo numero={6} titulo="Un acordeón que funciona con teclado y lector" archivo="acordeon.html" ejecutar="node auditar.mjs acordeon.html" salida="Sin violaciones automáticas">
+
+```html
+<h2>
+  <button type="button" aria-expanded="false" aria-controls="resp-1" id="pregunta-1">
+    ¿Hacen envíos a todo el país?
+  </button>
+</h2>
+<div id="resp-1" role="region" aria-labelledby="pregunta-1" hidden>
+  <p>Sí, con costo que depende de la ciudad.</p>
+</div>
+
+<script>
+  const boton = document.getElementById('pregunta-1');
+  const panel = document.getElementById('resp-1');
+  boton.addEventListener('click', () => {
+    const abierto = boton.getAttribute('aria-expanded') === 'true';
+    // El estado se comunica con aria-expanded; el panel se muestra u oculta con hidden
+    boton.setAttribute('aria-expanded', String(!abierto));
+    panel.hidden = abierto;
+  });
+</script>
+```
+
+Y el CSS del foco, que nunca debe desaparecer:
+
+```css
+button:focus-visible {
+  outline: 3px solid #0b5fff;
+  outline-offset: 2px;
+}
+```
+
+Como el control es un `button` nativo, Tab lo alcanza, Enter y Espacio lo activan y no escribimos código de teclado. ARIA solo agrega lo que HTML no sabe expresar: `aria-expanded` dice si el panel está abierto y `aria-controls` lo relaciona con el botón. Para correr el comando, el fragmento va dentro de un `main` con `h1` en una página completa. Después prueba lo que axe no puede: navega con Tab, activa con Enter y con Espacio, y enciende NVDA o VoiceOver para escuchar "botón, contraído" y luego "expandido".
+
+</Ejemplo>
+
+## Errores comunes
+
+<Callout tipo="warning" titulo="Inventar textos alternativos o dejar imágenes sin alt">
+
+Una imagen informativa necesita un `alt` que diga lo que transmite ("Gráfica: las ventas subieron en marzo"). Una decorativa necesita `alt=""` vacío para que el lector la ignore. Sin el atributo, muchos lectores leen el nombre del archivo ("IMG_4032.jpg"). Evita empezar con "imagen de" porque el lector ya dice que es una imagen.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Usar div o span como botones">
+
+Un `div` con `onclick` no recibe foco, no se activa con teclado y el lector no lo anuncia como botón. Usa `button` para acciones y `a href` para ir a otra página. Si de verdad no tienes opción, tendrías que agregar rol, `tabindex` y manejar Enter y Espacio a mano; casi nunca vale la pena.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Quitar el contorno del foco">
+
+Un `outline: none` sin reemplazo deja a quien navega con teclado sin saber dónde está. Si no te gusta el contorno por defecto, diséñalo con `:focus-visible` y asegura buen contraste con el fondo. WCAG 2.2 incluso agrega criterios sobre la apariencia del foco.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Usar placeholder como etiqueta">
+
+El texto del `placeholder` desaparece al escribir, suele tener poco contraste y no sustituye a un `label`. Algunas herramientas (axe incluida) lo aceptan como nombre accesible, pero eso no lo vuelve una buena práctica. Pon siempre un `label` visible.
+
+</Callout>
+
+<Callout tipo="warning" titulo="Llenar de ARIA lo que ya resuelve el HTML">
+
+Un `div role="button"` con tres atributos ARIA es más trabajo y más frágil que un `button`. Y un ARIA incorrecto es peor que ninguno: promete algo que el elemento no cumple. Primero HTML semántico, después ARIA solo para lo que falte, y prueba con un lector de pantalla para confirmar.
+
+</Callout>
+
+## Buenas prácticas
+
+- Usa HTML semántico: `header`, `nav`, `main`, `button`, `label`, `h1` a `h6` en orden lógico.
+- Declara el idioma con `lang` y pon un `title` único y descriptivo en cada página.
+- Cuida el contraste: 4.5 a 1 para texto normal en nivel AA. Revisa los estados de foco, error y desactivado.
+- Todo lo que se hace con el mouse debe poder hacerse con el teclado, con un orden de foco lógico y un foco visible.
+- No transmitas información solo con color, sonido o posición.
+- Escribe enlaces y botones que se entiendan solos: "Descargar el reporte de ventas", no "Haz clic aquí".
+- Combina auditoría automática, prueba con teclado, zoom y lector de pantalla. Ninguna basta por sí sola.
+- Integra axe en tus pruebas o en tu integración continua: el script de esta guía termina con código 1 cuando encuentra violaciones.
+- Respeta las preferencias del usuario, como `prefers-reduced-motion` para animaciones.
+- Cuando puedas, prueba con personas que usan tecnologías de apoyo todos los días.
+
+## Siguiente paso
+
+Ya sabes montar tu entorno de auditoría, interpretar a axe, calcular un contraste y construir formularios y componentes que funcionan con teclado y lector de pantalla. Lo que sigue es leer los criterios de WCAG 2.2 con calma, practicar con el curso gratuito de web.dev y estudiar los patrones oficiales de componentes de la guía ARIA Authoring Practices para menús, pestañas y diálogos.
+
+La accesibilidad empieza en el marcado: si necesitas reforzarlo, repasa [HTML y CSS desde cero](/guias/html-css/). Si tus componentes llevan JavaScript, revisa [JavaScript desde cero](/guias/javascript/). Y para dejar la revisión de accesibilidad automatizada en tus ramas, usa [Git y GitHub](/guias/git/). Todos los recursos están en [la biblioteca de accesibilidad](/biblioteca/accesibilidad/).
+
+<LibrosRecomendados ids={frontmatter.libros} />
