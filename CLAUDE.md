@@ -23,7 +23,7 @@ Sitio comunitario en https://dev.carlosnavarro.site. Astro 7 (salida estática) 
 - Datos tipados en `src/data/`, utilidades puras en `src/lib/` (con tests en `tests/`), scripts de navegador en `src/scripts/`.
 - Antes de dar algo por terminado: `npm run verify` en verde.
 - PHP: solo en `public/api/`, endurecido como `_guard.php`. Nunca secretos en el repositorio.
-- No publiques nada: la publicación la hace Carlos con el workflow `deploy.yml` en modo `publicar`.
+- Publica solo cuando Carlos lo pida en el chat, tras `npm run verify` en verde y una ejecución de `deploy.yml` en modo `prueba` sin errores. Después, lanza `deploy.yml` en modo `publicar` y comprueba el sitio en vivo. Si algo falla, no publiques y explica por qué. Cada publicación necesita una petición nueva.
 
 ## Al terminar un cambio
 Lista los archivos creados o modificados y qué falta por hacer, si algo.
