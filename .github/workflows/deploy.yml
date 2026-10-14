@@ -80,10 +80,10 @@ jobs:
 
       - name: Revisar que el build quedó completo
         run: |
-          for archivo in dist/index.html dist/404.html dist/.htaccess dist/robots.txt dist/sitemap-index.xml dist/rss.xml dist/search-index.json dist/recursos.json dist/api/suscribir.php dist/api/confirmar.php dist/api/baja.php dist/api/_guard.php dist/api/_newsletter.php dist/api/_data/.htaccess; do
+          for archivo in dist/index.html dist/404.html dist/.htaccess dist/robots.txt dist/sitemap-index.xml dist/rss.xml dist/search-index.json dist/recursos.json dist/api/suscribir.php dist/api/confirmar.php dist/api/baja.php dist/api/_guard.php dist/api/_newsletter.php dist/api/panel/index.php dist/api/_data/.htaccess; do
             [ -f "$archivo" ] || { echo "::error::Falta $archivo en el build"; exit 1; }
           done
-          for archivo_php in dist/api/*.php; do
+          for archivo_php in dist/api/*.php dist/api/*/*.php; do
             php -l "$archivo_php"
           done
           paginas=$(find dist -name '*.html' | wc -l)
@@ -148,6 +148,7 @@ jobs:
             .user.ini
             error_log
             api/_data/**
+            api/panel/.htaccess
 
       - name: Resumen
         env:

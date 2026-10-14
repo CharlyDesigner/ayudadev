@@ -34,6 +34,23 @@ function ad_data_dir(): string
     return sys_get_temp_dir();
 }
 
+/**
+ * Registro de eventos para el panel: una línea JSON por evento en .{nombre}.jsonl, sin IP ni contenido de consultas.
+ * Al pasar de 1 MB el archivo se archiva como .old y se empieza otro. Nunca lanza errores.
+ */
+function ad_registrar(string $nombre, array $fila): void
+{
+    try {
+        $archivo = ad_data_dir() . '/.' . preg_replace('/[^a-z0-9_-]/i', '', $nombre) . '.jsonl';
+        if (is_file($archivo) && (int) @filesize($archivo) > 1048576) @rename($archivo, $archivo . '.old');
+        $fila['ts'] = gmdate('c');
+        @file_put_contents($archivo, json_encode($fila, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+        @chmod($archivo, 0600);
+    } catch (Throwable) {
+        // El registro es opcional: si falla, el sitio sigue funcionando.
+    }
+}
+
 /** Secreto HMAC autogenerado en el servidor; nunca viaja al repositorio. */
 function ad_secret(): string
 {
@@ -182,6 +199,7 @@ function ad_respond(bool $ok, string $code, int $status = 200, string $backOk = 
 {
     http_response_code($status);
     if ($status === 429) header('Retry-After: 900');
+    if ($code === 'rate_limit') ad_registrar('bloqueos', ['codigo' => $code, 'script' => basename((string) ($_SERVER['SCRIPT_NAME'] ?? ''))]);
     $wantsJson = str_contains((string) ($_SERVER['HTTP_ACCEPT'] ?? ''), 'application/json');
     if ($wantsJson) {
         header('Content-Type: application/json; charset=utf-8');

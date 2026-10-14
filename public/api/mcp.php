@@ -11,6 +11,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/_guard.php';
+require_once __DIR__ . '/_newsletter.php'; // ad_registrar() para el conteo de uso del panel
 
 const MCP_VERSIONES = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const MCP_VERSION_SERVIDOR = '1.0.0';
@@ -418,6 +419,7 @@ function mcp_procesar(array $m): ?array
         case 'initialize':
             $pedida = is_string($params['protocolVersion'] ?? null) ? $params['protocolVersion'] : '';
             $version = in_array($pedida, MCP_VERSIONES, true) ? $pedida : MCP_VERSIONES[0];
+            ad_registrar('mcp', ['metodo' => 'initialize']);
             return ['jsonrpc' => '2.0', 'id' => $id, 'result' => [
                 'protocolVersion' => $version,
                 'capabilities' => ['tools' => ['listChanged' => false]],
@@ -432,11 +434,17 @@ function mcp_procesar(array $m): ?array
             $nombre = $params['name'] ?? null;
             $args = isset($params['arguments']) && is_array($params['arguments']) ? $params['arguments'] : [];
             if (!is_string($nombre)) return mcp_error($id, -32602, 'Falta el nombre de la herramienta.');
+            // Solo el nombre de la herramienta y si salió bien: nunca los argumentos ni el texto de las consultas.
+            $herramienta = in_array($nombre, ['buscar_contenido', 'obtener_documento', 'listar_temas', 'listar_recursos', 'definir_termino', 'proponer_recurso'], true) ? $nombre : 'desconocida';
             try {
-                return ['jsonrpc' => '2.0', 'id' => $id, 'result' => mcp_llamar($nombre, $args)];
+                $resultado = mcp_llamar($nombre, $args);
+                ad_registrar('mcp', ['metodo' => 'tools/call', 'herramienta' => $herramienta, 'ok' => true]);
+                return ['jsonrpc' => '2.0', 'id' => $id, 'result' => $resultado];
             } catch (InvalidArgumentException $e) {
+                ad_registrar('mcp', ['metodo' => 'tools/call', 'herramienta' => $herramienta, 'ok' => false]);
                 return mcp_error($id, -32602, $e->getMessage());
             } catch (Throwable $e) {
+                ad_registrar('mcp', ['metodo' => 'tools/call', 'herramienta' => $herramienta, 'ok' => false]);
                 return ['jsonrpc' => '2.0', 'id' => $id, 'result' => mcp_texto('No pude completar la consulta: ' . $e->getMessage(), null, true)];
             }
         default:
@@ -465,6 +473,7 @@ if (!str_contains($ct, 'json')) mcp_responder_http(415, mcp_error(null, -32000, 
 $ip = ad_client_ip();
 if (ad_rate_limited('mcp_min', $ip, 60, 120) || ad_rate_limited('mcp_dia', $ip, 86400, 5000)) {
     header('Retry-After: 60');
+    ad_registrar('bloqueos', ['codigo' => 'rate_limit', 'script' => 'mcp.php']);
     mcp_responder_http(429, mcp_error(null, -32000, 'Demasiadas solicitudes. Espera un minuto.'));
 }
 

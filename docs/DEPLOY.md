@@ -62,6 +62,21 @@ Viven en `~/ayudadev-data/.suscriptores.jsonl`, una línea JSON por evento (`pen
 
 Si GitHub no está disponible: `npm run build` y luego `.\scripts\Package-CPanel.ps1`. Sube el ZIP de `entregas/` al Document Root y extráelo ahí.
 
+## 8. Panel de administración
+
+Vive en `https://dev.carlosnavarro.site/api/panel/`. Es de solo lectura y muestra suscriptores con gráficas, fallos de correo, bloqueos por exceso de intentos y el uso del servidor MCP (solo qué herramienta se usó, nunca lo que se preguntó). Tiene doble candado: Directory Privacy de cPanel y una contraseña propia.
+
+Configúralo una sola vez, en este orden:
+
+1. **Publica el sitio** para que la carpeta `api/panel/` exista en el servidor.
+2. **Primer candado.** cPanel, Privacidad de directorios: elige `dev.carlosnavarro.site/api/panel`, marca "Proteger este directorio con contraseña", ponle un nombre y crea un usuario. El despliegue nunca toca el `.htaccess` que cPanel crea ahí.
+3. **Permiso de configuración.** En el Administrador de archivos de cPanel, con "Mostrar archivos ocultos" activado, entra a `ayudadev-data/` (en tu carpeta personal, no en la del sitio) y crea un archivo vacío llamado `.panel-activar`. Mientras ese archivo no exista y no haya contraseña, el panel responde 404.
+4. **Segundo candado.** Abre `https://dev.carlosnavarro.site/api/panel/`, entra con el usuario del paso 2 y crea la contraseña del panel (mínimo 12 caracteres). Se guarda cifrada en `ayudadev-data/.panel-hash` y el archivo `.panel-activar` se borra solo.
+
+Después de eso entras con las dos contraseñas. La sesión se cierra tras 30 minutos sin actividad. Si olvidas la contraseña del panel, borra `.panel-hash` y vuelve a crear `.panel-activar`.
+
+Los registros del panel (`.mcp.jsonl`, `.bloqueos.jsonl`) no guardan IP ni texto de consultas y se archivan solos al pasar de 1 MB. Los bloquea `.htaccess` por ser archivos ocultos.
+
 ## Problemas conocidos
 
 - **El correo de confirmación llega a spam.** Revisa SPF y DKIM en Email Deliverability y que el buzón `no-reply@carlosnavarro.site` exista.
