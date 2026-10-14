@@ -89,10 +89,18 @@ jobs:
           paginas=$(find dist -name '*.html' | wc -l)
           echo "Páginas compiladas: $paginas"
           [ "$paginas" -ge 60 ] || { echo "::error::Solo $paginas páginas, se esperaban 60 o más"; exit 1; }
-          if grep -rl 'localhost:43' dist --include='*.html' | head -1 | grep -q .; then
-            echo "::error::El build contiene enlaces a localhost"
-            exit 1
-          fi
+          # Ignora scripts y bloques <code>/<pre>: las guías citan http://localhost:4321 como ejemplo.
+          node <<'EOF' || { echo "::error::El build contiene enlaces a localhost"; exit 1; }
+          const fs = require('node:fs');
+          const paginas = fs.readdirSync('dist', { recursive: true }).filter((f) => f.endsWith('.html'));
+          const conLocalhost = paginas.filter((f) => {
+            const html = fs.readFileSync(`dist/${f}`, 'utf8')
+              .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+              .replace(/<(code|pre)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+            return html.includes('localhost:43');
+          });
+          if (conLocalhost.length) { console.error(conLocalhost.join('\n')); process.exit(1); }
+          EOF
 
       # La cuenta FTP debe aterrizar en el Document Root del subdominio. Por defecto
       # se busca cgi-bin/ (cPanel lo crea); si tu subdominio no lo tiene, define la
