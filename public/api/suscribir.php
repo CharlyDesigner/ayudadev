@@ -67,13 +67,27 @@ $guardado = ad_append_subscriber([
 if (!$guardado) ad_respond(false, 'error', 500);
 
 $enlace = AD_SITE_URL . '/api/confirmar.php?e=' . ad_b64url($email) . '&t=' . ad_token($email, 'confirmar');
+$urlBaja = ad_enlace_baja($email);
 $cuerpo = "Hola,\n\n"
     . "Alguien (esperamos que tú) pidió recibir el boletín de " . AD_SITE_NAME . " con este correo.\n\n"
     . "Para confirmar, abre este enlace:\n" . $enlace . "\n\n"
     . "Si no fuiste tú, ignora este mensaje y no recibirás nada más.\n\n"
-    . "--\n" . AD_SITE_NAME . " · " . AD_SITE_URL . "\n";
+    . "--\n" . AD_SITE_NAME . " · " . AD_SITE_URL . "\n"
+    . "Darme de baja: " . $urlBaja . "\n";
 
-$enviado = ad_send_mail($email, 'Confirma tu suscripción a ' . AD_SITE_NAME, $cuerpo);
+$html = ad_plantilla_correo(
+    'Confirma tu suscripción',
+    [
+        'Hola,',
+        'Alguien (esperamos que tú) pidió recibir el boletín de ' . AD_SITE_NAME . ' con este correo.',
+        'Para confirmar, pulsa el botón.',
+    ],
+    'Confirmar suscripción',
+    $enlace,
+    'Si no fuiste tú, ignora este mensaje y no recibirás nada más.',
+    $urlBaja
+);
+$enviado = ad_send_mail($email, 'Confirma tu suscripción a ' . AD_SITE_NAME, $cuerpo, '', $html, $urlBaja);
 if (!$enviado) ad_respond(false, 'mail_failed', 500);
 
 // Aviso interno (no bloquea la respuesta si falla).

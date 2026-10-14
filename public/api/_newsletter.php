@@ -96,19 +96,84 @@ function ad_append_subscriber(array $row): bool
     return $ok !== false;
 }
 
-function ad_send_mail(string $to, string $subject, string $body, string $replyTo = ''): bool
+/** Enlace firmado de baja para un correo. */
+function ad_enlace_baja(string $email): string
+{
+    return AD_SITE_URL . '/api/baja.php?e=' . ad_b64url($email) . '&t=' . ad_token($email, 'baja');
+}
+
+function ad_h(string $s): string
+{
+    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+/**
+ * Correo HTML con la marca del sitio. Va en tablas y estilos en línea porque los clientes de correo
+ * no soportan CSS externo ni variables, y siempre en tema claro para que se lea igual en todos.
+ *
+ * @param string[] $parrafos Texto plano; se escapa.
+ */
+function ad_plantilla_correo(string $titulo, array $parrafos, string $textoBoton, string $url, string $nota, string $urlBaja = ''): string
+{
+    $pieBaja = $urlBaja === '' ? '' : ' · <a href="' . ad_h($urlBaja) . '" style="color:#6b6b68;">Darme de baja</a>';
+    $fuente = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+    $cuerpo = '';
+    foreach ($parrafos as $p) {
+        $cuerpo .= '<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:#2b2b2a;">' . ad_h($p) . '</p>';
+    }
+    return '<!doctype html><html lang="es"><head><meta charset="utf-8">'
+        . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        . '<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">'
+        . '<title>' . ad_h($titulo) . '</title></head>'
+        . '<body style="margin:0;padding:0;background:#f3f3f1;">'
+        . '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' . ad_h($titulo) . '</div>'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f3f1;"><tr><td align="center" style="padding:32px 16px;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">'
+        . '<tr><td style="padding:0 0 20px;font-family:' . $fuente . ';">'
+        . '<a href="' . ad_h(AD_SITE_URL) . '" style="text-decoration:none;color:#0b0b0c;">'
+        . '<img src="' . ad_h(AD_SITE_URL) . '/icon-512.png" width="40" height="40" alt="" style="display:inline-block;vertical-align:middle;border:0;border-radius:10px;">'
+        . '<span style="display:inline-block;vertical-align:middle;margin-left:10px;font-size:20px;font-weight:700;letter-spacing:-0.01em;">' . ad_h(AD_SITE_NAME) . '</span>'
+        . '</a></td></tr>'
+        . '<tr><td style="background:#ffffff;border:1px solid #e3e3df;border-radius:20px;padding:32px;font-family:' . $fuente . ';">'
+        . '<h1 style="margin:0 0 16px;font-size:24px;line-height:1.25;color:#0b0b0c;">' . ad_h($titulo) . '</h1>'
+        . $cuerpo
+        . '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="background:#c6f24e;border-radius:999px;">'
+        . '<a href="' . ad_h($url) . '" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:700;color:#0b0b0c;text-decoration:none;">' . ad_h($textoBoton) . '</a>'
+        . '</td></tr></table>'
+        . '<p style="margin:0 0 6px;font-size:13px;line-height:1.5;color:#6b6b68;">Si el botón no funciona, copia y pega este enlace en tu navegador:</p>'
+        . '<p style="margin:0 0 20px;font-size:13px;line-height:1.5;word-break:break-all;"><a href="' . ad_h($url) . '" style="color:#4a6800;">' . ad_h($url) . '</a></p>'
+        . '<p style="margin:0;font-size:13px;line-height:1.5;color:#6b6b68;">' . ad_h($nota) . '</p>'
+        . '</td></tr>'
+        . '<tr><td align="center" style="padding:20px 0 0;font-family:' . $fuente . ';font-size:12px;line-height:1.5;color:#6b6b68;">'
+        . ad_h(AD_SITE_NAME) . ' · <a href="' . ad_h(AD_SITE_URL) . '" style="color:#6b6b68;">' . ad_h(preg_replace('#^https?://#', '', AD_SITE_URL)) . '</a>' . $pieBaja
+        . '</td></tr></table></td></tr></table></body></html>';
+}
+
+/** Con $urlBaja el correo lleva el botón de baja del cliente de correo (RFC 8058); sin ella, solo el enlace a la página de baja. */
+function ad_send_mail(string $to, string $subject, string $body, string $replyTo = '', string $html = '', string $urlBaja = ''): bool
 {
     $headers = [
         'From: ' . AD_SITE_NAME . ' <' . AD_FROM_EMAIL . '>',
         'MIME-Version: 1.0',
-        'Content-Type: text/plain; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
         'X-Mailer: AyudaDev-Web',
-        'List-Unsubscribe: <' . AD_SITE_URL . '/newsletter/baja/>',
+        'List-Unsubscribe: <' . ($urlBaja !== '' ? $urlBaja : AD_SITE_URL . '/newsletter/baja/') . '>',
     ];
+    if ($urlBaja !== '') $headers[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+    if ($html === '') {
+        $headers[] = 'Content-Type: text/plain; charset=UTF-8';
+        $headers[] = 'Content-Transfer-Encoding: 8bit';
+        $mensaje = $body;
+    } else {
+        $limite = 'ayudadev-' . bin2hex(random_bytes(8));
+        $headers[] = 'Content-Type: multipart/alternative; boundary="' . $limite . '"';
+        $parte = static fn(string $tipo, string $contenido): string =>
+            "--$limite\r\nContent-Type: $tipo; charset=UTF-8\r\nContent-Transfer-Encoding: quoted-printable\r\n\r\n"
+            . quoted_printable_encode($contenido) . "\r\n";
+        $mensaje = $parte('text/plain', $body) . $parte('text/html', $html) . "--$limite--\r\n";
+    }
     if ($replyTo !== '') $headers[] = 'Reply-To: ' . $replyTo;
     $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-    $sent = @mail($to, $encodedSubject, $body, implode("\r\n", $headers), '-f' . AD_FROM_EMAIL);
+    $sent = @mail($to, $encodedSubject, $mensaje, implode("\r\n", $headers), '-f' . AD_FROM_EMAIL);
     if (!$sent) @file_put_contents(ad_data_dir() . '/.mail-errors.log', gmdate('c') . " fallo al enviar a " . $to . "\n", FILE_APPEND | LOCK_EX);
     return $sent;
 }
