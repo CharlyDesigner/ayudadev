@@ -1,0 +1,141 @@
+---
+titulo: 'Índices en SQL y cómo leer EXPLAIN'
+descripcion: 'Qué es un índice, cuándo acelera una consulta y cuándo no sirve. Aprende a pedirle a SQLite el plan de ejecución con EXPLAIN QUERY PLAN y a interpretarlo.'
+categoria: datos
+nivel: intermedio
+tiempoLectura: 9
+publicado: 2026-10-14
+temas: [sql]
+etiquetas: [sql, indices, rendimiento, sqlite]
+orden: 40
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Una consulta funciona bien con cien filas y se arrastra con cincuenta mil. El motivo casi nunca es SQL "lento", sino que la base de datos tiene que **revisar todas las filas** para encontrar las que pides. Los índices son la forma de evitarlo. En este artículo aprendes qué son, cuándo ayudan y cómo comprobar que se están usando, con SQLite, que ya viene dentro de Python.
+
+Prerrequisitos: [Bases de datos relacionales](/fundamentos/bases-de-datos-relacionales/) y la [guía de SQL](/guias/sql/).
+
+## La analogía del libro
+
+Si buscas la palabra "closure" en un libro de 400 páginas sin índice, tienes que leerlo entero. Si el libro tiene un índice alfabético al final, buscas "closure", ves "pág. 214" y vas directo.
+
+Un **índice de base de datos** es lo mismo: una estructura ordenada aparte que apunta a las filas. A cambio de ocupar espacio y hacer más lenta la escritura (hay que mantener el índice al día), las búsquedas dejan de revisar todas las filas.
+
+## Ver el plan con EXPLAIN QUERY PLAN
+
+Antes de optimizar, mide. Casi todas las bases de datos pueden decirte **cómo piensan ejecutar** una consulta. En SQLite se hace anteponiendo `EXPLAIN QUERY PLAN`. Las palabras que más te interesan:
+
+| Verás | Significa |
+| --- | --- |
+| `SCAN tabla` | Recorre toda la tabla fila por fila |
+| `SEARCH tabla USING INDEX ...` | Salta directo usando un índice |
+| `SEARCH ... USING COVERING INDEX ...` | El índice trae todo lo necesario sin leer la tabla |
+
+<Ejemplo numero={1} titulo="Antes y después de crear un índice" archivo="indices.py" ejecutar="python indices.py" salida="Sin índice:
+   SCAN pedidos
+Con índice:
+   SEARCH pedidos USING COVERING INDEX idx_pedidos_cliente (cliente=?)
+Resultado: 50">
+
+```python
+import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE pedidos (id INTEGER PRIMARY KEY, cliente TEXT, total INTEGER)")
+con.executemany(
+    "INSERT INTO pedidos (cliente, total) VALUES (?, ?)",
+    ((f"cliente{n % 1000}", n % 500) for n in range(50000)),
+)
+
+consulta = "SELECT COUNT(*) FROM pedidos WHERE cliente = 'cliente42'"
+
+
+def plan():
+    for fila in con.execute("EXPLAIN QUERY PLAN " + consulta):
+        print("  ", fila[3])
+
+
+print("Sin índice:")
+plan()
+
+con.execute("CREATE INDEX idx_pedidos_cliente ON pedidos (cliente)")
+
+print("Con índice:")
+plan()
+print("Resultado:", con.execute(consulta).fetchone()[0])
+```
+
+Cargamos cincuenta mil pedidos. Sin índice, el plan dice `SCAN pedidos`: revisa las cincuenta mil filas. Después de `CREATE INDEX`, dice `SEARCH ... USING COVERING INDEX`: va directo a las 50 filas que coinciden. El texto exacto del plan puede variar un poco entre versiones de SQLite, pero las palabras `SCAN` y `SEARCH` se mantienen.
+
+</Ejemplo>
+
+## Un índice no sirve para todo
+
+Un índice solo ayuda si la consulta está escrita de forma que pueda usarlo. Dos errores frecuentes:
+
+<Ejemplo numero={2} titulo="Consultas que no aprovechan el índice" archivo="indices2.py" ejecutar="python indices2.py" salida="SELECT * FROM pedidos WHERE cliente = 'ana'
+   -> SEARCH pedidos USING INDEX idx_pedidos_cliente (cliente=?)
+SELECT * FROM pedidos WHERE upper(cliente) = 'ANA'
+   -> SCAN pedidos
+SELECT * FROM pedidos WHERE cliente LIKE '%na'
+   -> SCAN pedidos">
+
+```python
+import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE pedidos (id INTEGER PRIMARY KEY, cliente TEXT, total INTEGER)")
+con.execute("CREATE INDEX idx_pedidos_cliente ON pedidos (cliente)")
+
+# Una función sobre la columna impide usar el índice
+for sql in [
+    "SELECT * FROM pedidos WHERE cliente = 'ana'",
+    "SELECT * FROM pedidos WHERE upper(cliente) = 'ANA'",
+    "SELECT * FROM pedidos WHERE cliente LIKE '%na'",
+]:
+    plan = con.execute("EXPLAIN QUERY PLAN " + sql).fetchone()[3]
+    print(f"{sql}\n   -> {plan}")
+```
+
+- **Aplicar una función a la columna** (`upper(cliente)`) hace que el índice, que guarda los valores originales, no sirva.
+- **Un comodín al inicio** (`LIKE '%na'`) obliga a revisar todo, porque el índice está ordenado desde el principio de la palabra.
+
+Cada motor tiene sus matices (por ejemplo, índices sobre expresiones), pero la regla general es la misma: si transformas la columna o buscas por el final del texto, el índice normalmente no se usa.
+
+</Ejemplo>
+
+## Cuándo crear un índice
+
+Piensa en las columnas que usas para **buscar, unir o ordenar**:
+
+- Columnas de `WHERE` que filtran pocas filas de muchas (como `email` o `cliente_id`).
+- Columnas de `JOIN` (las claves foráneas suelen merecer índice).
+- Columnas de `ORDER BY` sobre tablas grandes.
+
+Y cuándo **no**:
+
+- Tablas pequeñas: recorrerlas es instantáneo.
+- Columnas con pocos valores distintos (un campo `activo` con solo sí o no).
+- Tablas con muchísimas escrituras y pocas lecturas: cada `INSERT` también actualiza el índice.
+
+Una clave primaria ya tiene índice. Para el resto, la regla de oro es **medir con el plan**, no adivinar.
+
+<Callout tipo="tip" titulo="Índices compuestos">
+Un índice sobre dos columnas, por ejemplo `(cliente, fecha)`, sirve para buscar por `cliente` solo o por `cliente` y `fecha`, pero no por `fecha` sola. El orden de las columnas importa.
+</Callout>
+
+## Errores comunes
+
+- **Indexar todo "por si acaso".** Cada índice ocupa espacio y ralentiza las escrituras.
+- **No revisar el plan.** Un índice existente no garantiza que la consulta lo use.
+- **Probar con pocos datos.** Con cien filas todo es rápido. Mide con un volumen parecido al real.
+- **Escribir `WHERE funcion(columna) = ...`** cuando podrías comparar la columna con un valor transformado.
+- **Confundir velocidad de lectura con diseño.** Antes de indexar, revisa que el diseño de tablas sea razonable ([normalización](/glosario/#normalizacion)).
+
+## Qué sigue
+
+- Practica con [Encuentra a los clientes que más gastan](/retos/sql-clientes-que-mas-gastan/) y [Ranking con funciones de ventana](/retos/sql-ranking-con-ventanas/).
+- Para profundizar, el recurso [Use The Index, Luke](/biblioteca/sql/) está en la biblioteca de SQL (en inglés).
+- En el [glosario](/glosario/#indice) encuentras la definición corta de índice.

@@ -1,0 +1,225 @@
+---
+titulo: 'Tablero de hábitos con JavaScript y localStorage'
+descripcion: 'Una página para marcar tus hábitos del día, ver tu racha y guardar todo en el navegador. Practica el DOM, eventos, almacenamiento y fechas sin librerías.'
+nivel: principiante
+tiempo: '1 a 2 días'
+tecnologias: ['html5', 'css3', 'javascript', 'git']
+temas: ['javascript', 'html-css']
+habilidades: ['DOM', 'eventos', 'localStorage', 'fechas', 'seguridad básica (textContent)']
+publicado: 2026-10-14
+orden: 15
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Solucion from '@components/guias/Solucion.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué vas a construir
+
+Una sola página `habitos.html` donde:
+
+- Agregas hábitos ("Leer 15 minutos", "Caminar").
+- Marcas cuáles cumpliste **hoy**.
+- Ves tu **racha**: cuántos días seguidos llevas.
+- Puedes borrar hábitos.
+- Todo se guarda en tu navegador y sigue ahí al recargar.
+
+Es un proyecto ideal después de los fundamentos de JavaScript: usa casi todo lo que necesita una app web real, sin servidor ni librerías.
+
+## Requisitos
+
+- Haber leído la [guía de JavaScript](/guias/javascript/) y la [guía de HTML y CSS](/guias/html-css/).
+- Entender cómo funciona [un navegador](/fundamentos/como-funciona-un-navegador/).
+- Haber resuelto retos como [Agrupa una lista de objetos](/retos/js-agrupar-por/) y [Aplana arreglos anidados con recursión](/retos/js-aplanar-arreglos/).
+- Entender qué hace una [closure](/fundamentos/closures-en-javascript/) ayuda con los controladores de eventos, aunque no es obligatorio.
+
+## Pasos sugeridos
+
+<Pasos>
+
+1. **Maqueta primero.** HTML con un formulario (campo y botón), un mensaje de "sin hábitos" y una lista vacía. Dale etiqueta al campo, aunque la ocultes visualmente.
+2. **Modelo de datos.** Decide la forma: un arreglo de objetos `{ id, nombre, dias }`, donde `dias` es la lista de fechas en que cumpliste el hábito.
+3. **Dibujar.** Escribe `dibujar()` que, a partir del arreglo, cree los elementos de la lista con `document.createElement`. Usa `textContent`, no `innerHTML`, para mostrar lo que escribe la persona.
+4. **Agregar.** Escucha el evento `submit` del formulario, evita el envío con `preventDefault()` y agrega un hábito nuevo.
+5. **Marcar el día.** Cada hábito tiene una casilla. Al cambiarla, agrega o quita la fecha de hoy.
+6. **Guardar y cargar.** Usa `localStorage` con `JSON.stringify` y `JSON.parse`. Envuelve las llamadas en `try/catch`: a veces el almacenamiento no está disponible.
+7. **Racha.** Cuenta los días consecutivos hacia atrás, empezando hoy (o ayer si hoy aún no marcas).
+8. **Borrar.** Agrega un botón con un nombre accesible ("Borrar Leer 15 minutos").
+9. **Pruebas a mano.** Agrega, marca, recarga, borra, escribe `<b>hola</b>` como nombre y comprueba que se ve como texto.
+10. **Accesibilidad.** Recorre todo con teclado. Revisa que cada control tenga nombre y foco visible.
+
+</Pasos>
+
+<Solucion titulo="Ver una versión de referencia (inténtalo primero)">
+
+Probamos esta versión en un navegador: agregar y borrar hábitos, marcar el día, conservar los datos tras recargar, calcular una racha con un hueco en medio y mostrar como texto un nombre con etiquetas HTML. Guárdala como `habitos.html` y ábrela con doble clic.
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tablero de hábitos</title>
+  <style>
+    :root { --texto: #1d1d1b; --fondo: #f4f4f0; --tarjeta: #fff; --acento: #2b6cb0; --borde: #767676; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; color: var(--texto); background: var(--fondo); }
+    main { max-width: 32rem; margin: 0 auto; }
+    form { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    input[type="text"] { flex: 1; min-width: 0; padding: 0.6rem 0.75rem; font: inherit; border: 2px solid var(--borde); border-radius: 10px; }
+    button { padding: 0.6rem 1.1rem; font: inherit; font-weight: 700; color: #fff; background: var(--acento); border: 0; border-radius: 999px; cursor: pointer; }
+    button.borrar { padding: 0.3rem 0.7rem; background: transparent; color: var(--texto); border: 1px solid var(--borde); font-weight: 600; }
+    :focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+    ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+    li { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: var(--tarjeta); border-radius: 16px; }
+    li label { flex: 1; }
+    .racha { font-size: 0.85rem; color: #4a4a47; }
+    .vacio { color: #4a4a47; }
+    .solo-lector { position: absolute; left: -9999px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Tablero de hábitos</h1>
+    <form id="formulario">
+      <label for="nuevo" class="solo-lector">Nuevo hábito</label>
+      <input id="nuevo" type="text" placeholder="Ej. Leer 15 minutos" required maxlength="60">
+      <button type="submit">Agregar</button>
+    </form>
+    <p id="vacio" class="vacio" hidden>Aún no tienes hábitos. Agrega el primero.</p>
+    <ul id="lista" aria-live="polite"></ul>
+  </main>
+
+  <script>
+    const CLAVE = 'habitos-v1';
+    // Fecha local en formato AAAA-MM-DD (toISOString usaría la hora UTC y cambiaría de día antes de medianoche)
+    const aTexto = (f) => `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
+    const hoy = () => aTexto(new Date());
+
+    // Leer y guardar: si el almacenamiento falla, la página sigue funcionando sin guardar
+    function cargar() {
+      try {
+        return JSON.parse(localStorage.getItem(CLAVE)) ?? [];
+      } catch {
+        return [];
+      }
+    }
+    function guardar(habitos) {
+      try {
+        localStorage.setItem(CLAVE, JSON.stringify(habitos));
+      } catch {
+        /* sin almacenamiento disponible */
+      }
+    }
+
+    let habitos = cargar(); // [{ id, nombre, dias: ['2026-10-14', ...] }]
+
+    // Cuántos días seguidos, terminando hoy o ayer, se cumplió el hábito
+    function racha(dias) {
+      const conjunto = new Set(dias);
+      const fecha = new Date();
+      if (!conjunto.has(aTexto(fecha))) fecha.setDate(fecha.getDate() - 1);
+      let total = 0;
+      while (conjunto.has(aTexto(fecha))) {
+        total++;
+        fecha.setDate(fecha.getDate() - 1);
+      }
+      return total;
+    }
+
+    function dibujar() {
+      const lista = document.getElementById('lista');
+      lista.replaceChildren(); // limpiar sin usar innerHTML
+      document.getElementById('vacio').hidden = habitos.length > 0;
+
+      for (const h of habitos) {
+        const li = document.createElement('li');
+
+        const casilla = document.createElement('input');
+        casilla.type = 'checkbox';
+        casilla.id = `h-${h.id}`;
+        casilla.checked = h.dias.includes(hoy());
+        casilla.addEventListener('change', () => alternar(h.id));
+
+        const etiqueta = document.createElement('label');
+        etiqueta.htmlFor = casilla.id;
+        etiqueta.textContent = h.nombre; // textContent evita inyectar HTML
+
+        const info = document.createElement('span');
+        info.className = 'racha';
+        info.textContent = `Racha: ${racha(h.dias)}`;
+
+        const borrar = document.createElement('button');
+        borrar.type = 'button';
+        borrar.className = 'borrar';
+        borrar.textContent = 'Borrar';
+        borrar.setAttribute('aria-label', `Borrar ${h.nombre}`);
+        borrar.addEventListener('click', () => quitar(h.id));
+
+        li.append(casilla, etiqueta, info, borrar);
+        lista.append(li);
+      }
+    }
+
+    function alternar(id) {
+      const h = habitos.find((x) => x.id === id);
+      const dia = hoy();
+      h.dias = h.dias.includes(dia) ? h.dias.filter((d) => d !== dia) : [...h.dias, dia];
+      guardar(habitos);
+      dibujar();
+    }
+
+    function quitar(id) {
+      habitos = habitos.filter((x) => x.id !== id);
+      guardar(habitos);
+      dibujar();
+    }
+
+    document.getElementById('formulario').addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      const campo = document.getElementById('nuevo');
+      const nombre = campo.value.trim();
+      if (!nombre) return;
+      habitos.push({ id: Date.now(), nombre, dias: [] });
+      guardar(habitos);
+      campo.value = '';
+      dibujar();
+      campo.focus();
+    });
+
+    dibujar();
+  </script>
+</body>
+</html>
+```
+
+Detalles que conviene entender:
+
+- **`textContent` en vez de `innerHTML`.** Si el nombre del hábito es `<b>Caminar</b>`, se muestra tal cual. Con `innerHTML` se interpretaría como HTML, que es la base de los ataques XSS. Lee [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/).
+- **Fechas en hora local.** `toISOString()` entrega la hora UTC, así que en México, después de cierta hora de la tarde, "hoy" cambiaría de día. La función `aTexto` arma la fecha con el día local.
+- **`try/catch` alrededor de `localStorage`.** Si el navegador lo bloquea (por ejemplo, en modo privado), la página sigue funcionando, solo que sin guardar.
+- **`aria-live="polite"`** en la lista hace que un lector de pantalla anuncie los cambios.
+- **El `id` es `Date.now()`**: suficiente para este ejemplo, porque nadie agrega dos hábitos en el mismo milisegundo.
+
+</Solucion>
+
+<Callout tipo="info" titulo="localStorage no es una base de datos">
+Se guarda en un solo navegador y un solo dispositivo, y quien tenga acceso al equipo puede leerlo. No guardes datos sensibles. Para datos de verdad necesitas un servidor y una base de datos: mira el proyecto [Control de gastos en Python con SQLite](/proyectos/control-de-gastos-en-python/).
+</Callout>
+
+## Retos extra
+
+- Muestra los últimos siete días de cada hábito como una fila de cuadritos.
+- Agrega un botón para exportar e importar tus hábitos como archivo JSON.
+- Agrega modo oscuro con `prefers-color-scheme` ([Cascada y especificidad en CSS](/fundamentos/cascada-y-especificidad-en-css/) te ayuda a organizarlo).
+- Separa la lógica de la racha en una función pura y escríbele pruebas con el ejecutor de pruebas de Node (`node --test`).
+- Conviértelo en una página instalable (investiga los service workers y el manifiesto).
+
+## Cómo publicarlo
+
+- Súbelo a GitHub y actívalo con GitHub Pages: es una página estática de un solo archivo.
+- En el README, explica cómo calculas la racha y por qué usas hora local.
+- Muéstralo en tu portafolio con una captura y una frase sobre qué decisión de diseño tomaste. Más ideas en [Portafolio que contrata](/carrera/portafolio-que-contrata/).
+
+Siguiente proyecto: [Gestor de notas en la terminal con Node.js](/proyectos/notas-en-terminal-con-node/).

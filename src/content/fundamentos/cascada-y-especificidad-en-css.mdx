@@ -1,0 +1,126 @@
+---
+titulo: 'Cascada y especificidad en CSS: quién gana'
+descripcion: 'Cuando dos reglas CSS chocan, ¿cuál se aplica? Aprende origen, especificidad y orden, cómo funciona la herencia y por qué !important casi nunca es la solución.'
+categoria: programacion
+nivel: principiante
+tiempoLectura: 8
+publicado: 2026-10-14
+temas: [html-css]
+etiquetas: [css, cascada, especificidad, herencia]
+orden: 24
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+La "C" de CSS significa *Cascading* (en cascada). Cuando varias reglas quieren darle un estilo distinto al mismo elemento, el navegador tiene un método fijo para decidir cuál gana. Si no lo conoces, CSS parece caprichoso: cambias algo y no pasa nada. Si lo conoces, puedes predecir el resultado. Entender esto te ahorra horas.
+
+Prerrequisitos: la [guía de HTML y CSS](/guias/html-css/) y la [hoja de HTML semántico](/hojas/html-semantico-y-etiquetas/).
+
+## El método, en orden
+
+Cuando hay un conflicto, el navegador revisa criterios en este orden y se detiene en el primero que desempata:
+
+1. **Importancia y origen.** Las declaraciones con `!important` ganan a las normales. También cuenta de dónde vienen los estilos (los del navegador pierden contra los tuyos).
+2. **Especificidad.** Un selector más específico gana a uno más general.
+3. **Orden.** Si hay empate, gana la regla que aparece **después** en el código.
+
+Y si ninguna regla toca una propiedad, entra la **herencia**: algunas propiedades (como `color` o `font-family`) pasan del padre al hijo.
+
+## Especificidad: contar selectores
+
+Una forma de pensarlo es como un marcador de tres números: **(ids, clases, etiquetas)**. Se comparan de izquierda a derecha.
+
+| Selector | Marcador | Ejemplo |
+| --- | --- | --- |
+| Etiqueta | (0, 0, 1) | `p` |
+| Clase, atributo o pseudoclase | (0, 1, 0) | `.aviso`, `:hover` |
+| Etiqueta + clase | (0, 1, 1) | `p.aviso` |
+| Id | (1, 0, 0) | `#principal` |
+| Estilo en línea (`style="..."`) | por encima de todo lo anterior | `<p style="color: black">` |
+
+Un solo id (1, 0, 0) gana a cualquier cantidad de clases (0, 50, 0). No se suman como un número decimal: se comparan columna por columna.
+
+## Verlo en acción
+
+Esta página tiene seis párrafos y varias reglas que compiten. Antes de ver el resultado, intenta predecir el color de cada uno.
+
+<Ejemplo numero={1} titulo="Seis casos de la cascada" archivo="cascada.html" ejecutar="Abre cascada.html en el navegador" salida="1. morado
+2. naranja
+3. rojo
+4. negro
+5. carmesí
+6. verde azulado">
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Cascada de CSS</title>
+  <style>
+    p { color: blue; }
+    .aviso { color: green; }
+    p.aviso { color: orange; }
+    #principal { color: red; }
+    p { color: purple; }
+    .fuerte { color: crimson !important; }
+  </style>
+</head>
+<body>
+  <p id="a">1. Solo etiqueta</p>
+  <p id="b" class="aviso">2. Etiqueta y clase</p>
+  <p id="principal" class="aviso">3. Con id</p>
+  <p id="c" class="aviso" style="color: black">4. Estilo en línea</p>
+  <p id="d" class="fuerte" style="color: black">5. Clase con !important</p>
+  <section style="color: teal"><span id="hijo">6. Hereda del padre</span></section>
+</body>
+</html>
+```
+
+Comprobamos los colores calculados en un navegador. Por qué sale cada uno:
+
+1. **Morado.** Solo aplican `p { color: blue }` y `p { color: purple }`. Tienen la misma especificidad (0, 0, 1), así que gana la que está **después**: morado.
+2. **Naranja.** Compiten `.aviso` (0, 1, 0) y `p.aviso` (0, 1, 1). La segunda es más específica, aunque esté escrita antes que otras reglas de `p`.
+3. **Rojo.** `#principal` (1, 0, 0) supera a `p.aviso`.
+4. **Negro.** El estilo en línea gana a las reglas de la hoja.
+5. **Carmesí.** Una regla con `!important` en la hoja gana incluso al estilo en línea normal.
+6. **Verde azulado.** El `span` no tiene regla de color. Hereda el `teal` de su padre, la `section`.
+
+</Ejemplo>
+
+## Cómo depurar cuando "no pasa nada"
+
+1. Abre las herramientas de desarrollo del navegador (clic derecho, Inspeccionar).
+2. Selecciona el elemento. En el panel de estilos verás las reglas que lo afectan, con las perdedoras **tachadas**.
+3. Lee el selector de la regla ganadora: te dice por qué ganó.
+4. Revisa la pestaña de estilos calculados para ver el valor final.
+
+Un error clásico: escribes `.boton { color: white }` y el texto sigue azul porque existe `#menu a { color: blue }`. El selector con id (1, 0, 1) gana al de clase (0, 1, 0), sin importar cuál esté primero. La solución sana es bajar la especificidad de la regla que estorba, no subir la tuya.
+
+## Buenas prácticas
+
+- **Mantén bajas las especificidades.** Usa clases en lugar de ids para dar estilo, y evita selectores muy largos.
+- **Una convención de nombres** (por ejemplo, clases descriptivas y planas) evita guerras entre reglas.
+- **Ordena tu CSS de lo general a lo específico.** Estilos base primero, componentes después.
+- **Variables CSS** para colores y espaciados: cambias un valor en un solo lugar.
+- **Evita `!important`.** Cuando lo usas, la única forma de vencerlo es otro `!important`.
+- **No uses estilos en línea** salvo casos muy puntuales.
+
+<Callout tipo="info" titulo="Capas con @layer">
+CSS moderno permite organizar tu código en capas con `@layer`, de modo que el orden de las capas desempate antes que la especificidad. Es útil en proyectos grandes. Consulta la documentación de [CSS en MDN](/biblioteca/html-css/) cuando domines lo básico.
+</Callout>
+
+## Errores comunes
+
+- **Subir la especificidad para "ganar".** Resuelves hoy y complicas mañana. Mejor reorganiza.
+- **Usar `!important` por prisa.** Es deuda técnica.
+- **Creer que las reglas más cercanas al elemento HTML ganan.** Lo que importa es la especificidad, no la cercanía en el árbol.
+- **Olvidar la herencia.** Algunas propiedades, como `margin`, no se heredan.
+- **Mezclar muchos lugares donde se define lo mismo.** Elige uno.
+
+## Qué sigue
+
+- Aplica lo aprendido en el reto [Tarjeta de perfil responsive](/retos/css-tarjeta-responsive/).
+- Para diseñar sin pelear con la cascada, practica con [Flexbox](/hojas/css-flexbox/) y [Grid](/hojas/css-grid/).
+- Construye una página completa con el proyecto [Página personal accesible](/proyectos/pagina-personal-accesible/).

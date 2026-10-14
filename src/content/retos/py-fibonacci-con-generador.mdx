@@ -1,0 +1,99 @@
+---
+titulo: 'Fibonacci con un generador infinito'
+descripcion: 'Crea un generador que produzca la sucesión de Fibonacci sin fin y úsalo para tomar los primeros números y buscar el primero que pase de 1000. Nivel intermedio.'
+tema: python
+nivel: intermedio
+tiempo: 15
+conceptos: ['generadores', 'yield', 'itertools', 'expresiones generadoras']
+publicado: 2026-10-14
+orden: 33
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, lee [Comprensiones y generadores en Python](/fundamentos/comprensiones-y-generadores-en-python/).
+
+## El reto
+
+La sucesión de Fibonacci empieza `0, 1, 1, 2, 3, 5, 8...`: cada número es la suma de los dos anteriores.
+
+1. Escribe un generador `fibonacci()` que produzca la sucesión **sin límite**.
+2. Imprime los primeros 10 números.
+3. Encuentra el primer número de la sucesión que sea mayor que 1000.
+
+Resultado esperado:
+
+```text
+[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+1597
+```
+
+## Reglas
+
+- No guardes la sucesión en una lista dentro de `fibonacci()`.
+- Para tomar solo los primeros 10, no uses un contador a mano: busca una herramienta de la biblioteca estándar.
+- Para el segundo punto, no recorras con `while` manual: usa una expresión generadora.
+
+## Pistas
+
+<Pista n={1}>
+
+Basta con dos variables, `a` y `b`, y un `while True`. Entrega `a` con `yield` y actualiza con `a, b = b, a + b`.
+
+</Pista>
+
+<Pista n={2}>
+
+En el módulo `itertools` existe `islice(iterable, n)`, que toma solo los primeros `n` elementos de algo que podría ser infinito.
+
+</Pista>
+
+<Pista n={3}>
+
+`next(n for n in fibonacci() if n > 1000)` pide el primer valor que cumple la condición y se detiene ahí. Un generador infinito está bien mientras tú te detengas.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `fib.py` y ejecútala con `python fib.py`.
+
+```python
+from itertools import islice
+
+
+def fibonacci():
+    """Genera la sucesión de Fibonacci sin fin."""
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+
+print(list(islice(fibonacci(), 10)))
+
+# Primer número de Fibonacci mayor que 1000
+print(next(n for n in fibonacci() if n > 1000))
+```
+
+Salida:
+
+```text
+[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+1597
+```
+
+Cómo funciona: `fibonacci()` nunca termina, pero tampoco calcula nada por adelantado: solo produce el siguiente número cuando alguien lo pide. `islice` pide exactamente 10 y se detiene. La expresión generadora filtra los números mayores que 1000 y `next` toma solo el primero, así que el cálculo se detiene en cuanto lo encuentra. Con una lista tendrías que decidir de antemano cuántos números calcular.
+
+</Solucion>
+
+## Variaciones
+
+- Escribe un generador `pares(fuente)` que reciba otro generador y entregue solo los números pares.
+- Calcula la suma de los números de Fibonacci menores que 4 millones que sean pares.
+- Mide el tiempo con `time.perf_counter()` y compara con una versión recursiva sin memoización.
+
+Siguiente reto: [Una cuenta bancaria con clases](/retos/py-cuenta-bancaria-con-clases/).

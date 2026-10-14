@@ -1,0 +1,178 @@
+---
+titulo: 'Ramas, merge y rebase en Git: qué hace cada uno'
+descripcion: 'Entiende las ramas como apuntadores, une trabajo con merge, resuelve un conflicto paso a paso y aprende qué cambia con rebase. Con un laboratorio que puedes repetir.'
+categoria: herramientas
+nivel: intermedio
+tiempoLectura: 11
+publicado: 2026-10-14
+temas: [git]
+etiquetas: [git, ramas, merge, rebase, conflictos]
+orden: 41
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Las ramas son lo que vuelve Git cómodo para trabajar en equipo, y también lo que más confunde al principio. Aquí vas a entender qué es realmente una rama, cómo se unen dos líneas de trabajo y por qué existen dos formas de hacerlo (`merge` y `rebase`). Todo con un laboratorio que puedes repetir en tu computadora sin riesgo.
+
+Prerrequisitos: la [guía de Git](/guias/git/) y la [hoja de comandos esenciales](/hojas/git-comandos-esenciales/). Si quieres practicar a recuperarte de errores, haz el reto [Deshacer en Git sin miedo](/retos/git-deshacer-sin-miedo/).
+
+## Qué es una rama
+
+Una rama **no es una copia** de tu proyecto. Es una etiqueta móvil que apunta a un commit. Cuando haces un commit nuevo, la etiqueta de la rama en la que estás avanza. Crear una rama es casi gratis: solo se crea otra etiqueta.
+
+```text
+main:        A --- B --- C
+                         \
+funcion-a:                D --- E
+```
+
+`main` apunta a `C`. `funcion-a` salió de `C` y avanzó con `D` y `E`. Cada rama es una línea de trabajo independiente hasta que decides juntarlas.
+
+## El laboratorio
+
+Guarda este script como `ramas.sh` y ejecútalo con `bash ramas.sh` (en Windows, usa Git Bash). Crea una carpeta `demo-ramas` y recorre los tres casos. Es seguro: solo toca esa carpeta.
+
+```bash
+#!/bin/bash
+set -e
+rm -rf demo-ramas && mkdir demo-ramas && cd demo-ramas
+git init -q -b main
+git config user.name "Estudiante" && git config user.email "estudiante@example.com" && git config core.autocrlf false
+
+echo "base" > app.txt && git add . && git commit -qm "Base"
+
+# --- 1. Merge sin conflicto ---
+git switch -q -c funcion-a
+echo "A" > a.txt && git add . && git commit -qm "Agrega A"
+git switch -q main
+echo "B" > b.txt && git add . && git commit -qm "Agrega B en main"
+git merge --no-edit funcion-a >/dev/null
+echo "== Historial tras merge =="
+git log --graph --format="%s"
+
+# --- 2. Conflicto ---
+git switch -q -c titulo-uno
+echo "Título uno" > titulo.txt && git add . && git commit -qm "Título uno"
+git switch -q main
+echo "Título dos" > titulo.txt && git add . && git commit -qm "Título dos"
+echo "== Merge con conflicto =="
+git merge titulo-uno || true
+echo "== Archivo con marcas =="
+cat titulo.txt
+echo "== Resolver =="
+echo "Título final" > titulo.txt
+git add titulo.txt && git commit -qm "Resuelve conflicto de título"
+git log -1 --format="%s"
+
+# --- 3. Rebase ---
+git switch -q -c funcion-c
+echo "C" > c.txt && git add . && git commit -qm "Agrega C"
+git switch -q main
+echo "D" > d.txt && git add . && git commit -qm "Agrega D en main"
+git switch -q funcion-c
+git rebase main >/dev/null 2>&1
+echo "== Historial de funcion-c tras rebase =="
+git log --format="%s" | head -4
+```
+
+Lo probamos en un repositorio limpio. A continuación, cada parte con su salida real.
+
+## 1. Merge: unir dos historias
+
+<Ejemplo numero={1} titulo="Merge sin conflicto" ejecutar="bash ramas.sh" salida="== Historial tras merge ==
+*   Merge branch 'funcion-a'
+|\  
+| * Agrega A
+* | Agrega B en main
+|/  
+* Base">
+
+`main` y `funcion-a` avanzaron cada una por su lado, pero tocaron archivos distintos. `git merge funcion-a` crea un **commit de unión** con dos padres. El dibujo del historial muestra las dos líneas que se separan en `Base` y se juntan en el commit de merge.
+
+Ventaja: el historial conserva exactamente lo que ocurrió. Costo: con muchas ramas, el historial se llena de commits de unión.
+
+</Ejemplo>
+
+## 2. Conflictos: cuando Git no puede decidir
+
+Un conflicto aparece cuando **las dos ramas cambiaron las mismas líneas** de forma distinta. Git no adivina: se detiene y te pide que decidas.
+
+<Ejemplo numero={2} titulo="Merge con conflicto y su resolución" ejecutar="bash ramas.sh" salida="== Merge con conflicto ==
+Auto-merging titulo.txt
+CONFLICT (add/add): Merge conflict in titulo.txt
+Automatic merge failed; fix conflicts and then commit the result.
+== Archivo con marcas ==
+<<<<<<< HEAD
+Título dos
+=======
+Título uno
+>>>>>>> titulo-uno
+== Resolver ==
+Resuelve conflicto de título">
+
+Git dejó el archivo con marcas:
+
+- Lo que está entre `<<<<<<< HEAD` y `=======` viene de **tu rama actual** (`main`).
+- Lo que está entre `=======` y `>>>>>>> titulo-uno` viene de **la rama que unes**.
+
+Para resolver:
+
+1. Abre el archivo y decide el resultado final (uno, otro, o una mezcla). Borra las tres líneas de marcas.
+2. `git add archivo` para decir "ya está resuelto".
+3. `git commit` para cerrar el merge.
+
+Si en cualquier momento quieres arrepentirte, `git merge --abort` regresa al estado anterior al merge.
+
+</Ejemplo>
+
+<Callout tipo="tip" titulo="Un conflicto no es un error">
+Es Git pidiéndote una decisión humana. Lee las dos versiones, habla con quien hizo el otro cambio si hace falta y prueba que el programa siga funcionando antes de hacer commit.
+</Callout>
+
+## 3. Rebase: reescribir para ordenar
+
+`rebase` también junta trabajo, pero de otra manera: **toma los commits de tu rama y los vuelve a aplicar encima de la punta de la otra**. El resultado es un historial lineal, como si hubieras empezado tu trabajo después.
+
+<Ejemplo numero={3} titulo="Rebase de una rama sobre main" ejecutar="bash ramas.sh" salida="== Historial de funcion-c tras rebase ==
+Agrega C
+Agrega D en main
+Resuelve conflicto de título
+Título dos">
+
+`funcion-c` nació antes de que `main` recibiera "Agrega D en main". Después de `git rebase main`, el commit "Agrega C" quedó **encima** del último commit de `main`: no hay commit de unión y la historia se lee en línea recta.
+
+</Ejemplo>
+
+Lo importante: el commit "Agrega C" **no es el mismo** que antes. Git lo volvió a crear con otro identificador, porque ahora tiene otro padre. Por eso `rebase` reescribe historia.
+
+## Merge o rebase: cómo elegir
+
+| | Merge | Rebase |
+| --- | --- | --- |
+| Historial | Conserva ramas y commits de unión | Lineal, más limpio |
+| Seguridad | No reescribe nada | Reescribe commits |
+| Conflictos | Los resuelves una vez | Puedes resolver varias veces, uno por commit |
+| Ideal para | Integrar ramas compartidas | Ordenar **tu propia** rama antes de integrarla |
+
+La regla de oro: **no hagas rebase de commits que ya compartiste con otras personas** (por ejemplo, que ya subiste a una rama que otros usan). Reescribirlos obliga a todos a reconciliar historiales distintos.
+
+Una receta común y segura en equipos pequeños:
+
+1. Trabaja en tu rama.
+2. Antes de abrir el pull request, actualiza tu rama con `git rebase main` (solo si nadie más la usa).
+3. Integra con merge (o con la opción que use tu equipo en GitHub).
+
+## Errores comunes
+
+- **Hacer commit en `main` por accidente.** Antes de trabajar, revisa en qué rama estás con `git status` o `git branch`.
+- **Borrar marcas de conflicto a medias.** Si queda un `<<<<<<<` en el código, rompes el programa.
+- **Rebase de ramas compartidas.** La causa número uno de historias rotas.
+- **Ramas eternas.** Mientras más tardes en integrar, más conflictos tendrás.
+- **Miedo a `reflog`.** Si algo sale mal, `git reflog` registra a dónde apuntó `HEAD` y suele permitir volver ([lo practicas aquí](/retos/git-deshacer-sin-miedo/)).
+
+## Qué sigue
+
+- Practica ramas jugando con [Learn Git Branching](/biblioteca/git/) (en la biblioteca de Git).
+- Revisa los flujos de trabajo en la [hoja de flujos de Git](/hojas/git-flujos-de-trabajo/).
+- Mira cómo mostrar tu trabajo con ramas y pull requests en [GitHub como currículum](/carrera/github-como-curriculum/).

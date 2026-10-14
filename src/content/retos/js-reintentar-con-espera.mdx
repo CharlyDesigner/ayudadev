@@ -1,0 +1,122 @@
+---
+titulo: 'Reintenta una tarea asíncrona con espera creciente'
+descripcion: 'Escribe reintentar(tarea) para repetir una operación que puede fallar, esperando más entre cada intento. Un patrón real para llamadas a APIs. Nivel intermedio.'
+tema: javascript
+nivel: intermedio
+tiempo: 25
+conceptos: ['async/await', 'try/catch', 'promesas', 'backoff exponencial']
+publicado: 2026-10-14
+orden: 14
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Implementa debounce](/retos/js-debounce/). Si dudas con `async` y `await`, revisa [Concurrencia y asincronía](/fundamentos/concurrencia-y-asincronia/).
+
+## El reto
+
+Las llamadas a servicios externos fallan a veces: el servidor está ocupado, la red parpadea. Una estrategia común es **reintentar** esperando un poco más cada vez, para no saturar al servidor.
+
+Escribe `reintentar(tarea, opciones)`:
+
+- `tarea` es una función `async` que recibe el número de intento (empezando en 1).
+- Si `tarea` funciona, devuelve su resultado.
+- Si falla, espera y vuelve a intentar. La espera se duplica en cada intento: `esperaInicial`, luego el doble, luego el doble de ese.
+- Después de `intentos` fallos, lanza un error que diga cuántos intentos hizo y por qué falló el último.
+- Valores por defecto: 3 intentos y 10 ms de espera inicial.
+
+```js
+console.log(await reintentar(servicio));
+// Intento 1 falló: servicio ocupado
+// Intento 2 falló: servicio ocupado
+// datos listos
+```
+
+## Reglas
+
+- No esperes después del último intento fallido.
+- Conserva el mensaje del error original.
+- Sin librerías.
+
+## Pistas
+
+<Pista n={1}>
+
+Un ciclo `for` de `1` a `intentos` con un `try/catch` dentro es la estructura más sencilla. Si `tarea` funciona, `return` sale de todo.
+
+</Pista>
+
+<Pista n={2}>
+
+Para esperar usa una promesa con `setTimeout`: `new Promise((resolver) => setTimeout(resolver, ms))` y `await` sobre ella.
+
+</Pista>
+
+<Pista n={3}>
+
+La espera del intento `n` es `esperaInicial * 2 ** (n - 1)`. Guarda el último error en una variable fuera del ciclo para poder usarlo en el mensaje final.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `reintentar.mjs` y ejecútala con `node reintentar.mjs`.
+
+```js
+// Reintenta una función asíncrona con espera creciente entre intentos
+const esperar = (ms) => new Promise((resolver) => setTimeout(resolver, ms));
+
+async function reintentar(tarea, { intentos = 3, esperaInicial = 10 } = {}) {
+  let ultimoError;
+  for (let intento = 1; intento <= intentos; intento++) {
+    try {
+      return await tarea(intento);
+    } catch (error) {
+      ultimoError = error;
+      console.log(`Intento ${intento} falló: ${error.message}`);
+      if (intento < intentos) await esperar(esperaInicial * 2 ** (intento - 1));
+    }
+  }
+  throw new Error(`Falló después de ${intentos} intentos: ${ultimoError.message}`);
+}
+
+// Un servicio que falla las dos primeras veces
+const servicio = async (intento) => {
+  if (intento < 3) throw new Error('servicio ocupado');
+  return 'datos listos';
+};
+
+console.log(await reintentar(servicio));
+
+try {
+  await reintentar(async () => { throw new Error('siempre falla'); }, { intentos: 2 });
+} catch (error) {
+  console.log(error.message);
+}
+```
+
+Salida:
+
+```text
+Intento 1 falló: servicio ocupado
+Intento 2 falló: servicio ocupado
+datos listos
+Intento 1 falló: siempre falla
+Intento 2 falló: siempre falla
+Falló después de 2 intentos: siempre falla
+```
+
+Cómo funciona: el `try` intenta la tarea; si lanza un error, el `catch` lo guarda y, si todavía quedan intentos, espera. `return await tarea(...)` es importante: sin el `await`, un fallo asíncrono escaparía del `try/catch`. La condición `intento < intentos` evita esperar después del último fallo. Al salir del ciclo sin éxito, se lanza un error con el mensaje del último fallo.
+
+</Solucion>
+
+## Variaciones
+
+- Reintenta solo para ciertos errores (por ejemplo, los que tengan `error.reintentable === true`).
+- Agrega un "jitter": suma una espera aleatoria pequeña para que muchos clientes no reintenten al mismo tiempo.
+- Úsalo con `fetch` contra una URL que a veces responde con error y revisa el código de estado.
+
+Siguiente reto: [Limita la concurrencia de tareas asíncronas](/retos/js-limitar-concurrencia/).

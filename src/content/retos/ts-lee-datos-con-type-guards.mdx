@@ -1,0 +1,123 @@
+---
+titulo: 'Lee datos externos con unknown y type guards'
+descripcion: 'Convierte un texto JSON en un objeto tipado de forma segura: usa unknown, escribe una función guardia con valor is Usuario y evita los as peligrosos. Nivel intermedio.'
+tema: typescript
+nivel: intermedio
+tiempo: 25
+conceptos: ['unknown', 'type guards', 'JSON.parse', 'narrowing']
+publicado: 2026-10-14
+orden: 22
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Ordena con genéricos y keyof](/retos/ts-ordenar-por-generico/). Para entender por qué importa validar lo que llega de fuera: [JSON y formatos de datos](/fundamentos/json-y-formatos-de-datos/).
+
+## El reto
+
+TypeScript solo revisa tipos **mientras compilas**. Cuando lees datos de afuera (un archivo, una API, un formulario), el compilador no puede saber qué contienen. `JSON.parse` devuelve `any`, y usarlo sin revisar es una forma de colar errores.
+
+Escribe `leerUsuario(texto)` que reciba un texto y devuelva un `Usuario` o `null`:
+
+```ts
+interface Usuario {
+  nombre: string;
+  edad: number;
+}
+```
+
+- Si el texto no es JSON válido, devuelve `null`.
+- Si es JSON pero no tiene la forma de un `Usuario`, devuelve `null`.
+- Si todo está bien, devuelve el usuario con el tipo correcto.
+
+```ts
+leerUsuario('{"nombre":"Ana","edad":30}'); // { nombre: 'Ana', edad: 30 }
+leerUsuario('{"nombre":"Ana"}');           // null
+leerUsuario('esto no es JSON');            // null
+```
+
+## Reglas
+
+- Modo estricto, sin `any` y sin aserciones `as Usuario`.
+- Escribe una función guardia `esUsuario(valor: unknown): valor is Usuario`.
+- El valor recién parseado debe tratarse como `unknown`.
+
+## Pistas
+
+<Pista n={1}>
+
+`unknown` es el tipo seguro para "no sé qué es esto": TypeScript te prohíbe usarlo hasta que lo compruebes. Es lo opuesto a `any`.
+
+</Pista>
+
+<Pista n={2}>
+
+Una función guardia devuelve un booleano, pero su tipo de retorno dice `valor is Usuario`. Si devuelve `true`, TypeScript trata el valor como `Usuario` en el código que sigue.
+
+</Pista>
+
+<Pista n={3}>
+
+Dentro de la guardia comprueba en orden: que sea un `object`, que no sea `null`, que `nombre` sea `string` y que `edad` sea `number`. Para leer propiedades de un objeto desconocido usa `(valor as Record<string, unknown>)`. Esa aserción es inofensiva porque solo la haces después de comprobar que es un objeto.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `guard.ts` y ejecútala con `node guard.ts` (Node.js 24 o una versión reciente que ejecute TypeScript). Para verificar tipos: `npx tsc --noEmit --strict guard.ts`.
+
+```ts
+// unknown obliga a revisar el tipo antes de usar un valor que viene de fuera
+interface Usuario {
+  nombre: string;
+  edad: number;
+}
+
+function esUsuario(valor: unknown): valor is Usuario {
+  return (
+    typeof valor === 'object' &&
+    valor !== null &&
+    typeof (valor as Record<string, unknown>).nombre === 'string' &&
+    typeof (valor as Record<string, unknown>).edad === 'number'
+  );
+}
+
+function leerUsuario(texto: string): Usuario | null {
+  let dato: unknown;
+  try {
+    dato = JSON.parse(texto);
+  } catch {
+    return null; // no era JSON válido
+  }
+  return esUsuario(dato) ? dato : null;
+}
+
+console.log(leerUsuario('{"nombre":"Ana","edad":30}'));
+console.log(leerUsuario('{"nombre":"Ana"}'));
+console.log(leerUsuario('esto no es JSON'));
+```
+
+Salida:
+
+```text
+{ nombre: 'Ana', edad: 30 }
+null
+null
+```
+
+Cómo funciona: guardamos el resultado de `JSON.parse` en una variable de tipo `unknown`, así que no podemos usarlo sin revisar. `esUsuario` hace las comprobaciones en tiempo de ejecución; el tipo de retorno `valor is Usuario` le avisa al compilador que, si devolvió `true`, ese valor es un `Usuario`. En `esUsuario(dato) ? dato : null`, TypeScript sabe que `dato` es `Usuario` en la rama verdadera. El `try/catch` cubre el caso de texto que no es JSON.
+
+La lección importante: los tipos de TypeScript **no existen en tiempo de ejecución**. Validar datos de fuera es trabajo tuyo. Para casos grandes se usan librerías de validación de esquemas, pero lo que aprendes aquí es lo que hacen por dentro.
+
+</Solucion>
+
+## Variaciones
+
+- Agrega la condición de que `edad` sea un entero mayor o igual que cero.
+- Haz que `leerUsuario` devuelva un `Resultado` (como en [Modela éxito y error con tipos](/retos/ts-resultado-tipado/)) con un mensaje que explique qué falló.
+- Escribe una guardia genérica `esArregloDe(valor, esElemento)` para validar listas de usuarios.
+
+Cuando termines, revisa la [guía de TypeScript](/guias/typescript/) y la [hoja de tipos útiles](/hojas/typescript-tipos-utiles/).

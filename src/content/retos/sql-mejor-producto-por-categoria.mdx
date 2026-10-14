@@ -1,0 +1,123 @@
+---
+titulo: 'El producto más vendido de cada categoría con CTE'
+descripcion: 'Usa expresiones de tabla comunes (WITH) y ROW_NUMBER para encontrar, en una sola consulta, el producto que más ingresos dejó en cada categoría. Nivel avanzado.'
+tema: sql
+nivel: avanzado
+tiempo: 30
+conceptos: ['CTE', 'WITH', 'ROW_NUMBER', 'subconsultas']
+publicado: 2026-10-14
+orden: 42
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Ranking por ciudad con funciones de ventana](/retos/sql-ranking-con-ventanas/). Para repasar uniones y agrupaciones: [hoja de JOINs y agregaciones](/hojas/sql-joins-y-agregaciones/).
+
+## El reto
+
+Tienes productos y ventas:
+
+| productos (id, nombre, categoria, precio) | ventas (producto_id, unidades) |
+| --- | --- |
+| 1 Cuaderno, papeleria, 45 | (1, 4) |
+| 2 Pluma, papeleria, 12 | (2, 10), (2, 4) |
+| 3 Mochila, accesorios, 350 | (3, 1) |
+| 4 Cartuchera, accesorios, 80 | (4, 2), (4, 3) |
+
+Escribe **una consulta** que devuelva, para cada categoría, el producto que más **ingresos** generó (unidades vendidas por precio), con su categoría, nombre y total.
+
+Resultado esperado:
+
+```text
+('accesorios', 'Cartuchera', 400)
+('papeleria', 'Cuaderno', 180)
+```
+
+## Reglas
+
+- Usa `WITH` para dividir el problema en pasos con nombre.
+- Usa una función de ventana para numerar los productos dentro de cada categoría.
+- Una sola sentencia `SELECT` final.
+
+## Pistas
+
+<Pista n={1}>
+
+Primero necesitas los ingresos por producto: une `ventas` con `productos`, agrupa por producto y suma `unidades * precio`. Ese será tu primer paso (una CTE).
+
+</Pista>
+
+<Pista n={2}>
+
+En un segundo paso, numera los productos de cada categoría de mayor a menor ingreso con `ROW_NUMBER() OVER (PARTITION BY categoria ORDER BY total DESC)`.
+
+</Pista>
+
+<Pista n={3}>
+
+No puedes filtrar por una función de ventana en el mismo `SELECT` donde la calculas. Por eso se hace en un paso aparte: en la consulta final, `WHERE lugar = 1`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `cte.py` y ejecútala con `python cte.py`.
+
+```python
+import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.executescript("""
+CREATE TABLE productos (id INTEGER PRIMARY KEY, nombre TEXT, categoria TEXT, precio INTEGER);
+CREATE TABLE ventas (producto_id INTEGER REFERENCES productos(id), unidades INTEGER);
+INSERT INTO productos VALUES
+  (1, 'Cuaderno', 'papeleria', 45), (2, 'Pluma', 'papeleria', 12),
+  (3, 'Mochila', 'accesorios', 350), (4, 'Cartuchera', 'accesorios', 80);
+INSERT INTO ventas VALUES (1, 4), (2, 10), (2, 4), (3, 1), (4, 2), (4, 3);
+""")
+
+consulta = """
+WITH ingresos AS (
+  SELECT p.categoria, p.nombre, SUM(v.unidades * p.precio) AS total
+  FROM ventas v
+  JOIN productos p ON p.id = v.producto_id
+  GROUP BY p.id
+),
+clasificados AS (
+  SELECT categoria, nombre, total,
+         ROW_NUMBER() OVER (PARTITION BY categoria ORDER BY total DESC) AS lugar
+  FROM ingresos
+)
+SELECT categoria, nombre, total
+FROM clasificados
+WHERE lugar = 1
+ORDER BY categoria;
+"""
+
+for fila in con.execute(consulta):
+    print(fila)
+```
+
+Salida:
+
+```text
+('accesorios', 'Cartuchera', 400)
+('papeleria', 'Cuaderno', 180)
+```
+
+Cómo funciona: `WITH` define dos "tablas temporales" con nombre que solo existen durante la consulta. `ingresos` calcula el total por producto: Cuaderno 4 por 45 son 180, Pluma 14 por 12 son 168, Mochila 350 y Cartuchera 5 por 80 son 400. `clasificados` numera cada producto dentro de su categoría de mayor a menor. La consulta final se queda con el lugar 1 de cada una. Lo bueno de las CTE es que cada paso se puede leer y probar por separado.
+
+Nota sobre empates: `ROW_NUMBER` nunca repite números, así que si dos productos empatan en ingresos, devuelve solo uno de forma arbitraria. Si quisieras ambos, usa `RANK()` como en el reto anterior.
+
+</Solucion>
+
+## Variaciones
+
+- Devuelve los **dos** mejores productos de cada categoría (`lugar <= 2`).
+- Cambia `ROW_NUMBER()` por `RANK()` y agrega un empate a propósito para ver la diferencia.
+- Calcula también el porcentaje que representa cada producto dentro de los ingresos de su categoría con `SUM(total) OVER (PARTITION BY categoria)`.
+
+Más práctica: la [biblioteca de SQL](/biblioteca/sql/) incluye sitios con ejercicios interactivos.

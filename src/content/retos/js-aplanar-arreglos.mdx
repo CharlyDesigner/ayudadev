@@ -1,0 +1,103 @@
+---
+titulo: 'Aplana arreglos anidados con recursión'
+descripcion: 'Escribe aplanar(lista, profundidad) sin usar flat para convertir arreglos dentro de arreglos en una sola lista. Practica recursión con un caso concreto.'
+tema: javascript
+nivel: principiante
+tiempo: 20
+conceptos: ['recursión', 'arreglos', 'Array.isArray', 'parámetros por defecto']
+publicado: 2026-10-14
+orden: 9
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, repasa [Funciones y recursión](/fundamentos/funciones-y-recursion/) y la [hoja de arreglos y objetos](/hojas/javascript-arreglos-y-objetos-metodos/).
+
+## El reto
+
+A veces los datos llegan como arreglos dentro de arreglos: `[1, [2, [3, [4]], 5]]`. Escribe `aplanar(lista, profundidad)` que devuelva un arreglo plano.
+
+```js
+aplanar([1, [2, [3, [4]], 5]]);
+// [ 1, 2, 3, 4, 5 ]
+
+aplanar([1, [2, [3, [4]], 5]], 1);
+// [ 1, 2, [ 3, [ 4 ] ], 5 ]   (solo aplana un nivel)
+
+aplanar([]);
+// []
+```
+
+La `profundidad` es opcional. Si no se da, aplana todos los niveles.
+
+## Reglas
+
+- No uses el método `flat()`.
+- No modifiques el arreglo original.
+- Debe funcionar con cualquier nivel de anidamiento.
+
+## Pistas
+
+<Pista n={1}>
+
+`Array.isArray(x)` te dice si `x` es un arreglo. Cada elemento será un arreglo (hay que entrar) o un valor normal (se agrega tal cual).
+
+</Pista>
+
+<Pista n={2}>
+
+Cuando encuentres un arreglo, llama a `aplanar` de nuevo con ese arreglo. Ese es el paso recursivo. El **caso base** es un arreglo sin más arreglos adentro.
+
+</Pista>
+
+<Pista n={3}>
+
+Para la profundidad, pásale a la llamada recursiva `profundidad - 1` y solo entra a un arreglo si `profundidad > 0`. Con `Infinity` como valor por defecto, nunca llega a cero.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `aplanar.js` y ejecútala con `node aplanar.js`.
+
+```js
+// Aplana arreglos anidados hasta una profundidad dada (sin usar flat)
+function aplanar(lista, profundidad = Infinity) {
+  const resultado = [];
+  for (const elemento of lista) {
+    if (Array.isArray(elemento) && profundidad > 0) {
+      resultado.push(...aplanar(elemento, profundidad - 1));
+    } else {
+      resultado.push(elemento);
+    }
+  }
+  return resultado;
+}
+
+console.log(aplanar([1, [2, [3, [4]], 5]]));
+console.log(aplanar([1, [2, [3, [4]], 5]], 1));
+console.log(aplanar([]));
+```
+
+Salida:
+
+```text
+[ 1, 2, 3, 4, 5 ]
+[ 1, 2, [ 3, [ 4 ] ], 5 ]
+[]
+```
+
+Cómo funciona: la función recorre la lista. Si el elemento es un arreglo y aún queda profundidad, se aplana ese subarreglo con una llamada recursiva y sus elementos se agregan con el operador de propagación (`...`). Si no, el elemento se agrega tal cual. Cada llamada recursiva reduce la profundidad en uno, y con `Infinity` nunca se agota. Como siempre construimos un arreglo nuevo, el original no cambia.
+
+</Solucion>
+
+## Variaciones
+
+- Escribe una versión iterativa con una pila (sin recursión) para evitar problemas con listas muy profundas.
+- Haz que también aplane objetos con la forma `{ hijos: [...] }`.
+- Compara tu resultado con `lista.flat(Infinity)`.
+
+Siguiente reto: [Cuenta las palabras de un texto](/retos/js-contar-palabras/).

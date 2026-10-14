@@ -1,0 +1,170 @@
+---
+titulo: 'Closures en JavaScript: funciones que recuerdan'
+descripcion: 'Qué es un closure, por qué un contador recuerda su cuenta, la trampa clásica de var en los bucles y para qué sirven en la práctica. Con ejemplos que corren.'
+categoria: programacion
+nivel: intermedio
+tiempoLectura: 10
+publicado: 2026-10-14
+temas: [javascript]
+etiquetas: [closures, funciones, scope, javascript]
+orden: 22
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Los closures asustan por su nombre, pero la idea es simple: **una función recuerda las variables del lugar donde nació, incluso después de que ese lugar terminó**. Una vez que la ves, la usas todo el tiempo sin darte cuenta: en temporizadores, eventos, `debounce`, módulos y hasta en los componentes de React.
+
+Si necesitas repasar funciones y ámbito antes, lee [Funciones y recursión](/fundamentos/funciones-y-recursion/) y [Variables, tipos y memoria](/fundamentos/variables-tipos-y-memoria/).
+
+## La idea con una analogía
+
+Imagina que una función es una persona que sale de casa. Normalmente, al salir, olvida lo que había en el refrigerador. Un closure es una persona que se lleva una **llave** de esa casa: aunque ya no esté ahí, puede volver a abrir y ver (y cambiar) lo que hay dentro.
+
+En código, la "casa" es el ámbito (scope) de otra función, y la "llave" es la referencia a las variables de ese ámbito.
+
+## Tu primer closure
+
+<Ejemplo numero={1} titulo="Un contador que recuerda su cuenta" archivo="closures1.js" ejecutar="node closures1.js" salida="1 2 3
+1">
+
+```js
+// Una función que "recuerda" la variable de donde nació
+function crearContador() {
+  let cuenta = 0;               // vive dentro de crearContador
+  return function () {
+    cuenta += 1;
+    return cuenta;
+  };
+}
+
+const a = crearContador();
+const b = crearContador();
+
+console.log(a(), a(), a());     // cada contador tiene su propia cuenta
+console.log(b());
+```
+
+`crearContador` termina en cuanto devuelve la función. Pero la función devuelta sigue viendo `cuenta`. Cada vez que llamas a `crearContador` se crea una `cuenta` nueva, por eso `a` y `b` no se mezclan: cada una tiene su propia llave de su propia casa.
+
+</Ejemplo>
+
+Fíjate en que `cuenta` no se puede tocar desde fuera. Eso nos lleva al primer uso práctico.
+
+## Para qué sirven
+
+### 1. Datos privados sin clases
+
+<Ejemplo numero={2} titulo="Un saldo que solo se toca con las funciones expuestas" archivo="closures3.js" ejecutar="node closures3.js" salida="150
+undefined
+Error: El monto debe ser positivo">
+
+```js
+// Datos privados sin clases: solo se toca la cuenta con las funciones expuestas
+function crearCuenta(saldoInicial) {
+  let saldo = saldoInicial;
+  return {
+    depositar(monto) {
+      if (monto <= 0) throw new Error('El monto debe ser positivo');
+      saldo += monto;
+    },
+    consultar: () => saldo,
+  };
+}
+
+const cuenta = crearCuenta(100);
+cuenta.depositar(50);
+console.log(cuenta.consultar());
+console.log(cuenta.saldo);      // undefined: no hay forma directa de llegar a saldo
+
+try {
+  cuenta.depositar(-5);
+} catch (error) {
+  console.log('Error:', error.message);
+}
+```
+
+Nadie puede poner un saldo negativo asignándolo directamente: la única forma de cambiarlo es `depositar`, que valida. Es el mismo principio de encapsulamiento que ves en [Programación orientada a objetos](/fundamentos/programacion-orientada-a-objetos/), pero logrado solo con funciones.
+
+</Ejemplo>
+
+### 2. Funciones que recuerdan resultados (memoización)
+
+<Ejemplo numero={3} titulo="Calcular una vez, recordar siempre" archivo="closures4.js" ejecutar="node closures4.js" salida="16 16 25
+veces que se calculó: 2">
+
+```js
+// Memoización: una función que recuerda resultados anteriores
+function memoizar(fn) {
+  const memoria = new Map();
+  return (n) => {
+    if (!memoria.has(n)) memoria.set(n, fn(n));
+    return memoria.get(n);
+  };
+}
+
+let llamadas = 0;
+const cuadrado = memoizar((n) => {
+  llamadas++;
+  return n * n;
+});
+
+console.log(cuadrado(4), cuadrado(4), cuadrado(5));
+console.log('veces que se calculó:', llamadas);
+```
+
+El `Map` vive en el closure de `memoizar`. Pedimos tres resultados pero solo se calculó dos veces: el segundo `cuadrado(4)` salió de la memoria.
+
+</Ejemplo>
+
+### 3. Configurar una función para usarla después
+
+Cuando escribes `debounce`, `setTimeout(() => ..., ms)` o un controlador de eventos, tu función usa variables de su alrededor. En el reto [Implementa debounce](/retos/js-debounce/) lo practicas: el temporizador vive en un closure compartido entre las llamadas.
+
+## La trampa clásica: `var` en bucles
+
+<Ejemplo numero={4} titulo="Por qué var da tres veces el mismo número" archivo="closures2.js" ejecutar="node closures2.js" salida="[ 3, 3, 3 ]
+[ 0, 1, 2 ]">
+
+```js
+// El clásico: var comparte una sola variable; let crea una nueva en cada vuelta
+const conVar = [];
+for (var i = 0; i < 3; i++) conVar.push(() => i);
+
+const conLet = [];
+for (let j = 0; j < 3; j++) conLet.push(() => j);
+
+console.log(conVar.map((f) => f()));
+console.log(conLet.map((f) => f()));
+```
+
+Con `var`, existe **una sola** `i` para todo el bucle. Las tres funciones guardan una llave de la misma casa. Cuando las llamas, el bucle ya terminó y `i` vale `3`. Con `let`, cada vuelta crea una `j` nueva, así que cada función recuerda la suya.
+
+</Ejemplo>
+
+Regla práctica: usa `const` y `let`, y evita `var`. Esa trampa desaparece.
+
+## Cómo pensarlo cuando algo no cuadra
+
+Cuando una función "ve" un valor raro, hazte tres preguntas:
+
+1. **¿De qué ámbito viene esa variable?** Busca hacia afuera, de la función más interna a la más externa.
+2. **¿Es una sola variable compartida o una por cada llamada?** (el caso del `var`).
+3. **¿Cambió después de crear la función?** Un closure guarda la **variable**, no una foto de su valor. Si la variable cambia, lo que ve la función también.
+
+<Callout tipo="warning" titulo="Closures y memoria">
+Mientras exista la función que recuerda, también existen las variables que recuerda. Si un closure guarda algo grande (un arreglo con miles de elementos) y vive mucho tiempo, esa memoria no se libera. En programas normales no es un problema, pero conviene saberlo cuando depuras fugas de memoria.
+</Callout>
+
+## Errores comunes
+
+- **Creer que el closure copia el valor.** Recuerda la variable, no su valor en ese momento.
+- **Usar `var` en bucles con funciones dentro.** Cambia a `let`.
+- **Declarar una función dentro de otra sin necesidad.** Un closure útil resuelve algo (privacidad, memoria, configuración); si no, es complejidad extra.
+- **Confundir closure con `this`.** Son mecanismos distintos: una arrow function guarda el `this` de afuera, pero eso es otra historia.
+
+## Qué sigue
+
+- Practica con los retos [Implementa debounce](/retos/js-debounce/) y [Limita la concurrencia de tareas asíncronas](/retos/js-limitar-concurrencia/).
+- Revisa el término en el [glosario](/glosario/#closure) y la [guía de JavaScript](/guias/javascript/).
+- Cuando te sientas cómodo, lee [Programación funcional](/fundamentos/programacion-funcional/): los closures son su materia prima.

@@ -1,0 +1,137 @@
+---
+titulo: 'Una cuenta bancaria con clases y excepciones'
+descripcion: 'Modela una cuenta con depósitos y retiros usando una clase, una propiedad de solo lectura y una excepción propia. Practica orientación a objetos. Nivel principiante.'
+tema: python
+nivel: principiante
+tiempo: 25
+conceptos: ['clases', 'propiedades', 'excepciones', 'encapsulamiento']
+publicado: 2026-10-14
+orden: 29
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, revisa [Programación orientada a objetos](/fundamentos/programacion-orientada-a-objetos/) y la [guía de Python](/guias/python/).
+
+## El reto
+
+Escribe una clase `Cuenta` con estas características:
+
+- Se crea con un `titular` y un saldo inicial (por defecto `0`).
+- `depositar(monto)` suma al saldo. Si el monto no es positivo, lanza `ValueError` con el mensaje `El monto debe ser positivo`.
+- `retirar(monto)` resta del saldo. Si el monto es mayor que el saldo, lanza una excepción propia `SaldoInsuficiente` con el mensaje `Saldo insuficiente: tienes X y pides Y`.
+- El saldo se puede **leer** (`cuenta.saldo`) pero no se debe poder cambiar asignándolo directamente.
+- `print(cuenta)` muestra `Ana: $120`.
+
+Prueba esperada:
+
+```python
+cuenta = Cuenta("Ana", 100)
+cuenta.depositar(50)
+cuenta.retirar(30)
+print(cuenta)              # Ana: $120
+cuenta.retirar(500)        # SaldoInsuficiente: Saldo insuficiente: tienes 120 y pides 500
+cuenta.depositar(-1)       # ValueError: El monto debe ser positivo
+```
+
+## Reglas
+
+- Define tu propia excepción: una clase que herede de `Exception`.
+- Guarda también un historial de movimientos (`("depósito", 50)`, `("retiro", 30)`).
+- El saldo interno va en un atributo con guion bajo (`_saldo`) y se expone con `@property`.
+
+## Pistas
+
+<Pista n={1}>
+
+`class SaldoInsuficiente(Exception): pass` es suficiente para tener una excepción propia. Con `raise SaldoInsuficiente("mensaje")` la lanzas.
+
+</Pista>
+
+<Pista n={2}>
+
+`@property` sobre un método `saldo(self)` permite leerlo como `cuenta.saldo` sin paréntesis. Si no defines un "setter", Python impide asignarlo.
+
+</Pista>
+
+<Pista n={3}>
+
+Para que `print(cuenta)` muestre un texto propio, define el método especial `__str__` y devuelve una cadena.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `cuenta.py` y ejecútala con `python cuenta.py`.
+
+```python
+class SaldoInsuficiente(Exception):
+    pass
+
+
+class Cuenta:
+    def __init__(self, titular, saldo=0):
+        self.titular = titular
+        self._saldo = saldo        # el guion bajo avisa: "no lo toques desde fuera"
+        self._movimientos = []
+
+    @property
+    def saldo(self):
+        return self._saldo
+
+    def depositar(self, monto):
+        if monto <= 0:
+            raise ValueError("El monto debe ser positivo")
+        self._saldo += monto
+        self._movimientos.append(("depósito", monto))
+
+    def retirar(self, monto):
+        if monto > self._saldo:
+            raise SaldoInsuficiente(f"Saldo insuficiente: tienes {self._saldo} y pides {monto}")
+        self._saldo -= monto
+        self._movimientos.append(("retiro", monto))
+
+    def __str__(self):
+        return f"{self.titular}: ${self._saldo}"
+
+
+cuenta = Cuenta("Ana", 100)
+cuenta.depositar(50)
+cuenta.retirar(30)
+print(cuenta)
+
+try:
+    cuenta.retirar(500)
+except SaldoInsuficiente as error:
+    print(error)
+
+try:
+    cuenta.depositar(-1)
+except ValueError as error:
+    print(error)
+```
+
+Salida:
+
+```text
+Ana: $120
+Saldo insuficiente: tienes 120 y pides 500
+El monto debe ser positivo
+```
+
+Cómo funciona: el constructor `__init__` prepara el estado. `@property` convierte `saldo` en un atributo de solo lectura: si escribes `cuenta.saldo = 1000`, Python lanza un `AttributeError`. Las validaciones están en los métodos, así que el saldo solo cambia por caminos que revisan las reglas. La excepción propia permite que quien use la clase capture justamente ese error con `except SaldoInsuficiente`, sin confundirlo con otros.
+
+En Python el guion bajo es una **convención**, no una barrera: alguien podría escribir `cuenta._saldo = 1000`. La convención indica "esto es interno, no lo uses".
+
+</Solucion>
+
+## Variaciones
+
+- Agrega `historial()` que devuelva una copia de la lista de movimientos (para que desde fuera no se pueda modificar).
+- Crea `CuentaDeAhorro` que herede de `Cuenta` y agregue un método `aplicar_interes(tasa)`.
+- Escribe pruebas con `unittest` o `pytest` para cada regla.
+
+Siguiente paso: aplica las clases en el proyecto [Control de gastos en Python con SQLite](/proyectos/control-de-gastos-en-python/).

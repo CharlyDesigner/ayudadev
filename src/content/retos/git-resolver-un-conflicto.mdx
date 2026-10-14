@@ -1,0 +1,137 @@
+---
+titulo: 'Resuelve un conflicto de merge'
+descripcion: 'Prepara un repositorio con dos ramas que cambian la misma línea, provoca el conflicto, léelo y resuélvelo conservando lo mejor de cada rama. Nivel intermedio.'
+tema: git
+nivel: intermedio
+tiempo: 20
+conceptos: ['merge', 'conflictos', 'marcas de conflicto', 'git add']
+publicado: 2026-10-14
+orden: 51
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, lee [Ramas, merge y rebase en Git](/fundamentos/ramas-merge-y-rebase-en-git/). Reto anterior: [Deshacer en Git sin miedo](/retos/git-deshacer-sin-miedo/).
+
+## El reto
+
+Dos personas cambiaron el mismo archivo de configuración: una cambió el nombre y el tema a `sepia` en `main`, y otra cambió el tema a `oscuro` en la rama `tema-oscuro`. Tú tienes que unir las dos ramas y decidir qué se queda. El resultado final debe tener **el nombre nuevo** y **el tema oscuro**.
+
+Primero crea el escenario. Guarda el script como `conflicto.sh` y ejecútalo con `bash conflicto.sh` (en Windows, usa Git Bash):
+
+```bash
+#!/bin/bash
+# Prepara un repositorio con un conflicto listo para resolver
+set -e
+rm -rf practica-conflicto && mkdir practica-conflicto && cd practica-conflicto
+git init -q -b main
+git config user.name "Estudiante" && git config user.email "estudiante@example.com" && git config core.autocrlf false
+
+printf 'nombre=Mi App\nidioma=es\ntema=claro\n' > config.txt
+git add . && git commit -qm "Configuración inicial"
+
+git switch -q -c tema-oscuro
+printf 'nombre=Mi App\nidioma=es\ntema=oscuro\n' > config.txt
+git commit -qam "Cambia el tema a oscuro"
+
+git switch -q main
+printf 'nombre=Mi App Pro\nidioma=es\ntema=sepia\n' > config.txt
+git commit -qam "Cambia nombre y tema a sepia"
+
+echo "Listo. Estás en main con la rama tema-oscuro pendiente de unir."
+```
+
+Después entra a `practica-conflicto` y ejecuta `git merge tema-oscuro`.
+
+## Reglas
+
+- No uses `git merge -X ours` ni `-X theirs`: la decisión es tuya, línea por línea.
+- Al terminar, `git status` debe indicar que no queda nada pendiente.
+- El historial debe terminar con un commit de merge.
+
+## Pistas
+
+<Pista n={1}>
+
+`git status` te dice qué archivos están en conflicto (aparecen como "both modified" o con `UU`). Abre ese archivo en tu editor.
+
+</Pista>
+
+<Pista n={2}>
+
+El archivo tendrá tres tipos de marcas: `<<<<<<< HEAD`, `=======` y `>>>>>>> tema-oscuro`. Arriba de `=======` está tu versión y debajo la de la otra rama. Deja el contenido final correcto y **borra las tres líneas de marcas**.
+
+</Pista>
+
+<Pista n={3}>
+
+Cuando el archivo esté bien, avísale a Git con `git add config.txt` y cierra el merge con `git commit`. Si te arrepientes antes de eso, `git merge --abort` deshace todo.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Después de `git merge tema-oscuro`, Git responde:
+
+```text
+Auto-merging config.txt
+CONFLICT (content): Merge conflict in config.txt
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+Y `config.txt` queda así:
+
+```text
+nombre=Mi App Pro
+idioma=es
+<<<<<<< HEAD
+tema=sepia
+=======
+tema=oscuro
+>>>>>>> tema-oscuro
+```
+
+Observa que la línea del nombre **no** está en conflicto: solo cambió `main`, así que Git la resolvió solo. El conflicto está únicamente en la línea del tema, que cambió en ambas ramas.
+
+Para resolverlo, deja el archivo así (sin marcas):
+
+```text
+nombre=Mi App Pro
+idioma=es
+tema=oscuro
+```
+
+Y luego:
+
+```bash
+git add config.txt
+git commit --no-edit
+git log --format="%s"
+git status
+```
+
+El historial queda:
+
+```text
+Merge branch 'tema-oscuro'
+Cambia nombre y tema a sepia
+Cambia el tema a oscuro
+Configuración inicial
+```
+
+y `git status` informa que no hay nada pendiente.
+
+Lo importante: un conflicto es una **decisión humana**. Git no sabe si preferías sepia u oscuro. Con `--no-edit` aceptamos el mensaje de merge que Git propone. Siempre prueba que el proyecto siga funcionando antes de hacer el commit de resolución.
+
+</Solucion>
+
+## Variaciones
+
+- Crea un segundo conflicto en otra línea y resuélvelo en el mismo merge.
+- Haz el mismo ejercicio con `git rebase tema-oscuro` y observa en qué se diferencia el proceso (después de resolver usarás `git rebase --continue`).
+- Usa la herramienta de comparación de tu editor (VS Code muestra botones para aceptar un lado u otro) y compara con hacerlo a mano.
+
+Siguiente paso: practica el flujo completo en el proyecto [Control de gastos en Python con SQLite](/proyectos/control-de-gastos-en-python/) usando una rama por función.

@@ -1,0 +1,143 @@
+---
+titulo: 'Formulario de suscripción accesible'
+descripcion: 'Construye un formulario con etiquetas asociadas, fieldset, ayuda con aria-describedby, tipos de campo correctos y foco visible. Verifica con teclado. Nivel principiante.'
+tema: html-css
+nivel: principiante
+tiempo: 30
+conceptos: ['formularios', 'label', 'fieldset', 'aria-describedby', 'foco visible']
+publicado: 2026-10-14
+orden: 61
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, lee la [guía de accesibilidad](/guias/accesibilidad/) y repasa [HTML semántico](/hojas/html-semantico-y-etiquetas/). Reto anterior: [Tarjeta de perfil responsive](/retos/css-tarjeta-responsive/).
+
+## El reto
+
+Crea `formulario.html` con un formulario para suscribirse a un boletín. Debe tener:
+
+- Un campo de **nombre** y uno de **correo electrónico**.
+- Una casilla para aceptar recibir correos, con una frase clara sobre cómo darse de baja.
+- Un texto de ayuda bajo el correo que explique para qué lo usarás.
+- Un botón de envío.
+
+Y debe cumplir esto:
+
+- Cada campo tiene una **etiqueta visible** conectada con él.
+- Se puede completar y enviar **solo con teclado**, y el campo enfocado se ve claramente.
+- Se ve bien desde 320 px de ancho, sin desplazamiento horizontal.
+- Los tipos de campo (`email`) y los atributos `autocomplete` ayudan al navegador a completar.
+
+## Reglas
+
+- Sin JavaScript. Usa la validación del navegador con `required`.
+- No uses `placeholder` como reemplazo de la etiqueta.
+- Agrupa los campos con `fieldset` y `legend`.
+
+## Pistas
+
+<Pista n={1}>
+
+Una etiqueta se conecta con su campo igualando `for` y `id`: `<label for="correo">` y `<input id="correo">`. Así un lector de pantalla anuncia el nombre del campo y puedes hacer clic en la etiqueta para enfocarlo.
+
+</Pista>
+
+<Pista n={2}>
+
+`aria-describedby="ayuda-correo"` en el campo hace que un lector de pantalla lea también el párrafo con ese `id`. Es la forma correcta de asociar texto de ayuda.
+
+</Pista>
+
+<Pista n={3}>
+
+Nunca quites el contorno del foco sin reemplazarlo. Con `:focus-visible` puedes darle un contorno grueso y de buen contraste solo cuando se navega con teclado.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `formulario.html` y ábrela en el navegador.
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Suscríbete al boletín</title>
+  <style>
+    :root { --texto: #1d1d1b; --fondo: #fff; --acento: #2b6cb0; --borde: #767676; --espacio: 1rem; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: var(--espacio); font-family: system-ui, sans-serif; color: var(--texto); background: var(--fondo); }
+    form { max-width: 28rem; margin: 0 auto; }
+    fieldset { border: 1px solid var(--borde); border-radius: 12px; padding: var(--espacio); }
+    legend { font-weight: 700; padding: 0 0.25rem; }
+    .campo { margin-bottom: var(--espacio); }
+    label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+    input[type="text"], input[type="email"] {
+      width: 100%; padding: 0.6rem 0.75rem; font: inherit;
+      border: 2px solid var(--borde); border-radius: 10px;
+    }
+    input:focus-visible, button:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+    .ayuda { margin: 0.25rem 0 0; font-size: 0.9rem; color: #4a4a47; }
+    button { padding: 0.7rem 1.4rem; font: inherit; font-weight: 700; color: #fff; background: var(--acento); border: 0; border-radius: 999px; cursor: pointer; }
+    .opcion { display: flex; gap: 0.5rem; align-items: start; }
+  </style>
+</head>
+<body>
+  <main>
+    <form action="/suscribir" method="post">
+      <fieldset>
+        <legend>Suscríbete al boletín</legend>
+
+        <div class="campo">
+          <label for="nombre">Nombre</label>
+          <input id="nombre" name="nombre" type="text" autocomplete="given-name" required>
+        </div>
+
+        <div class="campo">
+          <label for="correo">Correo electrónico</label>
+          <input id="correo" name="correo" type="email" autocomplete="email" required aria-describedby="ayuda-correo">
+          <p id="ayuda-correo" class="ayuda">Solo lo usaremos para enviarte el boletín.</p>
+        </div>
+
+        <div class="campo opcion">
+          <input id="acepto" name="acepto" type="checkbox" required>
+          <label for="acepto">Acepto recibir correos y entiendo que puedo darme de baja cuando quiera.</label>
+        </div>
+
+        <button type="submit">Suscribirme</button>
+      </fieldset>
+    </form>
+  </main>
+</body>
+</html>
+```
+
+Lo que comprobamos en un navegador: los tres campos tienen exactamente una etiqueta asociada, el árbol de accesibilidad nombra cada campo con el texto de su etiqueta y, a 320 px de ancho, la página no tiene desplazamiento horizontal.
+
+Por qué funciona:
+
+- `label for` + `input id` conecta cada etiqueta con su campo. En la casilla, la etiqueta también amplía el área en la que puedes hacer clic.
+- `type="email"` activa la validación y el teclado adecuado en el celular. `autocomplete` permite que el navegador sugiera tus datos.
+- `fieldset` con `legend` agrupa y nombra el formulario.
+- `aria-describedby` enlaza el texto de ayuda con el campo.
+- `:focus-visible` dibuja un contorno de 3 px solo para quien navega con teclado.
+- `required` hace que el navegador impida enviar vacío y muestre su mensaje.
+- Sin `placeholder`: desaparece al escribir y puede tener poco contraste.
+
+El `action="/suscribir"` es de ejemplo: cuando uses el formulario de verdad, apunta a tu servidor y valida también allí, porque la validación del navegador se puede saltar.
+
+</Solucion>
+
+## Variaciones
+
+- Agrega un campo de contraseña con un botón accesible para mostrarla u ocultarla.
+- Agrega mensajes de error propios con `aria-live="polite"` cuando el correo no es válido.
+- Recorre el formulario con `Tab` y `Shift+Tab` sin ratón. ¿El orden tiene sentido? Revisa también con el panel de accesibilidad de las herramientas de desarrollo.
+
+Siguiente paso: aplica todo en el proyecto [Página personal accesible](/proyectos/pagina-personal-accesible/).
