@@ -1,0 +1,103 @@
+---
+titulo: 'Claude desde cero: qué es y cómo empezar bien'
+descripcion: 'Qué es Claude, dónde se usa, cómo es una buena primera conversación y qué hábitos te ahorran errores. Nivel principiante, con prompts listos.'
+categoria: basico
+nivel: principiante
+tiempoLectura: 10
+publicado: 2026-10-14
+herramientas: ['claude']
+orden: 10
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Esta es la primera pieza de la ruta [Claude y Claude Code, de cero a avanzado](/rutas/claude-y-claude-code-de-cero-a-avanzado/). Aquí aprendes qué es Claude, cómo conversar con él y qué hábitos conviene tener desde el día uno.
+
+## Qué es Claude
+
+Claude es una familia de modelos de lenguaje hechos por Anthropic. Un modelo de lenguaje es un programa que aprendió patrones de texto y código a partir de muchísimos ejemplos, y que usa esos patrones para escribir una respuesta a lo que le pides. Si quieres entender el mecanismo, lee [Cómo funcionan los LLM](/fundamentos/como-funcionan-los-llm/).
+
+Lo que debes llevarte de ahí:
+
+- **Escribe texto, no "sabe" cosas como una enciclopedia.** Puede explicar, resumir, traducir, programar y razonar, pero también puede equivocarse con total seguridad.
+- **Solo ve lo que hay en la conversación.** No conoce tu proyecto, tu escuela ni tus archivos si no se los das.
+- **No recuerda conversaciones pasadas por sí solo.** Cada chat empieza desde cero, salvo que uses funciones de memoria o proyectos (más abajo).
+- **Su respuesta cambia según cómo preguntes.** Esa es la habilidad que vas a entrenar.
+
+## Dónde puedes usar Claude
+
+Claude es el nombre del modelo y también de varios productos. No los confundas:
+
+| Producto | Para qué sirve | Ficha |
+| --- | --- | --- |
+| Claude (chat) | Conversar en el navegador, la app de escritorio o el celular. | [Ficha de Claude](/ia/claude/) |
+| Claude Code | Programar con un agente que lee tu proyecto y corre comandos. | [Ficha de Claude Code](/ia/claude-code/) |
+| API de Claude | Usar el modelo desde tu propio programa. | [Documentación oficial](https://platform.claude.com/docs/en/get-started) |
+
+En esta pieza hablamos del chat. Los planes, límites de uso y precios cambian con el tiempo: consúltalos siempre en la [página oficial de precios](https://claude.com/pricing) y en el [centro de ayuda](https://support.claude.com).
+
+## Tu primera conversación
+
+<Pasos>
+
+1. Entra a [claude.ai](https://claude.ai) y crea tu cuenta con el método que prefieras. Revisa en la página oficial qué incluye cada plan antes de pagar nada.
+2. Empieza un chat nuevo. Un chat por tema: si cambias de asunto, abre otro.
+3. Escribe quién eres, qué quieres y cómo quieres la respuesta (usa la plantilla de abajo).
+4. Lee la respuesta completa. Si algo no queda claro, pregunta "¿qué significa X?" en vez de seguir.
+5. Pide que te revise: "¿qué parte de tu respuesta podría estar equivocada?".
+
+</Pasos>
+
+Una plantilla simple que funciona casi siempre:
+
+```text
+Contexto: soy estudiante de [CARRERA O NIVEL] y estoy aprendiendo [TEMA].
+Tarea: explícame [CONCEPTO] con una analogía y un ejemplo.
+Formato: máximo 150 palabras, en español de México, sin tecnicismos que no definas.
+Al final hazme una pregunta para comprobar que entendí.
+```
+
+Fíjate en las cuatro partes: **contexto, tarea, formato y cierre**. Con eso ya estás por encima de la mayoría de las conversaciones.
+
+## Hábitos que te ahorran problemas
+
+- **Pregunta por qué.** Si una respuesta te convence demasiado rápido, pide el razonamiento. Si no puedes explicarlo con tus palabras, aún no lo entiendes.
+- **Verifica lo que importa.** Fechas, nombres, enlaces, versiones de librerías, dosis, leyes. Contrasta con la fuente oficial. Más sobre esto en [Alucinaciones y verificación](/fundamentos/alucinaciones-y-verificacion/).
+- **Itera.** La primera respuesta es un borrador. Pide "más corto", "con un ejemplo en Python", "explícalo como a alguien de preparatoria".
+- **No compartas lo que no debes.** Contraseñas, claves de API, datos de otras personas, información confidencial de tu trabajo. Revisa qué hace la plataforma con tus conversaciones en su política oficial de privacidad.
+- **Un chat largo se vuelve confuso.** Si ya pasaron muchos mensajes y la calidad baja, resume lo importante y empieza un chat nuevo. El motivo está en [Tokens y ventana de contexto](/fundamentos/tokens-y-ventana-de-contexto/).
+
+<Callout tipo="warning" titulo="Claude no es una fuente primaria">
+Para tareas escolares o profesionales, úsalo para entender, practicar y revisar. Cita y consulta siempre la fuente original. Si algo suena demasiado perfecto, desconfía y comprueba.
+</Callout>
+
+## Qué puedes pedirle hoy
+
+Tres ideas para probar en tu primera sesión:
+
+```text
+Hazme un plan de estudio de una semana para aprender [TEMA]. Tengo [HORAS] por día. Para cada día dame un objetivo, una actividad práctica y cómo sabré que lo logré.
+```
+
+```text
+Voy a pegarte un texto. Resúmelo en cinco viñetas y luego dime tres preguntas que un profesor podría hacer sobre él. Texto: [PEGA AQUÍ]
+```
+
+```text
+Quiero aprender a programar. Hazme preguntas, una por una, para saber mi nivel y mis intereses. Cuando termines, recomiéndame por dónde empezar.
+```
+
+## Ejercicio
+
+1. Elige un concepto que te cueste (por ejemplo, qué es una variable o qué es una derivada).
+2. Pide la explicación con la plantilla de cuatro partes.
+3. Responde la pregunta final de Claude y pídele que califique tu respuesta.
+4. Pregunta: "¿Qué error común cometen quienes aprenden esto?".
+5. Escribe tú, sin mirar, un resumen de tres líneas. Compáralo con lo que dijo Claude.
+
+## Qué sigue
+
+- Siguiente pieza: [Prompts que funcionan con Claude](/ia/aprende/claude-prompts-que-funcionan/).
+- Para usar Claude como tutor y no como máquina de respuestas: [Cómo aprender a programar con IA sin copiar y pegar](/ia/aprende/aprender-sin-copiar/).
+- Para entender los nombres de los modelos: [Modelos de Claude: familias y cómo elegir](/ia/aprende/modelos-de-claude-como-elegir/).

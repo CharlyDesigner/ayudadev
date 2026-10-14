@@ -1,0 +1,110 @@
+---
+titulo: 'Agrupa una lista de objetos'
+descripcion: 'Escribe agruparPor(lista, clave) para organizar objetos según el valor de una propiedad, con reduce. Un clásico para trabajar datos reales. Nivel intermedio.'
+tema: javascript
+nivel: intermedio
+tiempo: 15
+conceptos: ['objetos', 'reduce', 'operador ??=']
+publicado: 2026-10-14
+orden: 11
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Cuenta las palabras de un texto](/retos/js-contar-palabras/). Referencia útil: [hoja de arreglos y objetos](/hojas/javascript-arreglos-y-objetos-metodos/).
+
+## El reto
+
+Escribe `agruparPor(lista, clave)`. Recibe un arreglo de objetos y el nombre de una propiedad. Devuelve un objeto cuyas llaves son los valores de esa propiedad y cuyos valores son arreglos con los elementos que la comparten.
+
+```js
+const personas = [
+  { nombre: 'Ana', ciudad: 'Puebla' },
+  { nombre: 'Luis', ciudad: 'Oaxaca' },
+  { nombre: 'Marta', ciudad: 'Puebla' },
+];
+
+agruparPor(personas, 'ciudad');
+// {
+//   Puebla: [ { nombre: 'Ana', ... }, { nombre: 'Marta', ... } ],
+//   Oaxaca: [ { nombre: 'Luis', ... } ]
+// }
+```
+
+## Reglas
+
+- No modifiques la lista original.
+- Resuélvelo con `reduce`.
+- Funciona con cualquier propiedad, no solo `ciudad`.
+
+## Pistas
+
+<Pista n={1}>
+
+`reduce` recibe una función y un valor inicial. Aquí el valor inicial es un objeto vacío `{}` que irás llenando.
+
+</Pista>
+
+<Pista n={2}>
+
+Para cada elemento, saca `elemento[clave]`. Si ese grupo aún no existe, créalo como arreglo vacío; después agrega el elemento.
+
+</Pista>
+
+<Pista n={3}>
+
+El operador `??=` asigna solo si el valor actual es `null` o `undefined`: `(grupos[valor] ??= []).push(elemento)` crea el grupo y lo usa en la misma línea.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `agrupar.js` y ejecútala con `node agrupar.js`.
+
+```js
+// Agrupa una lista de objetos según el valor de una propiedad
+function agruparPor(lista, clave) {
+  return lista.reduce((grupos, elemento) => {
+    const valor = elemento[clave];
+    (grupos[valor] ??= []).push(elemento);
+    return grupos;
+  }, {});
+}
+
+const personas = [
+  { nombre: 'Ana', ciudad: 'Puebla' },
+  { nombre: 'Luis', ciudad: 'Oaxaca' },
+  { nombre: 'Marta', ciudad: 'Puebla' },
+];
+
+console.log(agruparPor(personas, 'ciudad'));
+```
+
+Salida:
+
+```text
+{
+  Puebla: [
+    { nombre: 'Ana', ciudad: 'Puebla' },
+    { nombre: 'Marta', ciudad: 'Puebla' }
+  ],
+  Oaxaca: [ { nombre: 'Luis', ciudad: 'Oaxaca' } ]
+}
+```
+
+Cómo funciona: `reduce` recorre la lista y arrastra el objeto `grupos`. En cada vuelta calcula la llave (`valor`), crea el arreglo si no existe con `??=` y empuja el elemento. Al final devuelve `grupos`. La lista original no se toca porque solo la leemos.
+
+Nota: las versiones recientes de JavaScript incluyen `Object.groupBy(lista, fn)` que hace algo parecido. Conviene saber hacerlo a mano para entender cómo funciona por dentro.
+
+</Solucion>
+
+## Variaciones
+
+- Acepta como segundo argumento una función en vez de un nombre: `agruparPor(personas, p => p.ciudad)`.
+- En lugar de los objetos completos, guarda solo los nombres de cada grupo.
+- Devuelve cuántos elementos tiene cada grupo: `{ Puebla: 2, Oaxaca: 1 }`.
+
+Siguiente reto: [Implementa debounce](/retos/js-debounce/).

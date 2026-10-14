@@ -1,0 +1,90 @@
+---
+titulo: 'Agrupa anagramas'
+descripcion: 'Dada una lista de palabras, junta las que son anagramas entre sí usando diccionarios. Un ejercicio corto para pensar en llaves. Nivel principiante.'
+tema: python
+nivel: principiante
+tiempo: 15
+conceptos: ['diccionarios', 'cadenas', 'listas por comprensión']
+publicado: 2026-10-14
+orden: 30
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, repasa la [guía de Python](/guias/python/) y la [hoja de estructuras de datos de Python](/hojas/python-estructuras-de-datos/).
+
+## El reto
+
+Dos palabras son anagramas si usan exactamente las mismas letras: `roma` y `amor`. Escribe `agrupar_anagramas(palabras)`. Recibe una lista de palabras y devuelve una lista de grupos. Cada grupo es una lista de palabras que son anagramas entre sí. Solo devuelve grupos de dos o más palabras.
+
+```python
+agrupar_anagramas(["roma", "amor", "mora", "casa", "saca", "perro"])
+# [['roma', 'amor', 'mora'], ['casa', 'saca']]
+```
+
+## Reglas
+
+- Mayúsculas y minúsculas no importan (`Roma` y `amor` son anagramas).
+- Mantén las palabras en el orden en que aparecen.
+- No uses librerías externas.
+
+## Pistas
+
+<Pista n={1}>
+
+Si ordenas alfabéticamente las letras de dos anagramas, obtienes el mismo resultado: `roma` y `amor` dan `amor`.
+
+</Pista>
+
+<Pista n={2}>
+
+Esa versión ordenada sirve como **llave** de un diccionario. El valor es la lista de palabras que comparten esa llave.
+
+</Pista>
+
+<Pista n={3}>
+
+`sorted("roma")` devuelve una lista de letras; únelas con `"".join(...)`. Con `defaultdict(list)` de `collections` no necesitas revisar si la llave existe.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `anagramas.py` y ejecútala con `python anagramas.py`.
+
+```python
+# Agrupa palabras que son anagramas entre sí
+from collections import defaultdict
+
+
+def agrupar_anagramas(palabras):
+    grupos = defaultdict(list)
+    for palabra in palabras:
+        llave = "".join(sorted(palabra.lower()))   # mismas letras, mismo orden
+        grupos[llave].append(palabra)
+    return [g for g in grupos.values() if len(g) > 1]
+
+
+print(agrupar_anagramas(["roma", "amor", "mora", "casa", "saca", "perro"]))
+```
+
+Salida:
+
+```text
+[['roma', 'amor', 'mora'], ['casa', 'saca']]
+```
+
+Cómo funciona: cada palabra se convierte a minúsculas, sus letras se ordenan y se unen otra vez. Esa llave es igual para todos los anagramas. `defaultdict(list)` crea una lista vacía la primera vez que aparece una llave. Al final nos quedamos con los grupos de más de una palabra. Como los diccionarios de Python conservan el orden de inserción, los grupos salen en el orden en que aparecieron.
+
+</Solucion>
+
+## Variaciones
+
+- Haz que `Año` y `Ano` se traten como iguales (investiga el módulo `unicodedata`).
+- Devuelve también las palabras sin pareja, en un grupo aparte.
+- Cambia la llave por un conteo de letras con `collections.Counter` y compara el rendimiento con listas largas.
+
+Siguiente reto: [Valida paréntesis balanceados](/retos/py-parentesis-balanceados/).

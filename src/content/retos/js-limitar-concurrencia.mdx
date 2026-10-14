@@ -1,0 +1,116 @@
+---
+titulo: 'Limita la concurrencia de tareas asíncronas'
+descripcion: 'Ejecuta muchas tareas asíncronas con un máximo de N a la vez y devuelve los resultados en orden. Un patrón real para llamadas a APIs. Nivel avanzado.'
+tema: javascript
+nivel: avanzado
+tiempo: 30
+conceptos: ['promesas', 'async/await', 'concurrencia', 'Promise.all']
+publicado: 2026-10-14
+orden: 13
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Implementa debounce](/retos/js-debounce/). Lectura recomendada: [Concurrencia y asincronía](/fundamentos/concurrencia-y-asincronia/).
+
+## El reto
+
+Tienes 100 enlaces que descargar. Si lanzas las 100 peticiones al mismo tiempo, el servidor puede rechazarte. Si las haces una por una, tardas demasiado. Lo razonable: máximo unas cuantas a la vez.
+
+Escribe `ejecutarConLimite(tareas, limite)`:
+
+- `tareas` es un arreglo de funciones que devuelven una promesa.
+- `limite` es el máximo de tareas corriendo al mismo tiempo.
+- Devuelve una promesa con un arreglo de resultados **en el mismo orden** que `tareas`, aunque terminen en otro orden.
+
+```js
+const resultados = await ejecutarConLimite(tareas, 2);
+// ['A', 'B', 'C', 'D', 'E'] y nunca hubo más de 2 tareas activas
+```
+
+## Reglas
+
+- Cuando termina una tarea, debe arrancar la siguiente de inmediato.
+- No uses librerías.
+- Los resultados conservan el orden original.
+
+## Pistas
+
+<Pista n={1}>
+
+Crea `limite` "trabajadores". Cada trabajador es una función `async` que repite: tomar la siguiente tarea pendiente, ejecutarla y guardar su resultado, hasta que no queden tareas.
+
+</Pista>
+
+<Pista n={2}>
+
+Comparte un contador `siguiente` entre los trabajadores. Cada uno hace `const i = siguiente++` **antes** de esperar (`await`), así dos trabajadores nunca toman la misma tarea.
+
+</Pista>
+
+<Pista n={3}>
+
+Guarda cada resultado en `resultados[i]`, no con `push`, para conservar el orden. Al final espera a todos los trabajadores con `Promise.all`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `pool.mjs` (la extensión `.mjs` permite usar `await` al nivel superior) y ejecútala con `node pool.mjs`.
+
+```js
+// Ejecuta tareas asíncronas con un máximo de "limite" al mismo tiempo
+async function ejecutarConLimite(tareas, limite) {
+  const resultados = new Array(tareas.length);
+  let siguiente = 0;
+
+  async function trabajador() {
+    while (siguiente < tareas.length) {
+      const i = siguiente++; // reservamos la tarea antes de esperar
+      resultados[i] = await tareas[i]();
+    }
+  }
+
+  const trabajadores = Array.from({ length: Math.min(limite, tareas.length) }, trabajador);
+  await Promise.all(trabajadores);
+  return resultados;
+}
+
+// Prueba: cada tarea espera un rato y registramos cuántas corren a la vez
+let activas = 0;
+let maximo = 0;
+const tarea = (nombre, ms) => async () => {
+  activas++;
+  maximo = Math.max(maximo, activas);
+  await new Promise((r) => setTimeout(r, ms));
+  activas--;
+  return nombre;
+};
+
+const tareas = [tarea('A', 60), tarea('B', 20), tarea('C', 40), tarea('D', 10), tarea('E', 30)];
+const resultados = await ejecutarConLimite(tareas, 2);
+console.log('resultados:', resultados);
+console.log('máximo simultáneo:', maximo);
+```
+
+Salida:
+
+```text
+resultados: [ 'A', 'B', 'C', 'D', 'E' ]
+máximo simultáneo: 2
+```
+
+Cómo funciona: `Array.from({ length: n }, trabajador)` arranca `n` trabajadores a la vez. JavaScript ejecuta un solo hilo, pero cada `await` cede el turno, así que los trabajadores avanzan de forma intercalada. Como `siguiente++` ocurre antes del `await`, dos trabajadores nunca eligen la misma tarea. Cuando uno termina, vuelve al `while` y toma la siguiente, de modo que siempre hay `limite` tareas activas hasta que se acaban. `Promise.all` espera a que todos terminen.
+
+</Solucion>
+
+## Variaciones
+
+- Si una tarea falla, captura el error y guárdalo en su posición en vez de cancelar todo.
+- Agrega un parámetro opcional para reintentar una tarea hasta tres veces.
+- Úsalo con `fetch` real para descargar varias páginas de una API de práctica y mide el tiempo con distintos límites.
+
+Cuando termines, pasa al proyecto [Gestor de notas en la terminal con Node.js](/proyectos/notas-en-terminal-con-node/).

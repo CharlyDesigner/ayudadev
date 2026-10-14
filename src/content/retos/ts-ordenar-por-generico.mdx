@@ -1,0 +1,121 @@
+---
+titulo: 'Ordena con genéricos y keyof'
+descripcion: 'Escribe ordenarPor para cualquier lista de objetos, sin mutar el original y con error de compilación si la clave no existe. Usa T y K extends keyof T.'
+tema: typescript
+nivel: intermedio
+tiempo: 20
+conceptos: ['genéricos', 'keyof', 'restricciones']
+publicado: 2026-10-14
+orden: 21
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Modela éxito y error con tipos](/retos/ts-resultado-tipado/). Guía de apoyo: [TypeScript desde cero](/guias/typescript/).
+
+## El reto
+
+Escribe `ordenarPor(lista, clave)` con estas condiciones:
+
+- Funciona con una lista de **cualquier** tipo de objeto.
+- `clave` solo puede ser el nombre de una propiedad que exista en ese objeto. Si escribes una que no existe, el **compilador** debe marcar error.
+- Devuelve una lista nueva, ordenada de menor a mayor. La original no cambia.
+
+```ts
+interface Libro {
+  titulo: string;
+  paginas: number;
+}
+
+const libros: Libro[] = [
+  { titulo: 'Redes', paginas: 180 },
+  { titulo: 'Algoritmos', paginas: 320 },
+  { titulo: 'Bases de datos', paginas: 250 },
+];
+
+ordenarPor(libros, 'paginas'); // Redes, Bases de datos, Algoritmos
+ordenarPor(libros, 'titulo');  // Algoritmos, Bases de datos, Redes
+ordenarPor(libros, 'autor');   // Error de compilación
+```
+
+## Reglas
+
+- Modo estricto, sin `any`.
+- No uses `lista.sort()` directamente sobre la lista recibida: modificaría el original.
+
+## Pistas
+
+<Pista n={1}>
+
+Usa dos parámetros de tipo: `T` para el tipo de los elementos y `K` para la clave. Escríbelos como `<T, K extends keyof T>`.
+
+</Pista>
+
+<Pista n={2}>
+
+`keyof T` es la unión de los nombres de propiedades de `T`. Con `K extends keyof T`, el compilador solo acepta nombres que existan.
+
+</Pista>
+
+<Pista n={3}>
+
+Copia la lista con `[...lista]` antes de ordenar. En la función de `sort` devuelve `-1`, `1` o `0` comparando `a[clave]` con `b[clave]`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `ordenar.ts` y ejecútala con `node ordenar.ts`.
+
+```ts
+// Ordena sin modificar la lista original, y solo acepta claves que existan
+function ordenarPor<T, K extends keyof T>(lista: T[], clave: K): T[] {
+  return [...lista].sort((a, b) => {
+    if (a[clave] < b[clave]) return -1;
+    if (a[clave] > b[clave]) return 1;
+    return 0;
+  });
+}
+
+interface Libro {
+  titulo: string;
+  paginas: number;
+}
+
+const libros: Libro[] = [
+  { titulo: 'Redes', paginas: 180 },
+  { titulo: 'Algoritmos', paginas: 320 },
+  { titulo: 'Bases de datos', paginas: 250 },
+];
+
+console.log(ordenarPor(libros, 'paginas').map((l) => l.titulo));
+console.log(ordenarPor(libros, 'titulo').map((l) => l.titulo));
+console.log(libros[0].titulo); // la lista original no cambió
+
+// ordenarPor(libros, 'autor'); // Error de compilación: 'autor' no existe en Libro
+```
+
+Salida:
+
+```text
+[ 'Redes', 'Bases de datos', 'Algoritmos' ]
+[ 'Algoritmos', 'Bases de datos', 'Redes' ]
+Redes
+```
+
+Si descomentas la última línea y corres `npx tsc --noEmit --strict ordenar.ts`, el compilador responde algo como: el argumento `'autor'` no es asignable al parámetro de tipo `keyof Libro`.
+
+Cómo funciona: `T` se infiere de la lista (`Libro`) y `K` de la clave que pasas. La restricción `K extends keyof T` es lo que impide claves inexistentes. `[...lista]` crea una copia superficial, así que `sort` modifica la copia. La comparación con `<` y `>` funciona con números y con textos.
+
+</Solucion>
+
+## Variaciones
+
+- Agrega un tercer parámetro `orden: 'asc' | 'desc'` con valor por defecto `'asc'`.
+- Haz que los textos se comparen con `localeCompare('es')` para respetar acentos.
+- Escribe `pluck(lista, clave)` que devuelva solo los valores de esa propiedad, con el tipo correcto `T[K][]`.
+
+Cuando termines, pasa al proyecto [Gestor de notas en la terminal con Node.js](/proyectos/notas-en-terminal-con-node/) y conviértelo a TypeScript como reto extra.

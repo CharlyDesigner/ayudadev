@@ -1,0 +1,140 @@
+---
+titulo: 'Deshacer en Git sin miedo'
+descripcion: 'En un repositorio de práctica, descarta cambios, deshaz un commit con revert y recupera trabajo perdido con reflog. Aprende a equivocarte con seguridad.'
+tema: git
+nivel: intermedio
+tiempo: 25
+conceptos: ['restore', 'revert', 'reset', 'reflog']
+publicado: 2026-10-14
+orden: 50
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, revisa la [guía de Git](/guias/git/) y la [hoja de comandos esenciales](/hojas/git-comandos-esenciales/). Los comandos de este reto afectan solo a un repositorio de práctica que vas a crear.
+
+## El reto
+
+Vas a crear un repositorio de juguete con un historial de tres commits, el último con un error, y resolver tres situaciones:
+
+1. **Cambios sin commit.** Modificaste `notas.txt` y te arrepentiste. Descarta el cambio.
+2. **Un commit malo.** El último commit agregó una línea que no debía existir. Deshazlo **sin borrar el historial**.
+3. **Trabajo perdido.** Con un `reset --hard` movido de más, "perdiste" dos commits. Recupéralos.
+
+Primero, crea el repositorio con este script (guárdalo como `preparar.sh` y ejecútalo con `bash preparar.sh`; en Windows usa Git Bash):
+
+```bash
+#!/bin/bash
+# Crea un repositorio de práctica con un historial listo para romperse
+set -e
+rm -rf practica-git && mkdir practica-git && cd practica-git
+git init -q -b main
+git config user.name "Estudiante" && git config user.email "estudiante@example.com"
+git config core.autocrlf false
+echo "uno" > notas.txt && git add . && git commit -qm "Primera nota"
+echo "dos" >> notas.txt && git commit -qam "Segunda nota"
+echo "CONTRASENA=123" >> notas.txt && git commit -qam "Agrega nota con error"
+echo "Repositorio listo. Historial:"
+git log --format="%s"
+```
+
+Salida del script:
+
+```text
+Repositorio listo. Historial:
+Agrega nota con error
+Segunda nota
+Primera nota
+```
+
+Entra con `cd practica-git` y resuelve las tres partes.
+
+## Reglas
+
+- Trabaja solo dentro de `practica-git`.
+- En la parte 2 no uses `reset`: el historial debe conservar el commit malo y agregar uno que lo revierte.
+- Después de cada parte, comprueba con `git log --format="%s"` y `git status --short`.
+
+## Pistas
+
+<Pista n={1}>
+
+Parte 1: haz un cambio de prueba con `echo "texto" >> notas.txt` y mira `git status --short`. El comando para volver el archivo al último commit es `git restore`.
+
+</Pista>
+
+<Pista n={2}>
+
+Parte 2: `git revert` crea un commit **nuevo** que deshace los cambios de otro. Usa `--no-edit` para aceptar el mensaje por defecto. Es la opción segura cuando el commit ya se compartió.
+
+</Pista>
+
+<Pista n={3}>
+
+Parte 3: haz `git reset --hard HEAD~2` para "perder" dos commits. Luego mira `git reflog`: guarda a dónde apuntó `HEAD` y te dice dónde estabas. Para volver, mueve la rama a la posición anterior con `git reset --hard "HEAD@{1}"`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Ejecuta esto dentro de `practica-git`:
+
+```bash
+# Parte 1: descartar cambios sin commit
+echo "texto de prueba" >> notas.txt
+git status --short            #  M notas.txt
+git restore notas.txt
+git status --short            # sin salida: el árbol está limpio
+
+# Parte 2: deshacer el commit malo sin borrar historia
+git revert --no-edit HEAD
+git log --format="%s"
+cat notas.txt
+
+# Parte 3: perder y recuperar
+git reset --hard HEAD~2
+git log --format="%s"
+git reflog --format="%h %gs" | head -4
+git reset --hard "HEAD@{1}"
+git log --format="%s"
+```
+
+Lo que verás:
+
+```text
+Revert "Agrega nota con error"
+Agrega nota con error
+Segunda nota
+Primera nota
+```
+
+y el contenido de `notas.txt` vuelve a ser:
+
+```text
+uno
+dos
+```
+
+Después del `reset --hard HEAD~2`, el historial se queda con solo `Segunda nota` y `Primera nota`. Pero el reflog todavía recuerda el estado anterior: `git reset --hard "HEAD@{1}"` lo restaura, y `git log` vuelve a mostrar los cuatro commits.
+
+Qué aprendiste:
+
+- `git restore archivo` descarta cambios **sin commit**. Es destructivo: esos cambios no vuelven.
+- `git revert` deshace un commit con otro commit. Es seguro en ramas compartidas.
+- `git reset --hard` mueve la rama y modifica tus archivos. Puede hacerte "perder" commits, pero `git reflog` registra los movimientos de `HEAD` y suele permitir recuperarlos mientras no se haya limpiado.
+- En PowerShell, escribe `"HEAD@{1}"` entre comillas, porque las llaves tienen significado especial.
+
+Un detalle importante: el commit malo contenía `CONTRASENA=123`. Hacer `revert` quita la línea del archivo, **pero la contraseña sigue en el historial**. Si un secreto real llega a un commit, considéralo comprometido: cámbialo en el servicio correspondiente. Reescribir el historial es otra técnica, delicada y fuera del alcance de este reto.
+
+</Solucion>
+
+## Variaciones
+
+- Crea una rama `prueba`, haz un commit, vuelve a `main` y borra la rama. Recupérala con el reflog.
+- Usa `git stash` para guardar cambios sin commit y luego `git stash pop` para recuperarlos.
+- Corrige solo el mensaje del último commit con `git commit --amend` (solo si aún no lo compartes).
+
+Sigue con el proyecto [Control de gastos en Python con SQLite](/proyectos/control-de-gastos-en-python/) y haz commits pequeños mientras avanzas.

@@ -1,0 +1,150 @@
+---
+titulo: 'Claude Code: instalación y tu primer día'
+descripcion: 'Instala Claude Code en Windows, macOS o Linux, inicia sesión, haz tus primeras preguntas y un primer cambio seguro con git. Nivel principiante.'
+categoria: codigo
+nivel: principiante
+tiempoLectura: 12
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 30
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Claude Code es un agente de programación que trabaja desde tu terminal (y también en editores, app de escritorio y web). Lee tu proyecto, propone cambios, los aplica con tu permiso y corre comandos. Esta pieza te lleva de cero a tu primer cambio revisado. La ficha corta está en [Claude Code](/ia/claude-code/); aquí vamos paso a paso.
+
+Los comandos de instalación vienen de la [documentación oficial](https://code.claude.com/docs/en/quickstart), que es la fuente que debes consultar si algo cambia.
+
+## Qué necesitas antes
+
+- Una **terminal**. Si nunca usaste una, lee [Terminal explicada](/fundamentos/terminal-explicada/) y la [guía oficial de terminal](https://code.claude.com/docs/en/terminal-guide).
+- Un **proyecto** con código (puede ser uno pequeño tuyo).
+- Una **cuenta compatible**: una suscripción de Claude o una cuenta de la consola de Anthropic. Qué incluye cada opción lo ves en [claude.com/pricing](https://claude.com/pricing). No asumimos que haya plan gratuito: consúltalo ahí.
+- **git** instalado. En Windows nativo, la documentación recomienda [Git for Windows](https://git-scm.com/downloads/win) para que Claude Code pueda usar la herramienta Bash; sin él, usa PowerShell.
+
+## Instalar
+
+<Pasos>
+
+1. **Windows (PowerShell).** Reconoces PowerShell porque el prompt empieza con `PS C:\`. Ejecuta: `irm https://claude.ai/install.ps1 | iex`
+2. **macOS, Linux o WSL.** Ejecuta: `curl -fsSL https://claude.ai/install.sh | bash`
+3. **Alternativas.** Homebrew (`brew install --cask claude-code`) o WinGet (`winget install Anthropic.ClaudeCode`). Esas instalaciones no se actualizan solas.
+4. El instalador no muestra progreso mientras descarga. Cuando termine, **abre una terminal nueva** y escribe `claude --version`.
+5. Si responde con un número de versión, listo. Si dice que `claude` no se reconoce, falta agregarlo al PATH: sigue la sección de [solución de problemas de instalación](https://code.claude.com/docs/en/troubleshoot-install).
+
+</Pasos>
+
+<Callout tipo="warning" titulo="Lee antes de pegar comandos que descargan scripts">
+Estos comandos descargan y ejecutan un script. Hazlo solo con las direcciones que aparecen en la documentación oficial, copiadas de allí, nunca desde un video, un chat o un sitio desconocido.
+</Callout>
+
+## Tu primera sesión
+
+<Pasos>
+
+1. En la terminal, entra a tu proyecto: `cd mi-proyecto`.
+2. Escribe `claude` y presiona Enter.
+3. La primera vez te pide iniciar sesión. Sigue los pasos en el navegador. Después queda guardada.
+4. Verás la versión, el modelo actual y la carpeta de trabajo. Escribe `/help` para ver los comandos.
+5. Para salir, escribe `/exit`.
+
+</Pasos>
+
+Si estás dentro de una carpeta que no es un proyecto, Claude Code igualmente funciona, pero tendrá menos que leer. Para practicar, usa una carpeta con código.
+
+## Pregunta antes de cambiar
+
+El mejor primer día es de **solo lectura**. Pide cosas que no modifican nada:
+
+```text
+¿Qué hace este proyecto y en qué lenguaje está?
+```
+
+```text
+Explícame la estructura de carpetas. Para cada carpeta importante dime qué contiene.
+```
+
+```text
+¿Dónde está el punto de entrada y cómo se ejecuta el proyecto?
+```
+
+```text
+¿Hay algo en este código que pueda fallar con entradas vacías? Muéstrame dónde, sin cambiar nada.
+```
+
+Aprendes cómo piensa la herramienta y detectas si entiende tu proyecto. Si responde algo incorrecto, corrige y aclara: lo que escribas se queda en el contexto de la sesión.
+
+## Tu primer cambio, con red de seguridad
+
+Antes de pedir cambios, protege tu trabajo con git:
+
+```bash
+git status
+git add -A
+git commit -m "Punto de partida antes de Claude Code"
+```
+
+Si no sabes git, aprende lo básico en la [guía de Git](/guias/git/) o en la [hoja de comandos esenciales](/hojas/git-comandos-esenciales/). Con ese commit, siempre puedes volver al punto anterior.
+
+Ahora pide algo pequeño y concreto:
+
+```text
+Agrega una función que valide que el título no esté vacío. Explícame el cambio antes de aplicarlo y escribe una prueba.
+```
+
+Qué pasa después:
+
+1. Claude Code propone una edición y **te pregunta** si la aplica.
+2. Lee el cambio. Si no lo entiendes, escribe tu duda en lugar de aprobar.
+3. Acepta, corre las pruebas o el programa tú mismo y verifica.
+4. Revisa qué cambió con `git diff` (o con `/diff` dentro de Claude Code).
+5. Si te gusta, haz commit. Si no, regresa con `/rewind` o con `git restore .` (este último descarta todos los cambios sin commit, úsalo con cuidado).
+
+Los permisos y los modos están explicados en [Permisos y seguridad en Claude Code](/ia/aprende/claude-code-permisos-y-seguridad/).
+
+## Atajos que usarás todos los días
+
+| Qué haces | Cómo |
+| --- | --- |
+| Ver comandos | `/help` o escribir `/` |
+| Empezar de cero sin cerrar la terminal | `/clear` |
+| Cambiar el modo de permisos | `Shift+Tab` |
+| Detener a Claude a mitad de una acción | `Esc` |
+| Deshacer cambios y volver a un punto | `Esc` dos veces o `/rewind` |
+| Continuar la conversación más reciente | `claude -c` al abrir la terminal |
+| Elegir una conversación anterior | `claude -r` o `/resume` |
+| Hacer una consulta de una sola vez | `claude -p "tu pregunta"` |
+
+La lista completa está en la [referencia de comandos](https://code.claude.com/docs/en/commands). También tienes una [hoja de referencia de Claude Code](/hojas/claude-code-comandos-y-atajos/) en AyudaDev.
+
+## Hábitos para aprender, no solo para terminar
+
+- **Tú escribes lo importante.** Pide explicaciones y pistas; deja que Claude Code haga lo repetitivo.
+- **Un cambio pequeño por vez.** Es más fácil revisar y deshacer.
+- **Explica con tus palabras lo que aprobaste.** Si no puedes, pregunta antes.
+- **Verifica siempre.** Ejecuta pruebas, abre la app, lee el diff.
+- **No compartas secretos.** Claves, contraseñas y archivos `.env` no deben estar al alcance del agente. Más en la siguiente pieza.
+
+## Problemas frecuentes
+
+- **`claude` no se reconoce:** abre una terminal nueva; si persiste, revisa el PATH según la [guía de instalación](https://code.claude.com/docs/en/troubleshoot-install).
+- **Pegaste el comando de PowerShell en CMD (o al revés):** cada error tiene su explicación en la documentación; revisa en qué consola estás.
+- **No te deja iniciar sesión:** confirma que tu cuenta tenga acceso compatible en la [página de precios](https://claude.com/pricing).
+- **Se vuelve lento o confuso:** el contexto se llenó. Usa `/clear` entre tareas distintas.
+- **Hizo más de lo que pediste:** sé específico sobre el alcance ("solo el archivo `src/notas.js`") y revisa el diff.
+
+## Ejercicio
+
+1. Instala Claude Code y comprueba `claude --version`.
+2. Elige un proyecto tuyo pequeño y haz un commit de punto de partida.
+3. Abre `claude` y haz tres preguntas de solo lectura sobre el proyecto.
+4. Pide un cambio mínimo con prueba y revisa el diff.
+5. Acepta solo si puedes explicar el cambio. Haz commit con un mensaje claro.
+6. Cierra con `/exit` y vuelve con `claude -c`.
+
+## Qué sigue
+
+- [Flujo de trabajo con Claude Code](/ia/aprende/claude-code-flujo-de-trabajo/): explorar, planear, programar y verificar.
+- [Permisos y seguridad](/ia/aprende/claude-code-permisos-y-seguridad/): decide qué puede hacer sin preguntarte.
+- Curso oficial gratuito: [Claude Code 101](https://academy.claude.com/courses/claude-code-101) (en inglés).

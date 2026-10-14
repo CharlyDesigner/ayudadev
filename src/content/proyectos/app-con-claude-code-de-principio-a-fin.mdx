@@ -1,0 +1,87 @@
+---
+titulo: 'Una app pequeña con Claude Code, de principio a fin'
+descripcion: 'Construye tarjetas de estudio en JavaScript puro trabajando con Claude Code: especificación, CLAUDE.md, pruebas, revisión y commits. Aprende el flujo completo.'
+nivel: intermedio
+tiempo: '1 a 2 días'
+tecnologias: ['html5', 'css3', 'javascript', 'git']
+temas: ['javascript', 'inteligencia-artificial', 'git']
+habilidades: ['flujo con Claude Code', 'especificaciones', 'pruebas', 'revisión de código', 'git']
+publicado: 2026-10-14
+orden: 50
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué vas a construir
+
+Una app web de **tarjetas de estudio**: creas tarjetas con pregunta y respuesta, las repasas y marcas cuáles sabías. Se guarda en el navegador con `localStorage`. Lo importante no es la app sino el **proceso**: vas a usar Claude Code como lo haría un equipo, con especificación, pruebas, revisión y commits pequeños, sin dejar de entender cada línea.
+
+## Requisitos
+
+- Claude Code instalado y funcionando: [instalación y primer día](/ia/aprende/claude-code-instalacion-y-primer-dia/).
+- Haber leído [Flujo de trabajo con Claude Code](/ia/aprende/claude-code-flujo-de-trabajo/) y [Permisos y seguridad](/ia/aprende/claude-code-permisos-y-seguridad/).
+- Saber lo básico de JavaScript y del DOM: [guía de JavaScript](/guias/javascript/).
+- Git funcionando: [guía de Git](/guias/git/).
+- Una cuenta compatible con Claude Code. Revisa los planes en [claude.com/pricing](https://claude.com/pricing).
+
+<Callout tipo="info" titulo="Aquí el código lo escribe Claude">
+Este proyecto es distinto a los demás: la mayor parte del código lo propone Claude Code. Por eso hay más pasos de **especificar, verificar y revisar**. Tu trabajo es dirigir, entender y decidir.
+</Callout>
+
+## Pasos sugeridos
+
+<Pasos>
+
+1. **Prepara el terreno.** Crea la carpeta `tarjetas`, ejecuta `git init` y haz un primer commit con un `README.md` de una línea. Configura permisos conservadores: modo manual o `acceptEdits`, y deniega la lectura de `.env` (aunque no lo uses, es buen hábito).
+2. **Deja que Claude te entreviste.** Abre `claude` y escribe: "Quiero construir una app web de tarjetas de estudio con JavaScript puro, sin dependencias. Hazme preguntas, de una en una, sobre funciones, casos límite y decisiones de diseño que yo no haya considerado. Cuando terminemos, escribe una especificación en SPEC.md". Responde con tus propias decisiones.
+3. **Lee y corrige `SPEC.md`.** Debe nombrar archivos, funciones y casos límite, y decir qué queda fuera del alcance. Borra lo que no quieras. Haz commit.
+4. **Escribe un `CLAUDE.md` corto.** Ver el reto [Escribe un CLAUDE.md útil](/retos/ia-escribe-tu-claude-md/). Incluye cómo correr las pruebas, el estilo y qué no tocar. Haz commit.
+5. **Abre una sesión limpia con `/clear`** y entra en modo plan: "Lee SPEC.md y propón un plan de implementación en pasos pequeños, cada uno con su prueba. No cambies nada todavía".
+6. **Implementa por partes.** Un paso del plan a la vez: "Implementa el paso 1, escribe la prueba y córrela". Pide la lógica pura (crear, borrar y barajar tarjetas) en un archivo separado de la interfaz para poder probarla.
+7. **Verifica tú.** Corre las pruebas, abre `index.html` en el navegador y prueba a mano casos raros: tarjeta vacía, mil caracteres, recargar la página.
+8. **Revisa el diff.** Antes de cada commit, mira `git diff` o `/diff`. Elige una línea que no entiendas y pregúntale a Claude por qué está ahí.
+9. **Pide una segunda revisión.** En una sesión nueva o con un subagente revisor ([Subagentes](/ia/aprende/claude-code-subagentes/)): "Revisa el diff de esta rama contra SPEC.md. Reporta solo hallazgos que afecten la correctitud o incumplan la especificación".
+10. **Cierra con commits claros** y anota en el README qué hiciste tú y qué hizo Claude.
+
+</Pasos>
+
+## Plantillas para copiar y adaptar
+
+Un `CLAUDE.md` de partida para este proyecto:
+
+```markdown
+# Tarjetas de estudio
+
+## Comandos
+- Pruebas: `node --test` (usa el ejecutor de pruebas de Node)
+
+## Reglas
+- JavaScript puro con módulos; sin dependencias ni frameworks.
+- La lógica va en `src/logica.js` y la interfaz en `src/interfaz.js`.
+- Toda función de `logica.js` lleva pruebas en `tests/`.
+- Textos de la interfaz en español de México.
+- No hagas push ni agregues archivos fuera del proyecto.
+```
+
+Un prompt de verificación para cada paso:
+
+```text
+Implementa solo el paso [N] del plan. Escribe primero la prueba, córrela para ver que falla, implementa el código y vuelve a correrla. Muéstrame la salida de las pruebas y un resumen de qué archivos cambiaste.
+```
+
+## Retos extra
+
+- Agrega un modo de repaso que priorice las tarjetas que fallaste más (repetición espaciada básica).
+- Exporta e importa tus tarjetas como JSON.
+- Agrega un hook que corra `node --test` cuando Claude diga que terminó ([Hooks](/ia/aprende/claude-code-hooks/)).
+- Crea una skill `/nueva-tarjeta` que te pida pregunta y respuesta y las agregue.
+- Haz que la app funcione sin conexión como página instalable (investiga los service workers).
+
+## Cómo publicarlo
+
+- Sube el repositorio con `SPEC.md` y `CLAUDE.md` incluidos: muestran cómo trabajaste.
+- En el README, escribe una sección "Cómo usé IA" con tres cosas: qué le pediste, qué corregiste tú y qué aprendiste. Es lo que más valoran quienes revisan portafolios, junto con [las prácticas de un buen repositorio](/carrera/github-como-curriculum/).
+- Publícalo con GitHub Pages, ya que es una página estática. Más ideas en [Cloud, hosting y despliegue](/fundamentos/cloud-hosting-y-despliegue/).
+
+Repasa toda la serie en la ruta [Claude y Claude Code, de cero a avanzado](/rutas/claude-y-claude-code-de-cero-a-avanzado/).

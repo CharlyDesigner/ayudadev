@@ -1,0 +1,167 @@
+---
+titulo: 'Hooks en Claude Code: reglas que se cumplen siempre'
+descripcion: 'Qué es un hook, cómo se configura en settings.json, qué recibe por stdin, qué significa el código de salida 2 y un hook en Node que bloquea comandos peligrosos.'
+categoria: agentes
+nivel: avanzado
+tiempoLectura: 14
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 35
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Las instrucciones de `CLAUDE.md` son consejos: Claude suele seguirlas, pero no está obligado. Un **hook** es distinto: es un comando tuyo que Claude Code ejecuta en un momento exacto de su ciclo de trabajo, siempre. La documentación oficial lo resume así: control determinista, en vez de depender de que el modelo decida hacer algo. Fuentes: [guía de hooks](https://code.claude.com/docs/en/hooks-guide) y [referencia de hooks](https://code.claude.com/docs/en/hooks), que tiene los detalles completos y cambia con las versiones.
+
+Prerrequisitos: [permisos y seguridad](/ia/aprende/claude-code-permisos-y-seguridad/) y [CLAUDE.md](/ia/aprende/claude-code-claude-md/).
+
+## Cuándo usar un hook
+
+- Formatear el código después de cada edición.
+- Bloquear escrituras en carpetas delicadas o comandos peligrosos.
+- Avisarte cuando Claude necesita tu atención.
+- Registrar los comandos que se ejecutaron.
+- Exigir que pasen las pruebas antes de dar una tarea por terminada.
+
+Si lo que quieres es una preferencia ("prefiero funciones cortas"), eso va en `CLAUDE.md`. Si es una regla sin excepciones, hook.
+
+## Anatomía de un hook
+
+Se configuran en JSON, en uno de estos archivos de configuración:
+
+| Archivo | Alcance |
+| --- | --- |
+| `~/.claude/settings.json` | Todos tus proyectos |
+| `.claude/settings.json` | Este proyecto (se puede subir a git) |
+| `.claude/settings.local.json` | Solo para ti en este proyecto |
+
+La estructura tiene tres niveles: el **evento**, el **filtro (matcher)** y el **manejador**.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/proteger.mjs\"" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Eventos principales (hay más en la referencia):
+
+| Evento | Cuándo ocurre |
+| --- | --- |
+| `SessionStart` y `SessionEnd` | Al abrir y cerrar una sesión |
+| `UserPromptSubmit` | Cuando envías un mensaje |
+| `PreToolUse` | **Antes** de que Claude use una herramienta; puede bloquearla |
+| `PostToolUse` | Después de que una herramienta terminó bien |
+| `Notification` | Cuando Claude espera tu atención |
+| `Stop` | Cuando Claude termina de responder |
+| `SubagentStop` | Cuando termina un subagente |
+
+El **matcher** filtra por nombre de herramienta: `Bash`, `Edit|Write` (lista con barra vertical), `*` para todas. Las herramientas de MCP se llaman `mcp__servidor__herramienta`.
+
+## Qué recibe tu comando y cómo responde
+
+Para hooks de tipo `command`:
+
+- **Entrada:** Claude Code envía un JSON por **stdin** con datos del evento. En eventos de herramientas incluye `tool_name` y `tool_input`. Por ejemplo, para una llamada a Bash: `tool_input.command`; para editar: `tool_input.file_path`.
+- **Salida por código de salida:**
+  - `0`: todo bien; sigue el flujo normal.
+  - `2`: **bloqueo**. En eventos que pueden bloquearse (como `PreToolUse`) la acción se detiene y lo que escribas en stderr se le muestra a Claude como motivo.
+  - Cualquier otro código: error que no bloquea; la acción continúa.
+
+La documentación advierte: si quieres **imponer** una regla, usa `exit 2`. Un `exit 1` no bloquea.
+
+## Ejemplo práctico: un hook en Node que bloquea lo peligroso
+
+Los ejemplos de la documentación usan `jq` en scripts de Bash. Para que funcione igual en Windows, macOS y Linux sin instalar nada más, aquí lo hacemos con Node.js, que la propia documentación menciona como alternativa para leer JSON.
+
+<Ejemplo numero={1} titulo="Hook PreToolUse que bloquea rm -rf y archivos protegidos" archivo=".claude/hooks/proteger.mjs" ejecutar="node proteger.mjs < evento.json" salida="Bloqueado: rm -rf no está permitido en este proyecto. (código de salida 2)">
+
+```js
+// Hook PreToolUse: bloquea comandos peligrosos y ediciones a archivos protegidos.
+// Claude Code manda los datos del evento como JSON por stdin.
+let texto = '';
+for await (const trozo of process.stdin) texto += trozo;
+
+const evento = JSON.parse(texto);
+const entrada = evento.tool_input ?? {};
+
+const comandoPeligroso = /\brm\s+-[a-z]*(rf|fr)\b/i;
+const archivoProtegido = /(^|\/)\.env(\.|$)|\/migraciones\//;
+
+if (evento.tool_name === 'Bash' && comandoPeligroso.test(entrada.command ?? '')) {
+  console.error('Bloqueado: rm -rf no está permitido en este proyecto.');
+  process.exit(2); // 2 = bloquear; el mensaje de stderr le llega a Claude
+}
+
+// Las rutas de Windows usan "\": las pasamos a "/" para comparar igual
+const ruta = (entrada.file_path ?? '').replaceAll('\\', '/');
+if (/^(Edit|Write)$/.test(evento.tool_name) && archivoProtegido.test(ruta)) {
+  console.error(`Bloqueado: ${ruta} es un archivo protegido.`);
+  process.exit(2);
+}
+
+process.exit(0); // 0 = sin objeción; sigue el flujo normal de permisos
+```
+
+El script lee el JSON, revisa si es un `rm -rf` o una edición de `.env` o de una carpeta `migraciones`, y bloquea con código 2. Todo lo demás pasa. El archivo `evento.json` de la prueba contiene, por ejemplo, `{"tool_name": "Bash", "tool_input": {"command": "rm -rf build"}}`. Lo probamos con nueve entradas de ejemplo (comandos y rutas con `/` y con `\`): bloqueó las cinco peligrosas y dejó pasar las cuatro inofensivas.
+
+</Ejemplo>
+
+### Cómo instalarlo
+
+1. Guarda el script como `.claude/hooks/proteger.mjs` en tu proyecto.
+2. Agrega la configuración JSON de arriba a `.claude/settings.json`.
+3. Prueba el script a mano antes de confiar en él (el ejemplo muestra cómo).
+4. Abre Claude Code y escribe `/hooks` para ver qué hooks están activos.
+5. Pídele a Claude que ejecute `rm -rf` sobre una carpeta de prueba y comprueba que te muestra el bloqueo.
+
+Si ves "command not found", usa rutas absolutas o `$CLAUDE_PROJECT_DIR` para el script, como en la configuración de arriba, según la sección de problemas de la guía oficial. Y recuerda que un `matcher` solo decide cuándo se ejecuta; el que bloquea es el script.
+
+## Otras ideas con el mismo patrón
+
+- **PostToolUse con `Edit|Write`** para correr un formateador sobre el archivo editado (extrae `tool_input.file_path` del JSON).
+- **Notification** para recibir un aviso de escritorio cuando Claude te necesita; la guía oficial trae los comandos para macOS, Linux y Windows.
+- **Stop** para impedir que Claude se detenga si las pruebas fallan. Hay una precaución: revisa en la referencia el campo que evita bucles infinitos, porque un hook que siempre bloquea el cierre nunca terminará.
+
+## Cuidados importantes
+
+<Callout tipo="warning" titulo="Un hook ejecuta código en tu máquina">
+Se ejecuta con tus permisos. Lee cada hook antes de usarlo y nunca copies configuraciones de fuentes que no conoces. Un hook en el `settings.json` de un repositorio ajeno podría hacer cosas que no esperas; Claude Code te pide confiar en la carpeta antes de ejecutar algunas configuraciones, pero la responsabilidad de leer es tuya.
+</Callout>
+
+- **Los hooks no reemplazan los permisos.** Una decisión de un hook no salta las reglas de denegar ni las de preguntar.
+- **Mantén los hooks rápidos.** Corren en medio del trabajo; uno lento enlentece todo.
+- **Escribe a stderr los mensajes de bloqueo**, explicando qué hacer en su lugar. Claude los usa para corregir el rumbo.
+- **Prueba con entradas simuladas.** Un hook roto puede bloquear de más o no bloquear nada.
+- **Elige un solo estilo de respuesta por hook:** código de salida o JSON. No los mezcles.
+
+## Errores comunes
+
+- **Usar `exit 1` esperando bloquear.** Solo `exit 2` bloquea en eventos bloqueables.
+- **Olvidar que el JSON viene por stdin**, no como argumentos del comando.
+- **Rutas de Windows con `\`** que no coinciden con tus patrones. Normalízalas como en el ejemplo.
+- **Matchers demasiado amplios** que disparan el hook en todo.
+- **Poner secretos en el comando del hook** que luego se sube a git.
+
+## Ejercicio
+
+1. Copia `proteger.mjs` a un proyecto de práctica y pruébalo a mano con tres entradas de ejemplo.
+2. Agrega el bloque `hooks` a `.claude/settings.json`.
+3. En Claude Code, intenta editar un archivo `.env` de prueba y observa el bloqueo.
+4. Añade una regla tuya (por ejemplo, bloquear escrituras en `dist/`) y prueba de nuevo.
+5. Escribe un segundo hook de `PostToolUse` que registre en un archivo las rutas editadas.
+
+## Qué sigue
+
+- [MCP: conecta Claude Code con tus herramientas](/ia/aprende/claude-code-mcp/).
+- [Subagentes](/ia/aprende/claude-code-subagentes/).
+- Guía oficial para ir más lejos: [Automate actions with hooks](https://code.claude.com/docs/en/hooks-guide) (en inglés).

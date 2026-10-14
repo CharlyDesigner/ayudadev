@@ -1,0 +1,115 @@
+---
+titulo: 'Ranking por ciudad con funciones de ventana'
+descripcion: 'Asigna un lugar a cada vendedor dentro de su ciudad con RANK() OVER y PARTITION BY, y entiende qué pasa con los empates. Nivel avanzado.'
+tema: sql
+nivel: avanzado
+tiempo: 25
+conceptos: ['funciones de ventana', 'PARTITION BY', 'RANK']
+publicado: 2026-10-14
+orden: 41
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Encuentra a los clientes que más gastan](/retos/sql-clientes-que-mas-gastan/). Las funciones de ventana existen en SQLite desde la versión 3.25. Si tu Python es reciente, ya las tienes.
+
+## El reto
+
+Con la tabla `ventas (vendedor, ciudad, monto)`, muestra para cada fila su **lugar dentro de su ciudad**, según el monto, del más alto al más bajo. Si dos vendedores empatan, comparten lugar.
+
+Datos:
+
+| vendedor | ciudad | monto |
+| --- | --- | --- |
+| Ana | Puebla | 500 |
+| Luis | Puebla | 700 |
+| Marta | Puebla | 700 |
+| Pedro | Oaxaca | 300 |
+| Sofía | Oaxaca | 900 |
+
+Resultado esperado (ordenado por ciudad, lugar y vendedor):
+
+```text
+('Oaxaca', 'Sofía', 900, 1)
+('Oaxaca', 'Pedro', 300, 2)
+('Puebla', 'Luis', 700, 1)
+('Puebla', 'Marta', 700, 1)
+('Puebla', 'Ana', 500, 3)
+```
+
+## Reglas
+
+- No uses `GROUP BY`: todas las filas deben seguir apareciendo.
+- El lugar se calcula con una función de ventana.
+- Fíjate en lo que pasa después de un empate.
+
+## Pistas
+
+<Pista n={1}>
+
+Una función de ventana calcula algo sobre un conjunto de filas relacionadas **sin colapsarlas**, a diferencia de `GROUP BY`.
+
+</Pista>
+
+<Pista n={2}>
+
+La forma general es `FUNCION() OVER (PARTITION BY columna ORDER BY columna)`. `PARTITION BY` reinicia el cálculo por ciudad y `ORDER BY` define cómo se ordena dentro de cada una.
+
+</Pista>
+
+<Pista n={3}>
+
+`RANK()` deja huecos después de un empate; `DENSE_RANK()` no. Y `ROW_NUMBER()` nunca repite números. Prueba las tres y compara.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdalo como `ranking.py` y ejecútalo con `python ranking.py`.
+
+```python
+import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.executescript("""
+CREATE TABLE ventas (vendedor TEXT, ciudad TEXT, monto INTEGER);
+INSERT INTO ventas VALUES
+  ('Ana', 'Puebla', 500), ('Luis', 'Puebla', 700), ('Marta', 'Puebla', 700),
+  ('Pedro', 'Oaxaca', 300), ('Sofía', 'Oaxaca', 900);
+""")
+
+consulta = """
+SELECT ciudad, vendedor, monto,
+       RANK() OVER (PARTITION BY ciudad ORDER BY monto DESC) AS lugar
+FROM ventas
+ORDER BY ciudad, lugar, vendedor;
+"""
+
+for fila in con.execute(consulta):
+    print(fila)
+```
+
+Salida:
+
+```text
+('Oaxaca', 'Sofía', 900, 1)
+('Oaxaca', 'Pedro', 300, 2)
+('Puebla', 'Luis', 700, 1)
+('Puebla', 'Marta', 700, 1)
+('Puebla', 'Ana', 500, 3)
+```
+
+Cómo funciona: `PARTITION BY ciudad` separa las filas en dos ventanas, Puebla y Oaxaca. Dentro de cada una, `ORDER BY monto DESC` define el orden y `RANK()` numera. Luis y Marta empatan en el lugar 1, y Ana recibe el lugar 3, no el 2, porque `RANK()` salta números después de un empate. Con `DENSE_RANK()` Ana sería 2. El `ORDER BY` final solo ordena la presentación.
+
+</Solucion>
+
+## Variaciones
+
+- Cambia `RANK()` por `DENSE_RANK()` y por `ROW_NUMBER()` y explica la diferencia.
+- Muestra solo el mejor vendedor de cada ciudad (pista: envuelve la consulta en una subconsulta o CTE y filtra `lugar = 1`).
+- Agrega una columna con el total de la ciudad usando `SUM(monto) OVER (PARTITION BY ciudad)`.
+
+Más práctica en la biblioteca: [recursos de SQL](/biblioteca/sql/).

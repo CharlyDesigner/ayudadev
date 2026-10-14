@@ -1,0 +1,116 @@
+---
+titulo: 'Encuentra a los clientes que más gastan'
+descripcion: 'Con JOIN, GROUP BY y HAVING, saca los clientes con al menos dos pedidos y ordénalos por lo gastado. Se corre con Python y SQLite. Nivel intermedio.'
+tema: sql
+nivel: intermedio
+tiempo: 20
+conceptos: ['JOIN', 'GROUP BY', 'HAVING', 'agregaciones']
+publicado: 2026-10-14
+orden: 40
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes, revisa la [guía de SQL](/guias/sql/) y la [hoja de JOINs y agregaciones](/hojas/sql-joins-y-agregaciones/).
+
+## El reto
+
+Tienes dos tablas: `clientes` y `pedidos`. Escribe una consulta que devuelva, para cada cliente que haya hecho **al menos 2 pedidos**: su nombre, cuántos pedidos hizo y cuánto gastó en total. Ordena de quien más gastó a quien menos.
+
+Datos de práctica:
+
+| clientes (id, nombre) | pedidos (id, cliente_id, total) |
+| --- | --- |
+| 1 Ana, 2 Luis, 3 Marta, 4 Pedro | (1, 1, 300), (2, 1, 450), (3, 2, 120), (4, 3, 200), (5, 3, 90), (6, 3, 60) |
+
+Resultado esperado:
+
+```text
+('Ana', 2, 750)
+('Marta', 3, 350)
+```
+
+Luis tiene un solo pedido y Pedro ninguno, así que no aparecen.
+
+## Reglas
+
+- Una sola consulta `SELECT`.
+- Usa alias claros para las columnas calculadas.
+- No filtres con `WHERE` lo que es una condición sobre un grupo.
+
+## Pistas
+
+<Pista n={1}>
+
+Para unir cada pedido con su cliente: `FROM clientes c JOIN pedidos p ON p.cliente_id = c.id`. Un `JOIN` normal descarta a los clientes sin pedidos, que es justo lo que quieres aquí.
+
+</Pista>
+
+<Pista n={2}>
+
+`GROUP BY c.id, c.nombre` junta todas las filas de un cliente. Con `COUNT(p.id)` y `SUM(p.total)` calculas cuántos pedidos y cuánto gastó.
+
+</Pista>
+
+<Pista n={3}>
+
+`WHERE` filtra filas **antes** de agrupar. Para filtrar grupos ya calculados (por ejemplo, "con 2 o más pedidos") se usa `HAVING`. Y `ORDER BY` puede usar el alias que creaste en `SELECT`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Este archivo crea la base en memoria con Python, que ya incluye SQLite. Guárdalo como `top_clientes.py` y ejecútalo con `python top_clientes.py`.
+
+```python
+import sqlite3
+
+con = sqlite3.connect(":memory:")
+con.executescript("""
+CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL);
+CREATE TABLE pedidos (
+  id INTEGER PRIMARY KEY,
+  cliente_id INTEGER NOT NULL REFERENCES clientes(id),
+  total INTEGER NOT NULL
+);
+INSERT INTO clientes (nombre) VALUES ('Ana'), ('Luis'), ('Marta'), ('Pedro');
+INSERT INTO pedidos (cliente_id, total) VALUES
+  (1, 300), (1, 450), (2, 120), (3, 200), (3, 90), (3, 60);
+""")
+
+consulta = """
+SELECT c.nombre,
+       COUNT(p.id)  AS pedidos,
+       SUM(p.total) AS gastado
+FROM clientes c
+JOIN pedidos p ON p.cliente_id = c.id
+GROUP BY c.id, c.nombre
+HAVING COUNT(p.id) >= 2
+ORDER BY gastado DESC;
+"""
+
+for fila in con.execute(consulta):
+    print(fila)
+```
+
+Salida:
+
+```text
+('Ana', 2, 750)
+('Marta', 3, 350)
+```
+
+Cómo funciona: el `JOIN` empareja pedidos con clientes. `GROUP BY` crea un grupo por cliente. Las funciones `COUNT` y `SUM` calculan por grupo. `HAVING COUNT(p.id) >= 2` descarta los grupos con menos de dos pedidos (Luis tiene uno). Pedro ni siquiera llega a formar un grupo: el `JOIN` normal deja fuera a quien no tiene pedidos. Por último `ORDER BY gastado DESC` ordena por el alias de la columna calculada. El orden lógico es: `FROM` y `JOIN`, `WHERE`, `GROUP BY`, `HAVING`, `SELECT`, `ORDER BY`.
+
+</Solucion>
+
+## Variaciones
+
+- Haz que Pedro aparezca con 0 pedidos y 0 gastado (usa `LEFT JOIN` y `COALESCE`).
+- Devuelve también el promedio por pedido con `AVG`.
+- Agrega una tabla `ciudades` y obtén el total gastado por ciudad.
+
+Siguiente reto: [Ranking con funciones de ventana](/retos/sql-ranking-con-ventanas/).

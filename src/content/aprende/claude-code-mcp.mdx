@@ -1,0 +1,153 @@
+---
+titulo: 'MCP en Claude Code: conecta Claude con tus herramientas'
+descripcion: 'Qué es el Model Context Protocol, cómo agregar servidores remotos y locales con claude mcp add, los alcances, el archivo .mcp.json y cómo usarlo con seguridad.'
+categoria: agentes
+nivel: avanzado
+tiempoLectura: 12
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 36
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Por defecto, Claude Code trabaja con tus archivos y tu terminal. Pero tu trabajo real incluye otras cosas: tickets, bases de datos, diseños, documentos. El **Model Context Protocol (MCP)** es un estándar abierto para conectar herramientas de IA con esas fuentes y servicios. Según la [documentación oficial de MCP en Claude Code](https://code.claude.com/docs/en/mcp), un servidor MCP expone capacidades (un gestor de tareas, una base de datos, un panel de monitoreo) y Claude puede leerlas y usarlas directamente, en lugar de trabajar con datos que tú pegas.
+
+Sitio del protocolo: [modelcontextprotocol.io](https://modelcontextprotocol.io). Antes de seguir, lee [Agentes de IA](/fundamentos/agentes-de-ia/) y [Permisos y seguridad](/ia/aprende/claude-code-permisos-y-seguridad/), porque MCP amplía lo que el agente puede tocar.
+
+## La idea en una imagen
+
+```text
+Tú  ->  Claude Code  ->  servidor MCP  ->  servicio externo
+        (cliente)        (traductor)        (Notion, base de datos, etc.)
+```
+
+Un **servidor MCP** es un programa que ofrece "herramientas" con nombre y parámetros. Claude las ve, decide cuándo usarlas y te pide permiso cuando corresponde. Hay servidores remotos (en internet, normalmente con inicio de sesión) y locales (un proceso que corre en tu máquina).
+
+## Agregar un servidor
+
+### Remoto (HTTP)
+
+Es el tipo recomendado para servicios en la nube. Sintaxis y ejemplo de la documentación:
+
+```bash
+claude mcp add --transport http <nombre> <url>
+
+claude mcp add --transport http notion https://mcp.notion.com/mcp
+```
+
+Si el servicio requiere sesión, dentro de Claude Code escribe `/mcp` y sigue el flujo de autenticación (OAuth). También puedes usar `claude mcp login <nombre>` desde la terminal.
+
+### Local (stdio)
+
+Un proceso en tu computadora:
+
+```bash
+claude mcp add --transport stdio <nombre> -- <comando> [argumentos]
+```
+
+El doble guion `--` separa las opciones de Claude de las del servidor. Si tu servidor necesita variables de entorno, usa `--env CLAVE=valor` (y pon otra opción, como `--transport stdio`, entre `--env` y el nombre del servidor, como indica la documentación).
+
+### Gestionar
+
+```bash
+claude mcp list              # servidores configurados y su estado
+claude mcp get notion        # detalles de uno
+claude mcp remove notion     # quitar
+```
+
+Dentro de una sesión, `/mcp` muestra el estado de cada servidor, permite autenticar, reconectar o desactivar uno sin borrar su configuración.
+
+## Alcances: ¿para quién vale la configuración?
+
+| Alcance | Opción | Dónde se guarda | ¿Se comparte? |
+| --- | --- | --- | --- |
+| Local (por defecto) | `--scope local` | `~/.claude.json`, bajo la ruta del proyecto | No |
+| Proyecto | `--scope project` | `.mcp.json` en la raíz del proyecto | Sí, por git |
+| Usuario | `--scope user` | `~/.claude.json` | No, pero vale en todos tus proyectos |
+
+Si el mismo servidor está definido en varios alcances, gana el de más prioridad: local, luego proyecto, luego usuario.
+
+## El archivo `.mcp.json`
+
+Para compartir servidores con tu equipo, usa el alcance de proyecto. Claude Code crea `.mcp.json` en la raíz:
+
+```json
+{
+  "mcpServers": {
+    "documentacion": {
+      "type": "http",
+      "url": "https://example.com/mcp"
+    }
+  }
+}
+```
+
+Y un servidor local se describe así:
+
+```json
+{
+  "mcpServers": {
+    "mi-servidor": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["servidor.mjs"],
+      "env": {
+        "MI_CLAVE": "${MI_CLAVE}"
+      }
+    }
+  }
+}
+```
+
+Fíjate en `${MI_CLAVE}`: el archivo guarda solo el **nombre** de la variable de entorno, no el valor. La documentación permite esa expansión en `command`, `args`, `env`, `url` y `headers`, y también valores por defecto con `${VAR:-valor}`. Así subes el archivo a git sin filtrar secretos.
+
+## Seguridad: lo más importante de esta pieza
+
+Un servidor MCP es **código y datos que entran a tu sesión**. La documentación oficial pide, entre otras cosas:
+
+<Callout tipo="warning" titulo="Confía solo en servidores que conoces">
+Los servidores que traen contenido externo (páginas, tickets, correos) pueden exponerte a inyección de prompts: texto escrito por alguien más con instrucciones dirigidas al agente. Un servidor local también ejecuta código en tu máquina. Instala solo servidores de fuentes verificables.
+</Callout>
+
+- **Aprobación de servidores de proyecto:** al abrir un proyecto con `.mcp.json`, Claude Code te pregunta antes de usar sus servidores. Lee qué son antes de aceptar. Puedes reiniciar esas decisiones con `claude mcp reset-project-choices`.
+- **Menor privilegio:** crea credenciales de solo lectura cuando sea posible (por ejemplo, un usuario de base de datos que no pueda modificar).
+- **Secretos fuera de los archivos:** variables de entorno, no valores escritos en `.mcp.json`.
+- **Revisa qué herramientas ofrece** y niega las que no necesites con reglas de permisos. Las herramientas de MCP se nombran `mcp__servidor__herramienta`, por lo que puedes escribir reglas como `mcp__miservidor__*`.
+- **En modo no interactivo** (`claude -p`) los servidores de proyecto se cargan sin preguntar; ten cuidado en automatizaciones.
+
+## Cuándo sí y cuándo no usar MCP
+
+| Usa MCP cuando... | Mejor otra opción cuando... |
+| --- | --- |
+| Necesitas leer o escribir en un servicio con credenciales (tickets, diseño, base de datos) | Existe una herramienta de línea de comandos conocida, como `gh` para GitHub: la documentación señala que las CLI son muy eficientes en contexto |
+| Quieres compartir la conexión con tu equipo | Es una instrucción o un procedimiento: usa una [skill](/ia/aprende/claude-code-skills/) |
+| Quieres que Claude consulte datos vivos | Solo necesitas documentación estática: dale el enlace o el archivo |
+
+También ten presente que cada servidor agrega herramientas al contexto, y demasiadas hacen más lenta y confusa la sesión. Conecta solo las que usas.
+
+## Construir tu propio servidor
+
+El protocolo tiene SDK oficiales para varios lenguajes y una guía para construir servidores en [modelcontextprotocol.io](https://modelcontextprotocol.io). Un servidor propio te sirve para exponer a Claude algo específico de tu trabajo: consultar tus apuntes, tu base de datos de práctica o un servicio de tu escuela. En el proyecto [Tu primer servidor MCP](/proyectos/servidor-mcp-propio/) lo hacemos paso a paso.
+
+## Errores comunes
+
+- **Instalar servidores por moda** sin saber qué hacen ni con qué permisos.
+- **Escribir tokens en `.mcp.json`** y subirlos a git.
+- **No usar el doble guion `--`** en servidores locales y que Claude interprete mal las opciones.
+- **Esperar que todo funcione sin autenticación.** Si un servidor remoto muestra "necesita autenticación", entra a `/mcp`.
+- **Dejar conectado un servidor que ya no usas.** Quítalo con `claude mcp remove`.
+
+## Ejercicio
+
+1. Ejecuta `claude mcp list` y anota qué tienes configurado.
+2. Elige un servicio que uses y busca en su documentación oficial si ofrece servidor MCP.
+3. Si lo ofrece, agrégalo con el alcance `local` y autentica con `/mcp`.
+4. Pide a Claude una consulta de solo lectura y revisa qué herramienta usó y qué permiso pidió.
+5. Decide si lo quieres dejar. Si no, quítalo con `claude mcp remove`.
+
+## Qué sigue
+
+- [Subagentes](/ia/aprende/claude-code-subagentes/): delega tareas con contexto aislado.
+- Guía oficial para empezar rápido: [Inicio rápido de MCP](https://code.claude.com/docs/en/mcp-quickstart) (en inglés).
+- Proyecto: [Tu primer servidor MCP](/proyectos/servidor-mcp-propio/).

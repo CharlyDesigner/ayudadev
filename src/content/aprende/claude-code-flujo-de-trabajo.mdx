@@ -1,0 +1,117 @@
+---
+titulo: 'Flujo de trabajo con Claude Code: explorar, planear, programar, verificar'
+descripcion: 'Un método de cuatro fases para trabajar con Claude Code sin perder el control: modo plan, pruebas como verificación, gestión del contexto y cómo deshacer.'
+categoria: codigo
+nivel: intermedio
+tiempoLectura: 13
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 31
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Ya instalaste Claude Code y sabes pedir cambios pequeños ([instalación y primer día](/ia/aprende/claude-code-instalacion-y-primer-dia/)). Ahora aprendes el método que separa una sesión útil de una caótica. Está basado en las [buenas prácticas oficiales](https://code.claude.com/docs/en/best-practices) y en los [flujos comunes](https://code.claude.com/docs/en/common-workflows) de la documentación.
+
+## La idea central: el contexto es tu recurso más valioso
+
+Todo lo que ocurre en una sesión (tus mensajes, los archivos que lee, la salida de los comandos) ocupa espacio en la ventana de contexto. Según la documentación oficial, cuando se llena, el desempeño baja: puede olvidar instrucciones y cometer más errores. Casi todos los consejos de abajo existen para cuidar ese espacio. Si el tema es nuevo, lee [Tokens y ventana de contexto](/fundamentos/tokens-y-ventana-de-contexto/).
+
+## Fase 1: explorar
+
+Antes de cambiar nada, deja que lea y entienda. Lo ideal es hacerlo en **modo plan**: Claude lee archivos y responde preguntas sin editar.
+
+<Pasos>
+
+1. Pulsa `Shift+Tab` hasta ver el indicador de modo plan, o abre la sesión con `claude --permission-mode plan`. También puedes usar `/plan`.
+2. Pide que investigue algo concreto: "lee `src/auth` y explícame cómo se manejan las sesiones".
+3. Haz preguntas hasta que tú entiendas el código. Si tú no entiendes, no puedes revisar lo que venga después.
+
+</Pasos>
+
+Para investigaciones grandes, pide que use subagentes: "usa un subagente para investigar cómo se renuevan los tokens". Así la lectura masiva no llena tu conversación principal. Más en [Subagentes](/ia/aprende/claude-code-subagentes/).
+
+## Fase 2: planear
+
+Pide un plan con archivos, orden de pasos y riesgos.
+
+```text
+Quiero agregar una opción para exportar las notas a un archivo de texto. ¿Qué archivos habría que tocar? ¿Qué casos límite ves? Dame un plan en pasos numerados y no cambies nada todavía.
+```
+
+Revisa el plan como si lo hubiera escrito un compañero. Corrige lo que no te convence. Según la documentación, el plan se puede abrir en tu editor con `Ctrl+G` para editarlo antes de seguir.
+
+Cuándo **no** hace falta planear: cuando el cambio cabe en una frase (un typo, un nombre de variable, una línea de log). Planear en esos casos solo agrega pasos.
+
+## Fase 3: implementar con una forma de verificar
+
+La práctica que más mejora los resultados es darle a Claude **algo que pueda ejecutar para saber si acertó**: pruebas, un build, un linter o un script.
+
+| En vez de pedir | Pide |
+| --- | --- |
+| "Haz una función que valide correos." | "Escribe `validarCorreo`. Casos: `ana@mail.com` es válido, `ana` no, `ana@.com` no. Escribe las pruebas, córrelas y arregla lo que falle." |
+| "El build falla." | "El build falla con este error: [ERROR]. Arréglalo de raíz, no silencies el error, y confirma que el build pasa." |
+| "Mejora la interfaz." | "Implementa este diseño [captura], toma una captura del resultado, compárala y lista las diferencias." |
+
+Pide **evidencia**, no solo "ya quedó": la salida de las pruebas, el comando que corrió y lo que devolvió. Revisar evidencia es más rápido que repetir todo tú.
+
+Si tu proyecto no tiene pruebas, empezar a escribirlas con Claude Code es una de las mejores inversiones. Revisa [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+
+## Fase 4: revisar y guardar
+
+1. Lee el diff con `/diff` o con `git diff`.
+2. Pregunta lo que no entiendas: "¿por qué hiciste este cambio aquí?".
+3. Haz commit tú, o pide: "haz commit con un mensaje descriptivo". Revisa el mensaje.
+4. Para una segunda opinión, abre otra sesión o un subagente y pídele que revise el diff con ojos frescos. La documentación oficial lo recomienda porque un revisor sin el historial no está sesgado por el razonamiento que produjo el cambio.
+
+## Controlar el contexto
+
+| Situación | Acción |
+| --- | --- |
+| Cambias a una tarea sin relación | `/clear` |
+| La conversación es larga pero quieres seguir | `/compact` (puedes añadir instrucciones: `/compact conserva la lista de archivos modificados`) |
+| Corregiste dos veces lo mismo y sigue mal | `/clear` y empieza con un prompt mejor que incluya lo aprendido |
+| Quieres ver qué ocupa espacio | `/context` |
+| Una pregunta rápida que no debe quedarse en el historial | `/btw tu pregunta` |
+
+## Rehacer y deshacer sin miedo
+
+- `Esc` detiene a Claude a mitad de acción sin perder el contexto.
+- `Esc` dos veces, o `/rewind`, abre el menú para restaurar la conversación, el código o ambos a un punto anterior. Cada mensaje tuyo crea un punto de control. Detalles en [checkpointing](https://code.claude.com/docs/en/checkpointing).
+- Los puntos de control solo cubren cambios hechos con las herramientas de edición de Claude. Lo que hagan comandos de shell no se registra. **No sustituyen a git.**
+
+Por eso: commit antes de empezar, commit cuando algo quedó bien.
+
+## Retomar el trabajo otro día
+
+- `claude -c` continúa la conversación más reciente en esa carpeta.
+- `claude -r` o `/resume` te deja elegir.
+- `/rename nombre-claro` ayuda a encontrarla después.
+
+## Errores de flujo y cómo evitarlos
+
+- **La sesión cajón de sastre:** mezclar tareas sin relación. Solución: `/clear`.
+- **Corregir una y otra vez:** el contexto se llena de intentos fallidos. Solución: reiniciar con un prompt más específico.
+- **Confiar sin verificar:** código que "se ve bien" pero falla en bordes. Solución: pruebas y evidencia.
+- **Investigar sin límite:** "investiga el proyecto" lee cientos de archivos. Solución: acotar o usar subagentes.
+- **Un `CLAUDE.md` gigante:** se ignora la mitad. Solución en [CLAUDE.md](/ia/aprende/claude-code-claude-md/).
+
+<Callout tipo="tip" titulo="Pídele que te entreviste">
+Para una función grande, escribe una descripción mínima y agrega: "Hazme preguntas, de una en una, sobre casos límite, diseño y decisiones que yo no haya considerado. Cuando terminemos, escribe una especificación en SPEC.md". Después abre una sesión limpia y pide que la implemente. La documentación oficial recomienda este patrón.
+</Callout>
+
+## Ejercicio
+
+1. Elige una mejora pequeña en un proyecto tuyo con git (por ejemplo, validar entradas).
+2. Haz commit de punto de partida.
+3. Entra en modo plan y pide a Claude Code que explore y proponga un plan.
+4. Corrige el plan, apruébalo y pide que implemente **con pruebas que él mismo corra**.
+5. Revisa el diff, pide una segunda revisión en una sesión nueva y haz commit.
+6. Escribe tres líneas: qué fase te ahorró más tiempo y en cuál te saltaste algo.
+
+## Qué sigue
+
+- [Permisos y seguridad](/ia/aprende/claude-code-permisos-y-seguridad/).
+- [CLAUDE.md: la memoria de tu proyecto](/ia/aprende/claude-code-claude-md/).
+- Si ya trabajas así con frecuencia: [Skills](/ia/aprende/claude-code-skills/) para empaquetar tus flujos.

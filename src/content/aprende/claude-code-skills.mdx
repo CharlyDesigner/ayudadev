@@ -1,0 +1,149 @@
+---
+titulo: 'Skills en Claude Code: flujos reutilizables'
+descripcion: 'Qué es una skill, dónde se guarda, cómo escribir un archivo SKILL.md, cuándo usar una skill en vez de CLAUDE.md y cómo invocarla con una barra diagonal.'
+categoria: agentes
+nivel: intermedio
+tiempoLectura: 10
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 34
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Un `CLAUDE.md` se carga siempre. Pero hay conocimiento que solo sirve a veces: cómo desplegar, cómo revisar un pull request, cómo escribir una nota de versión. Para eso existen las **skills**: instrucciones empaquetadas que Claude carga cuando hacen falta, o que tú invocas con `/nombre`. Esta pieza sigue la [documentación oficial de skills](https://code.claude.com/docs/en/skills), que se actualiza con frecuencia.
+
+Antes: [CLAUDE.md](/ia/aprende/claude-code-claude-md/).
+
+## Qué es y cuándo usarla
+
+Una skill es una carpeta con un archivo `SKILL.md`. El archivo tiene dos partes: un encabezado con datos (frontmatter) y las instrucciones en Markdown.
+
+Regla práctica:
+
+| Si la instrucción... | Ponla en... |
+| --- | --- |
+| Aplica a todo el proyecto, todo el tiempo | `CLAUDE.md` |
+| Solo importa en cierta parte del código | Una regla con `paths` en `.claude/rules/` |
+| Es un procedimiento de varios pasos que se usa de vez en cuando | Una skill |
+| Debe cumplirse siempre, sin excepciones | Un [hook](/ia/aprende/claude-code-hooks/) |
+
+## Dónde viven
+
+Según la documentación:
+
+| Alcance | Ruta |
+| --- | --- |
+| Personal (todos tus proyectos) | `~/.claude/skills/<nombre>/SKILL.md` |
+| Proyecto (se comparte por git) | `.claude/skills/<nombre>/SKILL.md` |
+| Plugin | dentro del plugin, invocada como `/plugin:skill` |
+
+Los archivos antiguos en `.claude/commands/<nombre>.md` siguen funcionando y crean el mismo comando `/nombre`.
+
+## Tu primera skill, paso a paso
+
+Vas a crear una skill personal que resume tus cambios sin commit y señala riesgos.
+
+<Pasos>
+
+1. Crea la carpeta: `~/.claude/skills/resumir-cambios/` (en Windows, dentro de tu carpeta de usuario, en `.claude\skills\resumir-cambios`).
+2. Dentro, crea el archivo `SKILL.md` con el contenido de abajo.
+3. Abre (o reinicia) una sesión de Claude Code en un proyecto con cambios sin commit.
+4. Escribe `/resumir-cambios`, o pregunta "¿qué cambié?" y Claude la cargará solo si la descripción encaja.
+5. Revisa el resultado y ajusta el texto de la skill hasta que sea lo que querías.
+
+</Pasos>
+
+```markdown
+---
+description: Resume los cambios sin commit y señala riesgos. Úsala cuando pidan saber qué cambió, un mensaje de commit o una revisión del diff.
+---
+
+## Cambios actuales
+
+!`git diff HEAD`
+
+## Instrucciones
+
+Resume los cambios de arriba en dos o tres viñetas. Después lista los riesgos que veas:
+falta de manejo de errores, valores escritos a mano, o pruebas que habría que actualizar.
+Si no hay cambios, di que no hay nada sin commit.
+```
+
+La línea que empieza con signo de exclamación y comando entre acentos graves se ejecuta **antes** de que Claude vea la skill, así que recibe el diff real dentro de sus instrucciones. Este es el ejemplo mínimo de la documentación oficial.
+
+## Los campos del encabezado
+
+Todos son opcionales, pero `description` es muy recomendable porque Claude la usa para decidir cuándo cargar la skill. Algunos campos útiles, de la documentación:
+
+| Campo | Para qué sirve |
+| --- | --- |
+| `name` | Nombre del comando; por defecto, el de la carpeta |
+| `description` | Qué hace y cuándo usarla; pon primero el caso principal |
+| `disable-model-invocation: true` | Solo tú puedes invocarla; úsalo en flujos con efectos (desplegar, borrar) |
+| `user-invocable: false` | Solo Claude la usa; no aparece en el menú de barra |
+| `allowed-tools` | Herramientas que puede usar sin pedir permiso mientras corre la skill |
+| `argument-hint` | Pista de autocompletado, por ejemplo `[número-de-issue]` |
+| `context: fork` | Corre la skill en un subagente aislado |
+
+Y dentro del texto puedes usar `$ARGUMENTS` para recibir lo que escribas después del nombre. Ejemplo, una skill manual para arreglar issues, adaptada del ejemplo oficial:
+
+```markdown
+---
+name: arreglar-issue
+description: Arregla un issue de GitHub
+disable-model-invocation: true
+---
+
+Analiza y arregla el issue de GitHub: $ARGUMENTS.
+
+1. Usa `gh issue view` para leer el issue.
+2. Entiende el problema y busca los archivos relevantes.
+3. Implementa el cambio y escribe pruebas.
+4. Corre las pruebas y el verificador de tipos.
+5. Muéstrame el diff y propón un mensaje de commit. No hagas push.
+```
+
+La invocas con `/arreglar-issue 1234`. Nota que el último paso pide **no hacer push**: tú decides cuándo publicar.
+
+## Buenas prácticas
+
+- **Una skill, un trabajo.** Si necesita dos descripciones, son dos skills.
+- **Descripción clara con el "cuándo".** "Úsala cuando..." ayuda a que Claude la cargue en el momento correcto.
+- **Pasos numerados y verificables**, con un criterio de término ("termina cuando pasen las pruebas").
+- **Efectos secundarios, siempre manuales.** Usa `disable-model-invocation: true` para desplegar, enviar o borrar.
+- **Comparte con el equipo** guardándola en `.claude/skills/` y subiéndola a git.
+- **Revísala como código.** Una skill descargada de un tercero puede contener instrucciones o comandos que no quieres ejecutar.
+
+<Callout tipo="warning" titulo="Las skills ejecutan lo que dicen">
+Una skill puede incluir comandos de shell y permisos preaprobados. Lee el `SKILL.md` completo antes de instalar uno que no escribiste tú y no copies carpetas de fuentes que no conoces.
+</Callout>
+
+## Ver y gestionar tus skills
+
+- `/skills` lista las skills disponibles y te deja ordenarlas.
+- Escribir `/` en el prompt muestra comandos y skills.
+- Claude puede ayudarte a escribirlas: "crea una skill que revise mis componentes con esta checklist: ...".
+
+## Errores comunes
+
+- **Instrucciones vagas** ("revisa todo bien"). Mejor una lista concreta.
+- **Poner en una skill lo que debe ser siempre.** Eso va en `CLAUDE.md` o en un hook.
+- **Descripciones que no dicen cuándo usarlas.** Claude no la cargará.
+- **Olvidar el primer renglón del archivo:** el encabezado debe empezar con `---` en la línea uno.
+- **Skills enormes.** Si ocupa páginas, divide en archivos de apoyo dentro de la misma carpeta.
+
+## Ejercicio
+
+1. Piensa en un procedimiento que repites (revisar un componente, preparar notas de versión, crear un reto).
+2. Escríbelo como lista de pasos numerados con un criterio de término.
+3. Conviértelo en `SKILL.md` con una buena `description`.
+4. Pruébalo con `/tu-skill` en un proyecto de práctica.
+5. Ajusta los pasos que Claude interpretó distinto a lo que querías.
+
+## Qué sigue
+
+- [Hooks](/ia/aprende/claude-code-hooks/): automatiza acciones que deben ocurrir siempre.
+- [Subagentes](/ia/aprende/claude-code-subagentes/): delega tareas en asistentes con contexto propio.
+- Mira cómo se organizan las extensiones en la guía oficial [Extend Claude Code](https://code.claude.com/docs/en/features-overview).

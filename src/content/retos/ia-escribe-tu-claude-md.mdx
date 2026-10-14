@@ -1,0 +1,108 @@
+---
+titulo: 'Escribe un CLAUDE.md útil'
+descripcion: 'Redacta un CLAUDE.md corto, concreto y verificable para un proyecto de ejemplo. Practica distinguir reglas útiles de frases vacías. Nivel intermedio.'
+tema: inteligencia-artificial
+nivel: intermedio
+tiempo: 20
+conceptos: ['CLAUDE.md', 'instrucciones verificables', 'contexto']
+publicado: 2026-10-14
+orden: 71
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes de empezar, lee [CLAUDE.md: la memoria de tu proyecto](/ia/aprende/claude-code-claude-md/). Reto anterior: [Reescribe tres prompts flojos](/retos/ia-reescribe-un-prompt-malo/).
+
+## El reto
+
+Este es un proyecto imaginario:
+
+> **Recetario**: app web hecha con JavaScript y Node.js. Las recetas se guardan en `datos/recetas.json`. El código del servidor está en `src/`, las pruebas en `tests/` y se corren con `npm test`. Para verificar todo antes de un commit se usa `npm run verificar`. El equipo escribe los textos de la interfaz en español de México. Hay un archivo `.env` con una clave de un servicio externo.
+
+Escribe un `CLAUDE.md` para él con **no más de 15 líneas** que cumpla con esto:
+
+- Cada línea es una instrucción concreta que se pueda comprobar.
+- Incluye los comandos que Claude no podría adivinar.
+- Protege el archivo `.env`.
+- No incluye frases vacías como "escribe código limpio".
+
+## Reglas
+
+- Usa encabezados y viñetas cortas.
+- Ninguna línea debe describir algo que se ve leyendo el código.
+- Ningún secreto en el archivo.
+
+## Pistas
+
+<Pista n={1}>
+
+Haz la prueba de cada línea: "Si la quito, ¿Claude se equivocaría?". Si la respuesta es no, bórrala.
+
+</Pista>
+
+<Pista n={2}>
+
+Reglas verificables suenan así: "Corre `npm test` antes de terminar", "Los textos de la interfaz van en español de México". Reglas vacías suenan así: "Haz buen código".
+
+</Pista>
+
+<Pista n={3}>
+
+Para el `.env`, una instrucción en `CLAUDE.md` es solo una petición. Piensa en qué otra herramienta de Claude Code garantizaría que no lo lea (revisa la pieza de [permisos](/ia/aprende/claude-code-permisos-y-seguridad/)).
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Una versión posible, de 12 líneas con contenido:
+
+```markdown
+# Recetario
+
+## Comandos
+- Pruebas: `npm test` (una sola: `npm test -- nombre`)
+- Verificación antes de commit: `npm run verificar`
+
+## Estructura
+- Servidor en `src/`, pruebas en `tests/`, datos en `datos/recetas.json`.
+
+## Reglas
+- Textos de la interfaz en español de México.
+- Toda función nueva en `src/` lleva una prueba en `tests/`.
+- No leas ni modifiques `.env`; usa las variables que ya existen.
+- No agregues dependencias sin preguntarme.
+- No hagas push: lo hago yo.
+```
+
+Por qué funciona:
+
+- Cada línea es comprobable: se puede ver si se corrió `npm test` o si los textos están en español.
+- Los **comandos** son lo que Claude no puede deducir leyendo el código.
+- La **estructura** ocupa una línea, porque el resto se ve en las carpetas.
+- No hay secretos: solo se menciona el nombre del archivo `.env`.
+- Hay un límite claro (dependencias, push) que evita sorpresas.
+
+Un detalle importante: la línea sobre `.env` es una **petición**. Para garantizarla, agrega además una regla de denegar en `.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "deny": ["Read(./.env)"]
+  }
+}
+```
+
+Las instrucciones de `CLAUDE.md` guían; las reglas de permisos, y los hooks, obligan.
+
+</Solucion>
+
+## Variaciones
+
+- Escribe el `CLAUDE.md` de uno de tus proyectos reales y pruébalo: abre una sesión nueva, pide un cambio y verifica qué reglas respetó.
+- Agrega una regla por carpeta en `.claude/rules/` que solo aplique a `tests/`.
+- Pídele a Claude que critique tu archivo con este prompt: "Revisa este CLAUDE.md y marca las líneas que son vagas, redundantes o que no cambiarían tu comportamiento".
+
+Cuando termines, aplica lo aprendido en el proyecto [Una app pequeña con Claude Code, de principio a fin](/proyectos/app-con-claude-code-de-principio-a-fin/).

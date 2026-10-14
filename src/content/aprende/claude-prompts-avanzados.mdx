@@ -1,0 +1,195 @@
+---
+titulo: 'Prompts avanzados con Claude'
+descripcion: 'Etiquetas XML, ejemplos, documentos largos, cadenas de prompts y cómo probar tus prompts con casos fijos. Nivel avanzado, con código que puedes correr.'
+categoria: prompts
+nivel: avanzado
+tiempoLectura: 14
+publicado: 2026-10-14
+herramientas: ['claude']
+orden: 13
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Si ya dominas lo básico de [Prompts que funcionan con Claude](/ia/aprende/claude-prompts-que-funcionan/), esta pieza te lleva al siguiente nivel: estructurar prompts largos, trabajar con varios documentos, encadenar pasos y, sobre todo, medir si un prompt es mejor que otro. Todo se apoya en la [guía oficial de prompting](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices), que cambia con cada generación de modelos: revísala de vez en cuando.
+
+## Estructura con etiquetas
+
+Cuando un prompt mezcla instrucciones, contexto, ejemplos y datos, las etiquetas evitan confusiones. La guía oficial recomienda usar nombres consistentes y descriptivos y anidarlas cuando el contenido tenga jerarquía.
+
+```text
+<instrucciones>
+Eres revisor de código. Revisa la función y reporta solo problemas de correctitud.
+Si no hay problemas, responde exactamente: SIN HALLAZGOS.
+</instrucciones>
+
+<criterios>
+- Maneja entradas vacías
+- No modifica sus argumentos
+</criterios>
+
+<codigo>
+function sumar(lista) { let t = 0; for (const n of lista) t += n; return t; }
+</codigo>
+```
+
+No existen etiquetas "oficiales" que debas memorizar. Lo que importa es que cada tipo de contenido tenga su etiqueta y que la uses igual en todos tus prompts.
+
+## Varios documentos y la pregunta al final
+
+Con material largo, la guía oficial recomienda poner los documentos arriba, la pregunta al final y envolver cada documento con su fuente. Así Claude distingue de dónde viene cada dato y tú puedes pedir citas.
+
+<Ejemplo numero={1} titulo="Armar un prompt con documentos en etiquetas" archivo="armar_prompt.py" ejecutar="python armar_prompt.py" salida='<documentos>
+  <documento indice="1">
+    <fuente>apuntes_clase1.txt</fuente>
+    <contenido>Una variable guarda un valor con un nombre.</contenido>
+  </documento>
+  <documento indice="2">
+    <fuente>apuntes_clase2.txt</fuente>
+    <contenido>Una función agrupa instrucciones y se puede reutilizar.</contenido>
+  </documento>
+</documentos>
+
+Haz un repaso de una página: primero cita las frases clave y luego explica cada una.'>
+
+```python
+# Arma un prompt largo con documentos en etiquetas y la pregunta al final
+documentos = {
+    "apuntes_clase1.txt": "Una variable guarda un valor con un nombre.",
+    "apuntes_clase2.txt": "Una función agrupa instrucciones y se puede reutilizar.",
+}
+
+pregunta = "Haz un repaso de una página: primero cita las frases clave y luego explica cada una."
+
+partes = ["<documentos>"]
+for i, (fuente, contenido) in enumerate(documentos.items(), start=1):
+    partes.append(f'  <documento indice="{i}">')
+    partes.append(f"    <fuente>{fuente}</fuente>")
+    partes.append(f"    <contenido>{contenido}</contenido>")
+    partes.append("  </documento>")
+partes.append("</documentos>")
+partes.append("")
+partes.append(pregunta)
+
+print("\n".join(partes))
+```
+
+El script solo genera el texto. Puedes pegar el resultado en el chat o enviarlo por la API. Generar prompts con código te asegura que el formato sea idéntico cada vez.
+
+</Ejemplo>
+
+Para tareas sobre documentos largos, agrega este paso: pide primero las citas relevantes y después la respuesta.
+
+```text
+Primero extrae, dentro de <citas>, las frases de los documentos que sean relevantes para la pregunta. Después responde dentro de <respuesta> usando solo esas citas. Si los documentos no contienen la información, dilo.
+```
+
+## Ejemplos que enseñan (few-shot)
+
+Los ejemplos son de las formas más fiables de fijar formato y tono. La guía oficial sugiere que sean relevantes, variados y estén envueltos en etiquetas para que no se confundan con instrucciones.
+
+```text
+Clasifica cada mensaje de soporte como URGENTE, NORMAL o SPAM. Responde solo con la etiqueta.
+
+<ejemplos>
+<ejemplo>
+<mensaje>No puedo entrar a mi cuenta y mañana presento mi proyecto</mensaje>
+<etiqueta>URGENTE</etiqueta>
+</ejemplo>
+<ejemplo>
+<mensaje>¿Tienen tutoriales de CSS?</mensaje>
+<etiqueta>NORMAL</etiqueta>
+</ejemplo>
+<ejemplo>
+<mensaje>Gana dinero rápido, entra a este enlace</mensaje>
+<etiqueta>SPAM</etiqueta>
+</ejemplo>
+</ejemplos>
+
+<mensaje>Se borró mi tarea y la entrego hoy</mensaje>
+```
+
+Incluye casos límite entre tus ejemplos. Si todos los ejemplos son fáciles, Claude fallará en los difíciles.
+
+## Cadenas de prompts: borrador, revisión, versión final
+
+Para resultados de calidad, divide el trabajo en pasos y revisa lo intermedio. La guía oficial menciona el patrón de autocorrección: generar un borrador, pedir una revisión contra criterios y refinar.
+
+```text
+Paso 1 (borrador): Escribe una explicación de [TEMA] para [AUDIENCIA].
+Paso 2 (revisión): Revisa el borrador contra estos criterios: (a) cada término técnico está definido, (b) hay un ejemplo, (c) no hay afirmaciones que no puedas respaldar. Lista los fallos.
+Paso 3 (final): Corrige solo los fallos de la lista y entrégame la versión final.
+```
+
+Puedes hacerlo en un solo chat, pidiendo un paso a la vez. Ventaja: puedes intervenir entre pasos y aprender qué mejoró cada uno.
+
+## Pide límites claros
+
+Cuando el trabajo es de código o de agentes, agrega límites explícitos:
+
+- **Alcance:** "modifica solo `src/utils.js`".
+- **Estilo:** "sigue el estilo de los archivos existentes; no agregues dependencias".
+- **Finalización:** "termina cuando pasen las pruebas y muéstrame la salida".
+- **Dudas:** "si falta información, pregunta antes de suponer".
+
+Estos mismos límites son los que después escribirás en un [CLAUDE.md](/ia/aprende/claude-code-claude-md/) cuando uses Claude Code.
+
+## Cómo saber si tu prompt es mejor: evaluación con casos fijos
+
+Cambiar un prompt "a ojo" engaña. Para comparar dos versiones, necesitas casos de prueba fijos y una regla para calificar.
+
+<Ejemplo numero={2} titulo="Calificar respuestas contra casos fijos" archivo="evaluar.py" ejecutar="python evaluar.py" salida="prompt_a: 2/3 aciertos
+prompt_b: 3/3 aciertos">
+
+```python
+# Casos fijos: entrada y etiqueta correcta
+casos = [
+    ("No puedo entrar y presento mañana", "URGENTE"),
+    ("¿Tienen tutoriales de CSS?", "NORMAL"),
+    ("Gana dinero rápido, entra aquí", "SPAM"),
+]
+
+# Respuestas que dio cada versión del prompt (aquí van pegadas a mano
+# o guardadas desde el chat; en un proyecto real vendrían de la API)
+respuestas = {
+    "prompt_a": ["URGENTE", "NORMAL", "NORMAL"],
+    "prompt_b": ["URGENTE", "NORMAL", "SPAM"],
+}
+
+for nombre, salidas in respuestas.items():
+    aciertos = sum(1 for (_, esperada), dada in zip(casos, salidas) if dada == esperada)
+    print(f"{nombre}: {aciertos}/{len(casos)} aciertos")
+```
+
+La idea importa más que el código: mismas entradas, una regla de calificación que no cambia, y un número por versión. Con pocos casos solo ves tendencias. Agrega casos conforme encuentres fallos reales.
+
+</Ejemplo>
+
+Si pasas del chat a la API, el siguiente nivel es automatizar esas llamadas. Empieza por la [guía de inicio de la API](https://platform.claude.com/docs/en/get-started) y el artículo [Cómo elegir modelo con una prueba propia](/ia/aprende/elegir-modelo-con-una-prueba-propia/).
+
+<Callout tipo="warning" titulo="No metas secretos en prompts ni en repos">
+Una clave de API pegada en un chat, en un archivo de prompts o en un repositorio es una clave filtrada. Guárdala en variables de entorno y no la subas a git.
+</Callout>
+
+## Errores de nivel avanzado
+
+- **Prompts gigantes sin estructura.** Si no puedes explicar para qué sirve cada párrafo, divídelo.
+- **Reglas que se contradicen.** "Sé breve" y "explica todo con detalle" en el mismo prompt generan respuestas erráticas.
+- **Optimizar con un solo caso.** Un prompt que funciona en un ejemplo puede fallar en cinco más.
+- **Dar por hecho que lo que funcionó con un modelo funciona con otro.** Revisa tus casos al cambiar de modelo.
+- **Olvidar el humano.** Un prompt perfecto no sustituye revisar el resultado.
+
+## Ejercicio
+
+1. Elige una tarea que repites (por ejemplo, resumir artículos o clasificar correos).
+2. Escribe dos versiones de prompt: una simple y otra con etiquetas, ejemplos y criterios.
+3. Prepara cinco casos fijos, incluyendo dos difíciles.
+4. Pega los casos en cada versión y anota las respuestas.
+5. Califica con una regla escrita antes de mirar los resultados. Elige la versión ganadora.
+
+## Qué sigue
+
+- [Modelos de Claude: familias y cómo elegir](/ia/aprende/modelos-de-claude-como-elegir/).
+- [Claude Code: instalación y primer día](/ia/aprende/claude-code-instalacion-y-primer-dia/).
+- Fundamento teórico: [Prompting vs fine-tuning](/fundamentos/prompting-vs-fine-tuning/).

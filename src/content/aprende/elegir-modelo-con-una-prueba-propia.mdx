@@ -1,0 +1,152 @@
+---
+titulo: 'Cómo elegir modelo con una prueba propia'
+descripcion: 'Un método y un script en Python para comparar modelos de Claude con tus propios casos: mismas preguntas, regla de calificación fija y tiempo medido. Nivel avanzado.'
+categoria: api
+nivel: avanzado
+tiempoLectura: 12
+publicado: 2026-10-14
+herramientas: ['claude']
+orden: 22
+---
+
+import Ejemplo from '@components/guias/Ejemplo.astro';
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Las tablas de modelos te dicen para qué fue pensado cada uno. No te dicen cuál sirve para **tu** tarea. La guía oficial [Cómo elegir un modelo](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model) lo resume así: crea pruebas específicas para tu caso, pruébalas con tus prompts y datos reales, compara exactitud, calidad y manejo de casos límite, y luego pondera costo y desempeño.
+
+Esta pieza convierte ese consejo en un script que puedes ejecutar. Antes, lee [Modelos de Claude: familias y cómo elegir](/ia/aprende/modelos-de-claude-como-elegir/) y [Costos, límites y tokens](/ia/aprende/costos-limites-y-tokens-de-claude/).
+
+## Qué vas a construir
+
+Un programa que:
+
+1. Toma una lista de casos fijos (pregunta y respuesta esperada).
+2. Se la hace a cada modelo que quieras comparar.
+3. Califica con una regla que no cambia.
+4. Reporta aciertos y tiempo.
+
+Sin clave de API corre en **modo simulado**, para que entiendas la estructura sin gastar nada. Con clave, usa la API real.
+
+## Requisitos
+
+<Pasos>
+
+1. Python 3 instalado (`python --version`). Si no lo tienes, sigue la [guía de Python](/guias/python/).
+2. Para el modo real: una cuenta y una clave en la [consola de Claude](https://platform.claude.com) y el SDK con `pip install anthropic`. Los pasos oficiales están en la [guía de inicio](https://platform.claude.com/docs/en/get-started).
+3. La clave va en una variable de entorno llamada `ANTHROPIC_API_KEY`. El SDK la lee solo. Nunca la escribas dentro del código.
+
+</Pasos>
+
+## El script
+
+<Ejemplo numero={1} titulo="Comparar dos modelos con casos fijos" archivo="comparar_modelos.py" ejecutar="python comparar_modelos.py" salida="Modo: simulado (sin ANTHROPIC_API_KEY)
+claude-haiku-5-5: 3/3 aciertos
+claude-sonnet-5-5: 3/3 aciertos">
+
+```python
+import os
+import time
+
+# Modelos a comparar. Confirma los IDs vigentes en la página oficial de modelos.
+MODELOS = ["claude-haiku-5-5", "claude-sonnet-5-5"]
+
+# Casos fijos: pregunta y texto que la respuesta DEBE contener
+CASOS = [
+    ("¿Qué comando de git guarda una instantánea de los cambios preparados? Responde solo el comando.", "git commit"),
+    ("¿Qué método de arreglos de JavaScript devuelve un arreglo nuevo con los elementos que cumplen una condición? Responde solo el nombre.", "filter"),
+    ("¿Qué palabra clave de SQL ordena los resultados? Responde solo la palabra.", "ORDER BY"),
+]
+
+# Respuestas de ejemplo para poder correr el script sin clave de API
+SIMULADAS = {
+    "claude-haiku-5-5": ["git commit", "filter", "ORDER BY"],
+    "claude-sonnet-5-5": ["git commit", "filter", "ORDER BY"],
+}
+
+
+def pedir_a_claude(modelo, pregunta):
+    """Llama a la API oficial. Necesita: pip install anthropic y ANTHROPIC_API_KEY."""
+    import anthropic
+
+    cliente = anthropic.Anthropic()
+    mensaje = cliente.messages.create(
+        model=modelo,
+        max_tokens=200,
+        messages=[{"role": "user", "content": pregunta}],
+    )
+    return "".join(b.text for b in mensaje.content if b.type == "text")
+
+
+def califica(respuesta, esperado):
+    return esperado.lower() in respuesta.lower()
+
+
+usar_api = bool(os.environ.get("ANTHROPIC_API_KEY"))
+print("Modo:", "API real" if usar_api else "simulado (sin ANTHROPIC_API_KEY)")
+
+for modelo in MODELOS:
+    aciertos = 0
+    inicio = time.perf_counter()
+    for i, (pregunta, esperado) in enumerate(CASOS):
+        respuesta = pedir_a_claude(modelo, pregunta) if usar_api else SIMULADAS[modelo][i]
+        if califica(respuesta, esperado):
+            aciertos += 1
+    segundos = time.perf_counter() - inicio
+    print(f"{modelo}: {aciertos}/{len(CASOS)} aciertos")
+    if usar_api:
+        print(f"  tiempo total: {segundos:.1f} s")
+```
+
+La función `pedir_a_claude` sigue el ejemplo de Python de la guía oficial. La parte de la API la comprobamos contra esa guía, pero no la corrimos con una clave en AyudaDev; el modo simulado sí está probado. Con clave real, la salida depende de lo que responda cada modelo.
+
+</Ejemplo>
+
+## Cómo hacer que la prueba sea buena
+
+Un script bien escrito no arregla una prueba mala. Cuida esto:
+
+- **Casos reales.** Usa preguntas o documentos como los que de verdad vas a procesar.
+- **Casos difíciles.** Incluye entradas ambiguas, vacías o con errores. Ahí se separan los modelos.
+- **Calificación definida antes de ver resultados.** Si cambias la regla después, te engañas.
+- **Más de una corrida si hay variación.** Las respuestas pueden cambiar entre ejecuciones; repite y mira la tendencia.
+- **Califica también el estilo cuando importe.** `esperado in respuesta` sirve para datos exactos. Para redacción necesitas una rúbrica (por ejemplo, de 1 a 3 en claridad, corrección y tono) revisada por una persona.
+- **Registra tokens y costo.** La respuesta de la API trae el campo `usage`. Con los precios oficiales calculas el costo por caso.
+
+## Variables que puedes mover
+
+| Qué cambias | Qué aprendes |
+| --- | --- |
+| El modelo | Si uno más ligero alcanza para tu tarea. |
+| El esfuerzo de razonamiento | Si un nivel menor mantiene la calidad con menos espera. Mira la [documentación de esfuerzo](https://platform.claude.com/docs/en/build-with-claude/effort). |
+| El prompt | Cuánto de la calidad viene de pedir mejor y no de pagar más. |
+| El formato de salida | Si pedir una estructura fija facilita calificar de forma automática. |
+
+<Callout tipo="tip" titulo="Mejora el prompt antes de subir de modelo">
+Si un modelo ligero falla, lo más barato es probar un prompt más claro con ejemplos antes de pasar a uno mayor. Revisa [Prompts avanzados con Claude](/ia/aprende/claude-prompts-avanzados/).
+</Callout>
+
+## Combinar modelos
+
+La documentación oficial describe estrategias que mezclan modelos de distinto costo: un modelo potente decide lo difícil y uno ligero hace el trabajo repetitivo. Si tu proyecto crece, lee [Optimizing for cost and intelligence](https://platform.claude.com/docs/en/about-claude/models/optimizing-for-cost-and-intelligence) (está en inglés).
+
+## Errores comunes
+
+- **Probar con tres ejemplos fáciles y concluir.** Pocos casos solo dan tendencias.
+- **Comparar modelos con prompts distintos.** Cambia una sola variable a la vez.
+- **Ignorar el tiempo.** Una respuesta perfecta que tarda mucho puede ser inútil en una app interactiva.
+- **Usar IDs sin verificar.** Si el ID está mal o el modelo se retiró, la API devolverá error. Consulta la [tabla oficial](https://platform.claude.com/docs/en/about-claude/models/overview) y las [fechas de retiro](https://platform.claude.com/docs/en/about-claude/model-deprecations).
+- **Subir la clave a un repositorio.** Guárdala solo en el entorno.
+
+## Ejercicio
+
+1. Copia el script y córrelo en modo simulado.
+2. Cambia los casos por cinco de tu área (programación, estudio o trabajo), con una respuesta esperada clara.
+3. Si tienes clave, corre el modo real con dos modelos y anota aciertos y tiempo.
+4. Cambia una sola cosa del prompt (por ejemplo, agrega un ejemplo) y compara de nuevo.
+5. Escribe tu conclusión: qué modelo usarías y por qué, con los datos que tienes.
+
+## Qué sigue
+
+- Pasa de comparar modelos a trabajar con ellos en tu proyecto: [Claude Code: instalación y primer día](/ia/aprende/claude-code-instalacion-y-primer-dia/).
+- Para ver la API con más profundidad, empieza en la [documentación oficial](https://platform.claude.com/docs/en/get-started).

@@ -1,0 +1,174 @@
+---
+titulo: 'Tarjeta de perfil responsive'
+descripcion: 'Maqueta una tarjeta de perfil accesible con HTML semántico y CSS Grid que se adapta de celular a escritorio sin media queries. Nivel principiante.'
+tema: html-css
+nivel: principiante
+tiempo: 25
+conceptos: ['HTML semántico', 'CSS Grid', 'variables CSS', 'responsive']
+publicado: 2026-10-14
+orden: 60
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Repasa antes la [guía de HTML y CSS](/guias/html-css/), la [hoja de CSS Grid](/hojas/css-grid/) y la de [HTML semántico](/hojas/html-semantico-y-etiquetas/).
+
+## El reto
+
+Crea una página `tarjeta.html` con **una tarjeta de perfil** que muestre una foto (puedes usar un recuadro de color si no tienes imagen), un nombre, un puesto, un párrafo breve y dos enlaces.
+
+Comportamiento:
+
+- En pantallas angostas (celular), la foto va arriba y el texto debajo.
+- En pantallas anchas, la foto va a la izquierda y el texto a la derecha.
+- Debe verse bien desde 320 px de ancho, sin barra de desplazamiento horizontal.
+
+## Reglas
+
+- Usa HTML semántico: `main`, `article`, `h1` o `h2`, `p`, `a`. Nada de `div` para todo.
+- Si usas una imagen real, agrega `alt`. Si usas un recuadro, dale un nombre accesible o márcalo como decorativo.
+- Los colores y el espaciado salen de variables CSS (`--color-fondo`, `--espacio`...).
+- Los enlaces deben tener un estilo de foco visible (`:focus-visible`).
+- Sin JavaScript. Idealmente, sin `@media`.
+
+## Pistas
+
+<Pista n={1}>
+
+Para que el diseño cambie solo, prueba `grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr))`. El navegador decide cuántas columnas caben.
+
+</Pista>
+
+<Pista n={2}>
+
+`auto-fit` acomoda las columnas según el ancho disponible. Con una `minmax` mínima razonable, en celular queda una columna y en escritorio caben dos.
+
+</Pista>
+
+<Pista n={3}>
+
+Para la foto usa `aspect-ratio` (y `object-fit: cover` si es una imagen). Para que nada desborde en pantallas de 320 px, el contenedor necesita `max-width` y `padding` razonables, y los elementos `width: 100%`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `tarjeta.html` y ábrela en el navegador con doble clic.
+
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tarjeta de perfil</title>
+  <style>
+    :root {
+      --color-fondo: #f4f4f0;
+      --color-tarjeta: #ffffff;
+      --color-texto: #1d1d1b;
+      --color-suave: #5b5b57;
+      --color-acento: #2b6cb0;
+      --espacio: 1.25rem;
+      --radio: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: var(--color-fondo);
+      color: var(--color-texto);
+    }
+
+    main {
+      max-width: 44rem;
+      margin: 0 auto;
+      padding: var(--espacio);
+    }
+
+    .tarjeta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+      gap: var(--espacio);
+      padding: var(--espacio);
+      background: var(--color-tarjeta);
+      border-radius: var(--radio);
+      box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+    }
+
+    /* Recuadro de color que hace de foto; con una imagen real sería un img */
+    .foto {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: calc(var(--radio) - 6px);
+      background: #cfd8e3;
+    }
+
+    h1 { margin: 0 0 0.25rem; font-size: 1.5rem; }
+    .puesto { margin: 0 0 var(--espacio); color: var(--color-suave); }
+
+    .enlaces {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 0;
+      margin: var(--espacio) 0 0;
+      list-style: none;
+    }
+
+    a {
+      color: var(--color-acento);
+      font-weight: 600;
+      text-underline-offset: 3px;
+    }
+
+    a:focus-visible {
+      outline: 3px solid var(--color-acento);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <article class="tarjeta">
+      <div class="foto" role="img" aria-label="Retrato de Alex Rivera"></div>
+      <div>
+        <h1>Alex Rivera</h1>
+        <p class="puesto">Desarrolladora web junior</p>
+        <p>Estoy aprendiendo JavaScript y accesibilidad. Me gusta construir sitios pequeños que cualquiera pueda usar.</p>
+        <ul class="enlaces">
+          <li><a href="https://github.com/">GitHub</a></li>
+          <li><a href="mailto:alex@example.com">Correo</a></li>
+        </ul>
+      </div>
+    </article>
+  </main>
+</body>
+</html>
+```
+
+Cómo funciona:
+
+- `repeat(auto-fit, minmax(14rem, 1fr))` crea tantas columnas de al menos `14rem` como quepan. En un celular cabe una, así que la foto queda arriba. En una pantalla ancha caben dos y quedan lado a lado. Sin `@media`.
+- Las **variables CSS** (`--espacio`, `--radio`) permiten cambiar el diseño desde un solo lugar.
+- `aspect-ratio: 1` mantiene la foto cuadrada sin importar el ancho.
+- `a:focus-visible` muestra el foco solo cuando navegas con teclado.
+- `lang="es"` y la etiqueta `viewport` son parte de lo básico para accesibilidad y responsive.
+
+Cuando tengas una foto real, cambia el `div` por `<img src="tu-foto.jpg" alt="Descripción de la foto">` y agrega `object-fit: cover` a `.foto` para que no se deforme.
+
+</Solucion>
+
+## Variaciones
+
+- Agrega modo oscuro con `@media (prefers-color-scheme: dark)` cambiando solo las variables.
+- Muestra tres tarjetas en una cuadrícula con la misma técnica.
+- Revisa la página con las herramientas de desarrollo del navegador (Lighthouse o el panel de accesibilidad) y corrige lo que marque.
+
+Siguiente paso: el proyecto [Página personal accesible](/proyectos/pagina-personal-accesible/).

@@ -1,0 +1,109 @@
+---
+titulo: 'Costos, límites y tokens de Claude: cómo entenderlos'
+descripcion: 'Qué es un token, de qué depende el costo, cómo funcionan los límites de uso y cómo gastar menos sin perder calidad. Los números, en la fuente oficial.'
+categoria: api
+nivel: intermedio
+tiempoLectura: 10
+publicado: 2026-10-14
+herramientas: ['claude', 'claude-code']
+orden: 21
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Esta pieza no te dice cuánto cuesta Claude. Los precios y límites cambian, y una cifra vieja en un sitio comunitario hace daño. Lo que sí hace es explicarte **de qué dependen** el costo y los límites, para que sepas leer las páginas oficiales y reducir tu consumo.
+
+Fuentes oficiales para los números vigentes:
+
+- Planes del chat y de Claude Code: [claude.com/pricing](https://claude.com/pricing)
+- Precios de la API por modelo: [página de precios de la API](https://platform.claude.com/docs/en/about-claude/pricing)
+- Límites de la API: [límites de tasa](https://platform.claude.com/docs/en/api/rate-limits)
+- Control de gasto en Claude Code: [guía de costos](https://code.claude.com/docs/en/costs)
+
+Si no has leído [Modelos de Claude: familias y cómo elegir](/ia/aprende/modelos-de-claude-como-elegir/), empieza por ahí.
+
+## Qué es un token
+
+Un token es un trozo de texto que el modelo procesa: puede ser una palabra corta, parte de una palabra, un signo o un espacio. El modelo no "ve" letras, ve tokens. En español, las palabras largas o con acentos suelen partirse en más tokens.
+
+Por qué importa:
+
+- **Todo se mide en tokens**: lo que envías (entrada) y lo que recibes (salida).
+- **La ventana de contexto** es el máximo de tokens que caben en una conversación. Incluye tus mensajes, las respuestas, los archivos adjuntos y las instrucciones.
+- **Más tokens significa más costo y más espera.** Y una conversación enorme también puede rendir peor.
+
+Los fundamentos están en [Tokens y ventana de contexto](/fundamentos/tokens-y-ventana-de-contexto/).
+
+## Tres lugares donde pagas o te limitan
+
+| Dónde usas Claude | Cómo se paga o limita | Dónde ver los números |
+| --- | --- | --- |
+| Chat en claude.ai | Plan gratuito o de suscripción, con límites de uso que se renuevan por periodos. | [claude.com/pricing](https://claude.com/pricing) y la [ayuda oficial](https://support.claude.com) |
+| Claude Code | Con suscripción compatible o con cuenta de API; su consumo crece con el contexto y el trabajo del agente. | [Guía de costos](https://code.claude.com/docs/en/costs) |
+| API de Claude | Se paga por tokens de entrada y de salida, según el modelo, más extras por funciones concretas. | [Precios de la API](https://platform.claude.com/docs/en/about-claude/pricing) |
+
+## De qué depende el costo en la API
+
+1. **El modelo.** Cada línea tiene su precio. Las más capaces cuestan más por token.
+2. **Tokens de entrada.** Tu prompt, tus documentos y el historial de la conversación.
+3. **Tokens de salida.** La respuesta. Normalmente cuesta más por token que la entrada.
+4. **Razonamiento.** Cuando el modelo razona más, genera más tokens. Por eso el esfuerzo afecta costo y tiempo.
+5. **Funciones extra.** Herramientas como búsqueda web o ejecución de código pueden tener su propio cobro.
+6. **Opciones de ahorro.** La página oficial de precios describe, entre otras, el uso de caché de prompts y el procesamiento por lotes, con descuentos. Los porcentajes y condiciones vigentes están en esa página.
+
+### Ejemplo de estimación sin inventar precios
+
+Puedes hacer la cuenta con tus propios datos, tomando los precios de la página oficial:
+
+```text
+costo = (tokens de entrada / 1,000,000 * PRECIO_ENTRADA)
+      + (tokens de salida  / 1,000,000 * PRECIO_SALIDA)
+```
+
+`PRECIO_ENTRADA` y `PRECIO_SALIDA` los copias de la tabla oficial del modelo que usarás. Cada respuesta de la API incluye un campo `usage` con los tokens usados, así que mides tu consumo real en vez de adivinar.
+
+## Cómo gastar menos sin perder calidad
+
+- **Elige el modelo adecuado.** Para clasificar mil mensajes no necesitas el modelo más potente.
+- **Pide respuestas más cortas** cuando no necesites detalle: "máximo 100 palabras".
+- **No repitas el historial inútil.** Abre un chat nuevo por tema.
+- **En Claude Code, limpia el contexto entre tareas** con `/clear` y no leas archivos enormes si no hacen falta.
+- **Usa caché y lotes** en la API cuando tu caso encaje, siguiendo la documentación oficial.
+- **Mide antes de optimizar.** Mira cuántos tokens consume cada paso y ataca el más grande.
+
+## Cómo funcionan los límites de uso
+
+Los límites existen para repartir la capacidad entre todas las personas. Dependen de tu plan, del modelo y de qué tan pesado sea cada uso. Por eso dos personas con el mismo plan pueden toparse con el límite en momentos distintos.
+
+Si llegas al límite:
+
+1. Lee el mensaje: normalmente indica cuándo se renueva.
+2. Cambia a un modelo más ligero para tareas simples.
+3. Reduce el tamaño de lo que envías (menos archivos, menos historial).
+4. Revisa si un plan distinto se ajusta mejor a tu uso en la [página oficial de precios](https://claude.com/pricing).
+
+En la API, los límites de tasa se describen en la [documentación de límites](https://platform.claude.com/docs/en/api/rate-limits). Tu programa debe tratar el error de límite con reintentos espaciados, no con ciclos infinitos.
+
+<Callout tipo="warning" titulo="Cuidado con las claves de API">
+Una clave filtrada puede gastar tu dinero. No la pegues en chats, no la subas a git y guárdala en variables de entorno. Si sospechas que se filtró, revócala desde la consola oficial y crea otra.
+</Callout>
+
+## Errores comunes
+
+- **Creer que un precio de un blog sigue vigente.** Verifica siempre en la fuente oficial.
+- **Confundir los planes del chat con el cobro de la API.** Son cuentas y reglas distintas.
+- **Dejar un agente trabajando sin supervisión ni tope.** Revisa las opciones de control de gasto de tu herramienta.
+- **Optimizar el prompt para ahorrar unos tokens y perder claridad.** Calidad primero, luego costo.
+
+## Ejercicio
+
+1. Abre la página oficial de precios de la API y localiza la tabla de modelos.
+2. Elige un modelo y copia a tu cuaderno su precio de entrada y de salida, con la fecha de hoy.
+3. Calcula con la fórmula de arriba el costo de una tarea hipotética de tu elección, por ejemplo 1000 consultas de unos 500 tokens de entrada y 100 de salida.
+4. Repite con otra línea de modelos y compara.
+5. Escribe cuándo valdría la pena pagar más por un modelo mayor en esa tarea.
+
+## Qué sigue
+
+- [Cómo elegir modelo con una prueba propia](/ia/aprende/elegir-modelo-con-una-prueba-propia/).
+- Para controlar el consumo en tu terminal: [Flujo de trabajo con Claude Code](/ia/aprende/claude-code-flujo-de-trabajo/).

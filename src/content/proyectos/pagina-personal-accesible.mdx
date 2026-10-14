@@ -1,0 +1,67 @@
+---
+titulo: 'Página personal accesible y responsive'
+descripcion: 'Crea tu página personal con HTML semántico y CSS moderno: modo claro y oscuro, navegación con teclado y diseño que se adapta a cualquier pantalla.'
+nivel: principiante
+tiempo: '1 a 2 días'
+tecnologias: ['html5', 'css3', 'git', 'github']
+temas: ['html-css', 'accesibilidad']
+habilidades: ['HTML semántico', 'CSS Grid y Flexbox', 'variables CSS', 'accesibilidad', 'GitHub Pages']
+publicado: 2026-10-14
+orden: 30
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué vas a construir
+
+Una página de una sola pantalla con: tu nombre y descripción, una sección "Sobre mí", tus proyectos (aunque sean los retos de AyudaDev) y formas de contactarte. Debe:
+
+- Verse bien en un celular de 320 px y en una pantalla grande.
+- Poder usarse completa solo con teclado.
+- Tener modo claro y oscuro según la preferencia del sistema.
+- Cargar rápido: sin librerías, solo HTML y CSS.
+
+## Requisitos
+
+- Un editor de código (por ejemplo, VS Code) y un navegador.
+- Haber leído la [guía de HTML y CSS](/guias/html-css/) y la [guía de accesibilidad](/guias/accesibilidad/).
+- Haber hecho el reto [Tarjeta de perfil responsive](/retos/css-tarjeta-responsive/).
+- Una cuenta de GitHub para publicarla: [GitHub como currículum](/carrera/github-como-curriculum/).
+
+## Pasos sugeridos
+
+<Pasos>
+
+1. **Estructura primero.** Escribe solo HTML, sin estilos: `header` con tu nombre, `nav` con enlaces a secciones, `main` con una `section` por tema y `footer`. Usa un solo `h1` y encabezados en orden.
+2. **Revisa sin CSS.** Abre la página sin estilos. Si se entiende y se puede leer en orden, la base es buena.
+3. **Variables CSS.** Define colores, espaciado y radios en `:root`. Después úsalos en todo el diseño.
+4. **Diseño con Grid y Flexbox.** Un contenedor central con `max-width`, secciones con espacio y la lista de proyectos como tarjetas con `repeat(auto-fit, minmax(...))`.
+5. **Modo oscuro.** Cambia solo las variables dentro de `@media (prefers-color-scheme: dark)`. No dupliques todo el CSS.
+6. **Teclado.** Navega con `Tab`. Cada enlace debe verse enfocado (`:focus-visible`). Agrega un enlace "Saltar al contenido" al inicio.
+7. **Contraste y texto.** Revisa que el texto se lea bien en ambos modos. Usa tamaños en `rem` y respeta el zoom del navegador.
+8. **Imágenes.** Si pones fotos, escribe `alt` que describan; si son decorativas, `alt=""`.
+9. **Revisión.** Pasa Lighthouse (en las herramientas del navegador) y corrige lo que marque en accesibilidad.
+10. **Publica.** Sube el repositorio y activa GitHub Pages desde la configuración del repositorio. Sigue la [documentación oficial de GitHub Pages](https://docs.github.com/es/pages).
+
+</Pasos>
+
+<Callout tipo="tip" titulo="Pide revisión, no diseño">
+Cuando termines tu versión, pídele a Claude: "Revisa este HTML y CSS como especialista en accesibilidad. Lista problemas de semántica, contraste, foco y responsive. No reescribas, señala las líneas". Practica con el método de [Revisar y depurar con IA](/ia/aprende/revisar-y-depurar-con-ia/).
+</Callout>
+
+## Retos extra
+
+- Agrega un botón para alternar modo claro y oscuro que recuerde tu elección (necesitarás un poco de JavaScript y `localStorage`).
+- Respeta `prefers-reduced-motion`: si agregas animaciones, desactívalas para quien lo pida.
+- Añade `<meta>` de descripción y datos para compartir en redes (Open Graph).
+- Mide el peso de la página y reduce las imágenes con formatos modernos.
+- Agrega una sección de blog con una lista de enlaces a notas que escribas.
+
+## Cómo publicarlo
+
+- Pon el enlace de la página y el del repositorio en tu perfil de GitHub y de LinkedIn.
+- En el README, explica tres decisiones (por ejemplo, tu paleta, cómo lograste el modo oscuro, cómo verificaste accesibilidad).
+- Muestra el antes y el después de tus correcciones de accesibilidad: es de lo que más habla bien de ti en una entrevista.
+
+Siguiente proyecto: [Gestor de notas en la terminal con Node.js](/proyectos/notas-en-terminal-con-node/) si aún no lo haces, o salta a [Tu primer servidor MCP](/proyectos/servidor-mcp-propio/).

@@ -1,0 +1,100 @@
+---
+titulo: 'Modela éxito y error con tipos'
+descripcion: 'Define un tipo Resultado con uniones discriminadas para que TypeScript te obligue a revisar los errores antes de usar el valor. Nivel intermedio.'
+tema: typescript
+nivel: intermedio
+tiempo: 20
+conceptos: ['uniones discriminadas', 'genéricos', 'narrowing']
+publicado: 2026-10-14
+orden: 20
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Repasa tipos en la [guía de TypeScript](/guias/typescript/) y en la [hoja de tipos útiles](/hojas/typescript-tipos-utiles/). Para ejecutar archivos `.ts` directamente usa Node.js 24 (o una versión reciente que lo soporte), o `npx tsx archivo.ts` en versiones anteriores.
+
+## El reto
+
+Muchas funciones pueden fallar: dividir entre cero, leer un archivo, validar un formulario. En vez de lanzar errores que nadie revisa, puedes devolver un valor que diga "salió bien" o "salió mal" y dejar que el compilador te obligue a revisarlo.
+
+1. Define un tipo genérico `Resultado<T, E = string>` que sea **una de dos cosas**: `{ ok: true; valor: T }` o `{ ok: false; error: E }`.
+2. Escribe `dividir(a, b)` que devuelva `Resultado<number>`: error si `b` es `0`.
+3. Escribe `mostrar(r)` que reciba un `Resultado<number>` y devuelva un texto: `Resultado: 2.5` o `Error: No se puede dividir entre cero`.
+
+```ts
+console.log(mostrar(dividir(10, 4))); // Resultado: 2.5
+console.log(mostrar(dividir(5, 0)));  // Error: No se puede dividir entre cero
+```
+
+## Reglas
+
+- Activa el modo estricto (`strict`) y que no haya errores de tipo.
+- No uses `any`.
+- Dentro de `mostrar`, solo puedes leer `r.valor` cuando TypeScript sepa que `r.ok` es `true`.
+
+## Pistas
+
+<Pista n={1}>
+
+Una **unión** se escribe con `|`. Cada miembro tiene una propiedad común (`ok`) con un valor literal distinto (`true` o `false`). Esa propiedad es el "discriminante".
+
+</Pista>
+
+<Pista n={2}>
+
+El parámetro genérico `E = string` significa que el tipo del error es `string` si no dices otra cosa.
+
+</Pista>
+
+<Pista n={3}>
+
+Dentro de `if (r.ok) { ... }`, TypeScript entiende que `r` es el miembro con `valor`. Fuera del `if`, `r` es el miembro con `error`. A eso se le llama estrechamiento de tipos (narrowing).
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `resultado.ts` y ejecútala con `node resultado.ts`. Para verificar tipos: `npx tsc --noEmit --strict resultado.ts`.
+
+```ts
+// Un resultado es éxito (ok: true) o fallo (ok: false), nunca ambos
+type Resultado<T, E = string> =
+  | { ok: true; valor: T }
+  | { ok: false; error: E };
+
+function dividir(a: number, b: number): Resultado<number> {
+  if (b === 0) return { ok: false, error: 'No se puede dividir entre cero' };
+  return { ok: true, valor: a / b };
+}
+
+function mostrar(r: Resultado<number>): string {
+  // Al revisar r.ok, TypeScript sabe cuál de los dos casos es
+  if (r.ok) return `Resultado: ${r.valor}`;
+  return `Error: ${r.error}`;
+}
+
+console.log(mostrar(dividir(10, 4)));
+console.log(mostrar(dividir(5, 0)));
+```
+
+Salida:
+
+```text
+Resultado: 2.5
+Error: No se puede dividir entre cero
+```
+
+Cómo funciona: `ok` es el discriminante. Al comprobar `r.ok`, el compilador descarta uno de los dos miembros de la unión, así que dentro del `if` existe `r.valor` y después existe `r.error`. Si intentaras leer `r.valor` sin revisar antes `r.ok`, TypeScript marcaría un error. Eso es lo valioso: el compilador te recuerda manejar el fallo.
+
+</Solucion>
+
+## Variaciones
+
+- Escribe `raiz(n)` que falle con números negativos y encadénala con `dividir`.
+- Escribe `mapear(r, fn)` que aplique `fn` al valor solo si el resultado es exitoso.
+- Cambia `E` a un tipo propio, por ejemplo `{ codigo: number; mensaje: string }`.
+
+Siguiente reto: [Ordena con genéricos](/retos/ts-ordenar-por-generico/).

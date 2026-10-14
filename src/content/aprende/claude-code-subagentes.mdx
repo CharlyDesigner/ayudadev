@@ -1,0 +1,149 @@
+---
+titulo: 'Subagentes en Claude Code: delega sin llenar tu contexto'
+descripcion: 'Qué son los subagentes, los que ya trae Claude Code, cómo crear uno con un archivo Markdown, cómo invocarlo y patrones útiles: investigar, revisar y verificar.'
+categoria: agentes
+nivel: avanzado
+tiempoLectura: 11
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 37
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Cuando Claude Code investiga un proyecto, lee decenas de archivos, y todo eso consume tu ventana de contexto. Un **subagente** resuelve ese problema: es un asistente especializado que trabaja en su **propia ventana de contexto**, con sus propias instrucciones, herramientas y permisos, y devuelve solo un resumen. Esta pieza sigue la [documentación oficial de subagentes](https://code.claude.com/docs/en/sub-agents).
+
+Antes: [Flujo de trabajo con Claude Code](/ia/aprende/claude-code-flujo-de-trabajo/) y [Skills](/ia/aprende/claude-code-skills/).
+
+## Cuándo conviene un subagente
+
+- **Investigar** algo que requiere leer mucho ("¿cómo se renuevan los tokens en este proyecto?").
+- **Revisar** un cambio con ojos frescos, sin el sesgo de quien lo escribió.
+- **Tareas con herramientas limitadas** (un revisor que solo puede leer, nunca editar).
+- **Trabajo ruidoso** cuya salida no quieres en tu conversación (logs, resultados de búsqueda).
+
+No lo uses para tareas pequeñas: lanzar un subagente tiene costo y puede ser más lento que hacerlo directamente.
+
+## Los que ya vienen incluidos
+
+Según la documentación, Claude Code registra estos en sesiones interactivas:
+
+| Subagente | Para qué sirve |
+| --- | --- |
+| Explore | Búsqueda y análisis rápido del código, en solo lectura |
+| Plan | Investigación de solo lectura para el modo plan |
+| General-purpose | Tareas de varios pasos que requieren explorar y modificar |
+
+Además hay ayudantes internos para tareas generales, para configurar la línea de estado y para responder preguntas sobre las funciones de Claude Code. Explore y Plan no cargan tus `CLAUDE.md` ni el estado de git para ser rápidos y baratos.
+
+Puedes pedirlos con lenguaje natural:
+
+```text
+Usa subagentes para investigar cómo maneja este proyecto la autenticación y si ya hay utilidades que pueda reutilizar. Dame un resumen de media página.
+```
+
+## Crear uno propio
+
+Un subagente es un archivo Markdown con encabezado YAML. El cuerpo es su prompt de sistema. Solo `name` y `description` son obligatorios.
+
+Ubicaciones (la de mayor prioridad gana si repites el nombre):
+
+| Ubicación | Alcance |
+| --- | --- |
+| `.claude/agents/` | Este proyecto (puedes subirlo a git) |
+| `~/.claude/agents/` | Todos tus proyectos |
+| Opción `--agents` al abrir Claude Code | Solo esa sesión |
+| Directorio `agents/` de un plugin | Donde el plugin esté activo |
+
+Ejemplo mínimo, basado en el de la documentación. Guárdalo como `.claude/agents/revisor-de-codigo.md`:
+
+```markdown
+---
+name: revisor-de-codigo
+description: Revisa código en busca de problemas de calidad y buenas prácticas. Úsalo después de cambios.
+tools: Read, Glob, Grep
+model: sonnet
+---
+
+Eres un revisor de código. Cuando te invoquen, analiza el código y da comentarios
+concretos y accionables sobre calidad, seguridad y buenas prácticas.
+Reporta solo problemas de correctitud o que incumplan los requisitos dados.
+No propongas cambios de estilo menores. Indica archivo y línea de cada hallazgo.
+```
+
+Qué logra:
+
+- `tools: Read, Glob, Grep` limita al subagente a **leer y buscar**. No puede editar nada.
+- `model: sonnet` elige el modelo (acepta `sonnet`, `opus`, `haiku`, `fable`, un ID completo o `inherit`). Si lo omites, Claude Code elige según su orden de resolución. Para decidir con criterio, revisa [Modelos de Claude](/ia/aprende/modelos-de-claude-como-elegir/).
+- La `description` le dice a Claude **cuándo** delegar. Frases como "úsalo después de cambios" lo animan a hacerlo solo.
+
+Otros campos útiles del encabezado: `disallowedTools`, `permissionMode`, `maxTurns`, `skills`, `mcpServers`, `hooks`, `memory`, `effort`, `isolation: worktree` y `background`. Los nombres con varias palabras van en camelCase y los campos desconocidos se **ignoran en silencio**, así que revisa la ortografía.
+
+Con el comando `/agents` Claude Code te recuerda que puedes pedirle que cree o edite subagentes; en versiones anteriores abría un asistente interactivo. Lo más directo: describe el subagente que quieres y pídele a Claude que escriba el archivo.
+
+## Cómo invocarlo
+
+1. **Automático:** Claude delega cuando la tarea coincide con la descripción.
+2. **Con lenguaje natural:** "Usa el subagente revisor-de-codigo para revisar los cambios de esta rama".
+3. **Con @-mención:** escribe `@` y elige el agente en la lista; así garantizas que corre ese.
+4. **Toda la sesión como subagente:** `claude --agent revisor-de-codigo`.
+
+## Tres patrones para empezar
+
+### 1. Investigador
+
+Delega la lectura masiva para que tu conversación quede limpia.
+
+```text
+Usa un subagente para investigar qué archivos tocan el carrito de compras y qué pruebas lo cubren. Quiero solo la lista y un párrafo de cómo se conectan.
+```
+
+### 2. Revisor independiente
+
+Después de implementar, pide una revisión con contexto fresco.
+
+```text
+Usa el subagente revisor-de-codigo para revisar el diff de esta rama contra PLAN.md. Verifica que cada requisito esté implementado, que los casos límite tengan prueba y que no se haya cambiado nada fuera del alcance. Reporta solo hallazgos que afecten la correctitud.
+```
+
+La documentación sugiere pedir **solo lo que afecta la correctitud o los requisitos**. Un revisor al que le pides "encuentra problemas" casi siempre encontrará algunos, aunque el trabajo esté bien; sin ese filtro terminas sobreingeniando.
+
+### 3. Verificador de pruebas
+
+Un subagente que corre la suite y resume solo los fallos evita llenar tu sesión con páginas de salida.
+
+```text
+Usa un subagente para correr npm test y devolverme únicamente los nombres de las pruebas que fallan y el primer mensaje de error de cada una.
+```
+
+## Subagentes, sesiones y equipos
+
+Los subagentes viven **dentro de una sesión**. Para varias sesiones independientes en paralelo existen otras opciones descritas en las [buenas prácticas](https://code.claude.com/docs/en/best-practices): worktrees de git (copias aisladas del repositorio), la app de escritorio con varias sesiones, la vista de agentes en segundo plano, y los equipos de agentes (esta última marcada como experimental en la documentación). Empieza por subagentes: son lo más simple.
+
+Una regla para no descontrolarte: dos sesiones nunca deben editar los mismos archivos a la vez.
+
+<Callout tipo="warning" titulo="Un subagente también puede equivocarse">
+Su resumen es lo que llega a tu sesión, no todo lo que leyó. Para decisiones importantes, pide las rutas y líneas en las que se basó, y compruébalas tú.
+</Callout>
+
+## Errores comunes
+
+- **Crear subagentes para todo.** Empieza con uno o dos que resuelvan dolores reales.
+- **Descripciones vagas.** "Ayuda con código" no le dice a Claude cuándo usarlo.
+- **Permitirle más herramientas de las necesarias.** Un revisor no necesita editar.
+- **Pedir "revisa todo".** Acota: qué diff, contra qué plan, qué cuenta como hallazgo.
+- **Olvidar que el subagente no ve tu conversación.** Dale en el prompt los datos que necesita.
+
+## Ejercicio
+
+1. Crea `.claude/agents/revisor-de-codigo.md` con el ejemplo de arriba.
+2. Haz un cambio pequeño en un proyecto de práctica, con `git diff` visible.
+3. Pide: "Usa el subagente revisor-de-codigo para revisar mis cambios".
+4. Compara sus hallazgos con tu propia lectura del diff. ¿Qué vio que tú no?
+5. Ajusta la descripción y las instrucciones del subagente según lo que falló o sobró.
+
+## Qué sigue
+
+- Repasa toda la serie en la ruta [Claude y Claude Code, de cero a avanzado](/rutas/claude-y-claude-code-de-cero-a-avanzado/).
+- Construye algo con lo aprendido: proyecto [Una app pequeña con Claude Code, de principio a fin](/proyectos/app-con-claude-code-de-principio-a-fin/).
+- Consulta la [hoja de referencia de Claude Code](/hojas/claude-code-comandos-y-atajos/).

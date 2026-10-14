@@ -1,0 +1,111 @@
+---
+titulo: 'Totales por categoría desde un CSV'
+descripcion: 'Lee datos de ventas en formato CSV, calcula el total por categoría y muéstralos de mayor a menor. Trabajo con datos reales sin librerías externas. Nivel intermedio.'
+tema: python
+nivel: intermedio
+tiempo: 20
+conceptos: ['módulo csv', 'diccionarios', 'formato de texto']
+publicado: 2026-10-14
+orden: 32
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Valida paréntesis balanceados](/retos/py-parentesis-balanceados/). Para conocer el formato de datos: [JSON y formatos de datos](/fundamentos/json-y-formatos-de-datos/).
+
+## El reto
+
+Tienes un reporte de ventas en CSV:
+
+```text
+producto,categoria,precio,cantidad
+Cuaderno,papeleria,45.50,4
+Pluma,papeleria,12.00,10
+Mochila,accesorios,350.00,1
+Lápiz,papeleria,5.25,20
+Cartuchera,accesorios,80.00,2
+```
+
+Escribe un programa que calcule el total vendido (`precio * cantidad`) de cada categoría y lo imprima de mayor a menor con dos decimales:
+
+```text
+accesorios: $510.00
+papeleria: $407.00
+```
+
+## Reglas
+
+- Usa el módulo `csv` de la biblioteca estándar.
+- Para que el programa sea autocontenido, guarda los datos en una cadena y léelos con `io.StringIO`.
+- Convierte los textos de `precio` y `cantidad` a números antes de multiplicar.
+
+## Pistas
+
+<Pista n={1}>
+
+`csv.DictReader` convierte cada fila en un diccionario con los nombres de la primera línea: `fila["precio"]`. Recuerda que todo llega como texto.
+
+</Pista>
+
+<Pista n={2}>
+
+`io.StringIO(datos)` hace que una cadena se comporte como un archivo. Para leer un archivo real después, usarías `open("ventas.csv", newline="", encoding="utf-8")`.
+
+</Pista>
+
+<Pista n={3}>
+
+Acumula en un diccionario: `totales[cat] = totales.get(cat, 0) + importe`. Para ordenar, usa `sorted(totales.items(), key=lambda par: par[1], reverse=True)`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `ventas.py` y ejecútala con `python ventas.py`.
+
+```python
+# Lee ventas en formato CSV y calcula el total por categoría
+import csv
+import io
+
+datos = """producto,categoria,precio,cantidad
+Cuaderno,papeleria,45.50,4
+Pluma,papeleria,12.00,10
+Mochila,accesorios,350.00,1
+Lápiz,papeleria,5.25,20
+Cartuchera,accesorios,80.00,2
+"""
+
+totales = {}
+for fila in csv.DictReader(io.StringIO(datos)):
+    importe = float(fila["precio"]) * int(fila["cantidad"])
+    totales[fila["categoria"]] = totales.get(fila["categoria"], 0) + importe
+
+# De mayor a menor total
+for categoria, total in sorted(totales.items(), key=lambda par: par[1], reverse=True):
+    print(f"{categoria}: ${total:.2f}")
+```
+
+Salida:
+
+```text
+accesorios: $510.00
+papeleria: $407.00
+```
+
+Cómo funciona: `DictReader` entrega cada fila como diccionario. Convertimos `precio` a `float` y `cantidad` a `int`, multiplicamos y sumamos al total de su categoría. `sorted(..., reverse=True)` ordena por el segundo elemento de cada par. El formato `:.2f` imprime dos decimales.
+
+Para dinero real, los `float` pueden acumular errores de redondeo. En un sistema serio se usa `decimal.Decimal` o se guardan centavos como enteros.
+
+</Solucion>
+
+## Variaciones
+
+- Lee un archivo `ventas.csv` real en lugar de la cadena.
+- Agrega una columna "Total general" al final.
+- Muestra también cuántas piezas se vendieron por categoría.
+
+Cuando termines, haz el proyecto [Control de gastos en Python con SQLite](/proyectos/control-de-gastos-en-python/).

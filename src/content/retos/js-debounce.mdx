@@ -1,0 +1,104 @@
+---
+titulo: 'Implementa debounce'
+descripcion: 'Crea tu propia función debounce para que una acción solo ocurra cuando el usuario deja de escribir. Cierra el tema de closures y temporizadores. Nivel intermedio.'
+tema: javascript
+nivel: intermedio
+tiempo: 20
+conceptos: ['closures', 'setTimeout', 'funciones de orden superior']
+publicado: 2026-10-14
+orden: 12
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Agrupa una lista de objetos](/retos/js-agrupar-por/). Para repasar closures y asincronía: [Concurrencia y asincronía](/fundamentos/concurrencia-y-asincronia/).
+
+## El reto
+
+Cuando alguien escribe en un buscador, no quieres consultar el servidor con cada tecla. Quieres esperar a que la persona haga una pausa. Eso hace `debounce`.
+
+Escribe `debounce(fn, espera)`. Devuelve una nueva función que, al llamarla, programa la ejecución de `fn` después de `espera` milisegundos. Si la llamas otra vez antes de que pase ese tiempo, cancela la ejecución pendiente y vuelve a empezar la cuenta. La función original debe recibir los argumentos de la **última** llamada.
+
+```js
+const guardar = debounce((texto) => console.log('se ejecutó con:', texto), 100);
+
+guardar('a');
+guardar('ab');
+guardar('abc');
+// Después de 100 ms solo se imprime: se ejecutó con: abc
+```
+
+## Reglas
+
+- Solo puede ejecutarse `fn` una vez por ráfaga de llamadas.
+- Cada llamada debe poder tener sus propios argumentos.
+- No uses librerías.
+
+## Pistas
+
+<Pista n={1}>
+
+Necesitas recordar si ya hay una ejecución programada entre una llamada y otra. Una variable declarada **fuera** de la función devuelta, pero **dentro** de `debounce`, lo logra. Eso es un closure.
+
+</Pista>
+
+<Pista n={2}>
+
+`setTimeout` devuelve un identificador. Con `clearTimeout(identificador)` cancelas esa ejecución.
+
+</Pista>
+
+<Pista n={3}>
+
+La función que devuelves puede recibir cualquier número de argumentos con `(...args)`, y se los pasas a `fn(...args)`.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `debounce.js` y ejecútala con `node debounce.js`.
+
+```js
+// Devuelve una versión de fn que solo se ejecuta cuando pasan "espera" ms sin llamadas
+function debounce(fn, espera) {
+  let temporizador;
+  return (...args) => {
+    clearTimeout(temporizador);
+    temporizador = setTimeout(() => fn(...args), espera);
+  };
+}
+
+let llamadas = 0;
+const guardar = debounce((texto) => {
+  llamadas++;
+  console.log('se ejecutó con:', texto);
+}, 100);
+
+guardar('a');
+guardar('ab');
+guardar('abc');
+
+setTimeout(() => console.log('llamadas reales:', llamadas), 250);
+```
+
+Salida:
+
+```text
+se ejecutó con: abc
+llamadas reales: 1
+```
+
+Cómo funciona: la variable `temporizador` vive en el closure de `debounce` y se comparte entre todas las llamadas de la función devuelta. Cada llamada cancela el temporizador anterior con `clearTimeout` y programa uno nuevo. Solo el último sobrevive, y cuando se cumple el tiempo ejecuta `fn` con los argumentos de esa última llamada. La última línea espera 250 ms para confirmar que `fn` corrió una sola vez.
+
+</Solucion>
+
+## Variaciones
+
+- Agrega un método `.cancelar()` a la función devuelta para descartar la ejecución pendiente.
+- Escribe `throttle`: ejecuta `fn` como máximo una vez cada cierto tiempo, en vez de esperar la pausa.
+- Úsalo en una página real con un campo de búsqueda y el evento `input`.
+
+Siguiente reto: [Limita la concurrencia de tareas asíncronas](/retos/js-limitar-concurrencia/).

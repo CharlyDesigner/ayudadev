@@ -1,0 +1,162 @@
+---
+titulo: 'Gestor de notas en la terminal con Node.js'
+descripcion: 'Construye un programa de línea de comandos que agrega, lista, busca y borra notas guardadas en un archivo JSON. Tu primer proyecto con Node.js.'
+nivel: principiante
+tiempo: '3 a 5 horas'
+tecnologias: ['nodejs', 'javascript', 'git']
+temas: ['javascript', 'nodejs']
+habilidades: ['leer y escribir archivos', 'JSON', 'argumentos de la terminal', 'manejo de errores']
+publicado: 2026-10-14
+orden: 10
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Solucion from '@components/guias/Solucion.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué vas a construir
+
+Un programa que se usa así:
+
+```bash
+node notas.mjs agregar Comprar pilas
+node notas.mjs agregar Estudiar closures
+node notas.mjs listar
+node notas.mjs buscar closures
+node notas.mjs borrar 1
+```
+
+Las notas se guardan en un archivo `notas.json`, así que siguen ahí cuando cierras la terminal. Es un proyecto pequeño, pero practica lo que hace cualquier programa real: recibir entradas, leer y escribir datos, validar y mostrar errores claros.
+
+## Requisitos
+
+- Node.js instalado (`node --version`). Si no lo tienes, sigue la [guía de JavaScript](/guias/javascript/).
+- Saber usar una terminal básica: [Terminal explicada](/fundamentos/terminal-explicada/).
+- Haber hecho al menos un reto de JavaScript, por ejemplo [Cuenta las palabras de un texto](/retos/js-contar-palabras/).
+- Git para ir guardando tu avance (opcional pero recomendado): [guía de Git](/guias/git/).
+
+## Pasos sugeridos
+
+<Pasos>
+
+1. Crea la carpeta `notas-cli`, entra en ella y ejecuta `git init`.
+2. Crea `notas.mjs` e imprime los argumentos con `console.log(process.argv.slice(2))`. Pruébalo con `node notas.mjs agregar hola mundo`.
+3. Haz que el primer argumento sea el **comando** y el resto sea el **texto**.
+4. Implementa `listar` con un arreglo de ejemplo en memoria.
+5. Agrega la lectura y escritura de `notas.json` con `fs/promises`. Cuida el caso de que el archivo aún no exista.
+6. Implementa `agregar`, asignando un `id` nuevo que no se repita aunque borres notas.
+7. Implementa `buscar` sin importar mayúsculas.
+8. Implementa `borrar` y avisa con un mensaje claro si el `id` no existe (con código de salida distinto de cero).
+9. Haz un commit por cada comando que funcione.
+
+</Pasos>
+
+<Solucion titulo="Ver una versión de referencia (inténtalo primero)">
+
+Esta versión la probamos con los comandos de arriba. Guárdala como `notas.mjs`.
+
+```js
+// Gestor de notas en la terminal. Uso: node notas.mjs <comando> [texto]
+import { readFile, writeFile } from 'node:fs/promises';
+
+const ARCHIVO = new URL('./notas.json', import.meta.url);
+
+async function leer() {
+  try {
+    return JSON.parse(await readFile(ARCHIVO, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return []; // primera vez: aún no hay archivo
+    throw error;
+  }
+}
+
+async function guardar(notas) {
+  await writeFile(ARCHIVO, JSON.stringify(notas, null, 2) + '\n', 'utf8');
+}
+
+const [comando, ...resto] = process.argv.slice(2);
+const texto = resto.join(' ').trim();
+const notas = await leer();
+
+switch (comando) {
+  case 'agregar': {
+    if (!texto) {
+      console.error('Escribe el texto de la nota. Ejemplo: node notas.mjs agregar Comprar pilas');
+      process.exit(1);
+    }
+    const id = notas.reduce((mayor, n) => Math.max(mayor, n.id), 0) + 1;
+    notas.push({ id, texto });
+    await guardar(notas);
+    console.log(`Nota ${id} guardada.`);
+    break;
+  }
+  case 'listar': {
+    if (notas.length === 0) console.log('No tienes notas.');
+    for (const n of notas) console.log(`${n.id}. ${n.texto}`);
+    break;
+  }
+  case 'buscar': {
+    const encontradas = notas.filter((n) => n.texto.toLowerCase().includes(texto.toLowerCase()));
+    if (encontradas.length === 0) console.log('Sin resultados.');
+    for (const n of encontradas) console.log(`${n.id}. ${n.texto}`);
+    break;
+  }
+  case 'borrar': {
+    const id = Number(texto);
+    if (!notas.some((n) => n.id === id)) {
+      console.error(`No existe la nota ${texto}.`);
+      process.exit(1);
+    }
+    await guardar(notas.filter((n) => n.id !== id));
+    console.log(`Nota ${id} borrada.`);
+    break;
+  }
+  default:
+    console.log('Comandos: agregar <texto> | listar | buscar <texto> | borrar <id>');
+}
+```
+
+Una sesión de prueba:
+
+```text
+$ node notas.mjs listar
+No tienes notas.
+$ node notas.mjs agregar Comprar pilas
+Nota 1 guardada.
+$ node notas.mjs agregar Estudiar closures
+Nota 2 guardada.
+$ node notas.mjs buscar CLOS
+2. Estudiar closures
+$ node notas.mjs borrar 9
+No existe la nota 9.
+```
+
+Detalles que conviene entender:
+
+- `import.meta.url` hace que `notas.json` viva junto al programa, sin importar desde qué carpeta lo ejecutes.
+- El `try/catch` solo trata el error de "archivo inexistente" (`ENOENT`) y relanza cualquier otro, para no esconder fallos reales.
+- El `id` se calcula con el mayor existente más uno. Si usaras la longitud del arreglo, al borrar y agregar se repetirían ids.
+- `process.exit(1)` indica error a quien ejecute el programa (otros scripts, por ejemplo).
+- Usamos `.mjs` para poder usar `await` al nivel superior.
+
+</Solucion>
+
+<Callout tipo="tip" titulo="Con IA, sin copiar">
+Escribe tú la primera versión. Después pídele a Claude que revise tu código como mentor, siguiendo [Cómo revisar y depurar tu código con IA](/ia/aprende/revisar-y-depurar-con-ia/). Si usas Claude Code, [pídele que escriba pruebas](/ia/aprende/claude-code-flujo-de-trabajo/) y tú decides si las aceptas.
+</Callout>
+
+## Retos extra
+
+- Agrega el comando `editar <id> <texto nuevo>`.
+- Agrega etiquetas: `agregar --etiqueta escuela Estudiar closures` y `listar --etiqueta escuela`.
+- Escribe pruebas automáticas con el ejecutor de pruebas de Node (`node --test`).
+- Conviértelo a TypeScript (revisa la [guía de TypeScript](/guias/typescript/)).
+- Valida que el contenido de `notas.json` tenga la forma esperada antes de usarlo.
+
+## Cómo publicarlo
+
+- Sube la carpeta a un repositorio de GitHub (sin `notas.json` personal: agrégalo al `.gitignore`).
+- Escribe un `README.md` con una captura de la terminal, los comandos disponibles y cómo ejecutarlo.
+- En tu portafolio, cuenta qué decisión de diseño tomaste (por ejemplo, cómo generaste los `id`) y qué aprendiste. Más ideas en [Portafolio que contrata](/carrera/portafolio-que-contrata/) y [GitHub como currículum](/carrera/github-como-curriculum/).
+
+Siguiente proyecto: [Control de gastos en Python con SQLite](/proyectos/control-de-gastos-en-python/).

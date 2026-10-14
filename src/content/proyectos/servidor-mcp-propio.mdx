@@ -1,0 +1,157 @@
+---
+titulo: 'Tu primer servidor MCP: busca en tus apuntes'
+descripcion: 'Construye un servidor MCP en Node.js que expone una herramienta para buscar en tus apuntes y conéctalo a Claude Code. Aprende cómo hablan las herramientas de IA.'
+nivel: avanzado
+tiempo: '3 a 6 horas'
+tecnologias: ['nodejs', 'javascript', 'npm']
+temas: ['nodejs', 'javascript', 'inteligencia-artificial']
+habilidades: ['MCP', 'Node.js', 'esquemas con zod', 'stdio', 'integración con agentes']
+publicado: 2026-10-14
+orden: 40
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Solucion from '@components/guias/Solucion.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué vas a construir
+
+Un **servidor MCP** (Model Context Protocol) en Node.js que ofrece una herramienta llamada `buscar_apuntes`. Tú escribes notas en un archivo JSON; Claude Code puede llamar a la herramienta para consultarlas mientras trabajas contigo. Es un ejemplo pequeño del mismo mecanismo con el que las herramientas de IA se conectan a bases de datos, gestores de tareas y servicios.
+
+Antes de empezar, lee [MCP en Claude Code](/ia/aprende/claude-code-mcp/) y [Agentes de IA](/fundamentos/agentes-de-ia/).
+
+## Requisitos
+
+- Node.js y npm instalados ([guía de JavaScript](/guias/javascript/)).
+- Claude Code instalado ([instalación y primer día](/ia/aprende/claude-code-instalacion-y-primer-dia/)). Necesitas una cuenta compatible con Claude Code.
+- Haber hecho el proyecto [Gestor de notas en la terminal con Node.js](/proyectos/notas-en-terminal-con-node/) o saber leer archivos JSON en Node.
+- Disposición para leer la [documentación oficial de MCP](https://modelcontextprotocol.io): los SDK evolucionan y conviene comparar tu código con la guía vigente.
+
+<Callout tipo="warning" titulo="Los SDK cambian">
+El código de esta página se probó el 14 de octubre de 2026 con la versión 2.3.1 del paquete `@modelcontextprotocol/server`. Si instalas una versión distinta y algo no coincide, sigue la guía oficial [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) (en inglés).
+</Callout>
+
+## Pasos sugeridos
+
+<Pasos>
+
+1. Crea la carpeta `mis-apuntes-mcp`, entra y ejecuta `npm init -y`.
+2. Activa módulos de JavaScript con `npm pkg set type=module`.
+3. Instala las dependencias: `npm install @modelcontextprotocol/server zod`.
+4. Crea `apuntes.json` con tres o cuatro apuntes de tus materias (formato abajo).
+5. Crea `servidor.mjs` con una función que construye el servidor y registra la herramienta `buscar_apuntes`.
+6. Arranca el servidor con `serveStdio`. Importante: **nunca escribas en la salida estándar** con `console.log`, porque con el transporte stdio esa salida es el canal del protocolo. Usa `console.error`.
+7. Pruébalo **sin Claude** con el Inspector oficial (comandos abajo).
+8. Conéctalo a Claude Code con `claude mcp add` y pídele que busque en tus apuntes.
+9. Revisa qué permiso te pidió Claude Code y por qué.
+
+</Pasos>
+
+<Solucion titulo="Ver una versión de referencia (inténtalo primero)">
+
+**`apuntes.json`**
+
+```json
+[
+  { "tema": "closures", "texto": "Un closure es una función que recuerda las variables del lugar donde nació." },
+  { "tema": "promesas", "texto": "Una promesa representa un valor que llegará después: pendiente, cumplida o rechazada." },
+  { "tema": "git", "texto": "git commit guarda una instantánea de los cambios que están en el área de preparación." }
+]
+```
+
+**`servidor.mjs`**
+
+```js
+// Servidor MCP de ejemplo: busca en tus apuntes (apuntes.json)
+import { readFile } from 'node:fs/promises';
+import { McpServer } from '@modelcontextprotocol/server';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
+import { z } from 'zod';
+
+const ARCHIVO = new URL('./apuntes.json', import.meta.url);
+
+// serveStdio pide una instancia nueva cada vez que la necesita
+function crearServidor() {
+  const servidor = new McpServer({ name: 'mis-apuntes', version: '1.0.0' });
+
+  servidor.registerTool(
+    'buscar_apuntes',
+    {
+      description: 'Busca una palabra en los apuntes del estudiante y devuelve las notas que la contienen',
+      inputSchema: z.object({
+        texto: z.string().min(1).describe('Palabra o frase a buscar'),
+      }),
+    },
+    async ({ texto }) => {
+      const apuntes = JSON.parse(await readFile(ARCHIVO, 'utf8'));
+      const clave = texto.toLowerCase();
+      const encontrados = apuntes.filter(
+        (a) => a.tema.toLowerCase().includes(clave) || a.texto.toLowerCase().includes(clave)
+      );
+      const respuesta = encontrados.length
+        ? encontrados.map((a) => `[${a.tema}] ${a.texto}`).join('\n')
+        : `No encontré apuntes sobre "${texto}".`;
+      return { content: [{ type: 'text', text: respuesta }] };
+    }
+  );
+
+  return servidor;
+}
+
+// Con stdio, NUNCA escribas en stdout (console.log): rompe el protocolo. Usa stderr.
+serveStdio(crearServidor, {
+  onerror: (error) => console.error('Error del servidor:', error),
+});
+console.error('Servidor mis-apuntes listo por stdio');
+```
+
+**Probarlo con el Inspector oficial** (listar herramientas y llamar una):
+
+```bash
+npx @modelcontextprotocol/inspector --cli node servidor.mjs --method tools/list
+npx @modelcontextprotocol/inspector --cli node servidor.mjs --method tools/call --tool-name buscar_apuntes --tool-arg texto=promesa
+```
+
+La primera muestra la herramienta `buscar_apuntes` con su esquema de entrada (un campo `texto` obligatorio). La segunda devuelve:
+
+```text
+[promesas] Una promesa representa un valor que llegará después: pendiente, cumplida o rechazada.
+```
+
+(dentro de un objeto JSON con `content`). Con una palabra que no exista, responde `No encontré apuntes sobre "zzz".`
+
+**Conectarlo a Claude Code** (usa la ruta absoluta de tu archivo):
+
+```bash
+claude mcp add --transport stdio mis-apuntes -- node /ruta/completa/a/servidor.mjs
+claude mcp list
+```
+
+En Windows, la ruta se escribe con el formato de tu terminal, por ejemplo `C:\Users\tu-usuario\mis-apuntes-mcp\servidor.mjs`. Abre `claude` y pregunta: "Busca en mis apuntes qué anoté sobre closures". Claude pedirá permiso para usar la herramienta `mcp__mis-apuntes__buscar_apuntes`; revisa y apruébalo.
+
+Qué verificamos y qué no: el servidor lo probamos con el Inspector y respondió como se muestra arriba. El paso de conectarlo a Claude Code sigue lo que indica la [documentación oficial de MCP en Claude Code](https://code.claude.com/docs/en/mcp); si algo no coincide con tu versión, manda la documentación.
+
+Detalles que conviene entender:
+
+- `inputSchema` con `zod` describe qué parámetros acepta la herramienta. Claude usa ese esquema y la `description` para decidir **cuándo** llamarla.
+- La herramienta devuelve un arreglo `content` con bloques de texto. Eso es lo que Claude lee.
+- El servidor no hace nada por su cuenta: solo responde cuando un cliente (Claude Code, el Inspector) lo llama.
+- Si quitaras el servidor con `claude mcp remove mis-apuntes`, Claude dejaría de ver la herramienta.
+
+</Solucion>
+
+## Retos extra
+
+- Agrega una segunda herramienta `agregar_apunte(tema, texto)` que escriba en `apuntes.json`. Piensa en los riesgos: ¿debería pedir confirmación?
+- Expón los apuntes también como **recurso** (consulta en la documentación cómo se registran recursos).
+- Valida que el archivo exista y responde con un mensaje claro si falta.
+- Crea una skill de Claude Code (`/repasar`) que use tu herramienta para hacerte preguntas de repaso. Ver [Skills](/ia/aprende/claude-code-skills/).
+- Configura el servidor en `.mcp.json` con alcance de proyecto para compartirlo.
+
+## Cómo publicarlo
+
+- Sube el repositorio con un README que explique qué hace la herramienta, cómo probarla con el Inspector y cómo conectarla.
+- Aclara en el README los riesgos de seguridad: qué datos puede leer o escribir la herramienta y por qué no incluye secretos.
+- En tu portafolio, este proyecto muestra que entiendes cómo se integran herramientas con agentes de IA, una habilidad cada vez más pedida. Relaciónalo con [Seguridad en Claude Code](/ia/aprende/claude-code-permisos-y-seguridad/).
+
+Siguiente: [Una app pequeña con Claude Code, de principio a fin](/proyectos/app-con-claude-code-de-principio-a-fin/).

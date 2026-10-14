@@ -1,0 +1,176 @@
+---
+titulo: 'Control de gastos en Python con SQLite'
+descripcion: 'Registra gastos desde la terminal, guárdalos en una base de datos SQLite y obtén un resumen por categoría. Practica SQL dentro de un programa real.'
+nivel: intermedio
+tiempo: '1 a 2 días'
+tecnologias: ['python', 'sqlite', 'git']
+temas: ['python', 'sql']
+habilidades: ['SQLite', 'argparse', 'consultas SQL', 'validación de datos']
+publicado: 2026-10-14
+orden: 20
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Solucion from '@components/guias/Solucion.astro';
+import Callout from '@components/ui/Callout.astro';
+
+## Qué vas a construir
+
+Un programa de terminal para llevar tus gastos:
+
+```bash
+python gastos.py agregar 85.50 "Tacos" --categoria comida
+python gastos.py agregar 120 "Camión" --categoria transporte
+python gastos.py listar
+python gastos.py resumen
+```
+
+Los datos se guardan en un archivo `gastos.db` de SQLite, que viene incluido con Python. Es un proyecto ideal para unir dos cosas que a veces se aprenden separadas: un lenguaje (Python) y una base de datos (SQL).
+
+## Requisitos
+
+- Python 3 instalado: [guía de Python](/guias/python/).
+- Conocer lo básico de SQL: [guía de SQL](/guias/sql/) y el reto [Encuentra a los clientes que más gastan](/retos/sql-clientes-que-mas-gastan/).
+- Saber qué son funciones y diccionarios. Si dudas, haz antes [Totales por categoría desde un CSV](/retos/py-totales-desde-csv/).
+
+## Pasos sugeridos
+
+<Pasos>
+
+1. Crea la carpeta `gastos`, haz `git init` y crea `gastos.py`.
+2. Escribe una función `conectar()` que abra `gastos.db` y cree la tabla `gastos` si no existe, con las columnas `id`, `fecha`, `concepto`, `categoria` y `monto`.
+3. Agrega una restricción `CHECK (monto > 0)` para que la base rechace montos inválidos.
+4. Usa `argparse` con subcomandos (`agregar`, `listar`, `resumen`).
+5. Implementa `agregar` con una consulta **parametrizada** (signos `?`). Nunca armes el SQL pegando texto del usuario.
+6. Implementa `listar` ordenando por fecha.
+7. Implementa `resumen` con `GROUP BY categoria` y `SUM(monto)`, ordenado de mayor a menor.
+8. Prueba casos raros: monto negativo, concepto vacío, base de datos nueva.
+9. Haz commit por cada subcomando.
+
+</Pasos>
+
+<Solucion titulo="Ver una versión de referencia (inténtalo primero)">
+
+Probamos esta versión con tres gastos de ejemplo. Guárdala como `gastos.py`.
+
+```python
+"""Control de gastos en la terminal con SQLite.
+
+Uso:
+  python gastos.py agregar 85.50 "Tacos" --categoria comida
+  python gastos.py listar
+  python gastos.py resumen
+"""
+import argparse
+import sqlite3
+from datetime import date
+
+BASE = "gastos.db"
+
+
+def conectar():
+    con = sqlite3.connect(BASE)
+    con.execute(
+        """CREATE TABLE IF NOT EXISTS gastos (
+             id        INTEGER PRIMARY KEY,
+             fecha     TEXT NOT NULL,
+             concepto  TEXT NOT NULL,
+             categoria TEXT NOT NULL,
+             monto     REAL NOT NULL CHECK (monto > 0)
+           )"""
+    )
+    return con
+
+
+def agregar(args):
+    with conectar() as con:  # el "with" confirma (commit) los cambios al salir
+        con.execute(
+            "INSERT INTO gastos (fecha, concepto, categoria, monto) VALUES (?, ?, ?, ?)",
+            (args.fecha, args.concepto, args.categoria, args.monto),
+        )
+    print(f"Guardado: {args.concepto} (${args.monto:.2f})")
+
+
+def listar(_args):
+    con = conectar()
+    filas = con.execute("SELECT id, fecha, concepto, categoria, monto FROM gastos ORDER BY fecha, id")
+    for id_, fecha, concepto, categoria, monto in filas:
+        print(f"{id_:>3}  {fecha}  {concepto:<12} {categoria:<10} ${monto:>8.2f}")
+
+
+def resumen(_args):
+    con = conectar()
+    filas = con.execute(
+        "SELECT categoria, SUM(monto) AS total FROM gastos GROUP BY categoria ORDER BY total DESC"
+    )
+    for categoria, total in filas:
+        print(f"{categoria:<10} ${total:>8.2f}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Control de gastos")
+    sub = parser.add_subparsers(dest="comando", required=True)
+
+    p = sub.add_parser("agregar", help="Registra un gasto")
+    p.add_argument("monto", type=float)
+    p.add_argument("concepto")
+    p.add_argument("--categoria", default="otros")
+    p.add_argument("--fecha", default=date.today().isoformat())
+    p.set_defaults(funcion=agregar)
+
+    sub.add_parser("listar", help="Muestra todos los gastos").set_defaults(funcion=listar)
+    sub.add_parser("resumen", help="Total por categoría").set_defaults(funcion=resumen)
+
+    args = parser.parse_args()
+    args.funcion(args)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Una sesión de prueba (con fechas indicadas para que sea reproducible):
+
+```text
+$ python gastos.py agregar 85.50 Tacos --categoria comida --fecha 2026-10-01
+Guardado: Tacos ($85.50)
+$ python gastos.py agregar 120 Camión --categoria transporte --fecha 2026-10-02
+$ python gastos.py agregar 60 Café --categoria comida --fecha 2026-10-03
+$ python gastos.py listar
+  1  2026-10-01  Tacos        comida     $   85.50
+  2  2026-10-02  Camión       transporte $  120.00
+  3  2026-10-03  Café         comida     $   60.00
+$ python gastos.py resumen
+comida     $  145.50
+transporte $  120.00
+```
+
+Si intentas registrar un monto negativo, la base lo rechaza con `CHECK constraint failed: monto > 0`. Todavía se muestra como error técnico: convertirlo en un mensaje amigable es uno de los retos extra.
+
+Detalles que conviene entender:
+
+- Los `?` en el `INSERT` son **parámetros**. SQLite los separa del código SQL y así evitas la inyección SQL. Consulta [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/).
+- `with conectar() as con` confirma los cambios al terminar. El programa es corto y se cierra enseguida; en una app larga cerrarías la conexión con `con.close()`.
+- Un `float` sirve para practicar, pero para dinero real es mejor guardar centavos como enteros o usar `Decimal`.
+
+</Solucion>
+
+<Callout tipo="info" titulo="Los datos son tuyos">
+`gastos.db` contiene información personal. Agrégalo al `.gitignore` para no subirlo a GitHub.
+</Callout>
+
+## Retos extra
+
+- Muestra un mensaje amable cuando el monto sea inválido, en vez del error técnico.
+- Agrega `--mes 2026-10` a `resumen` para filtrar por mes (usa `WHERE fecha LIKE '2026-10%'`).
+- Agrega `borrar <id>` y `exportar` (a CSV con el módulo `csv`).
+- Escribe pruebas con `pytest` usando una base en memoria (`:memory:`). Más en [Pruebas automáticas](/fundamentos/pruebas-automaticas/).
+- Calcula el porcentaje que representa cada categoría con una función de ventana ([Ranking con funciones de ventana](/retos/sql-ranking-con-ventanas/)).
+
+## Cómo publicarlo
+
+- Sube el proyecto a GitHub con un `README.md` que muestre el uso y un ejemplo de salida.
+- Explica en el README por qué usas consultas parametrizadas y qué restricción tiene la tabla.
+- En tu portafolio, destaca que tomaste una decisión de diseño con los datos (por qué `CHECK`, por qué centavos o decimales).
+
+Siguiente proyecto: [Página personal accesible](/proyectos/pagina-personal-accesible/).

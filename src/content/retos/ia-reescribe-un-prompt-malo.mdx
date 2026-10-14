@@ -1,0 +1,105 @@
+---
+titulo: 'Reescribe tres prompts flojos'
+descripcion: 'Convierte tres peticiones vagas en prompts claros con contexto, tarea, formato y cierre. Entrena la habilidad que más mejora tus resultados con Claude.'
+tema: inteligencia-artificial
+nivel: principiante
+tiempo: 15
+conceptos: ['prompts', 'contexto', 'formato']
+publicado: 2026-10-14
+orden: 70
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Este reto va después de la pieza [Prompts que funcionan con Claude](/ia/aprende/claude-prompts-que-funcionan/). Funciona con Claude o con cualquier otro asistente.
+
+## El reto
+
+Estos tres prompts son demasiado vagos:
+
+1. `Explícame las promesas.`
+2. `Revisa mi código.`
+3. `Dame un plan para aprender Python.`
+
+Reescríbelos para que cada uno tenga:
+
+- **Contexto:** quién eres, qué nivel tienes, para qué lo necesitas.
+- **Tarea:** qué quieres exactamente.
+- **Formato:** longitud, estructura, tono.
+- **Cierre:** una pregunta, ejercicio o criterio para saber si entendiste.
+
+Después pruébalos con un asistente y compara con la versión vaga.
+
+## Reglas
+
+- Cada prompt reescrito debe poder entenderse **sin ver el original**.
+- Si vas a pegar código o texto, sepáralo del resto con etiquetas como `<codigo>`.
+- No pidas varias cosas distintas en un solo prompt.
+
+## Pistas
+
+<Pista n={1}>
+
+Para "las promesas": ¿en qué lenguaje? ¿Qué sabes ya (funciones, callbacks)? ¿Prefieres analogía, código o ambos?
+
+</Pista>
+
+<Pista n={2}>
+
+Para "revisa mi código": ¿qué debe revisar (errores, estilo, casos límite)? ¿Debe reescribirlo o solo señalar? ¿Qué esperabas que hiciera el código?
+
+</Pista>
+
+<Pista n={3}>
+
+Para el plan de estudio: ¿cuántas horas tienes por semana? ¿Qué quieres construir al final? ¿Cómo sabrás que avanzaste?
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+No hay una única respuesta correcta. Esta es una versión posible de cada una:
+
+**1. Promesas**
+
+```text
+Soy estudiante de primer año y ya entiendo funciones y callbacks en JavaScript. Explícame qué son las promesas con una analogía de la vida diaria y luego un ejemplo de menos de 15 líneas con comentarios en español. Termina con una pregunta que me ayude a comprobar si entendí la diferencia entre una promesa pendiente y una resuelta.
+```
+
+**2. Revisión de código**
+
+```text
+Estoy aprendiendo Python. Esta función debe devolver los números pares de una lista, pero con listas vacías falla. Revísala como un mentor: dime qué casos límite no cubre y qué nombre o estructura mejorarías. No la reescribas; señala las líneas.
+
+<codigo>
+def pares(lista):
+    return [n for n in lista if n % 2 == 0][0]
+</codigo>
+```
+
+**3. Plan de estudio**
+
+```text
+Quiero aprender Python para automatizar tareas en mi trabajo. Tengo cinco horas por semana y nunca programé. Hazme un plan de seis semanas en una tabla con columnas: semana, tema, práctica y cómo sabré que lo logré. Al final dime cuál sería mi primer mini proyecto.
+```
+
+Qué mejoró en cada caso:
+
+- El **contexto** (nivel, objetivo) hace que la explicación tenga la dificultad correcta.
+- La **tarea** es una sola y concreta.
+- El **formato** (analogía, menos de 15 líneas, tabla) evita respuestas largas o genéricas.
+- El **cierre** convierte la respuesta en práctica, no solo lectura.
+- Las **etiquetas** separan el código de las instrucciones.
+
+</Solucion>
+
+## Variaciones
+
+- Pide a Claude que critique tus prompts reescritos: "¿qué información falta para darte una mejor respuesta?".
+- Reescribe uno de tus prompts reales de esta semana con el mismo método.
+- Prueba la versión vaga y la reescrita y apunta cuál respuesta usarías y por qué.
+
+Siguiente reto: [Escribe un CLAUDE.md útil](/retos/ia-escribe-tu-claude-md/).

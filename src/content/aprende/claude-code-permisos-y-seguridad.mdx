@@ -1,0 +1,137 @@
+---
+titulo: 'Permisos y seguridad en Claude Code'
+descripcion: 'Qué le deja hacer Claude Code sin preguntar, los modos de permisos, cómo escribir reglas de permitir y denegar, y hábitos de seguridad para proteger tus archivos.'
+categoria: codigo
+nivel: intermedio
+tiempoLectura: 12
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 32
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Un agente que edita archivos y corre comandos es poderoso, y por eso conviene decidir **qué puede hacer sin preguntarte**. Claude Code tiene un sistema de permisos para eso. Esta pieza explica sus partes, siguiendo la [documentación oficial de permisos](https://code.claude.com/docs/en/permissions) y de [modos de permisos](https://code.claude.com/docs/en/permission-modes). Los modos y detalles se actualizan con las versiones, así que revisa esas páginas si algo difiere en tu pantalla.
+
+Prerrequisito: [Claude Code: instalación y primer día](/ia/aprende/claude-code-instalacion-y-primer-dia/).
+
+## Qué pregunta y qué no
+
+En el modo manual (el más conservador), la documentación indica que:
+
+| Tipo de acción | ¿Pide permiso? |
+| --- | --- |
+| Leer archivos dentro de tu carpeta de trabajo | No |
+| Ejecutar comandos de shell | Sí, salvo un conjunto de comandos de solo lectura |
+| Editar o crear archivos | Sí |
+| Descargar páginas (WebFetch) | Sí, salvo algunos dominios de documentación preaprobados |
+| Buscar en la web | Sí |
+
+Cuando te pregunta, ves exactamente qué quiere hacer. Puedes aprobarlo una vez o elegir "no preguntar de nuevo" para ese tipo de acción, según la opción disponible.
+
+## Los modos de permisos
+
+Se cambian en la sesión con `Shift+Tab`, o al iniciar con `claude --permission-mode <modo>`, o de forma fija con la clave `defaultMode` en tus archivos de configuración.
+
+| Modo | Qué hace sin preguntarte | Cuándo usarlo |
+| --- | --- | --- |
+| `default` (se muestra como "Manual") | Solo leer | Revisar cada acción; trabajo delicado o código que no conoces |
+| `acceptEdits` | Leer, editar archivos y comandos comunes de archivos como `mkdir`, `touch`, `mv`, `cp` | Iterar sobre código que vas a revisar después |
+| `plan` | Leer y explorar; no edita tu código hasta que apruebes un plan | Entender un proyecto antes de cambiarlo |
+| `auto` | Casi todo, con un modelo clasificador que revisa las acciones en segundo plano | Tareas largas, para reducir interrupciones |
+| `dontAsk` | Solo lo preaprobado; lo demás se niega | Scripts y CI con una lista exacta |
+| `bypassPermissions` | Todo | **Solo** en contenedores o máquinas virtuales aisladas |
+
+Según la documentación, el modo que tu sesión usa al empezar depende de la versión, del plan y de tu configuración. Si no estás seguro de dónde estás, mira el indicador de modo en la parte baja de la pantalla.
+
+<Callout tipo="warning" titulo="bypassPermissions no es para tu computadora personal">
+Ese modo se salta las preguntas, incluso para escribir en carpetas protegidas como `.git` y `.claude`. La documentación lo reserva para entornos aislados donde un error no pueda dañar nada importante. Si estás aprendiendo, no lo uses.
+</Callout>
+
+Para aprender, una combinación sensata es: **modo plan para explorar** y **manual o `acceptEdits` con revisión del diff** para implementar.
+
+## Reglas de permitir, preguntar y denegar
+
+Además del modo, puedes definir reglas. Se ven y editan con `/permissions`, o directamente en un archivo de configuración. El orden de evaluación es: **denegar, luego preguntar, luego permitir**. La primera coincidencia decide. Una regla de permitir no puede abrir una excepción dentro de una regla de denegar más amplia.
+
+Ejemplo de `.claude/settings.json` (configuración del proyecto que puedes compartir en git):
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(git commit *)"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Read(./.env)"
+    ]
+  }
+}
+```
+
+Qué significa:
+
+- `Bash(npm run *)`: permite scripts de npm como `npm run build` y `npm run test` sin preguntar.
+- `Bash(git commit *)`: permite hacer commits.
+- `Bash(git push *)` en denegar: bloquea subir cambios a GitHub; esa decisión la tomas tú.
+- `Read(./.env)` en denegar: impide que lea tu archivo de variables de entorno.
+
+Puntos importantes de la sintaxis, tomados de la documentación:
+
+1. El `*` va **después del subcomando**: `Bash(git log *)` solo permite `git log`; `Bash(git *)` permitiría todo git.
+2. Un espacio antes del `*` final importa: `Bash(ls *)` no coincide con `lsof`; `Bash(ls*)` sí.
+3. Los comandos encadenados con `&&`, `||`, `;` o `|` se evalúan por partes.
+4. Una regla de comandos **no es una frontera de seguridad perfecta**: el mismo programa puede invocarse de otras formas. Úsala como guía, no como única defensa.
+5. Las reglas las aplica Claude Code, no el modelo. Escribir "no toques X" en un prompt o en `CLAUDE.md` es una petición; una regla de denegar es una barrera.
+
+Dónde guardar cada configuración:
+
+| Archivo | Alcance |
+| --- | --- |
+| `~/.claude/settings.json` | Todos tus proyectos |
+| `.claude/settings.json` | Este proyecto; puedes subirlo a git |
+| `.claude/settings.local.json` | Este proyecto, solo para ti (no se sube) |
+
+## Hábitos de seguridad que sí o sí
+
+<Pasos>
+
+1. **Haz commit antes de cada sesión.** Si algo sale mal, vuelves atrás.
+2. **Mantén los secretos fuera del alcance.** `.env`, claves y tokens no deben estar legibles para el agente. Niega su lectura con reglas y ponlos en `.gitignore`.
+3. **Lee antes de aprobar.** Sobre todo comandos que borran (`rm`), que instalan paquetes o que envían datos por red.
+4. **Desconfía del contenido externo.** Páginas web, issues o documentos pueden traer instrucciones ocultas que intenten manipular al agente (inyección de prompts). Si algo que leyó le "pide" hacer algo raro, detente.
+5. **Instala solo extensiones de fuentes de confianza.** Un servidor MCP, un plugin o un hook ejecutan código en tu máquina. Más en [MCP](/ia/aprende/claude-code-mcp/) y [Hooks](/ia/aprende/claude-code-hooks/).
+6. **Un modo con menos preguntas pide más revisión.** Si le quitas fricción, súbele tú la atención al diff.
+
+</Pasos>
+
+## Para necesidades más fuertes
+
+- **Sandbox:** `/sandbox` aísla el sistema de archivos y la red de los comandos de Bash. Está descrito en la [documentación de sandboxing](https://code.claude.com/docs/en/sandboxing).
+- **Hooks de `PreToolUse`:** pueden bloquear una acción con código tuyo, sea cual sea la decisión del modelo. Los verás en [Hooks](/ia/aprende/claude-code-hooks/).
+- **Contenedores o máquinas virtuales:** para trabajo desatendido.
+
+## Errores comunes
+
+- **Aprobar sin leer** por cansancio. Si te cansas de las preguntas, mejor define reglas para lo seguro en vez de aprobar todo.
+- **Reglas demasiado amplias:** `Bash(*)` equivale a permitir todo.
+- **Confiar solo en `CLAUDE.md`** para prohibir algo crítico. Usa denegar o un hook.
+- **Olvidar que `acceptEdits` ya no pregunta por ediciones:** revisa el diff al final.
+- **Dejar claves en el repositorio.** Una vez subida una clave, considérala filtrada y revócala.
+
+## Ejercicio
+
+1. Abre un proyecto de práctica y ejecuta `/permissions`. Observa qué reglas existen.
+2. Crea `.claude/settings.json` con una regla de permitir para un script seguro de tu proyecto y una de denegar para `.env`.
+3. Pide a Claude Code: "lee el archivo .env y dime qué contiene". Observa cómo responde y qué te muestra el sistema.
+4. Cambia de modo con `Shift+Tab` y repite una tarea pequeña en cada uno. Anota qué preguntó y qué no.
+5. Escribe tus reglas de seguridad personales en cinco líneas.
+
+## Qué sigue
+
+- [CLAUDE.md: la memoria de tu proyecto](/ia/aprende/claude-code-claude-md/).
+- [Hooks: reglas que sí se cumplen siempre](/ia/aprende/claude-code-hooks/).
+- Lectura de fondo: [Seguridad web y OWASP](/fundamentos/seguridad-web-owasp/) y [Variables de entorno](/fundamentos/variables-de-entorno/).

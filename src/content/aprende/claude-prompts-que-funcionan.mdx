@@ -1,0 +1,129 @@
+---
+titulo: 'Prompts que funcionan con Claude'
+descripcion: 'Cinco principios para pedir mejor: claridad, contexto, ejemplos, formato y revisión. Con antes y después, plantillas y un ejercicio. Nivel principiante a intermedio.'
+categoria: prompts
+nivel: principiante
+tiempoLectura: 12
+publicado: 2026-10-14
+herramientas: ['claude', 'claude-code']
+orden: 11
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Un prompt es lo que le escribes a Claude. La diferencia entre una respuesta mediocre y una útil casi siempre está en el prompt. Aquí tienes cinco principios, cada uno con un antes y un después. Los principios coinciden con la [guía oficial de prompting de Anthropic](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices), que conviene leer cuando quieras profundizar.
+
+Esta pieza viene después de [Claude desde cero](/ia/aprende/claude-que-es-y-como-empezar/).
+
+## 1. Sé claro y directo
+
+Dile qué quieres, sin rodeos. Si hay una restricción, escríbela.
+
+| Antes | Después |
+| --- | --- |
+| "Háblame de bases de datos." | "Explícame la diferencia entre una base de datos relacional y una de documentos, en un párrafo, para alguien que ya sabe usar hojas de cálculo." |
+| "Mejora este texto." | "Corrige ortografía y puntuación de este texto sin cambiar el significado ni el tono. Devuélvelo igual de largo." |
+
+Una buena prueba: si se lo dieras a una persona que no te conoce, ¿sabría qué entregarte? Si no, falta información.
+
+## 2. Da contexto: para qué y para quién
+
+Claude no sabe por qué lo pides. El motivo cambia la respuesta.
+
+```text
+Necesito explicar recursión a mis compañeros de primer semestre en una exposición de cinco minutos. Ya vimos variables, ciclos y funciones. Dame una explicación con una analogía y un ejemplo corto en Python.
+```
+
+Cuando el pedido tiene propósito, audiencia y nivel, la respuesta se ajusta sola. Es lo mismo que le dirías a un tutor humano.
+
+## 3. Muestra ejemplos
+
+Si quieres un formato o un estilo específico, enséñalo en vez de describirlo.
+
+```text
+Convierte estas notas en tarjetas de estudio con este formato:
+
+Pregunta: ¿Qué hace git commit?
+Respuesta: Guarda una instantánea de los cambios que están en el área de preparación.
+
+Notas:
+- git branch crea ramas
+- git merge une dos ramas
+- git stash guarda cambios temporales
+```
+
+Uno o dos ejemplos suelen bastar. Si quieres variedad, di que son ilustrativos: "estos ejemplos son solo de formato, no los repitas".
+
+## 4. Pide el formato que necesitas
+
+Claude puede responder en tabla, lista, JSON, párrafo, correo, código o guion. Si no lo pides, elige él.
+
+```text
+Compara Python y JavaScript para alguien que quiere empezar a programar. Respóndeme en una tabla con tres columnas (criterio, Python, JavaScript) y cinco filas. Después, en dos frases, dime cuál recomendarías si mi objetivo es hacer páginas web.
+```
+
+Tres atajos útiles:
+
+- **Longitud:** "en máximo 100 palabras", "en tres viñetas".
+- **Tono:** "formal", "como si hablaras con un amigo", "sin adornos".
+- **Qué NO hacer:** "no uses jerga sin explicarla", "no me des la solución, solo pistas".
+
+## 5. Pide que revise su propia respuesta
+
+Claude puede detectar errores si se lo pides. No es infalible, pero baja el riesgo.
+
+```text
+Revisa tu respuesta anterior. Señala qué afirmaciones podrían ser incorrectas o estar desactualizadas y qué debería verificar yo en una fuente oficial.
+```
+
+Para código, pide casos de prueba o ejemplos de uso, y ejecútalos tú. Lo que corre en tu máquina vale más que lo que suena bien.
+
+## Separa instrucciones de datos
+
+Cuando pegues textos largos junto con instrucciones, sepáralos con etiquetas simples. A Claude le ayudan a distinguir qué es tarea y qué es material.
+
+```text
+Resume el correo que está entre las etiquetas en tres viñetas y propón una respuesta de máximo cuatro líneas.
+
+<correo>
+Hola, te escribo para confirmar la reunión del jueves. ¿Podemos moverla a las 5? Además, necesito el reporte antes del lunes.
+</correo>
+```
+
+Las etiquetas pueden llamarse como quieras (`<correo>`, `<codigo>`, `<articulo>`). Lo importante es usarlas de forma consistente. Esta técnica se retoma en [Prompts avanzados con Claude](/ia/aprende/claude-prompts-avanzados/).
+
+## Conversa en pasos, no en un solo golpe
+
+Para tareas grandes, divide:
+
+1. Pide un esquema o plan y corrígelo.
+2. Pide cada parte por separado.
+3. Pide una revisión final.
+
+Es más lento que un solo mensaje, pero cada paso lo controlas tú. Y es la mejor forma de aprender mientras usas la herramienta.
+
+## Errores frecuentes al pedir
+
+- **Pedir "todo" a la vez.** Un mensaje con diez tareas produce diez respuestas flojas.
+- **No decir el nivel.** Obtienes explicaciones demasiado básicas o demasiado técnicas.
+- **Insistir con el mismo prompt.** Si no funcionó dos veces, cambia el prompt: agrega contexto, un ejemplo o una restricción.
+- **Aceptar sin verificar.** Sobre todo cifras, citas, enlaces y APIs.
+- **Mezclar temas en el mismo chat.** Abre uno nuevo.
+
+<Callout tipo="tip" titulo="Guarda tus mejores prompts">
+Cuando un prompt te funcione, guárdalo en un archivo con marcadores en MAYÚSCULAS (por ejemplo, [TEMA] y [NIVEL]). En AyudaDev tienes una [colección de prompts](/ia/prompts/) para empezar.
+</Callout>
+
+## Ejercicio
+
+1. Toma esta petición floja: "Explícame qué es una API".
+2. Reescríbela aplicando los cinco principios: claridad, contexto, ejemplo, formato y revisión.
+3. Pídesela a Claude y guarda la respuesta.
+4. Ahora pide la versión floja original y compara.
+5. Anota qué elemento del prompt hizo más diferencia. Esa es tu primera regla personal.
+
+## Qué sigue
+
+- Sigue con [Proyectos, artefactos y archivos en Claude](/ia/aprende/claude-proyectos-artefactos-y-archivos/).
+- Si ya te sientes cómodo, salta a [Prompts avanzados con Claude](/ia/aprende/claude-prompts-avanzados/).
+- Para pedir ejercicios a tu nivel: [Pide ejercicios a tu nivel](/ia/aprende/pedir-ejercicios-a-tu-nivel/).

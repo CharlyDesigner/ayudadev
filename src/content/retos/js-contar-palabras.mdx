@@ -1,0 +1,105 @@
+---
+titulo: 'Cuenta las palabras de un texto'
+descripcion: 'Escribe una función que cuente cuántas veces aparece cada palabra, ignorando mayúsculas y signos, y las ordene de mayor a menor. Nivel principiante.'
+tema: javascript
+nivel: principiante
+tiempo: 15
+conceptos: ['cadenas', 'Map', 'expresiones regulares', 'ordenar']
+publicado: 2026-10-14
+orden: 10
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Antes de empezar, repasa cadenas y arreglos en la [guía de JavaScript](/guias/javascript/) y en la [hoja de arreglos y objetos](/hojas/javascript-arreglos-y-objetos-metodos/).
+
+## El reto
+
+Escribe `contarPalabras(texto)`. Debe devolver un arreglo de pares `[palabra, veces]`, de la palabra más repetida a la menos repetida. Si dos palabras se repiten igual, van en orden alfabético.
+
+Ejemplo:
+
+```js
+contarPalabras('Hola, hola. ¿Qué tal? Hola mundo');
+// [ [ 'hola', 3 ], [ 'mundo', 1 ], [ 'qué', 1 ], [ 'tal', 1 ] ]
+
+contarPalabras('');
+// []
+```
+
+## Reglas
+
+- No importa si la palabra está en mayúsculas o minúsculas: `Hola` y `hola` son la misma.
+- Los signos de puntuación no forman parte de las palabras.
+- Las letras con acento y la ñ sí cuentan como letras.
+- No uses librerías: solo JavaScript.
+
+## Pistas
+
+<Pista n={1}>
+
+Pasa todo el texto a minúsculas con `toLowerCase()` antes de contar.
+
+</Pista>
+
+<Pista n={2}>
+
+Una expresión regular puede extraer solo las palabras. `\p{L}` coincide con cualquier letra de cualquier idioma, y la bandera `u` activa esa función: `/\p{L}+/gu`. Con `texto.match(...)` obtienes un arreglo (o `null` si no hay coincidencias).
+
+</Pista>
+
+<Pista n={3}>
+
+Un `Map` es ideal para contar: `conteo.set(palabra, (conteo.get(palabra) ?? 0) + 1)`. Para ordenar, convierte el `Map` en arreglo con `[...conteo]` y usa `sort` con una función que compare primero por veces y luego por texto.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `contar.js` y ejecútala con `node contar.js`.
+
+```js
+// Cuenta palabras ignorando mayúsculas y signos
+function contarPalabras(texto) {
+  const conteo = new Map();
+  // \p{L} = cualquier letra (incluye acentos y ñ), \p{N} = números
+  const palabras = texto.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  for (const palabra of palabras) {
+    conteo.set(palabra, (conteo.get(palabra) ?? 0) + 1);
+  }
+  // Más repetidas primero; si empatan, orden alfabético
+  return [...conteo].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es')
+  );
+}
+
+console.log(contarPalabras('Hola, hola. ¿Qué tal? Hola mundo'));
+console.log(contarPalabras(''));
+```
+
+Salida:
+
+```text
+[ [ 'hola', 3 ], [ 'mundo', 1 ], [ 'qué', 1 ], [ 'tal', 1 ] ]
+[]
+```
+
+Cómo funciona:
+
+1. `toLowerCase()` unifica mayúsculas y minúsculas.
+2. `match(/[\p{L}\p{N}]+/gu)` toma secuencias de letras o números. Los signos y espacios quedan fuera. Si no hay coincidencias devuelve `null`, y `?? []` lo convierte en arreglo vacío.
+3. El `Map` guarda cuántas veces vimos cada palabra. `conteo.get(palabra) ?? 0` evita sumar a `undefined`.
+4. El `sort` resta las veces (`b[1] - a[1]`) para ordenar de mayor a menor. Si la resta da `0` (empate), `||` pasa a comparar el texto con `localeCompare`.
+
+</Solucion>
+
+## Variaciones
+
+- Devuelve solo las tres palabras más frecuentes.
+- Ignora palabras de una lista de "palabras vacías" como `de`, `la`, `el`.
+- Haz que `Hola` y `hóla` cuenten como la misma palabra (investiga `normalize('NFD')`).
+
+Siguiente reto: [Agrupa una lista de objetos](/retos/js-agrupar-por/).

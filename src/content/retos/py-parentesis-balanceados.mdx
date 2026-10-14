@@ -1,0 +1,101 @@
+---
+titulo: 'Valida paréntesis balanceados'
+descripcion: 'Comprueba que paréntesis, corchetes y llaves estén bien abiertos y cerrados usando una pila. Un clásico de entrevistas técnicas. Nivel intermedio.'
+tema: python
+nivel: intermedio
+tiempo: 20
+conceptos: ['pilas', 'listas', 'diccionarios']
+publicado: 2026-10-14
+orden: 31
+---
+
+import Pista from '@components/guias/Pista.astro';
+import Solucion from '@components/guias/Solucion.astro';
+
+Reto anterior: [Agrupa anagramas](/retos/py-agrupar-anagramas/). Para entender la estructura que vas a usar: [Estructuras de datos básicas](/fundamentos/estructuras-de-datos-basicas/).
+
+## El reto
+
+Escribe `esta_balanceado(texto)`. Devuelve `True` si todos los paréntesis `()`, corchetes `[]` y llaves `{}` del texto están bien abiertos y cerrados, en el orden correcto. Los demás caracteres se ignoran.
+
+```python
+esta_balanceado("([]{})")  # True
+esta_balanceado("(]")      # False
+esta_balanceado("((")      # False
+esta_balanceado("")        # True
+esta_balanceado("a(b)c")   # True
+esta_balanceado("}{")      # False
+```
+
+## Reglas
+
+- Cada símbolo que se cierra debe corresponder al último que se abrió y sigue abierto.
+- Al terminar, no debe quedar nada abierto.
+- Complejidad objetivo: una sola pasada por el texto.
+
+## Pistas
+
+<Pista n={1}>
+
+Piensa en una pila de platos: el último plato que pones es el primero que quitas. En Python, una lista con `append` y `pop` se comporta así.
+
+</Pista>
+
+<Pista n={2}>
+
+Cuando veas un símbolo que **abre**, guárdalo en la pila. Cuando veas uno que **cierra**, revisa que el último guardado sea su pareja.
+
+</Pista>
+
+<Pista n={3}>
+
+Un diccionario `{")": "(", "]": "[", "}": "{"}` te dice, para cada cierre, qué apertura espera. No olvides el caso de intentar cerrar con la pila vacía.
+
+</Pista>
+
+## Solución
+
+<Solucion>
+
+Guárdala como `parentesis.py` y ejecútala con `python parentesis.py`.
+
+```python
+# Revisa que los paréntesis, corchetes y llaves estén bien cerrados
+def esta_balanceado(texto):
+    pares = {")": "(", "]": "[", "}": "{"}
+    pila = []
+    for caracter in texto:
+        if caracter in "([{":
+            pila.append(caracter)       # abrimos: lo guardamos
+        elif caracter in pares:
+            if not pila or pila.pop() != pares[caracter]:
+                return False            # cerramos algo que no estaba abierto
+    return not pila                     # al final no debe sobrar nada abierto
+
+
+for prueba in ["([]{})", "(]", "((", "", "a(b)c", "}{"]:
+    print(repr(prueba), esta_balanceado(prueba))
+```
+
+Salida:
+
+```text
+'([]{})' True
+'(]' False
+'((' False
+'' True
+'a(b)c' True
+'}{' False
+```
+
+Cómo funciona: recorremos el texto una vez. Cada apertura entra a la pila. Cada cierre saca el último elemento y verifica que sea su pareja; si la pila estaba vacía o la pareja no coincide, el texto no está balanceado. Al terminar, `not pila` es `True` solo si no quedó ninguna apertura sin cerrar. Es una sola pasada, así que el costo crece de forma lineal con el largo del texto.
+
+</Solucion>
+
+## Variaciones
+
+- Devuelve la posición del primer error en lugar de `True` o `False`.
+- Agrega los símbolos `<` y `>` a los que se revisan.
+- Úsalo para validar expresiones matemáticas como `2 * (3 + [4 - 1])`.
+
+Siguiente reto: [Totales desde un CSV](/retos/py-totales-desde-csv/).

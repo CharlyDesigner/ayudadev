@@ -1,0 +1,101 @@
+---
+titulo: 'Modelos de Claude: familias y cómo elegir'
+descripcion: 'Qué son Fable, Opus, Sonnet y Haiku, para qué sirve cada uno, qué es el esfuerzo de razonamiento y cómo cambiar de modelo en el chat y en Claude Code.'
+categoria: basico
+nivel: principiante
+tiempoLectura: 11
+publicado: 2026-10-14
+herramientas: ['claude', 'claude-code']
+orden: 20
+---
+
+import Callout from '@components/ui/Callout.astro';
+
+Claude no es un solo modelo. Es una familia con varios tamaños y especialidades, y la lista cambia con el tiempo. Esta pieza te enseña a leer esa lista, entender para qué sirve cada una y elegir sin adivinar.
+
+<Callout tipo="info" titulo="Datos verificados el 14 de octubre de 2026">
+Los nombres de los modelos de esta pieza vienen de la [página oficial de modelos](https://platform.claude.com/docs/en/about-claude/models/overview) a esa fecha. Salen versiones nuevas y se retiran otras. Antes de depender de un nombre, vuelve a abrir esa página.
+</Callout>
+
+## Cómo se organiza la familia
+
+Cada modelo tiene un **nombre de línea** (la categoría) y un **número de versión**. Por ejemplo, "Sonnet 5.5" es la línea Sonnet, versión 5.5.
+
+Según la documentación oficial, estas son las líneas actuales y para qué las posiciona Anthropic:
+
+| Línea | Para qué está pensada, según la documentación oficial |
+| --- | --- |
+| Fable | Razonamiento exigente y trabajo de agente de larga duración. |
+| Opus | Programación con agentes de larga duración y trabajo de conocimiento. Es el punto de partida que la documentación sugiere para la mayoría de las cargas de trabajo. |
+| Sonnet | La mejor combinación de velocidad e inteligencia. |
+| Haiku | Tareas de mucho volumen y baja latencia, como clasificar, extraer datos o enrutar. |
+
+La página oficial también compara la latencia relativa: Haiku es el más rápido de la lista y Fable el más lento. Y recuerda: la velocidad real depende del largo del prompt, del largo de la respuesta y de cuánto razone el modelo.
+
+Los números exactos de cada modelo (ventana de contexto, límite de salida, precio, fecha de retiro) están en la tabla oficial. No los repetimos aquí para no darte datos viejos.
+
+## Cuándo usar cada una
+
+Piensa en una caja de herramientas, no en un ranking.
+
+- **Haiku**: cuando haces muchas tareas pequeñas y repetitivas y quieres rapidez. Ejemplos: clasificar mensajes, extraer fechas de textos, etiquetar.
+- **Sonnet**: el equilibrio para el día a día. Buen candidato para programar, analizar datos, redactar y para la mayoría de tareas de aprendizaje.
+- **Opus**: cuando la tarea es larga o compleja y quieres más capacidad: refactorizar muchos archivos, trabajar con un agente varias horas, problemas con muchas piezas.
+- **Fable**: cuando ya probaste con Opus en esfuerzo alto y tus pruebas aún no alcanzan, o cuando el trabajo exige razonamiento largo y exigente.
+
+La documentación oficial en [Cómo elegir un modelo](https://platform.claude.com/docs/en/about-claude/models/choosing-a-model) propone dos caminos de arranque:
+
+1. **Primero eficiencia**: empiezas con el modelo más rápido, pruebas bien y subes solo si hay una carencia real.
+2. **Primero capacidad**: empiezas con uno potente, optimizas el prompt y después bajas de modelo o de esfuerzo si te sobra calidad.
+
+Para aprender, normalmente basta con el modelo que te dé tu plan por defecto. Cambia de modelo cuando tengas una razón medible, no por moda.
+
+## El "esfuerzo": razonar más o menos
+
+Además del modelo, existe un control de **esfuerzo** que decide cuánto razona antes de responder. Más esfuerzo suele significar mejor resultado en problemas difíciles, pero también más espera y más consumo. La guía oficial menciona que ajustar el esfuerzo es muchas veces mejor palanca que cambiar de modelo. Los niveles disponibles dependen del modelo; consúltalos en la [documentación de esfuerzo](https://platform.claude.com/docs/en/build-with-claude/effort).
+
+## Cómo cambiar de modelo
+
+**En el chat de Claude:** hay un selector de modelo en la caja de mensaje. Qué modelos aparecen depende de tu plan; revisa la [ayuda oficial](https://support.claude.com).
+
+**En Claude Code**, según la [documentación de configuración de modelos](https://code.claude.com/docs/en/model-config):
+
+```text
+/model sonnet
+/effort high
+```
+
+```bash
+claude --model opus
+```
+
+Los alias `opus`, `sonnet` y `haiku` apuntan a la versión más reciente de cada línea. Si necesitas fijar una versión exacta para que nada cambie solo, usa el nombre completo del modelo que aparece en la página oficial. Hay también un alias `opusplan`, que usa Opus para planear y Sonnet para ejecutar.
+
+## Cómo decidir con un método
+
+1. **Escribe tu tarea real** (no un ejemplo de juguete).
+2. **Prepara cinco casos** que te importen, con al menos dos difíciles.
+3. **Pruébalos con dos modelos** y compara calidad, tiempo y esfuerzo para corregir.
+4. **Elige el más barato que cumpla.** Si ninguno cumple, mejora el prompt antes de subir de modelo.
+
+Ese proceso, con código, está en [Cómo elegir modelo con una prueba propia](/ia/aprende/elegir-modelo-con-una-prueba-propia/).
+
+## Mitos comunes
+
+- "El más grande siempre es mejor." No: para tareas simples puede ser lento y caro sin mejora visible.
+- "Un modelo nuevo funciona igual con mi prompt viejo." No siempre. Vuelve a probar tus casos.
+- "El modelo sabe lo que pasó ayer." Su conocimiento tiene fecha de corte. Para datos recientes dale fuentes o activa la búsqueda cuando exista.
+- "Si lo dice con seguridad, es verdad." Ninguna línea de modelos está libre de equivocarse. Lee [Alucinaciones y verificación](/fundamentos/alucinaciones-y-verificacion/).
+
+## Ejercicio
+
+1. Abre la [tabla oficial de modelos](https://platform.claude.com/docs/en/about-claude/models/overview).
+2. Anota para cada línea (Fable, Opus, Sonnet, Haiku) una tarea tuya que encaje con su descripción.
+3. Si tu plan te deja elegir modelo, haz la misma pregunta de programación a dos y compara claridad y tiempo.
+4. Escribe en una línea tu regla personal: "Empiezo con X y subo a Y si...".
+
+## Qué sigue
+
+- [Costos, límites y tokens: cómo entenderlos](/ia/aprende/costos-limites-y-tokens-de-claude/).
+- [Cómo elegir modelo con una prueba propia](/ia/aprende/elegir-modelo-con-una-prueba-propia/).
+- Teoría de fondo: [Tokens y ventana de contexto](/fundamentos/tokens-y-ventana-de-contexto/).

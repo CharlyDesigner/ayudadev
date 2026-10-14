@@ -1,0 +1,156 @@
+---
+titulo: 'CLAUDE.md: la memoria de tu proyecto en Claude Code'
+descripcion: 'Qué escribir (y qué no) en CLAUDE.md, dónde guardarlo, cómo importar archivos, reglas por carpeta y cómo mantenerlo corto para que Claude lo obedezca.'
+categoria: codigo
+nivel: intermedio
+tiempoLectura: 11
+publicado: 2026-10-14
+herramientas: ['claude-code']
+orden: 33
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Cada sesión de Claude Code empieza con la memoria en blanco. Lo que no esté en el prompt ni en el proyecto, no lo sabe: cómo corres las pruebas, qué estilo usas, qué no debe tocar. El archivo `CLAUDE.md` resuelve eso: Claude lo lee al inicio de cada sesión. Esta pieza sigue la [documentación oficial de memoria](https://code.claude.com/docs/en/memory).
+
+Antes: [Flujo de trabajo con Claude Code](/ia/aprende/claude-code-flujo-de-trabajo/).
+
+## Dos memorias distintas
+
+| | CLAUDE.md | Memoria automática |
+| --- | --- | --- |
+| Quién la escribe | Tú | Claude, a partir de tus correcciones y preferencias |
+| Qué contiene | Instrucciones y reglas | Aprendizajes y patrones |
+| Cuándo se carga | Cada sesión | Cada sesión |
+
+Con `/memory` puedes editar tus archivos `CLAUDE.md` y ver o activar la memoria automática. La documentación aclara algo clave: Claude trata `CLAUDE.md` como **contexto, no como configuración obligatoria**. Si necesitas una garantía, usa un [hook](/ia/aprende/claude-code-hooks/) o una regla de denegar ([permisos](/ia/aprende/claude-code-permisos-y-seguridad/)).
+
+## Dónde puede vivir
+
+| Alcance | Ubicación | Para qué |
+| --- | --- | --- |
+| Usuario | `~/.claude/CLAUDE.md` | Tus preferencias en todos tus proyectos |
+| Proyecto | `./CLAUDE.md` o `./.claude/CLAUDE.md` | Reglas del equipo; se sube a git |
+| Local | `./CLAUDE.local.md` | Tus notas en este proyecto; agrégalo a `.gitignore` |
+| Organización | Rutas de política administrada | Reglas de una empresa |
+
+Claude Code carga los `CLAUDE.md` de la carpeta donde lo abres y de las carpetas superiores. Los de subcarpetas se cargan cuando Claude trabaja con archivos de esa subcarpeta.
+
+## Crearlo en un minuto
+
+<Pasos>
+
+1. Entra a tu proyecto y abre `claude`.
+2. Escribe `/init`. Claude analiza el código y genera un `CLAUDE.md` inicial con comandos de compilación, de pruebas y convenciones que encuentre.
+3. Ábrelo y **bórrale lo que sobre**. Un archivo generado casi siempre trae de más.
+4. Agrega lo que Claude no podría deducir leyendo el código (abajo te decimos qué).
+5. Ejecuta `/context` y revisa que aparezca en la lista de archivos de memoria.
+6. Haz commit para que todo el equipo lo comparta.
+
+</Pasos>
+
+## Qué sí y qué no escribir
+
+La documentación oficial resume el criterio con una pregunta para cada línea: **"¿Quitar esto haría que Claude cometa errores?"** Si no, bórrala.
+
+| Escríbelo | No lo escribas |
+| --- | --- |
+| Comandos que Claude no adivinaría (`npm run verify`) | Lo que se ve leyendo el código |
+| Reglas de estilo distintas a las comunes | Convenciones estándar del lenguaje |
+| Cómo correr las pruebas | Documentación larga de APIs (mejor un enlace) |
+| Reglas de ramas, commits y pull requests | Información que cambia seguido |
+| Decisiones de arquitectura propias | Descripción archivo por archivo |
+| Trampas del entorno (variables requeridas) | Frases vacías como "escribe código limpio" |
+
+Sé **concreto y verificable**: "Usa 2 espacios de indentación" en vez de "Formatea bien". "Corre `npm test` antes de hacer commit" en vez de "prueba tus cambios". Y mantenlo corto: la documentación apunta a menos de 200 líneas por archivo.
+
+## Un ejemplo completo y breve
+
+```markdown
+# Mi proyecto: gestor de notas
+
+## Comandos
+- Instalar: `npm install`
+- Pruebas: `npm test` (corre uno solo con `npm test -- notas`)
+- Verificación completa antes de commit: `npm run verify`
+
+## Estilo
+- JavaScript moderno con módulos (import/export), no CommonJS.
+- Comentarios y textos de interfaz en español de México.
+- Nombres de funciones y variables en español, sin acentos.
+
+## Reglas del proyecto
+- No agregues dependencias sin preguntarme.
+- Las funciones puras van en `src/lib/` y llevan prueba en `tests/`.
+- Nunca leas ni modifiques `.env`.
+
+## Flujo
+- Una rama por tarea. Commits cortos y en presente: "Agrega validación de título".
+- No hagas push: lo hago yo.
+```
+
+Fíjate en que cada línea es concreta, corta y comprobable. Este mismo tipo de archivo se usa en AyudaDev: el repositorio del sitio tiene un `CLAUDE.md` con sus reglas de idioma, diseño y contenido.
+
+## Importar otros archivos
+
+Dentro de `CLAUDE.md` puedes traer otros archivos con `@ruta`:
+
+```markdown
+Consulta @README.md para la descripción general y @package.json para los scripts disponibles.
+
+# Flujo de git
+@docs/git.md
+```
+
+Detalles de la documentación: las rutas relativas se resuelven desde el archivo que las contiene; las importaciones pueden encadenarse hasta cuatro niveles; y lo importado **se carga al inicio**, así que importar no ahorra contexto. Si quieres mencionar una ruta sin importarla, ponla entre acentos graves.
+
+## Reglas por tipo de archivo: `.claude/rules/`
+
+Para proyectos grandes, divide en archivos pequeños dentro de `.claude/rules/`. Una regla puede limitarse a ciertos archivos con `paths`:
+
+```markdown
+---
+paths:
+  - "src/api/**/*.ts"
+---
+
+# Reglas de la API
+- Todo endpoint valida su entrada.
+- Usa el formato de error estándar del proyecto.
+```
+
+Esa regla solo se carga cuando Claude trabaja con archivos que coincidan. Es la forma de no llenar el contexto con instrucciones que no vienen al caso. Para flujos de varios pasos que solo ocurren a veces, mejor usa [skills](/ia/aprende/claude-code-skills/).
+
+## Mantenerlo sano
+
+- **Revísalo cuando algo salga mal.** Si Claude ignora una regla, probablemente el archivo es muy largo o la regla es ambigua.
+- **Quita contradicciones.** Dos reglas opuestas hacen que Claude elija una al azar.
+- **Un énfasis a la vez.** Marcar con "IMPORTANTE" una línea ayuda; marcar veinte no sirve.
+- **Agrega cuando te repites.** Si corriges lo mismo por segunda vez, escríbelo.
+- **Audita.** El comando `/doctor prompt-audit` revisa tus instrucciones en busca de rutas inexistentes o reglas en conflicto (requiere una versión reciente de Claude Code, indicada en la documentación).
+
+<Callout tipo="warning" titulo="Nada de secretos en CLAUDE.md">
+Este archivo se sube a git y Claude lo lee en cada sesión. No pongas claves, tokens ni contraseñas. Escribe solo el nombre de la variable de entorno y dónde se configura.
+</Callout>
+
+## Errores comunes
+
+- **Pegar tutoriales enteros.** Si ocupa páginas, no es una instrucción, es un manual. Enlázalo.
+- **Escribir deseos en vez de reglas.** "Código elegante" no se puede verificar.
+- **Olvidarse de los comandos reales.** Lo más útil es cómo compilar, probar y verificar.
+- **Duplicar README y CLAUDE.md.** Importa el README con `@README.md`.
+- **Subir `CLAUDE.local.md`.** Agrégalo a `.gitignore`.
+
+## Ejercicio
+
+1. En un proyecto tuyo, corre `/init` y lee el resultado.
+2. Borra todo lo que no pase la prueba de "si lo quito, Claude se equivoca".
+3. Agrega tres reglas concretas que hayas tenido que repetirle.
+4. Abre una sesión nueva, pídele que haga un cambio y verifica si siguió las reglas.
+5. Ajusta las reglas que no cumplió: más cortas, más específicas.
+
+## Qué sigue
+
+- [Skills](/ia/aprende/claude-code-skills/): instrucciones y flujos que se cargan solo cuando hacen falta.
+- [Hooks](/ia/aprende/claude-code-hooks/): lo que debe pasar siempre, sin excepciones.

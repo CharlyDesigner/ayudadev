@@ -1,0 +1,104 @@
+---
+titulo: 'Proyectos, artefactos y archivos en Claude'
+descripcion: 'Cómo darle a Claude tu material con archivos y proyectos, qué son los artefactos y cómo organizar una sesión de estudio larga. Nivel intermedio.'
+categoria: basico
+nivel: intermedio
+tiempoLectura: 10
+publicado: 2026-10-14
+herramientas: ['claude']
+orden: 12
+---
+
+import Pasos from '@components/guias/Pasos.astro';
+import Callout from '@components/ui/Callout.astro';
+
+Ya sabes conversar con Claude y pedir con claridad. Ahora vas a darle material propio y a organizar tu trabajo para que no empieces de cero en cada chat. Las funciones y sus límites cambian seguido, así que esta pieza explica la idea y te manda a la ayuda oficial para los detalles vigentes.
+
+Antes de seguir, lee [Prompts que funcionan con Claude](/ia/aprende/claude-prompts-que-funcionan/).
+
+## Subir archivos a un chat
+
+En lugar de copiar y pegar, puedes adjuntar documentos, imágenes y otros archivos a una conversación. Sirve para:
+
+- Pedir un resumen de un artículo o capítulo en PDF.
+- Que te explique una captura de pantalla de un error.
+- Revisar un archivo de código o una hoja de cálculo.
+
+Qué tipos de archivo se aceptan y de qué tamaño lo dice la [ayuda oficial sobre subir archivos](https://support.claude.com/en/articles/8241126-upload-files-to-claude). Consúltala antes de depender de una función concreta.
+
+Buenas prácticas:
+
+- **Di qué hacer con el archivo.** "Resume el capítulo 3 en cinco viñetas" rinde más que solo adjuntarlo.
+- **Pide que cite de dónde saca cada dato.** "Indica en qué sección encontraste cada afirmación". Así verificas rápido.
+- **Quita lo sensible.** No subas datos personales de otras personas, contraseñas ni documentos confidenciales sin permiso.
+
+## Proyectos: tu material siempre a la mano
+
+Un proyecto es un espacio de trabajo con su propio historial y una base de conocimiento. Dentro puedes subir archivos una vez y tener varias conversaciones que los usan, además de escribir instrucciones del proyecto que aplican a todos sus chats. Así lo describe la [ayuda oficial: qué son los proyectos](https://support.claude.com/en/articles/9517075-what-are-projects).
+
+Casos donde un proyecto vale la pena:
+
+| Situación | Qué pones en el proyecto |
+| --- | --- |
+| Estudias una materia | Apuntes, temario y una instrucción: "explícame a nivel de primer semestre y hazme preguntas al final". |
+| Escribes tu tesis o un informe | Tus borradores y la guía de formato de tu escuela. |
+| Aprendes un lenguaje | Tus ejercicios resueltos y la instrucción "no me des la solución, dame pistas". |
+| Trabajas en un sitio web | Descripción del proyecto, guía de estilo y decisiones tomadas. |
+
+Un ejemplo de instrucción de proyecto para estudiar:
+
+```text
+Eres mi tutor de [MATERIA]. Estoy en [NIVEL]. Usa los documentos del proyecto como fuente principal y dime cuando algo no aparezca en ellos. Explica con ejemplos sencillos, hazme una pregunta de repaso al final de cada respuesta y no resuelvas mis tareas: guíame con pistas.
+```
+
+<Callout tipo="info" titulo="Los proyectos están cambiando">
+La ayuda oficial menciona una versión nueva de proyectos que se va activando por etapas. Si tu pantalla se ve distinta a lo que lees aquí, sigue la ayuda oficial de tu plan.
+</Callout>
+
+## Artefactos: resultados que se quedan
+
+Un artefacto es un resultado independiente que Claude crea y muestra junto a la conversación: un documento, una página web pequeña, una tabla, un diagrama o una mini herramienta interactiva. Puedes editarlo, pedir cambios y volver a él. Según la [ayuda oficial de artefactos](https://support.claude.com/en/articles/17153992-what-are-artifacts-and-how-do-i-use-them), son privados por defecto y no se comparten hasta que tú lo decidas.
+
+Ideas para estudiar y practicar:
+
+- Una **tabla comparativa** para repasar (por ejemplo, tipos de bases de datos).
+- Un **cuestionario interactivo** de práctica.
+- Una **página HTML** con tu portafolio inicial, que luego mejoras tú a mano.
+- Una **calculadora** o conversor pequeño para entender cómo se arma la lógica.
+
+```text
+Crea un artefacto con un cuestionario de diez preguntas de opción múltiple sobre [TEMA], de nivel [NIVEL]. Al responder cada una debe mostrar si acerté y una explicación breve. Al final muestra mi puntaje y los temas que debo repasar.
+```
+
+Si el artefacto es código, no lo pegues en producción sin entenderlo. Léelo, pídele a Claude que explique cada parte y modifícalo tú. Para ese flujo revisa [Cómo revisar y depurar tu código con IA](/ia/aprende/revisar-y-depurar-con-ia/).
+
+## Cómo organizar una sesión larga
+
+<Pasos>
+
+1. **Un objetivo por chat.** "Entender cierres en JavaScript" es un buen objetivo. "Todo sobre JavaScript" no lo es.
+2. **Resume al cerrar.** Pide: "Resume en diez líneas lo que aprendimos y lo que me falta repasar". Guarda ese resumen en tu cuaderno o en el proyecto.
+3. **Retoma con el resumen.** En el chat siguiente, pega el resumen y di dónde te quedaste.
+4. **Corrige el rumbo temprano.** Si ves que la respuesta se desvía, aclara en el siguiente mensaje en vez de esperar.
+5. **Empieza de nuevo cuando se enrede.** Un chat largo con ideas mezcladas rinde menos. Abre otro con un resumen limpio. La razón técnica está en [Tokens y ventana de contexto](/fundamentos/tokens-y-ventana-de-contexto/).
+
+</Pasos>
+
+## Cuidados
+
+- **Privacidad:** revisa qué hace la plataforma con tus archivos y conversaciones en su política oficial antes de subir material delicado.
+- **Fuentes:** si Claude dice "según el documento", comprueba la cita. Puede resumir mal o mezclar contenido.
+- **Dependencia:** si cada tarea termina en un artefacto que no entiendes, estás delegando de más. Aplica la regla de [aprender sin copiar](/ia/aprende/aprender-sin-copiar/).
+
+## Ejercicio
+
+1. Crea un proyecto llamado "Estudio de [TEMA]".
+2. Sube dos o tres páginas de tus apuntes y escribe una instrucción de tutor.
+3. Pide un resumen y las tres ideas más difíciles.
+4. Pide un cuestionario como artefacto y respóndelo.
+5. Al terminar, pide el resumen de la sesión y guárdalo.
+
+## Qué sigue
+
+- [Prompts avanzados con Claude](/ia/aprende/claude-prompts-avanzados/): etiquetas, ejemplos, cadenas de prompts y evaluación.
+- [Claude Code: instalación y primer día](/ia/aprende/claude-code-instalacion-y-primer-dia/): cuando quieras que Claude trabaje sobre tu proyecto real.

@@ -1,0 +1,136 @@
+---
+titulo: 'Claude Code: comandos, atajos y archivos de configuración'
+descripcion: 'Referencia rápida de Claude Code: comandos de terminal, comandos con barra, atajos, modos de permisos y dónde van CLAUDE.md, skills, hooks, subagentes y MCP.'
+tema: inteligencia-artificial
+publicado: 2026-10-14
+etiquetas: ['claude-code', 'cli', 'ia']
+orden: 90
+---
+
+Verificada contra la [documentación oficial](https://code.claude.com/docs/en/commands) el 14 de octubre de 2026. Los comandos cambian con las versiones: si algo no aparece en tu pantalla, escribe `/help` o consulta la referencia. Aprende el contexto en la [serie de Claude Code](/ia/aprende/claude-code-instalacion-y-primer-dia/).
+
+## Instalar y abrir
+
+| Comando | Qué hace |
+| --- | --- |
+| `irm https://claude.ai/install.ps1 \| iex` | Instala en Windows (PowerShell) |
+| `curl -fsSL https://claude.ai/install.sh \| bash` | Instala en macOS, Linux o WSL |
+| `claude --version` | Comprueba la instalación |
+| `claude` | Abre una sesión interactiva en la carpeta actual |
+| `claude "tarea"` | Abre una sesión con un primer mensaje |
+| `claude -p "pregunta"` | Una consulta y sale (sirve para scripts) |
+| `claude -c` | Continúa la conversación más reciente de esta carpeta |
+| `claude -r` | Elige una conversación anterior |
+| `claude --model opus` | Abre con un modelo o alias concreto |
+| `claude --permission-mode plan` | Abre en un modo de permisos concreto |
+
+## Comandos con barra (dentro de la sesión)
+
+| Comando | Qué hace |
+| --- | --- |
+| `/help` | Ayuda y lista de comandos |
+| `/clear` | Conversación nueva con contexto vacío |
+| `/compact [instrucciones]` | Resume la conversación para liberar contexto |
+| `/context` | Muestra qué ocupa el contexto y qué memorias cargó |
+| `/init` | Genera un `CLAUDE.md` inicial |
+| `/memory` | Edita `CLAUDE.md` y gestiona la memoria automática |
+| `/model [nombre]` | Cambia de modelo |
+| `/effort [nivel]` | Cambia el esfuerzo de razonamiento |
+| `/permissions` | Ve y edita reglas de permitir, preguntar y denegar |
+| `/plan [descripción]` | Entra a modo plan |
+| `/diff` | Revisa los cambios del árbol de trabajo |
+| `/rewind` | Vuelve a un punto anterior (conversación y/o código) |
+| `/resume` | Retoma una conversación anterior |
+| `/hooks` | Ve los hooks configurados |
+| `/mcp` | Estado, autenticación y gestión de servidores MCP |
+| `/skills` | Lista las skills disponibles |
+| `/agents` | Recordatorio para crear o gestionar subagentes |
+| `/usage` | Consumo de la sesión y límites del plan (alias: `/cost`) |
+| `/status` | Versión, modelo, cuenta y conectividad |
+| `/btw pregunta` | Pregunta lateral que no entra al historial |
+| `/doctor` | Revisa tu instalación y configuración |
+| `/login` | Inicia sesión o cambia de cuenta |
+| `/exit` | Sale |
+
+## Atajos de teclado
+
+| Atajo | Qué hace |
+| --- | --- |
+| `Shift+Tab` | Cambia el modo de permisos |
+| `Esc` | Detiene a Claude sin perder el contexto |
+| `Esc` dos veces | Abre el menú para rebobinar |
+| `Ctrl+G` | Abre el plan en tu editor para modificarlo |
+| `Tab` | Autocompleta comandos |
+| Flecha arriba | Historial de comandos |
+| `@archivo` | Referencia un archivo en el mensaje |
+| `Ctrl+D` dos veces | Sale |
+
+## Modos de permisos
+
+| Modo | Qué corre sin preguntar |
+| --- | --- |
+| `default` (Manual) | Solo lecturas |
+| `acceptEdits` | Lecturas, ediciones y comandos comunes de archivos |
+| `plan` | Lecturas; no edita hasta aprobar un plan |
+| `auto` | Casi todo, con un clasificador que revisa |
+| `dontAsk` | Solo lo preaprobado; lo demás se niega |
+| `bypassPermissions` | Todo; solo en contenedores o VM aisladas |
+
+## Reglas de permisos (settings.json)
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(npm run *)", "Bash(git commit *)"],
+    "ask": ["Bash(git push *)"],
+    "deny": ["Read(./.env)", "Bash(rm -rf *)"]
+  }
+}
+```
+
+Orden de evaluación: denegar, preguntar, permitir. Pon el `*` después del subcomando.
+
+## Dónde va cada cosa
+
+| Qué | Dónde |
+| --- | --- |
+| Instrucciones del proyecto | `CLAUDE.md` o `.claude/CLAUDE.md` |
+| Tus instrucciones personales | `~/.claude/CLAUDE.md` |
+| Notas locales del proyecto (no se suben) | `CLAUDE.local.md` |
+| Reglas por carpeta o archivo | `.claude/rules/*.md` con `paths` en el encabezado |
+| Skill del proyecto | `.claude/skills/<nombre>/SKILL.md` |
+| Skill personal | `~/.claude/skills/<nombre>/SKILL.md` |
+| Subagente del proyecto | `.claude/agents/<nombre>.md` |
+| Subagente personal | `~/.claude/agents/<nombre>.md` |
+| Hooks y permisos del proyecto | `.claude/settings.json` |
+| Hooks y permisos solo tuyos | `.claude/settings.local.json` o `~/.claude/settings.json` |
+| Servidores MCP del proyecto | `.mcp.json` |
+
+## MCP en la terminal
+
+```bash
+claude mcp add --transport http <nombre> <url>      # remoto
+claude mcp add --transport stdio <nombre> -- <cmd>  # local
+claude mcp list
+claude mcp get <nombre>
+claude mcp remove <nombre>
+```
+
+Alcances: `--scope local` (por defecto), `project` (`.mcp.json`) y `user`.
+
+## Hooks: lo esencial
+
+| Dato | Valor |
+| --- | --- |
+| Eventos frecuentes | `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Notification`, `Stop`, `SessionStart` |
+| Entrada | JSON por stdin (`tool_name`, `tool_input`) |
+| Código de salida `0` | Todo bien, sigue |
+| Código de salida `2` | Bloquea y manda stderr a Claude |
+| Otro código | Error que no bloquea |
+
+## Enlaces oficiales
+
+- [Referencia de comandos](https://code.claude.com/docs/en/commands)
+- [Buenas prácticas](https://code.claude.com/docs/en/best-practices)
+- [Configuración](https://code.claude.com/docs/en/settings)
+- [Hooks](https://code.claude.com/docs/en/hooks) y [MCP](https://code.claude.com/docs/en/mcp)
