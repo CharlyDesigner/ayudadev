@@ -1,0 +1,112 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Mi cuenta', href: '/cuenta/' },
+  { nombre: 'Restablecer contraseña', href: '/cuenta/clave/' },
+];
+---
+
+<BaseLayout title="Restablecer contraseña" description="Recupera el acceso a tu cuenta de AyudaDev con un enlace que te enviamos por correo." path="/cuenta/clave/" noindex>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Cuenta (opcional)" titulo="Restablecer contraseña" descripcion="Te enviamos un enlace de un solo uso para elegir una contraseña nueva." />
+
+    <p data-cta-aviso role="status" aria-live="polite" hidden></p>
+
+    <div class="mt-8 max-w-md">
+      <section data-vista="solicitar" hidden>
+        <form class="card flex flex-col gap-4 p-6" data-cta-form="solicitar" novalidate>
+          <div class="visually-hidden" aria-hidden="true">
+            <label>No llenes este campo <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+            <label>Tampoco este <input type="text" name="address_line_2" tabindex="-1" autocomplete="off" /></label>
+          </div>
+          <label class="block text-sm font-medium">
+            Correo de tu cuenta
+            <input type="email" name="email" class="field mt-1" required autocomplete="email" inputmode="email" placeholder="tu@correo.com" />
+          </label>
+          <button type="submit" class="btn btn-primary justify-center">Enviarme el enlace</button>
+          <p data-cta-error class="text-sm text-danger" aria-live="polite" hidden></p>
+        </form>
+        <p class="mt-4 text-sm text-muted">¿Te acordaste? <a href="/cuenta/" class="link">Entrar</a></p>
+      </section>
+
+      <section data-vista="enviado" hidden class="card p-6">
+        <h2 class="text-xl font-bold tracking-tight">Revisa tu correo</h2>
+        <p class="mt-2 text-sm text-muted">Si ese correo tiene una cuenta, te enviamos un enlace para elegir una contraseña nueva. Caduca en 1 hora y funciona una sola vez. Mira también en spam.</p>
+        <a href="/" class="btn btn-secondary mt-5">Volver al inicio</a>
+      </section>
+
+      <section data-vista="restablecer" hidden>
+        <form class="card flex flex-col gap-4 p-6" data-cta-form="restablecer" novalidate>
+          <h2 class="text-xl font-bold tracking-tight">Elige tu contraseña nueva</h2>
+          <label class="block text-sm font-medium">
+            Contraseña nueva
+            <input type="password" name="clave" class="field mt-1" required minlength="10" maxlength="200" autocomplete="new-password" data-cta-clave />
+            <span class="mt-1 block text-xs font-normal text-muted">Mínimo 10 caracteres. Al cambiarla se cierran tus sesiones abiertas. Si tienes doble factor, se te seguirá pidiendo el código.</span>
+          </label>
+          <label class="flex items-center gap-2 text-sm text-muted"><input type="checkbox" data-cta-mostrar class="accent-[var(--ad-accent)]" /> Mostrar contraseña</label>
+          <button type="submit" class="btn btn-primary justify-center">Guardar contraseña</button>
+          <p data-cta-error class="text-sm text-danger" aria-live="polite" hidden></p>
+        </form>
+      </section>
+
+      <section data-vista="listo" hidden class="card p-6">
+        <h2 class="text-xl font-bold tracking-tight">Contraseña actualizada</h2>
+        <p class="mt-2 text-sm text-muted">Ya puedes entrar con la contraseña nueva.</p>
+        <a href="/cuenta/" class="btn btn-primary mt-5">Entrar</a>
+      </section>
+
+      <section data-vista="token" hidden class="card p-6">
+        <h2 class="text-xl font-bold tracking-tight">Este enlace ya no sirve</h2>
+        <p class="mt-2 text-sm text-muted">Ya se usó o caducó. Pide uno nuevo con tu correo.</p>
+        <a href="/cuenta/clave/" class="btn btn-primary mt-5">Pedir otro enlace</a>
+      </section>
+
+      <section data-vista="nodisponible" hidden class="card p-6">
+        <h2 class="text-xl font-bold tracking-tight">Las cuentas no están disponibles</h2>
+        <p class="mt-2 text-sm text-muted">Por ahora no podemos restablecer contraseñas. El resto de AyudaDev funciona igual.</p>
+        <a href="/" class="btn btn-secondary mt-5">Volver al inicio</a>
+      </section>
+    </div>
+
+    <noscript><p class="card mt-6 p-6 text-sm">La cuenta necesita JavaScript activado. El resto del sitio funciona sin él.</p></noscript>
+  </div>
+</BaseLayout>
+
+<script>
+  import { cuentasDisponibles, llamar } from '@/scripts/cuenta';
+  import { conectarFormulario, conectarMostrarClave, limpiarDireccion, mostrarVista, valor } from '@/scripts/cuenta-ui';
+
+  const token = new URLSearchParams(location.search).get('t') ?? '';
+  if (token) limpiarDireccion();
+
+  const iniciar = async () => {
+    const { disponible } = await cuentasDisponibles();
+    if (!disponible) return mostrarVista('nodisponible');
+    mostrarVista(token ? 'restablecer' : 'solicitar');
+  };
+
+  conectarFormulario(document.querySelector('[data-cta-form="solicitar"]'), async (form) => {
+    const r = await llamar('recuperar', {
+      email: valor(form, 'email'),
+      website: valor(form, 'website'),
+      address_line_2: valor(form, 'address_line_2'),
+    });
+    if (r.ok) mostrarVista('enviado');
+    return r;
+  });
+
+  conectarFormulario(document.querySelector('[data-cta-form="restablecer"]'), async (form) => {
+    const r = await llamar('restablecer', { t: token, clave: valor(form, 'clave') });
+    if (r.ok) mostrarVista('listo');
+    else if (r.code === 'token') mostrarVista('token');
+    return r;
+  });
+
+  conectarMostrarClave();
+  void iniciar();
+</script>

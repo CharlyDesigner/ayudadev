@@ -19,7 +19,7 @@ const migas = [
     <SectionHeader nivel="h1" eyebrow="Legal" titulo={titulo} descripcion={descripcion} />
 
     <div class="prose mt-10">
-      <p>Última actualización: 9 de octubre de 2026.</p>
+      <p>Última actualización: 14 de octubre de 2026.</p>
 
       <h2>Responsable</h2>
       <p>Carlos Navarro, con domicilio en Tepatitlán de Morelos, Jalisco, México, es el responsable del tratamiento de los datos personales que se recogen en este sitio. Contacto: <a href={`mailto:${SITE.contacto}`}>{SITE.contacto}</a>.</p>
@@ -28,24 +28,33 @@ const migas = [
       <ul>
         <li><strong>Boletín:</strong> tu correo electrónico, la fecha de alta, la página desde la que te suscribiste y un hash (resumen irreversible) de tu dirección IP y navegador, que usamos solo para evitar abusos.</li>
         <li><strong>Navegación:</strong> el servidor guarda registros técnicos estándar (dirección IP, página visitada, fecha) durante un tiempo limitado, por seguridad y mantenimiento. No usamos cookies de seguimiento ni servicios de analítica de terceros.</li>
-        <li><strong>Favoritos y tema:</strong> se guardan únicamente en tu navegador (almacenamiento local). Nunca llegan a nuestro servidor.</li>
+        <li><strong>Favoritos, progreso y tema:</strong> se guardan en tu navegador (almacenamiento local). Solo llegan a nuestro servidor si creas una cuenta e inicias sesión; sin cuenta nunca salen de tu navegador.</li>
+        <li>
+          <strong>Cuenta (opcional):</strong> tu correo, un nombre si lo escribes, la fecha de alta y la del último acceso; tu contraseña, guardada solo como un hash (nunca en claro); la lista de identificadores de lo que marcaste como completado y de tus favoritos; y, para mantener tu sesión, un hash del identificador de sesión, un hash de tu dirección IP y de tu navegador y sus fechas. Si vinculas GitHub, guardamos el número y el nombre de usuario de tu cuenta de GitHub; si activas el doble factor, el secreto de tu app de autenticación cifrado y los hashes de tus códigos de respaldo. Llevamos además un registro de eventos de seguridad (tipo de evento, fecha y un hash de la IP, sin tu correo) para detectar abusos.
+        </li>
+        <li><strong>Cookies:</strong> si inicias sesión, una cookie de sesión estrictamente necesaria para reconocerte. No usamos cookies de seguimiento ni de publicidad.</li>
       </ul>
 
       <h2>Para qué los usamos</h2>
       <ul>
         <li>Enviarte el boletín de AyudaDev con novedades del sitio. Solo si confirmas tu suscripción desde el correo que te enviamos (doble confirmación).</li>
+        <li>Darte una cuenta, si la pides: iniciar sesión con tu correo o con GitHub, sincronizar tu progreso y tus favoritos entre dispositivos, enviarte los correos para confirmar tu correo y restablecer tu contraseña, y avisarte cuando cambie algo de la seguridad de tu cuenta.</li>
         <li>Mantener el sitio seguro y funcionando.</li>
       </ul>
       <p>No vendemos ni compartimos tus datos con terceros. Los correos se envían desde nuestro propio servidor de hosting.</p>
 
       <h2>Cuánto tiempo los guardamos</h2>
-      <p>Tu correo se conserva mientras estés suscrito. Si no confirmas la suscripción, el registro pendiente se elimina en las limpiezas periódicas. Al darte de baja, marcamos tu correo como dado de baja para no volver a escribirte.</p>
+      <p>Tu cuenta y lo que guarda se conservan hasta que la borres. Puedes hacerlo tú mismo en <a href="/cuenta/">Mi cuenta</a>: se elimina todo lo que tenemos en el servidor (cuenta, contraseña, vínculo con GitHub, doble factor, progreso y favoritos). Las sesiones caducan tras 14 días sin uso y, como máximo, a los 60 días; los enlaces de los correos de cuenta caducan en 24 horas (registro) o en 1 hora (restablecer contraseña). La suscripción al boletín es independiente de la cuenta.</p>
+      <p>Tu correo del boletín se conserva mientras estés suscrito. Si no confirmas la suscripción, el registro pendiente se elimina en las limpiezas periódicas. Al darte de baja, marcamos tu correo como dado de baja para no volver a escribirte.</p>
 
       <h2>Tus derechos</h2>
-      <p>Puedes acceder, rectificar, cancelar u oponerte al tratamiento de tus datos (derechos ARCO) escribiendo a <a href={`mailto:${SITE.contacto}`}>{SITE.contacto}</a>. Para darte de baja del boletín basta con usar el enlace que aparece al final de cada correo.</p>
+      <p>Puedes acceder, rectificar, cancelar u oponerte al tratamiento de tus datos (derechos ARCO) escribiendo a <a href={`mailto:${SITE.contacto}`}>{SITE.contacto}</a>. Para darte de baja del boletín basta con usar el enlace que aparece al final de cada correo. Si tienes cuenta, también puedes exportar una copia de tus datos y borrarlos tú mismo desde <a href="/cuenta/">Mi cuenta</a>, sin escribirnos.</p>
 
       <h2>Donaciones</h2>
       <p>Los pagos se procesan en Stripe o GitHub Sponsors. AyudaDev no recibe ni almacena datos de tu tarjeta; consulta las políticas de privacidad de esos servicios.</p>
+
+      <h2>Inicio de sesión con GitHub</h2>
+      <p>Si eliges entrar con GitHub, GitHub te muestra su propia pantalla de autorización y trata tus datos según su política. Nosotros recibimos solo tu número y usuario de GitHub, tu nombre público y tu correo principal verificado; no pedimos acceso a tus repositorios y no guardamos el token de acceso.</p>
 
       <h2>Enlaces externos</h2>
       <p>La biblioteca enlaza a sitios de terceros. Cada uno tiene sus propias políticas de privacidad y no somos responsables de ellas.</p>

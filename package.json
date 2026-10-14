@@ -17,6 +17,7 @@
     "test": "vitest run",
     "check:static": "node scripts/check-static-site.mjs",
     "check:links": "node scripts/check-links.mjs",
+    "probar:cuentas": "node scripts/probar-cuentas/ejecutar.mjs",
     "verify": "npm run check && npm test && npm run build && npm run check:static"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.8",
+    "qrcode-generator": "^2.0.4",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {

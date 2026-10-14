@@ -10,10 +10,10 @@ const migas = [
 ];
 ---
 
-<BaseLayout title="Mi progreso" description="Lo que has completado en AyudaDev. Se guarda solo en este navegador." path="/progreso/" noindex>
+<BaseLayout title="Mi progreso" description="Lo que has completado en AyudaDev. Se guarda en este navegador y, si tienes cuenta, en ella." path="/progreso/" noindex>
   <div class="container-site py-10 sm:py-14">
     <Breadcrumbs migas={migas} class="mb-6" />
-    <SectionHeader nivel="h1" eyebrow="Tu avance" titulo="Mi progreso" descripcion="Todo se guarda solo en este navegador. Puedes exportarlo para llevarlo a otro dispositivo." />
+    <SectionHeader nivel="h1" eyebrow="Tu avance" titulo="Mi progreso" descripcion="Se guarda en este navegador. Puedes exportarlo para llevarlo a otro dispositivo o, si quieres, crear una cuenta para que te siga sola." />
 
     <div class="mt-6 flex flex-wrap gap-2">
       <button type="button" class="btn btn-secondary btn-sm" data-prog-export><Icon name="download" class="h-4 w-4" /> Exportar</button>

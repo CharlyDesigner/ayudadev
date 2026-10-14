@@ -1,0 +1,121 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+import SectionHeader from '@components/ui/SectionHeader.astro';
+import Breadcrumbs from '@components/ui/Breadcrumbs.astro';
+
+const migas = [
+  { nombre: 'Inicio', href: '/' },
+  { nombre: 'Mi cuenta', href: '/cuenta/' },
+  { nombre: 'Crear cuenta', href: '/cuenta/registro/' },
+];
+---
+
+<BaseLayout title="Crear cuenta" description="Crea una cuenta de AyudaDev para llevar tu progreso y tus favoritos a cualquier dispositivo." path="/cuenta/registro/" noindex>
+  <div class="container-site py-10 sm:py-14">
+    <Breadcrumbs migas={migas} class="mb-6" />
+    <SectionHeader nivel="h1" eyebrow="Cuenta (opcional)" titulo="Crear cuenta" descripcion="Primero confirmas tu correo y después eliges tu contraseña. No necesitas cuenta para usar AyudaDev." />
+
+    <p data-cta-aviso role="status" aria-live="polite" hidden></p>
+
+    <div class="mt-8 max-w-md">
+      <section data-vista="solicitar" hidden>
+        <form class="card flex flex-col gap-4 p-6" data-cta-form="solicitar" novalidate>
+          <div class="visually-hidden" aria-hidden="true">
+            <label>No llenes este campo <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+            <label>Tampoco este <input type="text" name="address_line_2" tabindex="-1" autocomplete="off" /></label>
+          </div>
+          <label class="block text-sm font-medium">
+            Correo electrónico
+            <input type="email" name="email" class="field mt-1" required autocomplete="email" inputmode="email" placeholder="tu@correo.com" />
+          </label>
+          <label class="flex items-start gap-2 text-xs text-muted">
+            <input type="checkbox" name="consentimiento" value="1" required class="mt-0.5 accent-[var(--ad-accent)]" />
+            <span>Acepto que AyudaDev guarde mi correo, mi progreso y mis favoritos para darme la cuenta. Puedo exportar o borrar todo cuando quiera. <a href="/privacidad/" class="link">Aviso de privacidad</a>.</span>
+          </label>
+          <button type="submit" class="btn btn-primary justify-center">Enviarme el enlace</button>
+          <p data-cta-error class="text-sm text-danger" aria-live="polite" hidden></p>
+        </form>
+        <p class="mt-4 text-sm text-muted">¿Ya tienes cuenta? <a href="/cuenta/" class="link">Entrar</a></p>
+      </section>
+
+      <section data-vista="enviado" hidden class="card p-6">
+        <h2 class="text-xl font-bold tracking-tight">Revisa tu correo</h2>
+        <p class="mt-2 text-sm text-muted">Si el correo es válido, te enviamos un enlace para crear tu cuenta. Funciona una sola vez y caduca en 24 horas. Mira también en spam.</p>
+        <a href="/" class="btn btn-secondary mt-5">Volver al inicio</a>
+      </section>
+
+      <section data-vista="completar" hidden>
+        <form class="card flex flex-col gap-4 p-6" data-cta-form="completar" novalidate>
+          <h2 class="text-xl font-bold tracking-tight">Elige tu contraseña</h2>
+          <label class="block text-sm font-medium">
+            Nombre (opcional)
+            <input type="text" name="nombre" class="field mt-1" autocomplete="nickname" maxlength="60" />
+          </label>
+          <label class="block text-sm font-medium">
+            Contraseña
+            <input type="password" name="clave" class="field mt-1" required minlength="10" maxlength="200" autocomplete="new-password" data-cta-clave />
+            <span class="mt-1 block text-xs font-normal text-muted">Mínimo 10 caracteres. Una frase larga que solo tú sepas funciona mejor que símbolos raros.</span>
+          </label>
+          <label class="flex items-center gap-2 text-sm text-muted"><input type="checkbox" data-cta-mostrar class="accent-[var(--ad-accent)]" /> Mostrar contraseña</label>
+          <button type="submit" class="btn btn-primary justify-center">Crear mi cuenta</button>
+          <p data-cta-error class="text-sm text-danger" aria-live="polite" hidden></p>
+        </form>
+      </section>
+
+      <section data-vista="token" hidden class="card p-6">
+        <h2 class="text-xl font-bold tracking-tight">Este enlace ya no sirve</h2>
+        <p class="mt-2 text-sm text-muted">Ya se usó o caducó. Pide uno nuevo con tu correo.</p>
+        <a href="/cuenta/registro/" class="btn btn-primary mt-5">Pedir otro enlace</a>
+      </section>
+
+      <section data-vista="nodisponible" hidden class="card p-6">
+        <h2 class="text-xl font-bold tracking-tight">Las cuentas no están disponibles</h2>
+        <p class="mt-2 text-sm text-muted">Por ahora no podemos crear cuentas. El resto de AyudaDev funciona igual y tu progreso se guarda en este navegador.</p>
+        <a href="/" class="btn btn-secondary mt-5">Volver al inicio</a>
+      </section>
+    </div>
+
+    <noscript><p class="card mt-6 p-6 text-sm">La cuenta necesita JavaScript activado. El resto del sitio funciona sin él.</p></noscript>
+  </div>
+</BaseLayout>
+
+<script>
+  import { abrirSesion, cuentasDisponibles, llamar } from '@/scripts/cuenta';
+  import { aviso, conectarFormulario, conectarMostrarClave, limpiarDireccion, marcado, mostrarVista, valor } from '@/scripts/cuenta-ui';
+
+  const token = new URLSearchParams(location.search).get('t') ?? '';
+  if (token) limpiarDireccion();
+
+  const iniciar = async () => {
+    const { disponible } = await cuentasDisponibles();
+    if (!disponible) return mostrarVista('nodisponible');
+    mostrarVista(token ? 'completar' : 'solicitar');
+  };
+
+  conectarFormulario(document.querySelector('[data-cta-form="solicitar"]'), async (form) => {
+    const r = await llamar('registro', {
+      email: valor(form, 'email'),
+      consentimiento: marcado(form, 'consentimiento'),
+      website: valor(form, 'website'),
+      address_line_2: valor(form, 'address_line_2'),
+    });
+    if (r.ok) mostrarVista('enviado');
+    return r;
+  });
+
+  conectarFormulario(document.querySelector('[data-cta-form="completar"]'), async (form) => {
+    const r = await llamar('completar', { t: token, clave: valor(form, 'clave'), nombre: valor(form, 'nombre') });
+    if (r.ok) {
+      await abrirSesion(String(r.csrf ?? ''));
+      location.assign('/cuenta/?ok=entrada');
+    } else if (r.code === 'token') {
+      mostrarVista('token');
+    } else if (r.code === 'existe') {
+      aviso('Ya hay una cuenta con ese correo. Entra con tu contraseña.', 'error');
+    }
+    return r;
+  });
+
+  conectarMostrarClave();
+  void iniciar();
+</script>

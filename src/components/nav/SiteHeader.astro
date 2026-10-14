@@ -96,6 +96,14 @@ const grupoActivo = (n: (typeof NAV)[number]) => Boolean(n.hijos?.some((h) => ac
         <Icon name="trophy" />
       </a>
       <a
+        href="/cuenta/"
+        class="hidden h-10 w-10 place-items-center rounded-full text-muted transition-colors hover:bg-surface hover:text-fg sm:grid"
+        aria-label="Mi cuenta"
+        title="Mi cuenta"
+      >
+        <Icon name="user" />
+      </a>
+      <a
         href="/biblioteca/favoritos/"
         class="relative grid h-10 w-10 place-items-center rounded-full text-muted transition-colors hover:bg-surface hover:text-fg"
         aria-label="Tus favoritos"

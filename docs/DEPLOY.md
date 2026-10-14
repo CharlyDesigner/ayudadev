@@ -77,6 +77,14 @@ Después de eso entras con las dos contraseñas. La sesión se cierra tras 30 mi
 
 Los registros del panel (`.mcp.jsonl`, `.bloqueos.jsonl`) no guardan IP ni texto de consultas y se archivan solos al pasar de 1 MB. Los bloquea `.htaccess` por ser archivos ocultos.
 
+## 9. Cuentas de usuario (opcional)
+
+Las cuentas son opcionales: sin esta configuración el sitio funciona igual y `/cuenta/` avisa que no están disponibles. El diseño, los datos que se guardan y los pasos de Carlos están en `docs/CUENTAS.md`. Resumen:
+
+- Requieren `pdo_sqlite` y `openssl` en el PHP del subdominio (cPanel, MultiPHP Extensions). Los datos viven en `~/ayudadev-data/cuentas.sqlite`; respáldalo junto con `.cuentas-clave`.
+- Para entrar con GitHub: crea la OAuth App (callback `https://dev.carlosnavarro.site/api/cuenta-github.php`) y guarda `client_id` y `client_secret` en `~/ayudadev-data/.cuentas.json`. Nunca en el repositorio.
+- Pruebas de la API: `PHP_WASM_DIR=<carpeta> npm run probar:cuentas` (PHP en WebAssembly, ver `docs/CUENTAS.md`).
+
 ## Problemas conocidos
 
 - **El correo de confirmación llega a spam.** Revisa SPF y DKIM en Email Deliverability y que el buzón `no-reply@carlosnavarro.site` exista.

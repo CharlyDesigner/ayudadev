@@ -5,7 +5,7 @@ DirectorySlash On
 LimitRequestBody 65536
 
 # Archivos internos, de configuración o respaldo nunca deben ser públicos.
-<FilesMatch "(^\.|\.(?:env|ini|log|bak|sql|ya?ml|lock|jsonl)$|^(?:package(?:-lock)?\.json|composer\.(?:json|lock))$)">
+<FilesMatch "(^\.|\.(?:env|ini|log|bak|sql|ya?ml|lock|jsonl|sqlite3?|db)$|^(?:package(?:-lock)?\.json|composer\.(?:json|lock))$)">
   Require all denied
 </FilesMatch>
 
@@ -27,8 +27,12 @@ LimitRequestBody 65536
   RewriteCond %{REQUEST_METHOD} !GET
   RewriteRule ^api/(confirmar|baja)\.php$ - [F,L]
 
-  # Módulos compartidos y carpeta de datos: nunca por web.
-  RewriteRule ^api/(_guard|_newsletter)\.php$ - [F,L]
+  # Cuentas: la API de JSON acepta GET y POST; el retorno de GitHub, solo GET.
+  RewriteCond %{REQUEST_METHOD} !GET
+  RewriteRule ^api/cuenta-github\.php$ - [F,L]
+
+  # Módulos compartidos (_guard, _newsletter, _cuentas, _totp...) y carpeta de datos: nunca por web.
+  RewriteRule ^api/_[^/]+\.php$ - [F,L]
   RewriteRule ^api/_data(/|$) - [F,L]
 </IfModule>
 

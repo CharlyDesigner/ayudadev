@@ -70,6 +70,7 @@ const PAGINAS_EXTRA = [
   { label: 'Biblioteca de prompts', href: '/ia/prompts/' },
   { label: 'Aprende con IA', href: '/ia/aprende/' },
   { label: 'Mi progreso', href: '/progreso/' },
+  { label: 'Mi cuenta', href: '/cuenta/' },
   { label: 'Mis favoritos', href: '/biblioteca/favoritos/' },
 ];
 

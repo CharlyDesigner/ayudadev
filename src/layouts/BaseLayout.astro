@@ -60,9 +60,11 @@ const ld = [organizacionLd(), ...(esInicio ? [sitioLd()] : []), ...jsonLd];
       import { montarFavoritos } from '@/scripts/favoritos';
       import { montarCopiar } from '@/scripts/copiar';
       import { montarProgreso } from '@/scripts/progreso';
+      import { iniciarCuenta } from '@/scripts/cuenta';
       montarFavoritos();
       montarCopiar();
       montarProgreso();
+      iniciarCuenta();
     </script>
   </body>
 </html>

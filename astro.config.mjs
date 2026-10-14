@@ -4,7 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 
-const EXCLUIDAS = ['/404', '/newsletter/gracias/', '/newsletter/confirmado/', '/newsletter/baja/', '/biblioteca/favoritos/', '/buscar/'];
+const EXCLUIDAS = ['/404', '/newsletter/gracias/', '/newsletter/confirmado/', '/newsletter/baja/', '/biblioteca/favoritos/', '/buscar/', '/cuenta/', '/cuenta/registro/', '/cuenta/clave/'];
 
 export default defineConfig({
   site: 'https://dev.carlosnavarro.site',
